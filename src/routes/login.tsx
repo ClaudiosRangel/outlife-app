@@ -8,6 +8,22 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useTranslation } from "react-i18next";
 
+// Traduz mensagens de erro da API do Supabase para pt-BR
+function translateAuthError(msg: string): string {
+  const map: Record<string, string> = {
+    "Invalid login credentials": "E-mail ou senha incorretos.",
+    "Email not confirmed": "Confirme seu e-mail antes de entrar.",
+    "Invalid Refresh Token": "Sessão expirada. Faça login novamente.",
+    "User not found": "Usuário não encontrado.",
+    "Email rate limit exceeded": "Muitas tentativas. Aguarde alguns minutos.",
+    "Password should be at least 6 characters": "A senha deve ter pelo menos 6 caracteres.",
+  };
+  for (const [key, value] of Object.entries(map)) {
+    if (msg.toLowerCase().includes(key.toLowerCase())) return value;
+  }
+  return msg;
+}
+
 export const Route = createFileRoute("/login")({
   component: Login,
   head: () => ({
@@ -35,7 +51,7 @@ function Login() {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     setLoading(false);
     if (error) {
-      toast.error(error.message || t("auth.loginError"));
+      toast.error(translateAuthError(error.message) || t("auth.loginError"));
       return;
     }
     toast.success(t("auth.loginSuccess"));

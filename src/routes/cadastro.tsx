@@ -10,6 +10,24 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
+// Traduz mensagens de erro da API do Supabase para pt-BR
+function translateAuthError(msg: string): string {
+  const map: Record<string, string> = {
+    "Password should be at least 6 characters": "A senha deve ter pelo menos 6 caracteres.",
+    "Password is too weak": "A senha é muito fraca. Use letras, números e símbolos.",
+    "Unable to validate email address: invalid format": "E-mail inválido.",
+    "User already registered": "Este e-mail já está cadastrado.",
+    "Email rate limit exceeded": "Muitas tentativas. Aguarde alguns minutos.",
+    "Signup requires a valid password": "Informe uma senha válida.",
+    "Invalid login credentials": "E-mail ou senha incorretos.",
+  };
+  // Busca correspondência parcial
+  for (const [key, value] of Object.entries(map)) {
+    if (msg.toLowerCase().includes(key.toLowerCase())) return value;
+  }
+  return msg;
+}
+
 export const Route = createFileRoute("/cadastro")({
   component: Cadastro,
   head: () => ({
@@ -69,7 +87,7 @@ function Cadastro() {
     });
     setLoading(false);
     if (error) {
-      toast.error(error.message);
+      toast.error(translateAuthError(error.message));
       return false;
     }
     toast.success(t("auth.signupSuccess"));
