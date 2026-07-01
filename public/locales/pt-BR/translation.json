@@ -28,10 +28,19 @@
     "wait": "Aguarde..."
   },
   "common": {
+    "available": "Disponível",
     "cancel": "Cancelar",
+    "clear": "Limpar",
+    "continue": "Continuar",
+    "delete": "Excluir",
+    "empty": "Nada por aqui ainda.",
+    "loading": "Carregando…",
+    "open": "Abrir",
     "save": "Salvar",
     "saving": "Salvando…",
-    "delete": "Excluir"
+    "seeAll": "Ver todos",
+    "unavailable": "Indisponível",
+    "verified": "Verificado"
   },
   "signup": {
     "stepOf": "Passo {{step}} de {{total}}",
