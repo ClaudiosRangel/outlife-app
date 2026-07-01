@@ -1,0 +1,402 @@
+import { useState, useRef, useCallback } from "react";
+import { createFileRoute } from "@tanstack/react-router";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  Heart,
+  MessageCircle,
+  MapPin,
+  Share2,
+  Plus,
+  X,
+  Send,
+  Camera,
+} from "lucide-react";
+import { StatusBar } from "@/components/StatusBar";
+import community1 from "@/assets/community-1.jpg";
+import { Skeleton } from "@/components/ui/skeleton";
+import { fetchCommunityPosts, createCommunityPost, resolveAsset } from "@/lib/api";
+import { useAuth } from "@/hooks/use-auth";
+import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
+
+
+type UIPost = {
+  id: string;
+  user: string;
+  handle: string;
+  avatar: string;
+  time: string;
+  place: string;
+  text: string;
+  img: string;
+  likes: number;
+  comments: number;
+  liked?: boolean;
+  following?: boolean;
+};
+
+export const Route = createFileRoute("/comunidade")({
+  component: Community,
+  head: () => ({
+    meta: [
+      { title: "Comunidade — Outlife" },
+      { name: "description", content: "Compartilhe relatos, fotos e dicas de aventuras outdoor com a comunidade Outlife." },
+      { property: "og:title", content: "Comunidade — Outlife" },
+      { property: "og:description", content: "Relatos, fotos e dicas da comunidade outdoor." },
+      { property: "og:url", content: "/comunidade" },
+    ],
+    links: [{ rel: "canonical", href: "/comunidade" }],
+  }),
+});
+
+function toUIPost(p: any): UIPost {
+  const author = p.author ?? {};
+  const created = p.created_at ? new Date(p.created_at) : new Date();
+  return {
+    id: p.id,
+    user: author.full_name || "Aventureiro",
+    handle: author.username ? `@${author.username}` : "@outlife",
+    avatar: resolveAsset(author.avatar_url, community1),
+    time: created.toLocaleDateString("pt-BR"),
+    place: p.place || "Brasil",
+    text: p.text || "",
+    img: resolveAsset(p.image_url, community1),
+    likes: p.likes ?? 0,
+    comments: p.comments_count ?? 0,
+  };
+}
+
+function Community() {
+  const { t } = useTranslation();
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
+
+  const { data: rawPosts = [], isLoading } = useQuery({
+    queryKey: ["community-posts"],
+    queryFn: fetchCommunityPosts,
+  });
+
+  const remotePosts: UIPost[] = (rawPosts as any[]).map(toUIPost);
+  const [localOverrides, setLocalOverrides] = useState<Record<string, Partial<UIPost>>>({});
+  const posts: UIPost[] = remotePosts.map((p) => ({ ...p, ...(localOverrides[p.id] ?? {}) }));
+
+  const [isOpen, setIsOpen] = useState(false);
+  const [preview, setPreview] = useState<string | null>(null);
+  const [text, setText] = useState("");
+  const [place, setPlace] = useState("");
+  const [showComments, setShowComments] = useState<Record<string, boolean>>({});
+  const [commentInputs, setCommentInputs] = useState<Record<string, string>>({});
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const createMutation = useMutation({
+    mutationFn: createCommunityPost,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["community-posts"] });
+      toast.success(t("community.published"));
+      closeDrawer();
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const openDrawer = () => {
+    if (!user) {
+      toast.error(t("community.loginRequired"));
+      return;
+    }
+    setIsOpen(true);
+  };
+
+  const closeDrawer = () => {
+    setIsOpen(false);
+    setPreview(null);
+    setText("");
+    setPlace("");
+  };
+
+  const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onloadend = () => setPreview(reader.result as string);
+    reader.readAsDataURL(file);
+  };
+
+  const handleSubmit = () => {
+    if (!text.trim()) return;
+    createMutation.mutate({ text: text.trim(), place: place.trim() || undefined });
+  };
+
+  const toggleLike = useCallback((id: string) => {
+    setLocalOverrides((prev) => {
+      const cur = prev[id] ?? {};
+      const base = remotePosts.find((p) => p.id === id);
+      const liked = !(cur.liked ?? base?.liked);
+      const baseLikes = base?.likes ?? 0;
+      return { ...prev, [id]: { ...cur, liked, likes: liked ? baseLikes + 1 : baseLikes } };
+    });
+  }, [remotePosts]);
+
+  const toggleFollow = useCallback((id: string) => {
+    setLocalOverrides((prev) => ({ ...prev, [id]: { ...(prev[id] ?? {}), following: !(prev[id]?.following) } }));
+  }, []);
+
+  const toggleComments = (id: string) => {
+    setShowComments((s) => ({ ...s, [id]: !s[id] }));
+  };
+
+
+  return (
+    <div className="animate-float-up relative min-h-full pb-20">
+      <StatusBar />
+      <div className="px-5 pt-2 pb-4">
+        <div className="flex items-center justify-between">
+          <h1 className="font-display text-2xl font-semibold">{t("community.title")}</h1>
+          <button
+            onClick={openDrawer}
+            aria-label={t("community.newPost")}
+            className="grid h-10 w-10 place-items-center rounded-full bg-primary text-primary-foreground shadow-card active:scale-95 transition-transform"
+          >
+            <Plus size={18} />
+          </button>
+        </div>
+        <div className="mt-3 flex gap-2 overflow-x-auto scrollbar-hide -mx-5 px-5">
+          {(["forYou", "following", "trails", "camping", "stories"] as const).map((k, i) => (
+            <button
+              key={k}
+              className={`whitespace-nowrap rounded-full px-4 py-1.5 text-xs font-medium ${
+                i === 0
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-secondary text-secondary-foreground"
+              }`}
+            >
+              {t(`community.tabs.${k}`)}
+            </button>
+          ))}
+        </div>
+      </div>
+
+
+      <div className="space-y-4 px-5 pb-6">
+        {isLoading
+          ? Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="overflow-hidden rounded-3xl bg-card shadow-card">
+                <div className="flex items-center gap-3 p-4">
+                  <Skeleton className="h-10 w-10 rounded-full" />
+                  <div className="flex-1 space-y-2">
+                    <Skeleton className="h-3 w-32" />
+                    <Skeleton className="h-3 w-20" />
+                  </div>
+                </div>
+                <Skeleton className="aspect-[4/5] w-full rounded-none" />
+                <div className="p-4 space-y-2">
+                  <Skeleton className="h-3 w-3/4" />
+                  <Skeleton className="h-3 w-1/2" />
+                </div>
+              </div>
+            ))
+          : posts.map((p) => (
+              <article key={p.id} className="overflow-hidden rounded-3xl bg-card shadow-card">
+                <header className="flex items-center gap-3 p-4">
+                  <img
+                    src={p.avatar}
+                    alt={p.user}
+                    loading="lazy"
+                    className="h-10 w-10 rounded-full object-cover"
+                  />
+                  <div className="min-w-0 flex-1">
+                    <div className="text-sm font-semibold leading-tight">{p.user}</div>
+                    <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                      <MapPin size={10} /> {p.place} · {p.time}
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => toggleFollow(p.id)}
+                    className={`rounded-full px-2 py-0.5 text-xs font-semibold transition-base ${
+                      p.following
+                        ? "bg-secondary text-foreground/60"
+                        : "text-primary"
+                    }`}
+                  >
+                    {p.following ? t("community.following") : t("community.follow")}
+                  </button>
+
+                </header>
+
+                <div className="relative aspect-[4/5]">
+                  <img src={p.img} alt="" loading="lazy" className="h-full w-full object-cover" />
+                </div>
+
+                <div className="p-4">
+                  <div className="flex items-center gap-4 text-foreground">
+                    <button
+                      onClick={() => toggleLike(p.id)}
+                      className={`flex items-center gap-1.5 text-sm transition-colors ${
+                        p.liked ? "text-red-500" : ""
+                      }`}
+                    >
+                      <Heart size={20} fill={p.liked ? "currentColor" : "none"} />
+                      <span className="font-medium">{p.likes}</span>
+                    </button>
+                    <button onClick={() => toggleComments(p.id)} className="flex items-center gap-1.5 text-sm">
+                      <MessageCircle size={20} />
+                      <span className="font-medium">{p.comments}</span>
+                    </button>
+                    <button className="ml-auto">
+                      <Share2 size={20} />
+                    </button>
+                  </div>
+                  <p className="mt-3 text-sm leading-relaxed">
+                    <span className="font-semibold">{p.handle}</span> {p.text}
+                  </p>
+                  {p.comments > 0 && (
+                    <button onClick={() => toggleComments(p.id)} className="mt-2 text-xs text-muted-foreground">
+                      {showComments[p.id] ? t("community.hideComments") : t("community.showComments", { count: p.comments })}
+                    </button>
+                  )}
+
+
+                  {showComments[p.id] && (
+                    <div className="mt-3 space-y-3 border-t border-border pt-3">
+                      {[
+                        { author: "Marina Costa", text: "Que aventura incrível! Parabéns 👏" },
+                        { author: "Diego Almeida", text: "Vou colocar na minha lista. Obrigado pela dica!" },
+                      ].map((c, i) => (
+                        <div key={i} className="flex items-start gap-2">
+                          <span className="grid h-7 w-7 place-items-center rounded-full bg-secondary text-[11px] font-semibold text-secondary-foreground">
+                            {c.author.charAt(0)}
+                          </span>
+                          <div className="flex-1 rounded-2xl bg-secondary/60 px-3 py-2">
+                            <div className="text-[12px] font-semibold">{c.author}</div>
+                            <div className="text-[12px] text-foreground/80">{c.text}</div>
+                          </div>
+                        </div>
+                      ))}
+                      <div className="flex items-center gap-2">
+                        <input
+                          value={commentInputs[p.id] || ""}
+                          onChange={(e) => setCommentInputs((s) => ({ ...s, [p.id]: e.target.value }))}
+                          placeholder={t("community.commentPlaceholder")}
+                          className="flex-1 rounded-full border border-border bg-card px-3 py-2 text-xs outline-none"
+                        />
+                        <button
+                          onClick={() => setCommentInputs((s) => ({ ...s, [p.id]: "" }))}
+                          className="grid h-9 w-9 place-items-center rounded-full bg-primary text-primary-foreground"
+                        >
+                          <Send size={14} />
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </article>
+            ))}
+      </div>
+
+      {/* Drawer de criação */}
+      {isOpen && (
+        <div className="fixed inset-0 z-50 flex flex-col justify-end">
+          <div
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            onClick={closeDrawer}
+          />
+          <div className="relative z-10 w-full max-h-[85vh] overflow-y-auto rounded-t-3xl bg-background animate-slide-up">
+            <div className="sticky top-0 z-10 flex items-center justify-between border-b border-border bg-background/95 backdrop-blur px-5 py-4">
+              <h2 className="font-display text-lg font-semibold">{t("community.drawerTitle")}</h2>
+              <button
+                onClick={closeDrawer}
+                className="grid h-8 w-8 place-items-center rounded-full bg-secondary text-secondary-foreground"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            <div className="space-y-5 p-5">
+              {/* Foto */}
+              <div>
+                <label className="mb-2 block text-sm font-medium">{t("community.photoLabel")}</label>
+                <button
+                  onClick={() => fileRef.current?.click()}
+                  className="relative flex w-full flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-border bg-secondary/50 p-6 text-muted-foreground transition-colors hover:bg-secondary active:scale-[0.98]"
+                >
+                  {preview ? (
+                    <img
+                      src={preview}
+                      alt="Preview"
+                      className="h-40 w-full rounded-xl object-cover"
+                    />
+                  ) : (
+                    <>
+                      <Camera size={28} className="text-muted-foreground" />
+                      <span className="text-sm">{t("community.addPhoto")}</span>
+                      <span className="text-xs text-muted-foreground/70">{t("community.photoHint")}</span>
+                    </>
+                  )}
+
+                  <input
+                    ref={fileRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    className="hidden"
+                    onChange={handleFile}
+                  />
+                </button>
+              </div>
+
+              {/* Local */}
+              <div>
+                <label className="mb-2 block text-sm font-medium">{t("community.placeLabel")}</label>
+                <div className="relative">
+                  <MapPin
+                    size={16}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+                  />
+                  <input
+                    value={place}
+                    onChange={(e) => setPlace(e.target.value)}
+                    placeholder={t("community.placePlaceholder")}
+                    className="h-12 w-full rounded-xl border border-border bg-card pl-10 pr-4 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+                  />
+                </div>
+              </div>
+
+              {/* Texto */}
+              <div>
+                <label className="mb-2 block text-sm font-medium">{t("community.textLabel")}</label>
+                <textarea
+                  value={text}
+                  onChange={(e) => setText(e.target.value)}
+                  placeholder={t("community.textPlaceholder")}
+                  rows={4}
+                  className="w-full rounded-xl border border-border bg-card p-4 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none"
+                />
+                <div className="mt-1 text-right text-xs text-muted-foreground">
+                  {text.length}/500
+                </div>
+              </div>
+
+
+              {/* Ações */}
+              <div className="flex gap-3 pt-2">
+                <button
+                  onClick={closeDrawer}
+                  className="flex-1 rounded-xl border border-border bg-card py-3.5 text-sm font-semibold text-foreground active:scale-[0.98] transition-transform"
+                >
+                  {t("common.cancel")}
+                </button>
+                <button
+                  onClick={handleSubmit}
+                  disabled={!text.trim() || createMutation.isPending}
+                  className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-primary py-3.5 text-sm font-semibold text-primary-foreground shadow-card disabled:opacity-50 disabled:active:scale-100 active:scale-[0.98] transition-transform"
+                >
+                  <Send size={16} />
+                  {createMutation.isPending ? t("community.publishing") : t("community.publish")}
+                </button>
+
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
