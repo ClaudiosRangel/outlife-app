@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://outlife-app.vercel.app/</loc>
+  </url>
+  <url>
+    <loc>https://outlife-app.vercel.app/explorar</loc>
+  </url>
+  <url>
+    <loc>https://outlife-app.vercel.app/marketplace</loc>
+  </url>
+  <url>
+    <loc>https://outlife-app.vercel.app/busca</loc>
+  </url>
+  <url>
+    <loc>https://outlife-app.vercel.app/comunidade</loc>
+  </url>
+  <url>
+    <loc>https://outlife-app.vercel.app/compliance</loc>
+  </url>
+</urlset>

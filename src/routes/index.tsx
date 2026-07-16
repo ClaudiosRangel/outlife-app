@@ -11,9 +11,9 @@ export const Route = createFileRoute("/")({
   component: Home,
   head: () => ({
     meta: [
-      { title: "Outlife — A vida não é só trilhar" },
+      { title: "Outlife — Trilhas, guias e pousadas verificadas" },
       { name: "description", content: "Marketplace outdoor colaborativo: trilhas, guias, pousadas e empresas verificadas via Cadastur." },
-      { property: "og:title", content: "Outlife — A vida não é só trilhar" },
+      { property: "og:title", content: "Outlife — Trilhas, guias e pousadas verificadas" },
       { property: "og:description", content: "Marketplace outdoor colaborativo: trilhas, guias, pousadas e empresas verificadas via Cadastur." },
       { property: "og:url", content: "/" },
     ],

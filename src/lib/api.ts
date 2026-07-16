@@ -1,5 +1,8 @@
 // Camada de dados Outlife — todos os dados vêm do Supabase.
 import { supabase } from "@/integrations/supabase/client";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { resizeImageForUpload } from "@/lib/image-resize";
 
 import waterfall from "@/assets/cachoeira_do_tabuleiro.jpg";
 import trail from "@/assets/trilha_pedra_do_sino.jpg";
@@ -375,9 +378,14 @@ export async function uploadReviewPhoto(file: File): Promise<string> {
     "image/png": "png",
     "image/webp": "webp",
   };
-  if (file.size > 5 * 1024 * 1024) throw new Error("Imagem maior que 5MB.");
   const ext = ALLOWED[file.type];
   if (!ext) throw new Error("Formato não suportado. Use JPG, PNG ou WEBP.");
+
+  // Redimensiona/comprime antes de validar o tamanho; em caso de falha,
+  // resizeImageForUpload retorna o próprio arquivo original (fallback),
+  // deixando a validação abaixo como última linha de defesa.
+  const optimized = await resizeImageForUpload(file);
+  if (optimized.size > 5 * 1024 * 1024) throw new Error("Imagem maior que 5MB.");
 
   const { data: userData } = await supabase.auth.getUser();
   if (!userData.user) throw new Error("Não autenticado.");
@@ -385,7 +393,7 @@ export async function uploadReviewPhoto(file: File): Promise<string> {
   const path = `${userData.user.id}/${crypto.randomUUID()}.${ext}`;
   const { error } = await supabase.storage
     .from("review-photos")
-    .upload(path, file, { contentType: file.type, upsert: false });
+    .upload(path, optimized, { contentType: file.type, upsert: false });
   if (error) throw error;
   const { data: pub } = supabase.storage.from("review-photos").getPublicUrl(path);
   return pub.publicUrl;
@@ -509,7 +517,7 @@ export async function fetchActivityById(id: string): Promise<UserActivity | null
 export type UserTrail = { id: string; name: string; distance: string };
 export type SavedDestination = { id: string; name: string; region: string };
 export type FavoritePartner = { id: string; name: string; category: string };
-export type Achievement = { id: string; key: string; label: string };
+export type Achievement = { id: string; key: string; label: string; achievedAt?: string };
 export type NextAdventure = {
   id: string;
   title: string;
@@ -520,51 +528,159 @@ export type PartnerMetric = { key: string; value: string; delta: string };
 export type PartnerChartPoint = { day: string; v: number };
 
 export async function fetchUserTrails(_userId?: string): Promise<UserTrail[]> {
-  return [
-    { id: "t1", name: "Pedra do Sino", distance: "18 km" },
-    { id: "t2", name: "Travessia Mantiqueira", distance: "42 km" },
-    { id: "t3", name: "Pico Agulhas Negras", distance: "22 km" },
-  ];
+  const { data: userData } = await supabase.auth.getUser();
+  if (!userData.user) return [];
+  const { data, error } = await supabase
+    .from("user_activities" as never)
+    .select("id, distance_meters, destination:destinations(name)")
+    .eq("user_id", userData.user.id)
+    .eq("status", "completed")
+    .order("start_time", { ascending: false });
+  if (error) throw error;
+  return ((data ?? []) as unknown as Array<{
+    id: string;
+    distance_meters: number | null;
+    destination: { name: string } | null;
+  }>).map((row) => ({
+    id: row.id,
+    name: row.destination?.name ?? "Trilha",
+    distance: row.distance_meters != null ? `${(Number(row.distance_meters) / 1000).toFixed(1)} km` : "—",
+  }));
+}
+
+export async function saveDestination(destinationId: string): Promise<void> {
+  const { data: userData } = await supabase.auth.getUser();
+  if (!userData.user) throw new Error("Não autenticado");
+  const { error } = await supabase
+    .from("saved_destinations" as never)
+    .insert({ user_id: userData.user.id, destination_id: destinationId } as never);
+  if (error) throw error;
+}
+
+export async function unsaveDestination(destinationId: string): Promise<void> {
+  const { data: userData } = await supabase.auth.getUser();
+  if (!userData.user) throw new Error("Não autenticado");
+  const { error } = await supabase
+    .from("saved_destinations" as never)
+    .delete()
+    .eq("user_id", userData.user.id)
+    .eq("destination_id", destinationId);
+  if (error) throw error;
 }
 
 export async function fetchSavedDestinations(_userId?: string): Promise<SavedDestination[]> {
-  return [
-    { id: "d1", name: "Cachoeira do Tabuleiro", region: "MG" },
-    { id: "d2", name: "Chapada Diamantina", region: "BA" },
-    { id: "d3", name: "Bonito", region: "MS" },
-  ];
+  const { data: userData } = await supabase.auth.getUser();
+  if (!userData.user) return [];
+  const { data, error } = await supabase
+    .from("saved_destinations" as never)
+    .select("destination_id, destination:destinations(id, name, region)")
+    .eq("user_id", userData.user.id)
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return ((data ?? []) as unknown as Array<{
+    destination_id: string;
+    destination: { id: string; name: string; region: string | null } | null;
+  }>).map((row) => ({
+    id: row.destination?.id ?? row.destination_id,
+    name: row.destination?.name ?? "Destino",
+    region: row.destination?.region ?? "",
+  }));
+}
+
+export async function favoritePartner(partnerId: string): Promise<void> {
+  const { data: userData } = await supabase.auth.getUser();
+  if (!userData.user) throw new Error("Não autenticado");
+  const { error } = await supabase
+    .from("favorite_partners" as never)
+    .insert({ user_id: userData.user.id, partner_id: partnerId } as never);
+  if (error) throw error;
+}
+
+export async function unfavoritePartner(partnerId: string): Promise<void> {
+  const { data: userData } = await supabase.auth.getUser();
+  if (!userData.user) throw new Error("Não autenticado");
+  const { error } = await supabase
+    .from("favorite_partners" as never)
+    .delete()
+    .eq("user_id", userData.user.id)
+    .eq("partner_id", partnerId);
+  if (error) throw error;
 }
 
 export async function fetchFavoritePartners(_userId?: string): Promise<FavoritePartner[]> {
-  return [
-    { id: "p1", name: "Rafa Trilhas", category: "Guia" },
-    { id: "p2", name: "Eco Lodge Serra Verde", category: "Pousada" },
-  ];
+  const { data: userData } = await supabase.auth.getUser();
+  if (!userData.user) return [];
+  const { data, error } = await supabase
+    .from("favorite_partners" as never)
+    .select("partner_id, partner:profiles(id, full_name, category)")
+    .eq("user_id", userData.user.id)
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return ((data ?? []) as unknown as Array<{
+    partner_id: string;
+    partner: { id: string; full_name: string | null; category: string | null } | null;
+  }>).map((row) => ({
+    id: row.partner?.id ?? row.partner_id,
+    name: row.partner?.full_name ?? "Parceiro",
+    category: row.partner?.category ?? "",
+  }));
 }
 
+// Mapa rule_code -> rótulo amigável. Fallback para o próprio rule_code
+// quando a regra ainda não tiver um rótulo mapeado aqui.
+const ACHIEVEMENT_RULE_LABELS: Record<string, string> = {
+  first_activity: "Primeira Aventura",
+  km_100: "100 km Percorridos",
+  km_500: "500 km Percorridos",
+  explorer: "Explorador",
+  top_reviewer: "Avaliador Top",
+};
+
 export async function fetchUserAchievements(_userId?: string): Promise<Achievement[]> {
-  return [
-    { id: "a1", key: "summit", label: "Cume" },
-    { id: "a2", key: "camper", label: "Camper" },
-    { id: "a3", key: "100km", label: "100km" },
-    { id: "a4", key: "topguide", label: "Top Guia" },
-    { id: "a5", key: "500km", label: "500km" },
-    { id: "a6", key: "photo", label: "Foto Épica" },
-    { id: "a7", key: "nomad", label: "Nômade" },
-    { id: "a8", key: "rain", label: "Chuva Fina" },
-  ];
+  const { data: userData } = await supabase.auth.getUser();
+  if (!userData.user) return [];
+  const { data, error } = await supabase
+    .from("achievement_records" as never)
+    .select("id, rule_code, achieved_at")
+    .eq("user_id", userData.user.id)
+    .order("achieved_at", { ascending: false });
+  if (error) throw error;
+  return ((data ?? []) as unknown as Array<{
+    id: string;
+    rule_code: string;
+    achieved_at: string;
+  }>).map((row) => ({
+    id: row.id,
+    key: row.rule_code,
+    label: ACHIEVEMENT_RULE_LABELS[row.rule_code] ?? row.rule_code,
+    achievedAt: row.achieved_at,
+  }));
 }
 
 export async function fetchNextAdventure(_userId?: string): Promise<NextAdventure> {
+  const { data: userData } = await supabase.auth.getUser();
+  if (!userData.user) return null;
+  const { data, error } = await supabase
+    .from("user_activities" as never)
+    .select("id, start_time, destination:destinations(name)")
+    .eq("user_id", userData.user.id)
+    .eq("status", "scheduled")
+    .gt("start_time", new Date().toISOString())
+    .order("start_time", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+  if (error) throw error;
+  const row = data as unknown as {
+    id: string;
+    start_time: string;
+    destination: { name: string } | null;
+  } | null;
+  if (!row) return null;
   return {
-    id: "n1",
-    title: "Travessia Petrópolis–Teresópolis",
-    date: "Sáb · 18 mai",
-    forecast: [
-      { label: "Sex", temp: "22°" },
-      { label: "Sáb", temp: "19°" },
-      { label: "Dom", temp: "21°" },
-    ],
+    id: row.id,
+    title: row.destination?.name ?? "Próxima aventura",
+    date: format(new Date(row.start_time), "EEE · d MMM", { locale: ptBR }),
+    forecast: [],
   };
 }
 
@@ -612,11 +728,13 @@ export async function fetchPartnerTrialStatus(partnerId: string): Promise<Partne
 }
 
 export async function trackPartnerProfileView(partnerId: string): Promise<void> {
-  await supabase.rpc("increment_partner_profile_view", { _partner_id: partnerId });
+  const { error } = await supabase.rpc("increment_partner_profile_view", { _partner_id: partnerId });
+  if (error) throw error;
 }
 
 export async function trackPartnerContactClick(partnerId: string): Promise<void> {
-  await supabase.rpc("increment_partner_contact_click", { _partner_id: partnerId });
+  const { error } = await supabase.rpc("increment_partner_contact_click", { _partner_id: partnerId });
+  if (error) throw error;
 }
 
 export async function fetchPartnerChart(_partnerId: string): Promise<PartnerChartPoint[]> {
@@ -646,13 +764,18 @@ export async function uploadPartnerGalleryImage(file: File): Promise<string> {
   if (!ext) {
     throw new Error("Formato inválido. Use JPG, PNG ou WEBP.");
   }
-  if (file.size > MAX_GALLERY_IMAGE_BYTES) {
+
+  // Redimensiona/comprime antes de validar o tamanho; em caso de falha,
+  // resizeImageForUpload retorna o próprio arquivo original (fallback),
+  // deixando a validação abaixo como última linha de defesa.
+  const optimized = await resizeImageForUpload(file, MAX_GALLERY_IMAGE_BYTES);
+  if (optimized.size > MAX_GALLERY_IMAGE_BYTES) {
     throw new Error("Imagem muito grande (máx. 5 MB).");
   }
   const path = `${userData.user.id}/${Date.now()}.${ext}`;
   const { error: upErr } = await supabase.storage
     .from("partner-gallery")
-    .upload(path, file, { upsert: false, contentType: mime });
+    .upload(path, optimized, { upsert: false, contentType: mime });
   if (upErr) throw upErr;
   const { data: pub } = supabase.storage.from("partner-gallery").getPublicUrl(path);
   return pub.publicUrl;

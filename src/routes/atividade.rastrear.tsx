@@ -12,6 +12,7 @@ import {
   finishActivity,
   discardActivity,
 } from "@/lib/api";
+import { mapRateLimitErrorToMessage } from "@/lib/rate-limit-error";
 import { Button } from "@/components/ui/button";
 import { StatusBar } from "@/components/StatusBar";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -87,6 +88,13 @@ function TrackActivityPage() {
           route_geojson: result.route,
         });
       } catch (err) {
+        const rateLimitMessage = mapRateLimitErrorToMessage(err);
+        if (rateLimitMessage) {
+          // Limite de chamadas atingido: nenhum efeito foi persistido pelo
+          // rate limiter, então não faz sentido enfileirar para retry
+          // imediato (voltaria a falhar até a janela expirar).
+          throw new Error(rateLimitMessage);
+        }
         // Offline / falha de rede: enfileira em IndexedDB para sincronização posterior.
         await enqueueActivity({
           localId: crypto.randomUUID(),

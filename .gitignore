@@ -24,6 +24,14 @@ dist-ssr
 # Vercel
 .vercel
 
+# Supabase CLI local state
+supabase/.temp/
+
+# Playwright (E2E_Test_Suite)
+/test-results/
+/playwright-report/
+/playwright/.cache/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

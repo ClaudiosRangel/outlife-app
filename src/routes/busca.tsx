@@ -139,7 +139,7 @@ function Busca() {
                     params={{ partnerId: p.id }}
                     className="flex items-center gap-3 rounded-2xl bg-card p-3 shadow-card"
                   >
-                    <img src={p.img} alt={p.name} className="h-14 w-14 rounded-xl object-cover" />
+                    <img src={p.img} alt={p.name} loading="lazy" className="h-14 w-14 rounded-xl object-cover" />
                     <div className="min-w-0 flex-1">
                       <div className="truncate font-semibold text-sm">{p.name}</div>
                       <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
@@ -158,7 +158,7 @@ function Busca() {
               <div className="mt-3 space-y-2">
                 {foundDestinations.map((d) => (
                   <div key={d.id} className="flex items-center gap-3 rounded-2xl bg-card p-3 shadow-card">
-                    <img src={d.img} alt={d.name} className="h-14 w-14 rounded-xl object-cover" />
+                    <img src={d.img} alt={d.name} loading="lazy" className="h-14 w-14 rounded-xl object-cover" />
                     <div className="min-w-0 flex-1">
                       <div className="truncate font-semibold text-sm">{d.name}</div>
                       <div className="text-[11px] text-muted-foreground">{d.region}</div>
@@ -178,6 +178,7 @@ function Busca() {
                     <img
                       src={resolveAsset(c.author?.avatar_url)}
                       alt={c.author?.full_name ?? "autor"}
+                      loading="lazy"
                       className="h-10 w-10 rounded-full object-cover"
                     />
                     <div className="min-w-0 flex-1">

@@ -16,6 +16,7 @@ import {
 import { StatusBar } from "@/components/StatusBar";
 import { Stars } from "@/components/Stars";
 import { fetchPartnerById, fetchServicesByPartner, fetchReviewsByPartner, submitReview, trackPartnerProfileView, trackPartnerContactClick } from "@/lib/api";
+import { mapRateLimitErrorToMessage } from "@/lib/rate-limit-error";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -62,11 +63,26 @@ function PartnerDetail() {
   useEffect(() => {
     if (!partnerId || viewTrackedRef.current === partnerId) return;
     viewTrackedRef.current = partnerId;
-    void trackPartnerProfileView(partnerId);
+    trackPartnerProfileView(partnerId).catch((err: unknown) => {
+      const rateLimitMessage = mapRateLimitErrorToMessage(err);
+      if (rateLimitMessage) {
+        toast.error(rateLimitMessage);
+      } else {
+        console.error(err);
+      }
+    });
   }, [partnerId]);
 
   const handleContactClick = () => {
-    if (partnerId) void trackPartnerContactClick(partnerId);
+    if (!partnerId) return;
+    trackPartnerContactClick(partnerId).catch((err: unknown) => {
+      const rateLimitMessage = mapRateLimitErrorToMessage(err);
+      if (rateLimitMessage) {
+        toast.error(rateLimitMessage);
+      } else {
+        console.error(err);
+      }
+    });
   };
 
   if (isLoading) {

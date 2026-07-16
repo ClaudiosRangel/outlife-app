@@ -151,6 +151,7 @@ function Cadastro() {
               return (
                 <button
                   key={opt.id}
+                  data-testid={`role-${opt.id}`}
                   onClick={() => setRole(opt.id as "adventurer" | "partner")}
                   className={`flex w-full items-start gap-3 rounded-2xl border-2 p-4 text-left transition-base ${
                     selected ? "border-primary bg-primary/5" : "border-border bg-card"
@@ -191,6 +192,7 @@ function Cadastro() {
           )}
 
           <button
+            data-testid="signup-submit"
             onClick={handleRoleNext}
             disabled={!role || loading}
             className="mt-6 w-full rounded-xl bg-primary py-3.5 text-sm font-semibold text-primary-foreground shadow-card disabled:opacity-50 active:scale-[0.98] transition-transform"

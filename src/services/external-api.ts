@@ -60,22 +60,28 @@ export type FetchPlacesPhotosParams = {
 
 /**
  * Busca destinos turísticos no Google Places.
- * TODO: implementar via Edge Function/server-fn para proteger a chave da API.
+ *
+ * Delega para a TanStack Start server function `fetchDestinationsFromGooglePlaces`
+ * (src/services/places.server.ts), que é a única camada que lê o
+ * Google_Places_Credential (`GOOGLE_PLACES_API_KEY`), nunca exposto ao
+ * bundle do cliente. Assinatura pública preservada.
  */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function fetchDestinationsFromGoogle(
-  _params: FetchDestinationsParams,
+  params: FetchDestinationsParams,
 ): Promise<GooglePlacesDestination[]> {
-  return [];
+  const { fetchDestinationsFromGooglePlaces } = await import('./places.server');
+  return fetchDestinationsFromGooglePlaces({ data: params });
 }
 
 /**
  * Busca fotos de um place específico no Google Places.
- * TODO: implementar via Edge Function/server-fn para proteger a chave da API.
+ *
+ * Delega para a TanStack Start server function `fetchPlacesPhotosFromGooglePlaces`
+ * (src/services/places.server.ts), pelo mesmo motivo acima.
  */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function fetchPlacesPhotos(
-  _params: FetchPlacesPhotosParams,
+  params: FetchPlacesPhotosParams,
 ): Promise<GooglePlacesPhoto[]> {
-  return [];
+  const { fetchPlacesPhotosFromGooglePlaces } = await import('./places.server');
+  return fetchPlacesPhotosFromGooglePlaces({ data: params });
 }
