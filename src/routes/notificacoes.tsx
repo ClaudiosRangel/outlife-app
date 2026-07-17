@@ -59,27 +59,32 @@ function NotificationsScreen() {
     enabled: !!user,
   });
 
-  const requesterIds = useMemo(() => {
+  // Ids de outros perfis referenciados no payload das notificações, para
+  // exibir nome/avatar: `requesterId` (friend_request) e `likerId` (post_like).
+  const relatedProfileIds = useMemo(() => {
     const ids = notifications
-      .filter((n) => n.type === "friend_request")
-      .map((n) => (n.payload as { requesterId?: string }).requesterId)
+      .map((n) => {
+        if (n.type === "friend_request") return (n.payload as { requesterId?: string }).requesterId;
+        if (n.type === "post_like") return (n.payload as { likerId?: string }).likerId;
+        return undefined;
+      })
       .filter((id): id is string => !!id);
     return Array.from(new Set(ids));
   }, [notifications]);
 
   const { data: profilesById = {} } = useQuery({
-    queryKey: ["notifications-profiles", requesterIds],
+    queryKey: ["notifications-profiles", relatedProfileIds],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("profiles")
         .select("id, full_name, username, avatar_url")
-        .in("id", requesterIds);
+        .in("id", relatedProfileIds);
       if (error) throw error;
       const map: Record<string, NotifierProfile> = {};
       for (const p of (data ?? []) as NotifierProfile[]) map[p.id] = p;
       return map;
     },
-    enabled: requesterIds.length > 0,
+    enabled: relatedProfileIds.length > 0,
   });
 
   // Requirement 9.7 — marca como lidas exatamente as notificações não lidas
@@ -120,6 +125,32 @@ function NotificationsScreen() {
             <div className="text-sm">
               <span className="font-semibold">{requester?.full_name || t("profile.title")}</span>{" "}
               {t("notifications.friendRequestText")}
+            </div>
+            <div className="mt-0.5 text-xs text-muted-foreground">
+              {new Date(n.created_at).toLocaleString("pt-BR")}
+            </div>
+          </div>
+          {!n.is_read && <span className="h-2 w-2 shrink-0 rounded-full bg-primary" />}
+        </div>
+      );
+    }
+
+    if (n.type === "post_like") {
+      const likerId = (n.payload as { likerId?: string }).likerId;
+      const liker = likerId ? profilesById[likerId] : undefined;
+      return (
+        <div key={n.id} className="flex items-center gap-3 rounded-2xl bg-card p-3 shadow-card">
+          <img
+            src={resolveAsset(liker?.avatar_url, avatarFallback)}
+            alt={liker?.full_name || ""}
+            className="h-10 w-10 rounded-full object-cover"
+            width={80}
+            height={80}
+          />
+          <div className="min-w-0 flex-1">
+            <div className="text-sm">
+              <span className="font-semibold">{liker?.full_name || t("profile.title")}</span>{" "}
+              {t("notifications.postLikeText")}
             </div>
             <div className="mt-0.5 text-xs text-muted-foreground">
               {new Date(n.created_at).toLocaleString("pt-BR")}

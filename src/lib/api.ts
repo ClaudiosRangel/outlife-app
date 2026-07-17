@@ -408,6 +408,15 @@ export async function createCommunityPost(input: {
   return data;
 }
 
+// Exclui um Community_Post do próprio autor autenticado. A RLS de
+// `community_posts` ("Users can delete their own posts", USING auth.uid() =
+// author_id, migration 20260521193007) já restringe isso a nível de banco;
+// aqui só propagamos o erro/sucesso da chamada.
+export async function deleteCommunityPost(postId: string): Promise<void> {
+  const { error } = await supabase.from("community_posts").delete().eq("id", postId);
+  if (error) throw error;
+}
+
 // ============ Avaliações ============
 export async function submitReview(
   targetId: string,

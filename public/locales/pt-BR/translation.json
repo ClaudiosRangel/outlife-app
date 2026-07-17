@@ -247,7 +247,12 @@
     "likeError": "Não foi possível curtir. Tente novamente.",
     "followError": "Não foi possível seguir. Tente novamente.",
     "commentError": "Não foi possível comentar. Tente novamente.",
-    "noComments": "Ainda não há comentários. Seja o primeiro!"
+    "noComments": "Ainda não há comentários. Seja o primeiro!",
+    "deletePost": "Excluir relato",
+    "deleteError": "Não foi possível excluir o relato. Tente novamente.",
+    "postDeleted": "Relato excluído.",
+    "confirmDeleteTitle": "Excluir este relato?",
+    "confirmDeleteDescription": "Essa ação não pode ser desfeita."
   },
   "profile": {
     "title": "Perfil",
@@ -439,6 +444,7 @@
     "title": "Notificações",
     "empty": "Você não tem notificações.",
     "friendRequestText": "enviou uma solicitação de amizade.",
+    "postLikeText": "curtiu seu relato.",
     "genericText": "Você tem uma nova notificação."
   },
   "settings": {

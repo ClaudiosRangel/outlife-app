@@ -10,6 +10,7 @@ import {
   Send,
   Camera,
   Loader2,
+  Trash2,
 } from "lucide-react";
 import { StatusBar } from "@/components/StatusBar";
 import community1 from "@/assets/community-1.jpg";
@@ -21,9 +22,20 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   fetchCommunityPosts,
   createCommunityPost,
   uploadCommunityPostImage,
+  deleteCommunityPost,
   resolveAsset,
   togglePostLike,
   fetchMyLikedPostIds,
@@ -248,6 +260,26 @@ function Community() {
     setShowComments((s) => ({ ...s, [id]: !s[id] }));
   };
 
+  // Requirement solicitado pelo usuário: permitir excluir a própria
+  // publicação da comunidade. A RLS de `community_posts` ("Users can delete
+  // their own posts", USING auth.uid() = author_id) já restringe isso a
+  // nível de banco; o botão de excluir só é exibido no próprio post (ver
+  // `p.authorId === user?.id` no JSX) e a confirmação evita exclusão
+  // acidental.
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+
+  const deleteMutation = useMutation({
+    mutationFn: (postId: string) => deleteCommunityPost(postId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["community-posts"] });
+      toast.success(t("community.postDeleted"));
+      setPendingDeleteId(null);
+    },
+    onError: () => {
+      toast.error(t("community.deleteError"));
+    },
+  });
+
   const handleShare = (p: UIPost) => {
     const url = typeof window !== "undefined"
       ? `${window.location.origin}/comunidade#post-${p.id}`
@@ -334,6 +366,17 @@ function Community() {
                       }`}
                     >
                       {p.following ? t("community.following") : t("community.follow")}
+                    </button>
+                  )}
+                  {/* Excluir a própria publicação: só aparece no post do
+                      próprio usuário autenticado. */}
+                  {p.authorId === user?.id && (
+                    <button
+                      onClick={() => setPendingDeleteId(p.id)}
+                      aria-label={t("community.deletePost")}
+                      className="ml-2 shrink-0 text-muted-foreground transition-base hover:text-destructive"
+                    >
+                      <Trash2 size={16} />
                     </button>
                   )}
                 </header>
@@ -474,6 +517,26 @@ function Community() {
           </div>
         </SheetContent>
       </Sheet>
+
+      {/* Confirmação de exclusão da própria publicação */}
+      <AlertDialog open={pendingDeleteId !== null} onOpenChange={(open) => !open && setPendingDeleteId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t("community.confirmDeleteTitle")}</AlertDialogTitle>
+            <AlertDialogDescription>{t("community.confirmDeleteDescription")}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => pendingDeleteId && deleteMutation.mutate(pendingDeleteId)}
+              disabled={deleteMutation.isPending}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleteMutation.isPending ? t("common.loading") : t("community.deletePost")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
