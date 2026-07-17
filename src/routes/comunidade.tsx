@@ -104,9 +104,14 @@ function Community() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
 
+  // Poll a cada 20s para refletir novos posts/curtidas/comentários de
+  // outros usuários sem precisar recarregar a página manualmente
+  // (Requirement solicitado pelo usuário: "ter uma atualização de tempo em
+  // tempo para os comentários").
   const { data: rawPosts = [], isLoading } = useQuery({
     queryKey: ["community-posts"],
     queryFn: fetchCommunityPosts,
+    refetchInterval: 20_000,
   });
 
   const { data: likedPostIds = [] } = useQuery({
@@ -546,9 +551,13 @@ function PostComments({ postId, currentUserId }: { postId: string; currentUserId
   const queryClient = useQueryClient();
   const [commentText, setCommentText] = useState("");
 
+  // Mesmo requisito de atualização periódica, aplicado aos comentários de
+  // cada post aberto: novos comentários de outros usuários aparecem sem
+  // precisar fechar/reabrir a seção.
   const { data: comments = [], isLoading } = useQuery({
     queryKey: ["post-comments", postId],
     queryFn: () => fetchPostComments(postId),
+    refetchInterval: 20_000,
   });
 
   const commentMutation = useMutation({

@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { Bell, MapPin, Search, ShieldCheck, Sparkles, ArrowRight, Mountain } from "lucide-react";
@@ -8,6 +8,7 @@ import { StatusBar } from "@/components/StatusBar";
 import { Stars } from "@/components/Stars";
 import { fetchDestinations, fetchMyProfile, fetchPartners, fetchUnreadNotificationCount, type Destination } from "@/lib/api";
 import { useAuth } from "@/hooks/use-auth";
+import { playNotificationSound } from "@/lib/notification-sound";
 
 const CATEGORY_KEYS = ["Trilhas", "Cachoeiras", "Montanhas", "Camping", "Caiaque", "Escalada"] as const;
 export type HomeCategory = (typeof CATEGORY_KEYS)[number];
@@ -71,11 +72,30 @@ function Home() {
   // ["notifications", "unread-count"] é reaproveitada por `/notificacoes`,
   // que a invalida ao marcar notificações como lidas (Requirement 9.8),
   // fazendo o indicador desaparecer sem esperar novo carregamento.
+  // Poll a cada 30s para o sino refletir notificações novas (curtidas,
+  // seguidas, solicitações de amizade) sem precisar recarregar a página
+  // (Requirement solicitado pelo usuário: alerta sonoro + animação).
   const { data: unreadCount = 0 } = useQuery({
     queryKey: ["notifications", "unread-count"],
     queryFn: fetchUnreadNotificationCount,
     enabled: !!user,
+    refetchInterval: 30_000,
   });
+
+  // Quando a contagem de não lidas aumenta (nova notificação chegou desde a
+  // última leitura), toca um bip curto e anima o sino balançando.
+  const previousUnreadRef = useRef<number | null>(null);
+  const [bellRinging, setBellRinging] = useState(false);
+  useEffect(() => {
+    const previous = previousUnreadRef.current;
+    const increased = previous !== null && unreadCount > previous;
+    previousUnreadRef.current = unreadCount;
+    if (!increased) return;
+    playNotificationSound();
+    setBellRinging(true);
+    const timer = setTimeout(() => setBellRinging(false), 1200);
+    return () => clearTimeout(timer);
+  }, [unreadCount]);
   // Mesma queryKey ["my-profile", user?.id] já usada em perfil.tsx/
   // configuracoes.tsx/compliance.tsx — cache compartilhado entre telas.
   const { data: profile } = useQuery({
@@ -112,7 +132,7 @@ function Home() {
               aria-label="Notificações"
               className="relative grid h-10 w-10 place-items-center rounded-full bg-white/15 text-white backdrop-blur-md"
             >
-              <Bell size={18} />
+              <Bell size={18} className={bellRinging ? "animate-bell-ring" : undefined} />
               {unreadCount > 0 && (
                 <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-red-500" />
               )}

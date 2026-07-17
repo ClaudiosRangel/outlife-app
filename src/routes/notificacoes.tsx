@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { ArrowLeft, Bell } from "lucide-react";
@@ -13,6 +13,7 @@ import {
   type Notification,
 } from "@/lib/api";
 import { supabase } from "@/integrations/supabase/client";
+import { playNotificationSound } from "@/lib/notification-sound";
 import avatarFallback from "@/assets/avatar-rafael.jpg";
 
 export const Route = createFileRoute("/notificacoes")({
@@ -53,11 +54,38 @@ function NotificationsScreen() {
   // Requirement 9.3 — `fetchNotifications` já retorna em ordem cronológica
   // decrescente (ORDER BY created_at DESC no Production_Supabase_Project),
   // então a lista é exibida na ordem recebida, sem reordenação no client.
+  //
+  // `refetchInterval` faz a lista se atualizar sozinha a cada 30s enquanto
+  // a tela estiver aberta (Requirement solicitado pelo usuário: alerta
+  // sonoro + animação para notificações novas).
   const { data: notifications = [], isLoading } = useQuery({
     queryKey: ["notifications", user?.id],
     queryFn: fetchNotifications,
     enabled: !!user,
+    refetchInterval: 30_000,
   });
+
+  // Detecta ids de notificação vistos pela primeira vez nesta sessão (após
+  // o carregamento inicial) para tocar o alerta sonoro e destacar o item
+  // com uma animação de entrada, sem repetir a cada refetch subsequente.
+  const seenIdsRef = useRef<Set<string> | null>(null);
+  const [newlyArrivedIds, setNewlyArrivedIds] = useState<Set<string>>(new Set());
+  useEffect(() => {
+    if (notifications.length === 0) return;
+    const currentIds = new Set(notifications.map((n) => n.id));
+    if (seenIdsRef.current === null) {
+      // Primeira carga: apenas registra os ids já existentes, sem alertar.
+      seenIdsRef.current = currentIds;
+      return;
+    }
+    const newIds = notifications.filter((n) => !seenIdsRef.current!.has(n.id)).map((n) => n.id);
+    if (newIds.length > 0) {
+      playNotificationSound();
+      setNewlyArrivedIds(new Set(newIds));
+      setTimeout(() => setNewlyArrivedIds(new Set()), 1000);
+    }
+    seenIdsRef.current = currentIds;
+  }, [notifications]);
 
   // Ids de outros perfis referenciados no payload das notificações, para
   // exibir nome/avatar: `requesterId` (friend_request) e `likerId` (post_like).
@@ -109,11 +137,14 @@ function NotificationsScreen() {
   }, [notifications, qc, user?.id]);
 
   function renderNotification(n: Notification) {
+    const isNew = newlyArrivedIds.has(n.id);
+    const cardClassName = `flex items-center gap-3 rounded-2xl bg-card p-3 shadow-card ${isNew ? "animate-pop-in ring-2 ring-primary/40" : ""}`;
+
     if (n.type === "friend_request") {
       const requesterId = (n.payload as { requesterId?: string }).requesterId;
       const requester = requesterId ? profilesById[requesterId] : undefined;
       return (
-        <div key={n.id} className="flex items-center gap-3 rounded-2xl bg-card p-3 shadow-card">
+        <div key={n.id} className={cardClassName}>
           <img
             src={resolveAsset(requester?.avatar_url, avatarFallback)}
             alt={requester?.full_name || ""}
@@ -139,7 +170,7 @@ function NotificationsScreen() {
       const likerId = (n.payload as { likerId?: string }).likerId;
       const liker = likerId ? profilesById[likerId] : undefined;
       return (
-        <div key={n.id} className="flex items-center gap-3 rounded-2xl bg-card p-3 shadow-card">
+        <div key={n.id} className={cardClassName}>
           <img
             src={resolveAsset(liker?.avatar_url, avatarFallback)}
             alt={liker?.full_name || ""}
@@ -163,7 +194,7 @@ function NotificationsScreen() {
 
     // Fallback genérico para tipos de notificação futuros/desconhecidos.
     return (
-      <div key={n.id} className="flex items-center gap-3 rounded-2xl bg-card p-3 shadow-card">
+      <div key={n.id} className={cardClassName}>
         <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-muted text-muted-foreground">
           <Bell size={16} />
         </div>
