@@ -1,8 +1,15 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { ChevronLeft, Mountain } from "lucide-react";
+import { ChevronLeft, Mountain, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+} from "@/components/ui/sheet";
 import { StatusBar } from "@/components/StatusBar";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -45,6 +52,15 @@ function Login() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
+  // Fluxo de recuperação de senha ("Esqueci minha senha"): coleta o e-mail
+  // num Sheet separado e chama `resetPasswordForEmail`, que já está
+  // configurado e validado no Production_Supabase_Project (SMTP customizado
+  // via Resend, spec email-transacional-dominio-proprio). O e-mail recebido
+  // leva para `/redefinir-senha`, que define a nova senha.
+  const [forgotOpen, setForgotOpen] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [forgotLoading, setForgotLoading] = useState(false);
+
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -56,6 +72,26 @@ function Login() {
     }
     toast.success(t("auth.loginSuccess"));
     navigate({ to: "/perfil" });
+  };
+
+  const submitForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const trimmed = forgotEmail.trim();
+    if (!trimmed) {
+      toast.error(t("auth.forgotPasswordEmailRequired"));
+      return;
+    }
+    setForgotLoading(true);
+    const redirectTo = typeof window !== "undefined" ? `${window.location.origin}/redefinir-senha` : undefined;
+    const { error } = await supabase.auth.resetPasswordForEmail(trimmed, { redirectTo });
+    setForgotLoading(false);
+    if (error) {
+      toast.error(translateAuthError(error.message) || t("auth.forgotPasswordError"));
+      return;
+    }
+    toast.success(t("auth.forgotPasswordSuccess"));
+    setForgotOpen(false);
+    setForgotEmail("");
   };
 
   return (
@@ -85,6 +121,13 @@ function Login() {
         <div className="space-y-1.5">
           <Label htmlFor="password">{t("auth.password")}</Label>
           <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" required />
+          <button
+            type="button"
+            onClick={() => setForgotOpen(true)}
+            className="block text-right text-xs font-medium text-primary"
+          >
+            {t("auth.forgotPassword")}
+          </button>
         </div>
         <button type="submit" disabled={loading} className="w-full rounded-xl bg-primary py-3.5 text-sm font-semibold text-primary-foreground shadow-card active:scale-[0.98] transition-transform disabled:opacity-60">
           {loading ? t("common.loading") : t("auth.signIn")}
@@ -93,6 +136,36 @@ function Login() {
           {t("auth.noAccount")}
         </Link>
       </form>
+
+      <Sheet open={forgotOpen} onOpenChange={setForgotOpen}>
+        <SheetContent side="bottom" className="rounded-t-3xl">
+          <SheetHeader>
+            <SheetTitle className="font-display">{t("auth.forgotPasswordTitle")}</SheetTitle>
+            <SheetDescription>{t("auth.forgotPasswordDescription")}</SheetDescription>
+          </SheetHeader>
+          <form onSubmit={submitForgotPassword} className="mt-4 space-y-4 pb-2">
+            <div className="space-y-1.5">
+              <Label htmlFor="forgot-email">{t("auth.email")}</Label>
+              <Input
+                id="forgot-email"
+                type="email"
+                value={forgotEmail}
+                onChange={(e) => setForgotEmail(e.target.value)}
+                placeholder="voce@email.com"
+                required
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={forgotLoading}
+              className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3.5 text-sm font-semibold text-primary-foreground shadow-card active:scale-[0.98] transition-transform disabled:opacity-60"
+            >
+              {forgotLoading ? <Loader2 size={16} className="animate-spin" /> : null}
+              {forgotLoading ? t("common.loading") : t("auth.forgotPasswordSubmit")}
+            </button>
+          </form>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }

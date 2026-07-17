@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as RedefinirSenhaRouteImport } from './routes/redefinir-senha'
 import { Route as PerfilRouteImport } from './routes/perfil'
 import { Route as NotificacoesRouteImport } from './routes/notificacoes'
 import { Route as MarketplaceRouteImport } from './routes/marketplace'
@@ -29,6 +30,11 @@ import { Route as AtividadeRastrearRouteImport } from './routes/atividade.rastre
 import { Route as AtividadeActivityIdRouteImport } from './routes/atividade.$activityId'
 import { Route as AdminComplianceRouteImport } from './routes/admin.compliance'
 
+const RedefinirSenhaRoute = RedefinirSenhaRouteImport.update({
+  id: '/redefinir-senha',
+  path: '/redefinir-senha',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PerfilRoute = PerfilRouteImport.update({
   id: '/perfil',
   path: '/perfil',
@@ -138,6 +144,7 @@ export interface FileRoutesByFullPath {
   '/marketplace': typeof MarketplaceRoute
   '/notificacoes': typeof NotificacoesRoute
   '/perfil': typeof PerfilRoute
+  '/redefinir-senha': typeof RedefinirSenhaRoute
   '/admin/compliance': typeof AdminComplianceRoute
   '/atividade/$activityId': typeof AtividadeActivityIdRoute
   '/atividade/rastrear': typeof AtividadeRastrearRoute
@@ -159,6 +166,7 @@ export interface FileRoutesByTo {
   '/marketplace': typeof MarketplaceRoute
   '/notificacoes': typeof NotificacoesRoute
   '/perfil': typeof PerfilRoute
+  '/redefinir-senha': typeof RedefinirSenhaRoute
   '/admin/compliance': typeof AdminComplianceRoute
   '/atividade/$activityId': typeof AtividadeActivityIdRoute
   '/atividade/rastrear': typeof AtividadeRastrearRoute
@@ -181,6 +189,7 @@ export interface FileRoutesById {
   '/marketplace': typeof MarketplaceRoute
   '/notificacoes': typeof NotificacoesRoute
   '/perfil': typeof PerfilRoute
+  '/redefinir-senha': typeof RedefinirSenhaRoute
   '/admin/compliance': typeof AdminComplianceRoute
   '/atividade/$activityId': typeof AtividadeActivityIdRoute
   '/atividade/rastrear': typeof AtividadeRastrearRoute
@@ -204,6 +213,7 @@ export interface FileRouteTypes {
     | '/marketplace'
     | '/notificacoes'
     | '/perfil'
+    | '/redefinir-senha'
     | '/admin/compliance'
     | '/atividade/$activityId'
     | '/atividade/rastrear'
@@ -225,6 +235,7 @@ export interface FileRouteTypes {
     | '/marketplace'
     | '/notificacoes'
     | '/perfil'
+    | '/redefinir-senha'
     | '/admin/compliance'
     | '/atividade/$activityId'
     | '/atividade/rastrear'
@@ -246,6 +257,7 @@ export interface FileRouteTypes {
     | '/marketplace'
     | '/notificacoes'
     | '/perfil'
+    | '/redefinir-senha'
     | '/admin/compliance'
     | '/atividade/$activityId'
     | '/atividade/rastrear'
@@ -268,6 +280,7 @@ export interface RootRouteChildren {
   MarketplaceRoute: typeof MarketplaceRoute
   NotificacoesRoute: typeof NotificacoesRoute
   PerfilRoute: typeof PerfilRoute
+  RedefinirSenhaRoute: typeof RedefinirSenhaRoute
   AdminComplianceRoute: typeof AdminComplianceRoute
   AtividadeActivityIdRoute: typeof AtividadeActivityIdRoute
   AtividadeRastrearRoute: typeof AtividadeRastrearRoute
@@ -279,6 +292,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/redefinir-senha': {
+      id: '/redefinir-senha'
+      path: '/redefinir-senha'
+      fullPath: '/redefinir-senha'
+      preLoaderRoute: typeof RedefinirSenhaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/perfil': {
       id: '/perfil'
       path: '/perfil'
@@ -428,6 +448,7 @@ const rootRouteChildren: RootRouteChildren = {
   MarketplaceRoute: MarketplaceRoute,
   NotificacoesRoute: NotificacoesRoute,
   PerfilRoute: PerfilRoute,
+  RedefinirSenhaRoute: RedefinirSenhaRoute,
   AdminComplianceRoute: AdminComplianceRoute,
   AtividadeActivityIdRoute: AtividadeActivityIdRoute,
   AtividadeRastrearRoute: AtividadeRastrearRoute,
