@@ -14,14 +14,16 @@ import {
 import { StatusBar } from "@/components/StatusBar";
 import community1 from "@/assets/community-1.jpg";
 import { Skeleton } from "@/components/ui/skeleton";
-import { fetchCommunityPosts, createCommunityPost, resolveAsset } from "@/lib/api";
+import { fetchCommunityPosts, createCommunityPost, resolveAsset, togglePostLike, fetchMyLikedPostIds, toggleAuthorFollow, fetchMyFollowedAuthorIds, fetchPostComments, createPostComment, type PostComment } from "@/lib/api";
 import { useAuth } from "@/hooks/use-auth";
+import { shareContent } from "@/lib/share";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 
 
 type UIPost = {
   id: string;
+  authorId: string;
   user: string;
   handle: string;
   avatar: string;
@@ -54,6 +56,7 @@ function toUIPost(p: any): UIPost {
   const created = p.created_at ? new Date(p.created_at) : new Date();
   return {
     id: p.id,
+    authorId: p.author_id,
     user: author.full_name || "Aventureiro",
     handle: author.username ? `@${author.username}` : "@outlife",
     avatar: resolveAsset(author.avatar_url, community1),
@@ -76,16 +79,34 @@ function Community() {
     queryFn: fetchCommunityPosts,
   });
 
+  const { data: likedPostIds = [] } = useQuery({
+    queryKey: ["my-liked-post-ids"],
+    queryFn: fetchMyLikedPostIds,
+    enabled: !!user,
+  });
+
+  const { data: followedAuthorIds = [] } = useQuery({
+    queryKey: ["my-followed-author-ids"],
+    queryFn: fetchMyFollowedAuthorIds,
+    enabled: !!user,
+  });
+
   const remotePosts: UIPost[] = (rawPosts as any[]).map(toUIPost);
+  const likedPostIdSet = new Set(likedPostIds);
+  const followedAuthorIdSet = new Set(followedAuthorIds);
   const [localOverrides, setLocalOverrides] = useState<Record<string, Partial<UIPost>>>({});
-  const posts: UIPost[] = remotePosts.map((p) => ({ ...p, ...(localOverrides[p.id] ?? {}) }));
+  const posts: UIPost[] = remotePosts.map((p) => ({
+    ...p,
+    liked: likedPostIdSet.has(p.id),
+    following: followedAuthorIdSet.has(p.authorId),
+    ...(localOverrides[p.id] ?? {}),
+  }));
 
   const [isOpen, setIsOpen] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
   const [text, setText] = useState("");
   const [place, setPlace] = useState("");
   const [showComments, setShowComments] = useState<Record<string, boolean>>({});
-  const [commentInputs, setCommentInputs] = useState<Record<string, string>>({});
   const fileRef = useRef<HTMLInputElement>(null);
 
   const createMutation = useMutation({
@@ -126,22 +147,84 @@ function Community() {
     createMutation.mutate({ text: text.trim(), place: place.trim() || undefined });
   };
 
-  const toggleLike = useCallback((id: string) => {
-    setLocalOverrides((prev) => {
-      const cur = prev[id] ?? {};
-      const base = remotePosts.find((p) => p.id === id);
-      const liked = !(cur.liked ?? base?.liked);
-      const baseLikes = base?.likes ?? 0;
-      return { ...prev, [id]: { ...cur, liked, likes: liked ? baseLikes + 1 : baseLikes } };
-    });
-  }, [remotePosts]);
+  const likeMutation = useMutation({
+    mutationFn: (postId: string) => togglePostLike(postId),
+    onMutate: (postId: string) => {
+      const previous = localOverrides[postId];
+      setLocalOverrides((prev) => {
+        const cur = prev[postId] ?? {};
+        const base = remotePosts.find((p) => p.id === postId);
+        const baseLiked = likedPostIdSet.has(postId);
+        const liked = !(cur.liked ?? baseLiked);
+        const baseLikes = base?.likes ?? 0;
+        return { ...prev, [postId]: { ...cur, liked, likes: liked ? baseLikes + 1 : baseLikes } };
+      });
+      return { previous, postId };
+    },
+    onError: (_err, _postId, context) => {
+      if (!context) return;
+      setLocalOverrides((prev) => ({ ...prev, [context.postId]: context.previous ?? {} }));
+      toast.error(t("community.likeError"));
+    },
+    onSuccess: (result, postId) => {
+      setLocalOverrides((prev) => ({
+        ...prev,
+        [postId]: { ...(prev[postId] ?? {}), liked: result.liked, likes: result.likes },
+      }));
+    },
+  });
 
-  const toggleFollow = useCallback((id: string) => {
-    setLocalOverrides((prev) => ({ ...prev, [id]: { ...(prev[id] ?? {}), following: !(prev[id]?.following) } }));
-  }, []);
+  const handleToggleLike = useCallback((postId: string) => {
+    if (!user) {
+      toast.error(t("community.loginRequired"));
+      return;
+    }
+    likeMutation.mutate(postId);
+  }, [user, likeMutation, t]);
+
+  const followMutation = useMutation({
+    mutationFn: ({ authorId }: { postId: string; authorId: string }) => toggleAuthorFollow(authorId),
+    onMutate: ({ postId }: { postId: string; authorId: string }) => {
+      const previous = localOverrides[postId];
+      setLocalOverrides((prev) => {
+        const cur = prev[postId] ?? {};
+        const post = remotePosts.find((p) => p.id === postId);
+        const baseFollowing = post ? followedAuthorIdSet.has(post.authorId) : false;
+        const following = !(cur.following ?? baseFollowing);
+        return { ...prev, [postId]: { ...cur, following } };
+      });
+      return { previous, postId };
+    },
+    onError: (_err, _vars, context) => {
+      if (!context) return;
+      setLocalOverrides((prev) => ({ ...prev, [context.postId]: context.previous ?? {} }));
+      toast.error(t("community.followError"));
+    },
+    onSuccess: (result, { postId }) => {
+      setLocalOverrides((prev) => ({
+        ...prev,
+        [postId]: { ...(prev[postId] ?? {}), following: result.following },
+      }));
+    },
+  });
+
+  const handleToggleFollow = useCallback((postId: string, authorId: string) => {
+    if (!user) {
+      toast.error(t("community.loginRequired"));
+      return;
+    }
+    followMutation.mutate({ postId, authorId });
+  }, [user, followMutation, t]);
 
   const toggleComments = (id: string) => {
     setShowComments((s) => ({ ...s, [id]: !s[id] }));
+  };
+
+  const handleShare = (p: UIPost) => {
+    const url = typeof window !== "undefined"
+      ? `${window.location.origin}/comunidade#post-${p.id}`
+      : `/comunidade#post-${p.id}`;
+    shareContent({ title: p.user, text: p.text, url });
   };
 
 
@@ -210,7 +293,7 @@ function Community() {
                     </div>
                   </div>
                   <button
-                    onClick={() => toggleFollow(p.id)}
+                    onClick={() => handleToggleFollow(p.id, p.authorId)}
                     className={`rounded-full px-2 py-0.5 text-xs font-semibold transition-base ${
                       p.following
                         ? "bg-secondary text-foreground/60"
@@ -229,7 +312,7 @@ function Community() {
                 <div className="p-4">
                   <div className="flex items-center gap-4 text-foreground">
                     <button
-                      onClick={() => toggleLike(p.id)}
+                      onClick={() => handleToggleLike(p.id)}
                       className={`flex items-center gap-1.5 text-sm transition-colors ${
                         p.liked ? "text-red-500" : ""
                       }`}
@@ -241,7 +324,7 @@ function Community() {
                       <MessageCircle size={20} />
                       <span className="font-medium">{p.comments}</span>
                     </button>
-                    <button className="ml-auto">
+                    <button onClick={() => handleShare(p)} className="ml-auto" aria-label={t("common.share")}>
                       <Share2 size={20} />
                     </button>
                   </div>
@@ -256,36 +339,7 @@ function Community() {
 
 
                   {showComments[p.id] && (
-                    <div className="mt-3 space-y-3 border-t border-border pt-3">
-                      {[
-                        { author: "Marina Costa", text: "Que aventura incrível! Parabéns 👏" },
-                        { author: "Diego Almeida", text: "Vou colocar na minha lista. Obrigado pela dica!" },
-                      ].map((c, i) => (
-                        <div key={i} className="flex items-start gap-2">
-                          <span className="grid h-7 w-7 place-items-center rounded-full bg-secondary text-[11px] font-semibold text-secondary-foreground">
-                            {c.author.charAt(0)}
-                          </span>
-                          <div className="flex-1 rounded-2xl bg-secondary/60 px-3 py-2">
-                            <div className="text-[12px] font-semibold">{c.author}</div>
-                            <div className="text-[12px] text-foreground/80">{c.text}</div>
-                          </div>
-                        </div>
-                      ))}
-                      <div className="flex items-center gap-2">
-                        <input
-                          value={commentInputs[p.id] || ""}
-                          onChange={(e) => setCommentInputs((s) => ({ ...s, [p.id]: e.target.value }))}
-                          placeholder={t("community.commentPlaceholder")}
-                          className="flex-1 rounded-full border border-border bg-card px-3 py-2 text-xs outline-none"
-                        />
-                        <button
-                          onClick={() => setCommentInputs((s) => ({ ...s, [p.id]: "" }))}
-                          className="grid h-9 w-9 place-items-center rounded-full bg-primary text-primary-foreground"
-                        >
-                          <Send size={14} />
-                        </button>
-                      </div>
-                    </div>
+                    <PostComments postId={p.id} currentUserId={user?.id} />
                   )}
                 </div>
               </article>
@@ -397,6 +451,83 @@ function Community() {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+function PostComments({ postId, currentUserId }: { postId: string; currentUserId: string | undefined }) {
+  const { t } = useTranslation();
+  const queryClient = useQueryClient();
+  const [commentText, setCommentText] = useState("");
+
+  const { data: comments = [], isLoading } = useQuery({
+    queryKey: ["post-comments", postId],
+    queryFn: () => fetchPostComments(postId),
+  });
+
+  const commentMutation = useMutation({
+    mutationFn: (text: string) => createPostComment(postId, text),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["post-comments", postId] });
+      queryClient.invalidateQueries({ queryKey: ["community-posts"] });
+      setCommentText("");
+    },
+    onError: () => {
+      toast.error(t("community.commentError"));
+    },
+  });
+
+  const handleSubmitComment = () => {
+    if (!currentUserId) {
+      toast.error(t("community.loginRequired"));
+      return;
+    }
+    const trimmed = commentText.trim();
+    if (trimmed.length === 0) return;
+    commentMutation.mutate(trimmed);
+  };
+
+  return (
+    <div className="mt-3 space-y-3 border-t border-border pt-3">
+      {isLoading ? (
+        <div className="space-y-2">
+          <Skeleton className="h-10 w-full rounded-2xl" />
+          <Skeleton className="h-10 w-full rounded-2xl" />
+        </div>
+      ) : comments.length === 0 ? (
+        <p className="text-xs text-muted-foreground">{t("community.noComments")}</p>
+      ) : (
+        comments.map((c: PostComment) => {
+          const name = c.author?.full_name || "Aventureiro";
+          const initials = name.split(" ").map((n: string) => n[0]).join("").slice(0, 2).toUpperCase();
+          return (
+            <div key={c.id} className="flex items-start gap-2">
+              <span className="grid h-7 w-7 place-items-center rounded-full bg-secondary text-[11px] font-semibold text-secondary-foreground">
+                {initials}
+              </span>
+              <div className="flex-1 rounded-2xl bg-secondary/60 px-3 py-2">
+                <div className="text-[12px] font-semibold">{name}</div>
+                <div className="text-[12px] text-foreground/80">{c.text}</div>
+              </div>
+            </div>
+          );
+        })
+      )}
+      <div className="flex items-center gap-2">
+        <input
+          value={commentText}
+          onChange={(e) => setCommentText(e.target.value)}
+          placeholder={t("community.commentPlaceholder")}
+          className="flex-1 rounded-full border border-border bg-card px-3 py-2 text-xs outline-none"
+        />
+        <button
+          onClick={handleSubmitComment}
+          disabled={commentMutation.isPending || commentText.trim().length === 0}
+          className="grid h-9 w-9 place-items-center rounded-full bg-primary text-primary-foreground disabled:opacity-50"
+        >
+          <Send size={14} />
+        </button>
+      </div>
     </div>
   );
 }

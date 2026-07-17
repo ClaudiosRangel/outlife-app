@@ -5,7 +5,8 @@ import { Bell, MapPin, Search, ShieldCheck, Sparkles, ArrowRight, Mountain } fro
 import hero from "@/assets/hero-mountain.jpg";
 import { StatusBar } from "@/components/StatusBar";
 import { Stars } from "@/components/Stars";
-import { fetchDestinations, fetchPartners } from "@/lib/api";
+import { fetchDestinations, fetchPartners, fetchUnreadNotificationCount } from "@/lib/api";
+import { useAuth } from "@/hooks/use-auth";
 
 export const Route = createFileRoute("/")({
   component: Home,
@@ -23,8 +24,18 @@ export const Route = createFileRoute("/")({
 
 function Home() {
   const { t } = useTranslation();
+  const { user } = useAuth();
   const { data: destinations = [] } = useQuery({ queryKey: ["destinations"], queryFn: fetchDestinations });
   const { data: partners = [] } = useQuery({ queryKey: ["partners"], queryFn: fetchPartners });
+  // Requirement 9.4/9.5/9.6 — indicador visual do sino. A queryKey
+  // ["notifications", "unread-count"] é reaproveitada por `/notificacoes`,
+  // que a invalida ao marcar notificações como lidas (Requirement 9.8),
+  // fazendo o indicador desaparecer sem esperar novo carregamento.
+  const { data: unreadCount = 0 } = useQuery({
+    queryKey: ["notifications", "unread-count"],
+    queryFn: fetchUnreadNotificationCount,
+    enabled: !!user,
+  });
   return (
     <div className="animate-float-up">
       {/* Hero */}
@@ -41,9 +52,16 @@ function Home() {
             <Link to="/busca" className="grid h-10 w-10 place-items-center rounded-full bg-white/15 text-white backdrop-blur-md">
               <Search size={18} />
             </Link>
-            <button className="grid h-10 w-10 place-items-center rounded-full bg-white/15 text-white backdrop-blur-md">
+            <Link
+              to="/notificacoes"
+              aria-label="Notificações"
+              className="relative grid h-10 w-10 place-items-center rounded-full bg-white/15 text-white backdrop-blur-md"
+            >
               <Bell size={18} />
-            </button>
+              {unreadCount > 0 && (
+                <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-red-500" />
+              )}
+            </Link>
           </div>
         </div>
 

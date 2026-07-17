@@ -10,15 +10,17 @@ import {
   Clock,
   TrendingUp,
   Navigation,
-  Heart,
   Share2,
 } from "lucide-react";
 import { StatusBar } from "@/components/StatusBar";
 import { Stars } from "@/components/Stars";
-import { fetchPartnerById, fetchServicesByPartner, fetchReviewsByPartner, submitReview, trackPartnerProfileView, trackPartnerContactClick } from "@/lib/api";
+import { fetchPartnerById, fetchServicesByPartner, fetchReviewsByPartner, fetchFavoritePartners, submitReview, trackPartnerProfileView, trackPartnerContactClick } from "@/lib/api";
 import { mapRateLimitErrorToMessage } from "@/lib/rate-limit-error";
+import { shareContent } from "@/lib/share";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { CollectionToggleButton } from "@/components/CollectionToggleButton";
+import { useAuth } from "@/hooks/use-auth";
 
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
@@ -42,11 +44,18 @@ export const Route = createFileRoute("/parceiro/$partnerId")({
 function PartnerDetail() {
   const { partnerId } = Route.useParams();
   const { t } = useTranslation();
+  const { user } = useAuth();
 
   const { data: partner, isLoading } = useQuery({
     queryKey: ["partner", partnerId],
     queryFn: () => fetchPartnerById(partnerId),
   });
+  const { data: favoritePartners = [] } = useQuery({
+    queryKey: ["fav-partners"],
+    queryFn: () => fetchFavoritePartners(),
+    enabled: !!user,
+  });
+  const isFavorited = favoritePartners.some((p) => p.id === partner?.id);
   const { data: services = [] } = useQuery({
     queryKey: ["services", partnerId],
     queryFn: () => fetchServicesByPartner(partnerId),
@@ -72,6 +81,12 @@ function PartnerDetail() {
       }
     });
   }, [partnerId]);
+
+  const handleShare = () => {
+    if (!partner) return;
+    const url = typeof window !== "undefined" ? window.location.href : `/parceiro/${partnerId}`;
+    shareContent({ title: partner.name, text: partner.description, url });
+  };
 
   const handleContactClick = () => {
     if (!partnerId) return;
@@ -155,10 +170,12 @@ function PartnerDetail() {
             <ChevronLeft size={18} />
           </Link>
           <div className="flex gap-2">
-            <button className="grid h-10 w-10 place-items-center rounded-full bg-black/40 text-white backdrop-blur-md transition-base hover:bg-black/60">
-              <Heart size={18} />
-            </button>
-            <button className="grid h-10 w-10 place-items-center rounded-full bg-black/40 text-white backdrop-blur-md transition-base hover:bg-black/60">
+            <CollectionToggleButton kind="partner" id={partner.id} isActive={isFavorited} variant="overlay" />
+            <button
+              onClick={handleShare}
+              aria-label={t("common.share")}
+              className="grid h-10 w-10 place-items-center rounded-full bg-black/40 text-white backdrop-blur-md transition-base hover:bg-black/60"
+            >
               <Share2 size={18} />
             </button>
           </div>

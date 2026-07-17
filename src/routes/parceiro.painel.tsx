@@ -11,6 +11,8 @@ import {
   CheckCircle2,
   Edit3,
   Plus,
+  Trash2,
+  Briefcase,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { StatusBar } from "@/components/StatusBar";
@@ -19,6 +21,16 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import {
   fetchMyProfile,
@@ -28,6 +40,10 @@ import {
   fetchPartnerTrialStatus,
   uploadPartnerGalleryImage,
   resolveAsset,
+  fetchMyServices,
+  createService,
+  deleteService,
+  fetchDestinations,
 } from "@/lib/api";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -93,6 +109,17 @@ function PartnerPanel() {
     enabled: !!user,
   });
 
+  const { data: services = [], isLoading: servicesLoading } = useQuery({
+    queryKey: ["my-services", user?.id],
+    queryFn: fetchMyServices,
+    enabled: !!user,
+  });
+
+  const { data: destinations = [] } = useQuery({
+    queryKey: ["destinations-list"],
+    queryFn: fetchDestinations,
+    enabled: !!user,
+  });
 
   const [editOpen, setEditOpen] = useState(false);
   const [name, setName] = useState("");
@@ -158,6 +185,70 @@ function PartnerPanel() {
   };
 
   const displayName = profile?.full_name?.split(" ")[0] ?? "Parceiro";
+
+  // ============ Meus serviços ============
+  const [serviceSheetOpen, setServiceSheetOpen] = useState(false);
+  const [serviceDestinationId, setServiceDestinationId] = useState("");
+  const [serviceTitle, setServiceTitle] = useState("");
+  const [serviceDescription, setServiceDescription] = useState("");
+  const [servicePrice, setServicePrice] = useState("");
+  const [serviceErrors, setServiceErrors] = useState<Record<string, string>>({});
+  const [serviceToDelete, setServiceToDelete] = useState<string | null>(null);
+
+  const resetServiceForm = () => {
+    setServiceDestinationId("");
+    setServiceTitle("");
+    setServiceDescription("");
+    setServicePrice("");
+    setServiceErrors({});
+  };
+
+  const validateServiceForm = () => {
+    const errors: Record<string, string> = {};
+    if (!serviceDestinationId) errors.destination = t("panel.services.errorDestination");
+    if (!serviceTitle.trim()) errors.title = t("panel.services.errorTitle");
+    if (!serviceDescription.trim()) errors.description = t("panel.services.errorDescription");
+    const priceValue = Number(servicePrice.replace(",", "."));
+    if (!servicePrice.trim() || !Number.isFinite(priceValue) || priceValue <= 0) {
+      errors.price = t("panel.services.errorPrice");
+    }
+    setServiceErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const createServiceMutation = useMutation({
+    mutationFn: async () => {
+      const priceValue = Number(servicePrice.replace(",", "."));
+      return createService({
+        destination_id: serviceDestinationId,
+        title: serviceTitle.trim(),
+        description: serviceDescription.trim(),
+        price: priceValue,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["my-services", user?.id] });
+      resetServiceForm();
+      setServiceSheetOpen(false);
+      toast.success(t("panel.services.created"));
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const deleteServiceMutation = useMutation({
+    mutationFn: async (id: string) => deleteService(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["my-services", user?.id] });
+      toast.success(t("panel.services.deleted"));
+    },
+    onError: (e: Error) => toast.error(e.message),
+    onSettled: () => setServiceToDelete(null),
+  });
+
+  const handleCreateService = () => {
+    if (!validateServiceForm()) return;
+    createServiceMutation.mutate();
+  };
 
   return (
     <div className="animate-float-up pb-24">
@@ -335,6 +426,58 @@ function PartnerPanel() {
         </div>
       </section>
 
+      <section className="mt-6 px-5">
+        <div className="flex items-center justify-between">
+          <h2 className="font-display text-lg font-semibold">{t("panel.services.title")}</h2>
+          <button
+            onClick={() => {
+              resetServiceForm();
+              setServiceSheetOpen(true);
+            }}
+            className="grid h-9 w-9 place-items-center rounded-full border border-border bg-card"
+            aria-label={t("panel.services.add")}
+          >
+            <Plus size={16} />
+          </button>
+        </div>
+
+        <div className="mt-3 space-y-2">
+          {servicesLoading ? (
+            <>
+              <Skeleton className="h-16 w-full rounded-xl" />
+              <Skeleton className="h-16 w-full rounded-xl" />
+            </>
+          ) : services.length === 0 ? (
+            <div className="flex flex-col items-center gap-2 rounded-xl border-2 border-dashed border-border py-8 text-center text-muted-foreground">
+              <Briefcase size={20} />
+              <p className="text-xs">{t("panel.services.empty")}</p>
+            </div>
+          ) : (
+            services.map((s: any) => (
+              <div
+                key={s.id}
+                className="flex items-center justify-between gap-3 rounded-xl bg-card px-4 py-3 shadow-card"
+              >
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-semibold">{s.title}</p>
+                  <p className="truncate text-[11px] text-muted-foreground">
+                    {s.destination?.name ?? t("panel.services.noDestination")}
+                    {s.price != null ? ` · R$ ${Number(s.price).toFixed(2)}` : ""}
+                  </p>
+                </div>
+                <button
+                  onClick={() => setServiceToDelete(s.id)}
+                  className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-muted-foreground hover:text-destructive"
+                  aria-label={t("panel.services.delete")}
+                >
+                  <Trash2 size={16} />
+                </button>
+              </div>
+            ))
+          )}
+        </div>
+      </section>
+
       <Sheet open={editOpen} onOpenChange={setEditOpen}>
         <SheetContent side="bottom" className="rounded-t-3xl">
           <SheetHeader>
@@ -374,6 +517,102 @@ function PartnerPanel() {
           </div>
         </SheetContent>
       </Sheet>
+
+      <Sheet
+        open={serviceSheetOpen}
+        onOpenChange={(open) => {
+          setServiceSheetOpen(open);
+          if (!open) resetServiceForm();
+        }}
+      >
+        <SheetContent side="bottom" className="rounded-t-3xl">
+          <SheetHeader>
+            <SheetTitle className="font-display">{t("panel.services.newTitle")}</SheetTitle>
+          </SheetHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="s-destination">{t("panel.services.destination")}</Label>
+              <Select value={serviceDestinationId} onValueChange={setServiceDestinationId}>
+                <SelectTrigger id="s-destination" className={serviceErrors.destination ? "border-destructive" : ""}>
+                  <SelectValue placeholder={t("panel.services.selectDestination")} />
+                </SelectTrigger>
+                <SelectContent>
+                  {destinations.map((d) => (
+                    <SelectItem key={d.id} value={d.id}>
+                      {d.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {serviceErrors.destination && (
+                <p className="text-xs text-destructive">{serviceErrors.destination}</p>
+              )}
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="s-title">{t("panel.services.titleLabel")}</Label>
+              <Input
+                id="s-title"
+                value={serviceTitle}
+                onChange={(e) => setServiceTitle(e.target.value)}
+                className={serviceErrors.title ? "border-destructive" : ""}
+              />
+              {serviceErrors.title && <p className="text-xs text-destructive">{serviceErrors.title}</p>}
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="s-description">{t("panel.services.descriptionLabel")}</Label>
+              <Textarea
+                id="s-description"
+                value={serviceDescription}
+                onChange={(e) => setServiceDescription(e.target.value)}
+                rows={3}
+                className={serviceErrors.description ? "border-destructive" : ""}
+              />
+              {serviceErrors.description && (
+                <p className="text-xs text-destructive">{serviceErrors.description}</p>
+              )}
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="s-price">{t("panel.services.priceLabel")}</Label>
+              <Input
+                id="s-price"
+                type="number"
+                min="0"
+                step="0.01"
+                inputMode="decimal"
+                value={servicePrice}
+                onChange={(e) => setServicePrice(e.target.value)}
+                className={serviceErrors.price ? "border-destructive" : ""}
+              />
+              {serviceErrors.price && <p className="text-xs text-destructive">{serviceErrors.price}</p>}
+            </div>
+            <button
+              onClick={handleCreateService}
+              disabled={createServiceMutation.isPending}
+              className="mt-2 w-full rounded-xl bg-primary py-3.5 text-sm font-semibold text-primary-foreground shadow-card disabled:opacity-60"
+            >
+              {createServiceMutation.isPending ? t("common.loading") : t("panel.services.create")}
+            </button>
+          </div>
+        </SheetContent>
+      </Sheet>
+
+      <AlertDialog open={!!serviceToDelete} onOpenChange={(open) => !open && setServiceToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t("panel.services.confirmDelete")}</AlertDialogTitle>
+            <AlertDialogDescription>{t("panel.services.confirmDeleteDescription")}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t("common.cancel", "Cancelar")}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => serviceToDelete && deleteServiceMutation.mutate(serviceToDelete)}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {t("common.delete", "Excluir")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

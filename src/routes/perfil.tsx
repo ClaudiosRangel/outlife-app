@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   Settings,
@@ -17,6 +17,7 @@ import {
   Moon,
   Briefcase,
   LogOut,
+  Users,
 } from "lucide-react";
 import { StatusBar } from "@/components/StatusBar";
 import { Stars } from "@/components/Stars";
@@ -26,6 +27,7 @@ import { Progress } from "@/components/ui/progress";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
+import { shouldShowForecast } from "@/lib/profile-decorative";
 import {
   fetchMyProfile,
   resolveAsset,
@@ -36,6 +38,7 @@ import {
   fetchNextAdventure,
   fetchUserChecklists,
   fetchUserActivities,
+  fetchFriends,
 } from "@/lib/api";
 import { Activity as ActivityIcon, Clock, Route as RouteIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -44,6 +47,7 @@ import { ChecklistCreateDialog } from "@/components/ChecklistCreateDialog";
 import { LocationSharingCard } from "@/components/LocationSharingCard";
 import { useTranslation } from "react-i18next";
 import i18n from "@/lib/i18n";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 
 export const Route = createFileRoute("/perfil")({
   component: Profile,
@@ -119,6 +123,36 @@ function Profile() {
     enabled: !!user,
   });
 
+  // Requirement 12.3 — "seguidores" e "seguindo" não modelam um grafo social
+  // próprio (fora de escopo, ver requirements.md § "Fora de Escopo"). Os dois
+  // botões reaproveitam a mesma Friendship (`user_friends`, status
+  // `accepted`) via `fetchFriends`; `openFriendList` controla qual dos dois
+  // está aberto no momento, garantindo que apenas um seja exibido por vez.
+  const [openFriendList, setOpenFriendList] = useState<"followers" | "following" | null>(null);
+  const { data: friendRows = [], isLoading: friendRowsLoading } = useQuery({
+    queryKey: ["profile-friends", user?.id],
+    queryFn: fetchFriends,
+    enabled: !!user && openFriendList !== null,
+  });
+  const friendUserIds = useMemo(() => {
+    if (!user) return [];
+    return friendRows
+      .filter((f) => f.status === "accepted")
+      .map((f) => (f.requester_id === user.id ? f.addressee_id : f.requester_id));
+  }, [friendRows, user]);
+  const { data: friendProfiles = [], isLoading: friendProfilesLoading } = useQuery({
+    queryKey: ["profile-friends-details", friendUserIds],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("id, full_name, username, avatar_url")
+        .in("id", friendUserIds);
+      if (error) throw error;
+      return data ?? [];
+    },
+    enabled: !!user && openFriendList !== null && friendUserIds.length > 0,
+  });
+
 
   useEffect(() => {
     if (!authLoading && !user) navigate({ to: "/login" });
@@ -165,11 +199,13 @@ function Profile() {
             >
               <LogOut size={16} />
             </button>
-            <button
+            <Link
+              to="/configuracoes"
+              aria-label={t("settings.title")}
               className="grid h-10 w-10 place-items-center rounded-full bg-white/15 backdrop-blur-md"
             >
               <Settings size={16} />
-            </button>
+            </Link>
           </div>
         </div>
         <div className="mt-4 flex flex-col items-center text-center">
@@ -214,17 +250,29 @@ function Profile() {
 
 
       <div className="mx-5 mt-3 grid grid-cols-2 items-center rounded-2xl bg-card p-3 shadow-card relative">
-        <button onClick={() => toast(`${t("profile.followers")}: ${profile?.followers_count ?? 0}`)} className="flex flex-col items-center">
+        <button onClick={() => setOpenFriendList("followers")} className="flex flex-col items-center">
           <span className="font-display text-base font-semibold">{profile?.followers_count ?? 0}</span>
           <span className="text-[11px] text-muted-foreground">{t("profile.followers")}</span>
         </button>
         <div className="absolute left-1/2 top-1/2 h-8 w-px -translate-x-1/2 -translate-y-1/2 bg-border" />
-        <button onClick={() => toast(`${t("profile.following")}: ${profile?.following_count ?? 0}`)} className="flex flex-col items-center">
+        <button onClick={() => setOpenFriendList("following")} className="flex flex-col items-center">
           <span className="font-display text-base font-semibold">{profile?.following_count ?? 0}</span>
           <span className="text-[11px] text-muted-foreground">{t("profile.following")}</span>
         </button>
       </div>
 
+
+      <div className="mx-5 mt-3">
+        <Link to="/amigos" className="flex items-center justify-between rounded-2xl bg-card p-3 shadow-card">
+          <div className="flex items-center gap-3">
+            <span className="grid h-9 w-9 place-items-center rounded-xl bg-primary/10 text-primary">
+              <Users size={16} />
+            </span>
+            <span className="text-sm font-semibold">{t("friends.cta")}</span>
+          </div>
+          <span className="text-xs text-primary font-medium">{t("common.open")}</span>
+        </Link>
+      </div>
 
       {profile?.role === "partner" && (
         <div className="mx-5 mt-3">
@@ -399,7 +447,7 @@ function Profile() {
         </section>
       )}
 
-      {nextAdventure && (
+      {nextAdventure && shouldShowForecast(nextAdventure.forecast) && (
         <section className="px-5 mt-6">
           <h2 className="font-display text-lg font-semibold">{t("profile.nextAdventure")}</h2>
           <div className="mt-3 rounded-2xl bg-gradient-sky p-4 text-white shadow-card">
@@ -514,6 +562,41 @@ function Profile() {
           <LogOut size={16} /> {t("profile.signOut")}
         </button>
       </section>
+
+      <Sheet open={openFriendList !== null} onOpenChange={(open) => !open && setOpenFriendList(null)}>
+        <SheetContent side="bottom" className="rounded-t-3xl max-h-[80vh] overflow-y-auto">
+          <SheetHeader>
+            <SheetTitle className="font-display">
+              {openFriendList === "following" ? t("profile.following") : t("profile.followers")}
+            </SheetTitle>
+          </SheetHeader>
+          <div className="mt-4 space-y-2 pb-4">
+            {friendRowsLoading || friendProfilesLoading ? (
+              [0, 1, 2].map((i) => <Skeleton key={i} className="h-14 w-full rounded-2xl" />)
+            ) : friendProfiles.length === 0 ? (
+              <div className="rounded-2xl bg-card p-6 text-center text-xs text-muted-foreground shadow-card">
+                {t("common.empty", "Nada por aqui ainda.")}
+              </div>
+            ) : (
+              friendProfiles.map((p) => (
+                <div key={p.id} className="flex items-center gap-3 rounded-2xl bg-card p-3 shadow-card">
+                  <img
+                    src={resolveAsset(p.avatar_url, avatar)}
+                    alt={p.full_name || ""}
+                    className="h-10 w-10 rounded-full object-cover"
+                    width={80}
+                    height={80}
+                  />
+                  <div className="min-w-0">
+                    <div className="truncate text-sm font-semibold">{p.full_name || t("profile.title")}</div>
+                    {p.username && <div className="truncate text-xs text-muted-foreground">@{p.username}</div>}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }

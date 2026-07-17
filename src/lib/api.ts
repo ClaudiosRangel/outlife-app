@@ -27,6 +27,9 @@ export type Destination = {
   trailType: string;
 };
 
+// Chaves de filtro exibidas como chips em /explorar (exclui "all", que representa "sem filtro").
+export type Difficulty = "easy" | "moderate" | "hard" | "accessible" | "near";
+
 export type Partner = {
   id: string;
   name: string;
@@ -91,6 +94,48 @@ export async function fetchDestinations(): Promise<Destination[]> {
     type: d.type ?? "",
     trailType: d.trail_type ?? "",
   }));
+}
+
+export type DestinationDetail = {
+  id: string;
+  name: string;
+  description: string | null;
+  img: string;
+  difficulty: string;
+  distance: string;
+  duration: string;
+  elevation: number;
+  type: string;
+  status: "pending" | "approved" | "rejected";
+  created_by: string | null;
+};
+
+// Busca um destino por id sem filtrar por status: a política de RLS de
+// `destinations` já retorna a linha apenas quando `status = 'approved'` ou
+// `auth.uid() = created_by` (ver migration 20260521193007), então `null`
+// aqui cobre tanto "não existe" quanto "pending de outro usuário" — a tela
+// de detalhe trata ambos como "destino não encontrado" sem distinção.
+export async function fetchDestinationById(id: string): Promise<DestinationDetail | null> {
+  const { data, error } = await supabase
+    .from("destinations")
+    .select("*")
+    .eq("id", id)
+    .maybeSingle();
+  if (error) throw error;
+  if (!data) return null;
+  return {
+    id: data.id,
+    name: data.name,
+    description: data.description,
+    img: resolveAsset(data.main_image_url, waterfall),
+    difficulty: data.difficulty ?? "",
+    distance: data.distance ?? "",
+    duration: data.duration ?? "",
+    elevation: Number(String(data.elevation ?? "0").replace(/[^0-9]/g, "")) || 0,
+    type: data.type ?? "",
+    status: data.status,
+    created_by: data.created_by,
+  };
 }
 
 export type DbDestination = {
@@ -737,16 +782,47 @@ export async function trackPartnerContactClick(partnerId: string): Promise<void>
   if (error) throw error;
 }
 
-export async function fetchPartnerChart(_partnerId: string): Promise<PartnerChartPoint[]> {
-  return [
-    { day: "Seg", v: 38 },
-    { day: "Ter", v: 62 },
-    { day: "Qua", v: 45 },
-    { day: "Qui", v: 80 },
-    { day: "Sex", v: 70 },
-    { day: "Sáb", v: 95 },
-    { day: "Dom", v: 58 },
-  ];
+// Agrega `partner_metric_daily` dos últimos 7 dias (hoje e os 6 anteriores)
+// para o gráfico real do painel do parceiro (Requirement 12.2), substituindo
+// o array fixo anterior. `v` reflete `views + contact_clicks` do dia — o
+// gráfico exibe uma única série (barra por dia), então combinamos as duas
+// métricas em um só valor em vez de introduzir uma segunda série na UI.
+// Dias sem registro em `partner_metric_daily` são preenchidos com zero no
+// cliente, e o rótulo de dia da semana é calculado a partir da data real
+// (em vez de fixo), usando a primeira letra maiúscula do nome abreviado em
+// português (mesmo padrão de abreviação de `date-fns`/`ptBR`).
+export async function fetchPartnerChart(partnerId: string): Promise<PartnerChartPoint[]> {
+  const today = new Date();
+  const sixDaysAgo = new Date(today);
+  sixDaysAgo.setDate(sixDaysAgo.getDate() - 6);
+  const sixDaysAgoStr = format(sixDaysAgo, "yyyy-MM-dd");
+
+  const { data, error } = await supabase
+    .from("partner_metric_daily" as never)
+    .select("day, views, contact_clicks")
+    .eq("partner_id", partnerId)
+    .gte("day", sixDaysAgoStr)
+    .order("day", { ascending: true });
+  if (error) throw error;
+
+  const rows = (data ?? []) as unknown as { day: string; views: number; contact_clicks: number }[];
+  const byDay = new Map(rows.map((r) => [r.day, r]));
+
+  const points: PartnerChartPoint[] = [];
+  for (let i = 6; i >= 0; i--) {
+    const date = new Date(today);
+    date.setDate(date.getDate() - i);
+    const key = format(date, "yyyy-MM-dd");
+    const row = byDay.get(key);
+    const views = Number(row?.views ?? 0);
+    const clicks = Number(row?.contact_clicks ?? 0);
+    const weekdayAbbrev = format(date, "EEEEEE", { locale: ptBR });
+    points.push({
+      day: weekdayAbbrev.charAt(0).toUpperCase() + weekdayAbbrev.slice(1),
+      v: views + clicks,
+    });
+  }
+  return points;
 }
 
 const ALLOWED_IMAGE_TYPES: Record<string, string> = {
@@ -1015,4 +1091,483 @@ export async function acceptFriendRequest(id: string) {
 export async function removeFriend(id: string) {
   const { error } = await supabase.from("user_friends" as never).delete().eq("id", id);
   if (error) throw error;
+}
+
+export type UserSearchResult = {
+  id: string;
+  full_name: string | null;
+  username: string | null;
+  avatar_url: string | null;
+};
+
+// Escapa valor para uso seguro dentro do filtro `.or()` do PostgREST, onde
+// `"` e `\` têm significado sintático quando o valor é envolvido em aspas.
+function escapeForOrFilter(value: string): string {
+  return value.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+}
+
+export async function searchUsers(query: string): Promise<UserSearchResult[]> {
+  const trimmed = query.trim();
+  if (!trimmed) return [];
+  const pattern = `%${escapeForOrFilter(trimmed)}%`;
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("id, full_name, username, avatar_url")
+    .or(`full_name.ilike."${pattern}",username.ilike."${pattern}"`);
+  if (error) throw error;
+  return (data ?? []) as UserSearchResult[];
+}
+
+// ============ Comunidade — curtidas e follow (Requirements 6, 7) ============
+
+// Alterna o Post_Like do usuário autenticado para `postId` através da RPC
+// `toggle_post_like` (SECURITY DEFINER, delete-then-insert idempotente por
+// par post/usuário — ver migration 20260716090000). O erro de "não
+// autenticado" é levantado pela própria função no banco quando `auth.uid()`
+// é nulo, então nenhuma guarda de sessão client-side é necessária aqui além
+// de propagar o erro do Supabase.
+export async function togglePostLike(postId: string): Promise<{ liked: boolean; likes: number }> {
+  const { data, error } = await supabase.rpc("toggle_post_like" as never, {
+    _post_id: postId,
+  } as never);
+  if (error) throw error;
+  const row = (Array.isArray(data) ? data[0] : data) as { liked: boolean; likes: number } | null;
+  if (!row) throw new Error("Falha ao alternar curtida.");
+  return { liked: Boolean(row.liked), likes: Number(row.likes) };
+}
+
+// Retorna os `post_id` de todos os Post_Like do usuário autenticado, usado
+// para hidratar o estado inicial do controle de curtida em cada
+// Community_Post ao carregar a tela de comunidade (Requirement 6.4) — sem
+// isso, o estado "curtido" reiniciaria para "não curtido" a cada
+// recarregamento mesmo com a curtida persistida via `toggle_post_like`.
+export async function fetchMyLikedPostIds(): Promise<string[]> {
+  const { data: userData } = await supabase.auth.getUser();
+  if (!userData.user) return [];
+  const { data, error } = await supabase
+    .from("post_likes" as never)
+    .select("post_id")
+    .eq("user_id", userData.user.id);
+  if (error) throw error;
+  return ((data ?? []) as unknown as Array<{ post_id: string }>).map((row) => row.post_id);
+}
+
+// Alterna o Post_Follow (Requirement 7): reaproveita `user_friends` com uma
+// linha assimétrica `status = 'following'` (requester_id = quem segue,
+// addressee_id = autor seguido), sem afetar `are_friends`/Friendship
+// (Requirement 3), que continuam filtrando estritamente por `status =
+// 'accepted'`. Toggle feito no cliente (verifica existência, depois
+// DELETE ou INSERT) já que não há RPC dedicada para este caso.
+export async function toggleAuthorFollow(authorId: string): Promise<{ following: boolean }> {
+  const { data: userData } = await supabase.auth.getUser();
+  if (!userData.user) throw new Error("Não autenticado");
+  if (authorId === userData.user.id) throw new Error("Não é possível seguir você mesmo");
+
+  const { data: existing, error: selErr } = await supabase
+    .from("user_friends" as never)
+    .select("id")
+    .eq("requester_id", userData.user.id)
+    .eq("addressee_id", authorId)
+    .eq("status", "following")
+    .maybeSingle();
+  if (selErr) throw selErr;
+
+  if (existing) {
+    const { error: delErr } = await supabase
+      .from("user_friends" as never)
+      .delete()
+      .eq("id", (existing as unknown as { id: string }).id);
+    if (delErr) throw delErr;
+    return { following: false };
+  }
+
+  const { error: insErr } = await supabase
+    .from("user_friends" as never)
+    .insert({ requester_id: userData.user.id, addressee_id: authorId, status: "following" } as never);
+  if (insErr) throw insErr;
+  return { following: true };
+}
+
+// Retorna os `addressee_id` de todos os Post_Follow (`status = 'following'`)
+// do usuário autenticado, usado para hidratar o estado inicial do controle
+// de seguir em cada Community_Post ao carregar a tela de comunidade.
+export async function fetchMyFollowedAuthorIds(): Promise<string[]> {
+  const { data: userData } = await supabase.auth.getUser();
+  if (!userData.user) return [];
+  const { data, error } = await supabase
+    .from("user_friends" as never)
+    .select("addressee_id")
+    .eq("requester_id", userData.user.id)
+    .eq("status", "following");
+  if (error) throw error;
+  return ((data ?? []) as unknown as Array<{ addressee_id: string }>).map((row) => row.addressee_id);
+}
+
+// ============ Comunidade — comentários (Requirement 8) ============
+
+export type PostComment = {
+  id: string;
+  post_id: string;
+  text: string;
+  created_at: string;
+  author: { full_name: string | null; avatar_url: string | null } | null;
+};
+
+// Busca os Post_Comment reais de um Community_Post (Requirement 8.2),
+// ordenados do mais antigo para o mais novo, com o autor embutido via
+// join implícito do supabase-js sobre a FK `post_comments.author_id ->
+// profiles.id` (mesmo padrão usado por `fetchReviewsByDestination`).
+export async function fetchPostComments(postId: string): Promise<PostComment[]> {
+  const { data, error } = await supabase
+    .from("post_comments" as never)
+    .select("id, post_id, text, created_at, author:profiles(full_name, avatar_url)")
+    .eq("post_id", postId)
+    .order("created_at", { ascending: true });
+  if (error) throw error;
+  return (data ?? []) as unknown as PostComment[];
+}
+
+// Persiste um Post_Comment através da RPC `create_post_comment`
+// (SECURITY DEFINER), que também incrementa `community_posts.comments_count`
+// de forma atômica, contornando o trigger `prevent_post_counter_tampering`
+// (Requirement 8.3, 8.4). A RPC não retorna o autor embutido, então
+// buscamos o perfil do usuário autenticado para preencher o campo `author`
+// e manter o formato consistente com `fetchPostComments`.
+export async function createPostComment(postId: string, text: string): Promise<PostComment> {
+  const { data: userData } = await supabase.auth.getUser();
+  if (!userData.user) throw new Error("Não autenticado");
+
+  const { data, error } = await supabase.rpc("create_post_comment" as never, {
+    _post_id: postId,
+    _text: text,
+  } as never);
+  if (error) throw error;
+  const row = (Array.isArray(data) ? data[0] : data) as {
+    id: string;
+    post_id: string;
+    text: string;
+    created_at: string;
+  } | null;
+  if (!row) throw new Error("Falha ao criar comentário.");
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("full_name, avatar_url")
+    .eq("id", userData.user.id)
+    .maybeSingle();
+
+  return {
+    id: row.id,
+    post_id: row.post_id,
+    text: row.text,
+    created_at: row.created_at,
+    author: profile ? { full_name: profile.full_name, avatar_url: profile.avatar_url } : null,
+  };
+}
+
+// ============ Notificações (Requirement 9) ============
+
+export type Notification = {
+  id: string;
+  type: string;
+  payload: Record<string, unknown>;
+  is_read: boolean;
+  created_at: string;
+};
+
+// Lista as Notification do usuário autenticado em ordem cronológica
+// decrescente (Requirement 9.3). A RLS de `notifications` já restringe a
+// leitura a `auth.uid() = recipient_id`, mas filtramos explicitamente por
+// `recipient_id` também no client para deixar a intenção clara e evitar
+// depender apenas da política de banco.
+export async function fetchNotifications(): Promise<Notification[]> {
+  const { data: userData } = await supabase.auth.getUser();
+  if (!userData.user) return [];
+  const { data, error } = await supabase
+    .from("notifications" as never)
+    .select("id, type, payload, is_read, created_at")
+    .eq("recipient_id", userData.user.id)
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return (data ?? []) as unknown as Notification[];
+}
+
+// Conta as Notification não lidas do usuário autenticado (Requirement 9.5,
+// 9.6), usada para o indicador visual do sino de notificação. Usa
+// `count: "exact", head: true` para que o Supabase retorne apenas a
+// contagem, sem trazer as linhas.
+export async function fetchUnreadNotificationCount(): Promise<number> {
+  const { data: userData } = await supabase.auth.getUser();
+  if (!userData.user) return 0;
+  const { count, error } = await supabase
+    .from("notifications" as never)
+    .select("*", { count: "exact", head: true })
+    .eq("recipient_id", userData.user.id)
+    .eq("is_read", false);
+  if (error) throw error;
+  return count ?? 0;
+}
+
+// Marca as Notification indicadas como lidas (Requirement 9.7, 9.8). A RLS
+// de `UPDATE` já restringe a alteração a `auth.uid() = recipient_id`. Se
+// `ids` estiver vazio, retorna sem fazer nenhuma chamada ao banco.
+export async function markNotificationsAsRead(ids: string[]): Promise<void> {
+  if (ids.length === 0) return;
+  const { error } = await supabase
+    .from("notifications" as never)
+    .update({ is_read: true } as never)
+    .in("id", ids);
+  if (error) throw error;
+}
+
+// ============ Perfil — avatar e unicidade de username (Requirement 10) ============
+
+const MAX_AVATAR_IMAGE_BYTES = 5 * 1024 * 1024;
+
+// Envia uma nova foto de perfil para o bucket `avatars` (Requirement 10.3,
+// 10.4), seguindo exatamente o mesmo padrão de resize client-side/validação/
+// upload de `uploadPartnerGalleryImage`: mesma allowlist de mime types
+// (`ALLOWED_IMAGE_TYPES`), mesmo redimensionamento via `resizeImageForUpload`,
+// mesmo limite de 5 MB como última linha de defesa. O path é prefixado pela
+// pasta do usuário autenticado (`${userId}/...`), consistente com a policy
+// de storage `auth.uid()::text = (storage.foldername(name))[1]` da migration
+// `20260716090400_avatars-bucket.sql`. Retorna a URL pública do arquivo.
+export async function uploadAvatarImage(file: File): Promise<string> {
+  const { data: userData } = await supabase.auth.getUser();
+  if (!userData.user) throw new Error("Não autenticado");
+  const mime = file.type;
+  const ext = ALLOWED_IMAGE_TYPES[mime];
+  if (!ext) {
+    throw new Error("Formato inválido. Use JPG, PNG ou WEBP.");
+  }
+
+  const optimized = await resizeImageForUpload(file, MAX_AVATAR_IMAGE_BYTES);
+  if (optimized.size > MAX_AVATAR_IMAGE_BYTES) {
+    throw new Error("Imagem muito grande (máx. 5 MB).");
+  }
+  const path = `${userData.user.id}/${Date.now()}.${ext}`;
+  const { error: upErr } = await supabase.storage
+    .from("avatars")
+    .upload(path, optimized, { upsert: false, contentType: mime });
+  if (upErr) throw upErr;
+  const { data: pub } = supabase.storage.from("avatars").getPublicUrl(path);
+  return pub.publicUrl;
+}
+
+// Verifica se `username` já está em uso por outro perfil (Requirement 10.6).
+// A comparação é case-sensitive, consistente com a constraint `UNIQUE` de
+// `profiles.username` (sem `citext`/índice funcional de lowercase no
+// schema) e com `searchUsers`, que também usa o valor de `username` como
+// texto puro. Exclui o próprio usuário autenticado da checagem: se o
+// usuário já tem esse username, não é considerado "taken" para ele mesmo.
+export async function isUsernameTaken(username: string): Promise<boolean> {
+  const trimmed = username.trim();
+  if (!trimmed) return false;
+  const { data: userData } = await supabase.auth.getUser();
+  const myId = userData.user?.id ?? null;
+
+  let query = supabase.from("profiles").select("id").eq("username", trimmed).limit(1);
+  if (myId) {
+    query = query.neq("id", myId);
+  }
+  const { data, error } = await query;
+  if (error) throw error;
+  return (data ?? []).length > 0;
+}
+
+// ============ Compliance / admin (Requirement 11) ============
+
+// Campos exibidos pela tela de compliance do parceiro (badge de status) e
+// pela Admin_Compliance_Screen (lista de pendentes), refletindo as colunas
+// relevantes de `cadastur_verification_requests` (migration
+// `20260716090500_cadastur-verification-requests.sql`).
+export type CadasturRequest = {
+  id: string;
+  status: "pending" | "approved" | "rejected";
+  created_at: string;
+  reviewed_at: string | null;
+  company_name: string;
+  cnpj: string;
+  cadastur_number: string;
+  category: string;
+  responsible: string;
+  email: string;
+  phone: string;
+  description: string;
+  document_url: string;
+};
+
+// Persiste uma Cadastur_Verification_Request com `status = 'pending'`
+// (Requirement 11.2), em vez da simulação de aprovação automática por
+// `setTimeout` anteriormente existente em `compliance.tsx`. O índice único
+// parcial `cadastur_requests_one_pending_per_partner` (`WHERE status =
+// 'pending'`) é a última linha de defesa contra uma segunda submissão
+// pendente do mesmo parceiro (Requirement 11.9): a violação chega aqui como
+// erro Postgres `23505` (unique_violation), mapeada para uma mensagem de UI
+// explicando o motivo, em vez de propagar o erro genérico do banco.
+export async function submitCadasturRequest(input: {
+  companyName: string;
+  cnpj: string;
+  cadastur: string;
+  category: string;
+  responsible: string;
+  email: string;
+  phone: string;
+  description: string;
+  documentUrl: string;
+}): Promise<void> {
+  const { data: userData } = await supabase.auth.getUser();
+  if (!userData.user) throw new Error("Não autenticado");
+
+  const { error } = await supabase.from("cadastur_verification_requests" as never).insert({
+    partner_id: userData.user.id,
+    company_name: input.companyName,
+    cnpj: input.cnpj,
+    cadastur_number: input.cadastur,
+    category: input.category,
+    responsible: input.responsible,
+    email: input.email,
+    phone: input.phone,
+    description: input.description,
+    document_url: input.documentUrl,
+    status: "pending",
+  } as never);
+
+  if (error) {
+    if ((error as { code?: string }).code === "23505") {
+      throw new Error("Você já tem uma solicitação em análise.");
+    }
+    throw error;
+  }
+}
+
+// Busca a Cadastur_Verification_Request mais recente do parceiro
+// autenticado (Requirement 11.7), usada para exibir o badge de status real
+// (`pending`/`approved`/`rejected`) na tela de compliance em vez do estado
+// local anteriormente usado. Retorna `null` quando o parceiro nunca
+// submeteu nenhuma solicitação. A RLS de `SELECT` já restringe a leitura ao
+// próprio parceiro ou a um admin.
+export async function fetchMyCadasturRequest(): Promise<CadasturRequest | null> {
+  const { data: userData } = await supabase.auth.getUser();
+  if (!userData.user) return null;
+  const { data, error } = await supabase
+    .from("cadastur_verification_requests" as never)
+    .select("*")
+    .eq("partner_id", userData.user.id)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (error) throw error;
+  return (data as unknown as CadasturRequest) ?? null;
+}
+
+const ALLOWED_COMPLIANCE_DOCUMENT_TYPES: Record<string, string> = {
+  "image/jpeg": "jpg",
+  "image/png": "png",
+  "application/pdf": "pdf",
+};
+const MAX_COMPLIANCE_DOCUMENT_BYTES = 5 * 1024 * 1024;
+
+// Envia o documento comprobatório do Cadastur para o bucket privado
+// `compliance-documents` (Requirement 11.1, 11.2). PDFs não passam pelo
+// redimensionamento de imagem de `resizeImageForUpload` (que decodifica o
+// arquivo como bitmap) — apenas jpeg/png são otimizados antes do upload,
+// seguindo o mesmo padrão de `uploadPartnerGalleryImage`/`uploadAvatarImage`;
+// para PDF, o limite de 5 MB é a única validação de tamanho.
+//
+// Decisão de retorno: como o bucket é privado (sem policy pública de
+// SELECT), esta função retorna apenas o PATH de storage (não uma URL
+// pública nem uma signed URL de validade fixa). Persistir o path em
+// `cadastur_verification_requests.document_url` mantém a leitura posterior
+// flexível: quem tiver permissão (o próprio parceiro ou um admin, via RLS
+// de `storage.objects`) gera uma signed URL sob demanda no momento da
+// exibição (`supabase.storage.from("compliance-documents").createSignedUrl(path, ttl)`),
+// em vez de depender de uma URL assinada que pode expirar antes de ser
+// usada ou de expor uma URL pública que não existe para este bucket.
+export async function uploadComplianceDocument(file: File): Promise<string> {
+  const { data: userData } = await supabase.auth.getUser();
+  if (!userData.user) throw new Error("Não autenticado");
+  const mime = file.type;
+  const ext = ALLOWED_COMPLIANCE_DOCUMENT_TYPES[mime];
+  if (!ext) {
+    throw new Error("Formato inválido. Use JPG, PNG ou PDF.");
+  }
+
+  const optimized =
+    mime === "application/pdf" ? file : await resizeImageForUpload(file, MAX_COMPLIANCE_DOCUMENT_BYTES);
+  if (optimized.size > MAX_COMPLIANCE_DOCUMENT_BYTES) {
+    throw new Error("Arquivo muito grande (máx. 5 MB).");
+  }
+
+  const path = `${userData.user.id}/${Date.now()}.${ext}`;
+  const { error: upErr } = await supabase.storage
+    .from("compliance-documents")
+    .upload(path, optimized, { upsert: false, contentType: mime });
+  if (upErr) throw upErr;
+  return path;
+}
+
+// Lista as Cadastur_Verification_Request com `status = 'pending'`
+// (Requirement 11.4), usada pela Admin_Compliance_Screen. A RLS de `SELECT`
+// já restringe esta leitura a `auth.uid() = partner_id OR
+// is_admin(auth.uid())` — para um usuário sem Admin_Role, a query retorna
+// apenas a própria solicitação pendente (se houver), nunca as de outros
+// parceiros; a tela de admin só funciona corretamente para quem tem
+// Admin_Role (Requirement 11.8), confiando na RLS em vez de reimplementar
+// essa checagem aqui.
+export async function fetchPendingCadasturRequests(): Promise<CadasturRequest[]> {
+  const { data, error } = await supabase
+    .from("cadastur_verification_requests" as never)
+    .select("*")
+    .eq("status", "pending")
+    .order("created_at", { ascending: true });
+  if (error) throw error;
+  return (data ?? []) as unknown as CadasturRequest[];
+}
+
+// Aprova/rejeita uma Cadastur_Verification_Request através das RPCs
+// `approve_cadastur_request`/`reject_cadastur_request` (Requirement 11.5,
+// 11.6), ambas `SECURITY DEFINER` checando `is_admin(auth.uid())`
+// explicitamente no banco — um usuário sem Admin_Role recebe o erro "not
+// authorized" lançado pela própria função (Requirement 11.8).
+export async function approveCadasturRequest(id: string): Promise<void> {
+  const { error } = await supabase.rpc("approve_cadastur_request" as never, { _id: id } as never);
+  if (error) throw error;
+}
+
+export async function rejectCadasturRequest(id: string): Promise<void> {
+  const { error } = await supabase.rpc("reject_cadastur_request" as never, { _id: id } as never);
+  if (error) throw error;
+}
+
+// Retorna o `role` (`app_role`: `adventurer` | `partner`) do usuário
+// autenticado, lido de `profiles.role` (mesma coluna já usada por
+// `fetchMyProfile`). Não inclui `admin`, que é um papel adicional
+// modelado separadamente em `user_roles`/`app_role_enum` (ver
+// `isCurrentUserAdmin`), não em `profiles.role`.
+export async function fetchMyRole(): Promise<"adventurer" | "partner" | null> {
+  const { data: userData } = await supabase.auth.getUser();
+  if (!userData.user) return null;
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", userData.user.id)
+    .maybeSingle();
+  if (error) throw error;
+  return (data?.role as "adventurer" | "partner" | undefined) ?? null;
+}
+
+// Verifica se o usuário autenticado possui o Admin_Role (Requirement 11.4,
+// 11.8), através da função `is_admin` já existente (migration
+// `20260522193933_...sql`), consultada via RPC em vez de uma query direta a
+// `user_roles` — mesmo mecanismo já usado pela RLS/RPCs de decisão desta
+// mesma migration, mantendo uma única fonte de verdade para "é admin".
+export async function isCurrentUserAdmin(): Promise<boolean> {
+  const { data: userData } = await supabase.auth.getUser();
+  if (!userData.user) return false;
+  const { data, error } = await supabase.rpc("is_admin" as never, {
+    _user_id: userData.user.id,
+  } as never);
+  if (error) throw error;
+  return Boolean(data);
 }

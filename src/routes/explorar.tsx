@@ -1,10 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { lazy, Suspense, useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { ChevronLeft, MapPin, Search, SlidersHorizontal } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { StatusBar } from "@/components/StatusBar";
-import { fetchDestinations } from "@/lib/api";
+import { fetchDestinations, type Destination, type Difficulty } from "@/lib/api";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const MapView = lazy(() => import("@/components/MapView"));
@@ -25,13 +25,44 @@ export const Route = createFileRoute("/explorar")({
 
 const filterKeys = ["all", "easy", "moderate", "hard", "accessible", "near"] as const;
 
+// Mapeia as chaves de dificuldade do filtro para os valores em português persistidos em `destinations.difficulty`.
+// "accessible" e "near" não filtram por dificuldade: não há campo de acessibilidade ou proximidade geográfica
+// disponível em `Destination` hoje, então esses chips permanecem apenas com destaque visual (sem restringir a lista).
+const DIFFICULTY_LABELS: Record<"easy" | "moderate" | "hard", string> = {
+  easy: "Fácil",
+  moderate: "Moderada",
+  hard: "Difícil",
+};
+
+/**
+ * Função pura de filtro por dificuldade. Retorna exatamente os destinos cuja dificuldade
+ * corresponde à chave selecionada, ou todos os destinos quando `difficulty` é "all" ou
+ * corresponde a um chip sem critério de dificuldade associado ("accessible"/"near").
+ */
+export function filterDestinationsByDifficulty(
+  destinations: Destination[],
+  difficulty: Difficulty | "all",
+): Destination[] {
+  if (difficulty !== "easy" && difficulty !== "moderate" && difficulty !== "hard") {
+    return destinations;
+  }
+  const label = DIFFICULTY_LABELS[difficulty];
+  return destinations.filter((d) => d.difficulty === label);
+}
+
 function Explore() {
   const { t } = useTranslation();
   const [mounted, setMounted] = useState(false);
+  const [difficultyFilter, setDifficultyFilter] = useState<Difficulty | "all">("all");
   const { data: destinations = [], isLoading } = useQuery({
     queryKey: ["destinations"],
     queryFn: fetchDestinations,
   });
+
+  const filteredDestinations = useMemo(
+    () => filterDestinationsByDifficulty(destinations, difficultyFilter),
+    [destinations, difficultyFilter],
+  );
 
   useEffect(() => {
     setMounted(true);
@@ -60,8 +91,12 @@ function Explore() {
         </div>
 
         <div className="mt-4 flex gap-2 overflow-x-auto scrollbar-hide -mx-5 px-5">
-          {filterKeys.map((k, i) => (
-            <button key={k} className={`whitespace-nowrap rounded-full px-4 py-1.5 text-xs font-medium transition-base ${i === 0 ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground"}`}>
+          {filterKeys.map((k) => (
+            <button
+              key={k}
+              onClick={() => setDifficultyFilter(k)}
+              className={`whitespace-nowrap rounded-full px-4 py-1.5 text-xs font-medium transition-base ${difficultyFilter === k ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground"}`}
+            >
               {t(`explore.filters.${k}`)}
             </button>
           ))}
@@ -90,8 +125,13 @@ function Explore() {
         </div>
       ) : (
         <div className="px-5 pb-6 grid grid-cols-2 gap-3">
-          {destinations.map((d) => (
-            <Link to="/marketplace" key={d.id} className="overflow-hidden rounded-2xl bg-card shadow-card transition-base active:scale-[0.98]">
+          {filteredDestinations.map((d) => (
+            <Link
+              to="/destino/$destinationId"
+              params={{ destinationId: d.id }}
+              key={d.id}
+              className="overflow-hidden rounded-2xl bg-card shadow-card transition-base active:scale-[0.98]"
+            >
               <div className="relative h-32">
                 <img src={d.img} alt={d.name} loading="lazy" className="h-full w-full object-cover" width={800} height={1024} />
                 <div className="absolute right-2 top-2 rounded-full bg-white/90 px-1.5 py-0.5 text-[10px] font-semibold">★ {d.rating}</div>

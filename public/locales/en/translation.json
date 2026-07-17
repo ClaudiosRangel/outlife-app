@@ -29,6 +29,10 @@
   },
   "common": {
     "available": "Available",
+    "linkCopied": "Link copied!",
+    "share": "Share",
+    "shareError": "Could not share.",
+    "shared": "Shared!",
     "cancel": "Cancel",
     "clear": "Clear",
     "continue": "Continue",
@@ -131,6 +135,52 @@
       "agencies": "Agencies"
     }
   },
+  "destination": {
+    "notFound": "Destination not found",
+    "notFoundDescription": "The destination you're looking for isn't available on Outlife.",
+    "backToExplore": "Back to Explore",
+    "pendingBadge": "Under review",
+    "pendingNotice": "This destination is still under review and is only visible to you until it's approved.",
+    "metrics": {
+      "difficulty": "Difficulty",
+      "distance": "Distance",
+      "duration": "Duration",
+      "elevation": "Elevation",
+      "type": "Type"
+    },
+    "noDescription": "This destination doesn't have a description yet."
+  },
+  "collection": {
+    "saveLabel": "Save",
+    "savedLabel": "Saved",
+    "favoriteLabel": "Favorite",
+    "favoritedLabel": "Favorited",
+    "loginRequired": "Sign in to continue.",
+    "toggleError": "Couldn't complete the action. Please try again."
+  },
+  "destinationSuggestion": {
+    "trigger": "Suggest a new destination",
+    "title": "Suggest a new destination",
+    "description": "Tell us about a destination that isn't on Outlife yet. We'll review it before publishing.",
+    "nameLabel": "Destination name",
+    "namePlaceholder": "E.g.: Escorrega Waterfall",
+    "descriptionLabel": "Description (optional)",
+    "descriptionPlaceholder": "Describe the destination, how to get there, what to find there…",
+    "locationLabel": "Location",
+    "useCurrentLocation": "Use my current location",
+    "locating": "Getting location…",
+    "locationCaptured": "Location captured",
+    "locationErrorDenied": "Location permission denied. Enable GPS in your browser to continue.",
+    "locationErrorUnavailable": "Geolocation is unavailable on this device.",
+    "locationErrorGeneric": "Couldn't get your location.",
+    "nameRequired": "Enter the destination name.",
+    "locationRequired": "Capture a valid location to continue.",
+    "submit": "Send suggestion",
+    "submitting": "Sending…",
+    "success": "Suggestion sent for review!",
+    "error": "Error sending suggestion. Please try again.",
+    "loginRequired": "Log in to suggest a destination."
+  },
   "partner": {
     "notFound": "Partner not found",
     "notFoundDescription": "The partner you are looking for is not registered on Outlife.",
@@ -161,7 +211,11 @@
     "submit": "Submit review",
     "submitted": "Review submitted!",
     "writeComment": "Please write a comment.",
-    "error": "Error submitting review."
+    "error": "Error submitting review.",
+    "selectRating": "Select a rating.",
+    "loginRequired": "Log in to leave a review.",
+    "reviewsTitle": "Reviews",
+    "noReviewsYet": "No reviews yet. Be the first!"
   },
   "community": {
     "title": "Community",
@@ -189,7 +243,11 @@
     "publish": "Publish",
     "publishing": "Publishing...",
     "published": "Story published!",
-    "loginRequired": "Sign in to publish."
+    "loginRequired": "Sign in to publish.",
+    "likeError": "Couldn't like the post. Please try again.",
+    "followError": "Couldn't follow. Please try again.",
+    "commentError": "Couldn't comment. Please try again.",
+    "noComments": "No comments yet. Be the first!"
   },
   "profile": {
     "title": "Profile",
@@ -297,7 +355,29 @@
     "name": "Name",
     "description": "Description",
     "category": "Category",
-    "saved": "Profile updated!"
+    "saved": "Profile updated!",
+    "services": {
+      "title": "My services",
+      "add": "Add service",
+      "empty": "No services yet.",
+      "noDestination": "No destination",
+      "delete": "Remove service",
+      "newTitle": "New service",
+      "destination": "Destination",
+      "selectDestination": "Select a destination",
+      "titleLabel": "Title",
+      "descriptionLabel": "Description",
+      "priceLabel": "Price ($)",
+      "create": "Create service",
+      "created": "Service created!",
+      "deleted": "Service removed.",
+      "confirmDelete": "Remove this service?",
+      "confirmDeleteDescription": "This action cannot be undone. The service will no longer appear on your public profile.",
+      "errorDestination": "Select a destination.",
+      "errorTitle": "Enter a title.",
+      "errorDescription": "Enter a description.",
+      "errorPrice": "Enter a valid price."
+    }
   },
   "compliance": {
     "title": "Compliance",
@@ -328,7 +408,78 @@
     "verified": "Business verified! Cadastur seal activated.",
     "checkFields": "Please check the highlighted fields.",
     "attachDoc": "Attach the Cadastur proof (PDF or image).",
-    "fileTooBig": "File exceeds 5MB."
+    "fileTooBig": "File exceeds 5MB.",
+    "genericError": "Couldn't submit your request. Please try again."
+  },
+  "friends": {
+    "title": "Friends",
+    "cta": "See friends",
+    "searchPlaceholder": "Search by name or username…",
+    "searchResults": "Search results",
+    "emptySearch": "No users found.",
+    "pendingReceived": "Received requests",
+    "emptyPendingReceived": "No pending requests.",
+    "accepted": "My friends",
+    "emptyAccepted": "You don't have any friends yet. Search for people to get started.",
+    "sendRequest": "Add",
+    "accept": "Accept",
+    "remove": "Remove",
+    "thisIsYou": "This is you",
+    "statusFriends": "Already friends",
+    "statusPending": "Request pending",
+    "requestSent": "Friend request sent!",
+    "requestAccepted": "Request accepted!",
+    "friendRemoved": "Friend removed.",
+    "errorSelf": "You can't send a request to yourself.",
+    "errorAlreadyFriends": "You're already friends.",
+    "errorAlreadyPending": "There's already a pending request with this user.",
+    "genericError": "Couldn't complete the action. Please try again."
+  },
+  "notifications": {
+    "title": "Notifications",
+    "empty": "You don't have any notifications.",
+    "friendRequestText": "sent you a friend request.",
+    "genericText": "You have a new notification."
+  },
+  "settings": {
+    "title": "Settings",
+    "changePhoto": "Change photo",
+    "fullNameLabel": "Full name",
+    "usernameLabel": "Username",
+    "locationLabel": "Location",
+    "save": "Save changes",
+    "saved": "Profile updated!",
+    "avatarUpdated": "Profile photo updated!",
+    "usernameTaken": "This username is already taken.",
+    "genericError": "Couldn't complete the action. Please try again."
+  },
+  "adminCompliance": {
+    "title": "Cadastur Moderation",
+    "subtitle": "Pending requests · Outlife Admin",
+    "back": "Back",
+    "accessDeniedTitle": "Restricted access",
+    "accessDeniedDescription": "This area is for administrators only.",
+    "backToHome": "Back to home",
+    "emptyPending": "No pending requests.",
+    "cnpj": "CNPJ",
+    "cadasturNumber": "Cadastur",
+    "category": "Category",
+    "responsible": "Responsible",
+    "email": "Email",
+    "phone": "Phone",
+    "description": "Description",
+    "viewDocument": "View document",
+    "documentUnavailable": "Couldn't open the document.",
+    "submittedAt": "Submitted on",
+    "approve": "Approve",
+    "reject": "Reject",
+    "confirmApprove": "Approve this request?",
+    "confirmApproveDescription": "The partner will be marked as verified (Cadastur seal).",
+    "confirmReject": "Reject this request?",
+    "confirmRejectDescription": "This action can't be undone. The partner will be able to submit a new request.",
+    "approved": "Request approved.",
+    "rejected": "Request rejected.",
+    "genericError": "Couldn't complete the action. Please try again."
   },
   "location": {
     "shareTitle": "Share your location",

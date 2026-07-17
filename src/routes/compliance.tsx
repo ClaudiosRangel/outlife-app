@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
 import { ArrowLeft, Building2, Upload, ShieldCheck } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -11,6 +12,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner";
 
 import { ComplianceBadge, type ComplianceStatus } from "@/components/ComplianceBadge";
+import { useAuth } from "@/hooks/use-auth";
+import {
+  fetchMyCadasturRequest,
+  fetchMyProfile,
+  submitCadasturRequest,
+  uploadComplianceDocument,
+} from "@/lib/api";
 
 export const Route = createFileRoute("/compliance")({
   component: CompliancePage,
@@ -66,6 +74,8 @@ const CATEGORIES = ["Guias", "Pousadas", "Fotógrafos", "Aluguel", "Restaurantes
 
 function CompliancePage() {
   const { t } = useTranslation();
+  const { user } = useAuth();
+  const qc = useQueryClient();
 
   const [form, setForm] = useState({
     companyName: "",
@@ -78,8 +88,27 @@ function CompliancePage() {
     description: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [status, setStatus] = useState<ComplianceStatus>("unverified");
-  const [docName, setDocName] = useState<string | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const docName = selectedFile?.name ?? null;
+
+  const { data: myCadasturRequest } = useQuery({
+    queryKey: ["my-cadastur-request", user?.id],
+    queryFn: fetchMyCadasturRequest,
+    enabled: !!user,
+  });
+  const { data: profile } = useQuery({
+    queryKey: ["my-profile", user?.id],
+    queryFn: fetchMyProfile,
+    enabled: !!user,
+  });
+
+  // Requirement 11.7 — o badge reflete o estado real persistido, nunca mais
+  // o selo de "verificado" incondicional da simulação anterior.
+  const status: ComplianceStatus = profile?.is_verified
+    ? "verified"
+    : myCadasturRequest?.status === "pending"
+      ? "pending"
+      : "unverified";
 
   const completion = useMemo(() => {
     const total = Object.keys(form).length + 1; // +1 for doc
@@ -91,8 +120,32 @@ function CompliancePage() {
   const update = (key: keyof typeof form, value: string) => {
     setForm((f) => ({ ...f, [key]: value }));
     setErrors((e) => ({ ...e, [key]: "" }));
-    if (status !== "unverified") setStatus("unverified");
   };
+
+  const submitMutation = useMutation({
+    mutationFn: async () => {
+      if (!selectedFile) throw new Error(t("compliance.attachDoc"));
+      const documentUrl = await uploadComplianceDocument(selectedFile);
+      await submitCadasturRequest({
+        companyName: form.companyName,
+        cnpj: form.cnpj,
+        cadastur: form.cadastur,
+        category: form.category,
+        responsible: form.responsible,
+        email: form.email,
+        phone: form.phone,
+        description: form.description,
+        documentUrl,
+      });
+    },
+    onSuccess: () => {
+      toast.success(t("compliance.submitted"));
+      qc.invalidateQueries({ queryKey: ["my-cadastur-request", user?.id] });
+    },
+    onError: (err: Error) => {
+      toast.error(err.message || t("compliance.genericError"));
+    },
+  });
 
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -107,18 +160,12 @@ function CompliancePage() {
       toast.error(t("compliance.checkFields"));
       return;
     }
-    if (!docName) {
+    if (!selectedFile) {
       toast.error(t("compliance.attachDoc"));
       return;
     }
 
-    setStatus("pending");
-    toast.success(t("compliance.submitted"));
-
-    setTimeout(() => {
-      setStatus("verified");
-      toast.success(t("compliance.verified"));
-    }, 3500);
+    submitMutation.mutate();
   };
 
 
@@ -304,14 +351,18 @@ function CompliancePage() {
                   toast.error(t("compliance.fileTooBig"));
                   return;
                 }
-                setDocName(f.name);
+                setSelectedFile(f);
               }}
             />
           </label>
         </div>
 
-        <Button type="submit" className="mt-6 h-12 w-full rounded-full text-sm font-semibold">
-          {t("compliance.submit")}
+        <Button
+          type="submit"
+          className="mt-6 h-12 w-full rounded-full text-sm font-semibold"
+          disabled={submitMutation.isPending}
+        >
+          {submitMutation.isPending ? t("common.loading") : t("compliance.submit")}
         </Button>
         <p className="mt-3 text-center text-[11px] text-muted-foreground">
           {t("compliance.termsNote")}

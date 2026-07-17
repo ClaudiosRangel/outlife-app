@@ -10,23 +10,33 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as PerfilRouteImport } from './routes/perfil'
+import { Route as NotificacoesRouteImport } from './routes/notificacoes'
 import { Route as MarketplaceRouteImport } from './routes/marketplace'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ExplorarRouteImport } from './routes/explorar'
+import { Route as ConfiguracoesRouteImport } from './routes/configuracoes'
 import { Route as ComunidadeRouteImport } from './routes/comunidade'
 import { Route as ComplianceRouteImport } from './routes/compliance'
 import { Route as CadastroRouteImport } from './routes/cadastro'
 import { Route as BuscaRouteImport } from './routes/busca'
+import { Route as AmigosRouteImport } from './routes/amigos'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ParceiroPainelRouteImport } from './routes/parceiro.painel'
 import { Route as ParceiroPartnerIdRouteImport } from './routes/parceiro.$partnerId'
+import { Route as DestinoDestinationIdRouteImport } from './routes/destino.$destinationId'
 import { Route as ChecklistChecklistIdRouteImport } from './routes/checklist.$checklistId'
 import { Route as AtividadeRastrearRouteImport } from './routes/atividade.rastrear'
 import { Route as AtividadeActivityIdRouteImport } from './routes/atividade.$activityId'
+import { Route as AdminComplianceRouteImport } from './routes/admin.compliance'
 
 const PerfilRoute = PerfilRouteImport.update({
   id: '/perfil',
   path: '/perfil',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NotificacoesRoute = NotificacoesRouteImport.update({
+  id: '/notificacoes',
+  path: '/notificacoes',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MarketplaceRoute = MarketplaceRouteImport.update({
@@ -42,6 +52,11 @@ const LoginRoute = LoginRouteImport.update({
 const ExplorarRoute = ExplorarRouteImport.update({
   id: '/explorar',
   path: '/explorar',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ConfiguracoesRoute = ConfiguracoesRouteImport.update({
+  id: '/configuracoes',
+  path: '/configuracoes',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ComunidadeRoute = ComunidadeRouteImport.update({
@@ -64,6 +79,11 @@ const BuscaRoute = BuscaRouteImport.update({
   path: '/busca',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AmigosRoute = AmigosRouteImport.update({
+  id: '/amigos',
+  path: '/amigos',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -77,6 +97,11 @@ const ParceiroPainelRoute = ParceiroPainelRouteImport.update({
 const ParceiroPartnerIdRoute = ParceiroPartnerIdRouteImport.update({
   id: '/parceiro/$partnerId',
   path: '/parceiro/$partnerId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DestinoDestinationIdRoute = DestinoDestinationIdRouteImport.update({
+  id: '/destino/$destinationId',
+  path: '/destino/$destinationId',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ChecklistChecklistIdRoute = ChecklistChecklistIdRouteImport.update({
@@ -94,53 +119,73 @@ const AtividadeActivityIdRoute = AtividadeActivityIdRouteImport.update({
   path: '/atividade/$activityId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminComplianceRoute = AdminComplianceRouteImport.update({
+  id: '/admin/compliance',
+  path: '/admin/compliance',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/amigos': typeof AmigosRoute
   '/busca': typeof BuscaRoute
   '/cadastro': typeof CadastroRoute
   '/compliance': typeof ComplianceRoute
   '/comunidade': typeof ComunidadeRoute
+  '/configuracoes': typeof ConfiguracoesRoute
   '/explorar': typeof ExplorarRoute
   '/login': typeof LoginRoute
   '/marketplace': typeof MarketplaceRoute
+  '/notificacoes': typeof NotificacoesRoute
   '/perfil': typeof PerfilRoute
+  '/admin/compliance': typeof AdminComplianceRoute
   '/atividade/$activityId': typeof AtividadeActivityIdRoute
   '/atividade/rastrear': typeof AtividadeRastrearRoute
   '/checklist/$checklistId': typeof ChecklistChecklistIdRoute
+  '/destino/$destinationId': typeof DestinoDestinationIdRoute
   '/parceiro/$partnerId': typeof ParceiroPartnerIdRoute
   '/parceiro/painel': typeof ParceiroPainelRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/amigos': typeof AmigosRoute
   '/busca': typeof BuscaRoute
   '/cadastro': typeof CadastroRoute
   '/compliance': typeof ComplianceRoute
   '/comunidade': typeof ComunidadeRoute
+  '/configuracoes': typeof ConfiguracoesRoute
   '/explorar': typeof ExplorarRoute
   '/login': typeof LoginRoute
   '/marketplace': typeof MarketplaceRoute
+  '/notificacoes': typeof NotificacoesRoute
   '/perfil': typeof PerfilRoute
+  '/admin/compliance': typeof AdminComplianceRoute
   '/atividade/$activityId': typeof AtividadeActivityIdRoute
   '/atividade/rastrear': typeof AtividadeRastrearRoute
   '/checklist/$checklistId': typeof ChecklistChecklistIdRoute
+  '/destino/$destinationId': typeof DestinoDestinationIdRoute
   '/parceiro/$partnerId': typeof ParceiroPartnerIdRoute
   '/parceiro/painel': typeof ParceiroPainelRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/amigos': typeof AmigosRoute
   '/busca': typeof BuscaRoute
   '/cadastro': typeof CadastroRoute
   '/compliance': typeof ComplianceRoute
   '/comunidade': typeof ComunidadeRoute
+  '/configuracoes': typeof ConfiguracoesRoute
   '/explorar': typeof ExplorarRoute
   '/login': typeof LoginRoute
   '/marketplace': typeof MarketplaceRoute
+  '/notificacoes': typeof NotificacoesRoute
   '/perfil': typeof PerfilRoute
+  '/admin/compliance': typeof AdminComplianceRoute
   '/atividade/$activityId': typeof AtividadeActivityIdRoute
   '/atividade/rastrear': typeof AtividadeRastrearRoute
   '/checklist/$checklistId': typeof ChecklistChecklistIdRoute
+  '/destino/$destinationId': typeof DestinoDestinationIdRoute
   '/parceiro/$partnerId': typeof ParceiroPartnerIdRoute
   '/parceiro/painel': typeof ParceiroPainelRoute
 }
@@ -148,66 +193,86 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/amigos'
     | '/busca'
     | '/cadastro'
     | '/compliance'
     | '/comunidade'
+    | '/configuracoes'
     | '/explorar'
     | '/login'
     | '/marketplace'
+    | '/notificacoes'
     | '/perfil'
+    | '/admin/compliance'
     | '/atividade/$activityId'
     | '/atividade/rastrear'
     | '/checklist/$checklistId'
+    | '/destino/$destinationId'
     | '/parceiro/$partnerId'
     | '/parceiro/painel'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/amigos'
     | '/busca'
     | '/cadastro'
     | '/compliance'
     | '/comunidade'
+    | '/configuracoes'
     | '/explorar'
     | '/login'
     | '/marketplace'
+    | '/notificacoes'
     | '/perfil'
+    | '/admin/compliance'
     | '/atividade/$activityId'
     | '/atividade/rastrear'
     | '/checklist/$checklistId'
+    | '/destino/$destinationId'
     | '/parceiro/$partnerId'
     | '/parceiro/painel'
   id:
     | '__root__'
     | '/'
+    | '/amigos'
     | '/busca'
     | '/cadastro'
     | '/compliance'
     | '/comunidade'
+    | '/configuracoes'
     | '/explorar'
     | '/login'
     | '/marketplace'
+    | '/notificacoes'
     | '/perfil'
+    | '/admin/compliance'
     | '/atividade/$activityId'
     | '/atividade/rastrear'
     | '/checklist/$checklistId'
+    | '/destino/$destinationId'
     | '/parceiro/$partnerId'
     | '/parceiro/painel'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AmigosRoute: typeof AmigosRoute
   BuscaRoute: typeof BuscaRoute
   CadastroRoute: typeof CadastroRoute
   ComplianceRoute: typeof ComplianceRoute
   ComunidadeRoute: typeof ComunidadeRoute
+  ConfiguracoesRoute: typeof ConfiguracoesRoute
   ExplorarRoute: typeof ExplorarRoute
   LoginRoute: typeof LoginRoute
   MarketplaceRoute: typeof MarketplaceRoute
+  NotificacoesRoute: typeof NotificacoesRoute
   PerfilRoute: typeof PerfilRoute
+  AdminComplianceRoute: typeof AdminComplianceRoute
   AtividadeActivityIdRoute: typeof AtividadeActivityIdRoute
   AtividadeRastrearRoute: typeof AtividadeRastrearRoute
   ChecklistChecklistIdRoute: typeof ChecklistChecklistIdRoute
+  DestinoDestinationIdRoute: typeof DestinoDestinationIdRoute
   ParceiroPartnerIdRoute: typeof ParceiroPartnerIdRoute
   ParceiroPainelRoute: typeof ParceiroPainelRoute
 }
@@ -219,6 +284,13 @@ declare module '@tanstack/react-router' {
       path: '/perfil'
       fullPath: '/perfil'
       preLoaderRoute: typeof PerfilRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/notificacoes': {
+      id: '/notificacoes'
+      path: '/notificacoes'
+      fullPath: '/notificacoes'
+      preLoaderRoute: typeof NotificacoesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/marketplace': {
@@ -240,6 +312,13 @@ declare module '@tanstack/react-router' {
       path: '/explorar'
       fullPath: '/explorar'
       preLoaderRoute: typeof ExplorarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/configuracoes': {
+      id: '/configuracoes'
+      path: '/configuracoes'
+      fullPath: '/configuracoes'
+      preLoaderRoute: typeof ConfiguracoesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/comunidade': {
@@ -270,6 +349,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BuscaRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/amigos': {
+      id: '/amigos'
+      path: '/amigos'
+      fullPath: '/amigos'
+      preLoaderRoute: typeof AmigosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -289,6 +375,13 @@ declare module '@tanstack/react-router' {
       path: '/parceiro/$partnerId'
       fullPath: '/parceiro/$partnerId'
       preLoaderRoute: typeof ParceiroPartnerIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/destino/$destinationId': {
+      id: '/destino/$destinationId'
+      path: '/destino/$destinationId'
+      fullPath: '/destino/$destinationId'
+      preLoaderRoute: typeof DestinoDestinationIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/checklist/$checklistId': {
@@ -312,22 +405,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AtividadeActivityIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/compliance': {
+      id: '/admin/compliance'
+      path: '/admin/compliance'
+      fullPath: '/admin/compliance'
+      preLoaderRoute: typeof AdminComplianceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AmigosRoute: AmigosRoute,
   BuscaRoute: BuscaRoute,
   CadastroRoute: CadastroRoute,
   ComplianceRoute: ComplianceRoute,
   ComunidadeRoute: ComunidadeRoute,
+  ConfiguracoesRoute: ConfiguracoesRoute,
   ExplorarRoute: ExplorarRoute,
   LoginRoute: LoginRoute,
   MarketplaceRoute: MarketplaceRoute,
+  NotificacoesRoute: NotificacoesRoute,
   PerfilRoute: PerfilRoute,
+  AdminComplianceRoute: AdminComplianceRoute,
   AtividadeActivityIdRoute: AtividadeActivityIdRoute,
   AtividadeRastrearRoute: AtividadeRastrearRoute,
   ChecklistChecklistIdRoute: ChecklistChecklistIdRoute,
+  DestinoDestinationIdRoute: DestinoDestinationIdRoute,
   ParceiroPartnerIdRoute: ParceiroPartnerIdRoute,
   ParceiroPainelRoute: ParceiroPainelRoute,
 }
