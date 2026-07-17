@@ -356,6 +356,37 @@ export async function fetchCommunityPosts() {
   return data ?? [];
 }
 
+const MAX_COMMUNITY_POST_IMAGE_BYTES = 5 * 1024 * 1024;
+
+// Envia a foto anexada a um Community_Post para o bucket
+// `community-post-images` (migration `20260717120000_community-post-images-bucket.sql`),
+// seguindo exatamente o mesmo padrão de resize client-side/validação/upload
+// de `uploadAvatarImage`/`uploadPartnerGalleryImage`. Sem isso, o formulário
+// de "Novo relato" só gerava uma preview local (base64) e nunca enviava a
+// foto de fato — todo post caía no fallback de imagem padrão. Retorna a URL
+// pública do arquivo, para ser passada como `image_url` em `createCommunityPost`.
+export async function uploadCommunityPostImage(file: File): Promise<string> {
+  const { data: userData } = await supabase.auth.getUser();
+  if (!userData.user) throw new Error("Não autenticado");
+  const mime = file.type;
+  const ext = ALLOWED_IMAGE_TYPES[mime];
+  if (!ext) {
+    throw new Error("Formato inválido. Use JPG, PNG ou WEBP.");
+  }
+
+  const optimized = await resizeImageForUpload(file, MAX_COMMUNITY_POST_IMAGE_BYTES);
+  if (optimized.size > MAX_COMMUNITY_POST_IMAGE_BYTES) {
+    throw new Error("Imagem muito grande (máx. 5 MB).");
+  }
+  const path = `${userData.user.id}/${Date.now()}.${ext}`;
+  const { error: upErr } = await supabase.storage
+    .from("community-post-images")
+    .upload(path, optimized, { upsert: false, contentType: mime });
+  if (upErr) throw upErr;
+  const { data: pub } = supabase.storage.from("community-post-images").getPublicUrl(path);
+  return pub.publicUrl;
+}
+
 export async function createCommunityPost(input: {
   text: string;
   place?: string;

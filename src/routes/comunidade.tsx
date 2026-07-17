@@ -7,14 +7,32 @@ import {
   MapPin,
   Share2,
   Plus,
-  X,
   Send,
   Camera,
+  Loader2,
 } from "lucide-react";
 import { StatusBar } from "@/components/StatusBar";
 import community1 from "@/assets/community-1.jpg";
 import { Skeleton } from "@/components/ui/skeleton";
-import { fetchCommunityPosts, createCommunityPost, resolveAsset, togglePostLike, fetchMyLikedPostIds, toggleAuthorFollow, fetchMyFollowedAuthorIds, fetchPostComments, createPostComment, type PostComment } from "@/lib/api";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
+import {
+  fetchCommunityPosts,
+  createCommunityPost,
+  uploadCommunityPostImage,
+  resolveAsset,
+  togglePostLike,
+  fetchMyLikedPostIds,
+  toggleAuthorFollow,
+  fetchMyFollowedAuthorIds,
+  fetchPostComments,
+  createPostComment,
+  type PostComment,
+} from "@/lib/api";
 import { useAuth } from "@/hooks/use-auth";
 import { shareContent } from "@/lib/share";
 import { toast } from "sonner";
@@ -104,13 +122,21 @@ function Community() {
 
   const [isOpen, setIsOpen] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [text, setText] = useState("");
   const [place, setPlace] = useState("");
   const [showComments, setShowComments] = useState<Record<string, boolean>>({});
   const fileRef = useRef<HTMLInputElement>(null);
 
+  // Corrige o bug em que toda foto escolhida caía sempre na imagem padrão:
+  // antes, o formulário só gerava uma preview local (base64, `handleFile`) e
+  // `createCommunityPost` era chamado sem `image_url`. Agora o arquivo real
+  // é enviado via `uploadCommunityPostImage` antes de criar o post.
   const createMutation = useMutation({
-    mutationFn: createCommunityPost,
+    mutationFn: async ({ text, place }: { text: string; place?: string }) => {
+      const image_url = selectedFile ? await uploadCommunityPostImage(selectedFile) : undefined;
+      return createCommunityPost({ text, place, image_url });
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["community-posts"] });
       toast.success(t("community.published"));
@@ -130,6 +156,7 @@ function Community() {
   const closeDrawer = () => {
     setIsOpen(false);
     setPreview(null);
+    setSelectedFile(null);
     setText("");
     setPlace("");
   };
@@ -137,6 +164,7 @@ function Community() {
   const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    setSelectedFile(file);
     const reader = new FileReader();
     reader.onloadend = () => setPreview(reader.result as string);
     reader.readAsDataURL(file);
@@ -292,17 +320,22 @@ function Community() {
                       <MapPin size={10} /> {p.place} · {p.time}
                     </div>
                   </div>
-                  <button
-                    onClick={() => handleToggleFollow(p.id, p.authorId)}
-                    className={`rounded-full px-2 py-0.5 text-xs font-semibold transition-base ${
-                      p.following
-                        ? "bg-secondary text-foreground/60"
-                        : "text-primary"
-                    }`}
-                  >
-                    {p.following ? t("community.following") : t("community.follow")}
-                  </button>
-
+                  {/* Requirement 7.2/7.3 — o botão de seguir não faz sentido no
+                      próprio post; exibi-lo levava ao erro genérico "Não foi
+                      possível seguir" (toggleAuthorFollow rejeita seguir a si
+                      mesmo). Ocultado quando o autor é o usuário autenticado. */}
+                  {p.authorId !== user?.id && (
+                    <button
+                      onClick={() => handleToggleFollow(p.id, p.authorId)}
+                      className={`rounded-full px-2 py-0.5 text-xs font-semibold transition-base ${
+                        p.following
+                          ? "bg-secondary text-foreground/60"
+                          : "text-primary"
+                      }`}
+                    >
+                      {p.following ? t("community.following") : t("community.follow")}
+                    </button>
+                  )}
                 </header>
 
                 <div className="relative aspect-[4/5]">
@@ -346,111 +379,101 @@ function Community() {
             ))}
       </div>
 
-      {/* Drawer de criação */}
-      {isOpen && (
-        <div className="fixed inset-0 z-50 flex flex-col justify-end">
-          <div
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-            onClick={closeDrawer}
-          />
-          <div className="relative z-10 w-full max-h-[85vh] overflow-y-auto rounded-t-3xl bg-background animate-slide-up">
-            <div className="sticky top-0 z-10 flex items-center justify-between border-b border-border bg-background/95 backdrop-blur px-5 py-4">
-              <h2 className="font-display text-lg font-semibold">{t("community.drawerTitle")}</h2>
+      {/* Drawer de criação — usa o componente Sheet (renderiza via portal do
+          Radix) em vez de uma `div fixed inset-0` manual. O modal manual
+          antigo ficava preso dentro do PhoneFrame (que tem `overflow-hidden`
+          + `relative`), quebrando o posicionamento fixo em mobile e
+          obrigando a rolar a tela para encontrar o conteúdo do formulário. */}
+      <Sheet open={isOpen} onOpenChange={(open) => (open ? openDrawer() : closeDrawer())}>
+        <SheetContent side="bottom" className="rounded-t-3xl max-h-[85vh] overflow-y-auto">
+          <SheetHeader>
+            <SheetTitle className="font-display">{t("community.drawerTitle")}</SheetTitle>
+          </SheetHeader>
+
+          <div className="space-y-5 py-4">
+            {/* Foto */}
+            <div>
+              <label className="mb-2 block text-sm font-medium">{t("community.photoLabel")}</label>
               <button
-                onClick={closeDrawer}
-                className="grid h-8 w-8 place-items-center rounded-full bg-secondary text-secondary-foreground"
+                onClick={() => fileRef.current?.click()}
+                className="relative flex w-full flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-border bg-secondary/50 p-6 text-muted-foreground transition-colors hover:bg-secondary active:scale-[0.98]"
               >
-                <X size={16} />
+                {preview ? (
+                  <img
+                    src={preview}
+                    alt="Preview"
+                    className="h-40 w-full rounded-xl object-cover"
+                  />
+                ) : (
+                  <>
+                    <Camera size={28} className="text-muted-foreground" />
+                    <span className="text-sm">{t("community.addPhoto")}</span>
+                    <span className="text-xs text-muted-foreground/70">{t("community.photoHint")}</span>
+                  </>
+                )}
+
+                <input
+                  ref={fileRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  className="hidden"
+                  onChange={handleFile}
+                />
               </button>
             </div>
 
-            <div className="space-y-5 p-5">
-              {/* Foto */}
-              <div>
-                <label className="mb-2 block text-sm font-medium">{t("community.photoLabel")}</label>
-                <button
-                  onClick={() => fileRef.current?.click()}
-                  className="relative flex w-full flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-border bg-secondary/50 p-6 text-muted-foreground transition-colors hover:bg-secondary active:scale-[0.98]"
-                >
-                  {preview ? (
-                    <img
-                      src={preview}
-                      alt="Preview"
-                      className="h-40 w-full rounded-xl object-cover"
-                    />
-                  ) : (
-                    <>
-                      <Camera size={28} className="text-muted-foreground" />
-                      <span className="text-sm">{t("community.addPhoto")}</span>
-                      <span className="text-xs text-muted-foreground/70">{t("community.photoHint")}</span>
-                    </>
-                  )}
-
-                  <input
-                    ref={fileRef}
-                    type="file"
-                    accept="image/jpeg,image/png,image/webp"
-                    className="hidden"
-                    onChange={handleFile}
-                  />
-                </button>
-              </div>
-
-              {/* Local */}
-              <div>
-                <label className="mb-2 block text-sm font-medium">{t("community.placeLabel")}</label>
-                <div className="relative">
-                  <MapPin
-                    size={16}
-                    className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-                  />
-                  <input
-                    value={place}
-                    onChange={(e) => setPlace(e.target.value)}
-                    placeholder={t("community.placePlaceholder")}
-                    className="h-12 w-full rounded-xl border border-border bg-card pl-10 pr-4 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
-                  />
-                </div>
-              </div>
-
-              {/* Texto */}
-              <div>
-                <label className="mb-2 block text-sm font-medium">{t("community.textLabel")}</label>
-                <textarea
-                  value={text}
-                  onChange={(e) => setText(e.target.value)}
-                  placeholder={t("community.textPlaceholder")}
-                  rows={4}
-                  className="w-full rounded-xl border border-border bg-card p-4 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none"
+            {/* Local */}
+            <div>
+              <label className="mb-2 block text-sm font-medium">{t("community.placeLabel")}</label>
+              <div className="relative">
+                <MapPin
+                  size={16}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
                 />
-                <div className="mt-1 text-right text-xs text-muted-foreground">
-                  {text.length}/500
-                </div>
-              </div>
-
-
-              {/* Ações */}
-              <div className="flex gap-3 pt-2">
-                <button
-                  onClick={closeDrawer}
-                  className="flex-1 rounded-xl border border-border bg-card py-3.5 text-sm font-semibold text-foreground active:scale-[0.98] transition-transform"
-                >
-                  {t("common.cancel")}
-                </button>
-                <button
-                  onClick={handleSubmit}
-                  disabled={!text.trim() || createMutation.isPending}
-                  className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-primary py-3.5 text-sm font-semibold text-primary-foreground shadow-card disabled:opacity-50 disabled:active:scale-100 active:scale-[0.98] transition-transform"
-                >
-                  <Send size={16} />
-                  {createMutation.isPending ? t("community.publishing") : t("community.publish")}
-                </button>
-
+                <input
+                  value={place}
+                  onChange={(e) => setPlace(e.target.value)}
+                  placeholder={t("community.placePlaceholder")}
+                  className="h-12 w-full rounded-xl border border-border bg-card pl-10 pr-4 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+                />
               </div>
             </div>
+
+            {/* Texto */}
+            <div>
+              <label className="mb-2 block text-sm font-medium">{t("community.textLabel")}</label>
+              <textarea
+                value={text}
+                onChange={(e) => setText(e.target.value)}
+                placeholder={t("community.textPlaceholder")}
+                rows={4}
+                className="w-full rounded-xl border border-border bg-card p-4 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none"
+              />
+              <div className="mt-1 text-right text-xs text-muted-foreground">
+                {text.length}/500
+              </div>
+            </div>
+
+            {/* Ações */}
+            <div className="flex gap-3 pt-2">
+              <button
+                onClick={closeDrawer}
+                className="flex-1 rounded-xl border border-border bg-card py-3.5 text-sm font-semibold text-foreground active:scale-[0.98] transition-transform"
+              >
+                {t("common.cancel")}
+              </button>
+              <button
+                onClick={handleSubmit}
+                disabled={!text.trim() || createMutation.isPending}
+                className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-primary py-3.5 text-sm font-semibold text-primary-foreground shadow-card disabled:opacity-50 disabled:active:scale-100 active:scale-[0.98] transition-transform"
+              >
+                {createMutation.isPending ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
+                {createMutation.isPending ? t("community.publishing") : t("community.publish")}
+              </button>
+            </div>
           </div>
-        </div>
-      )}
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }
