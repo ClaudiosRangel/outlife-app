@@ -88,16 +88,18 @@ BEGIN
 
   IF _deleted_count > 0 THEN
     UPDATE public.community_posts
-      SET likes = GREATEST(COALESCE(likes, 0) - 1, 0)
+      SET likes = GREATEST(COALESCE(community_posts.likes, 0) - 1, 0)
       WHERE id = _post_id
-      RETURNING false, likes INTO _liked, _likes;
+      RETURNING community_posts.likes INTO _likes;
+    _liked := false;
   ELSE
     INSERT INTO public.post_likes (post_id, user_id) VALUES (_post_id, _uid);
 
     UPDATE public.community_posts
-      SET likes = COALESCE(likes, 0) + 1
+      SET likes = COALESCE(community_posts.likes, 0) + 1
       WHERE id = _post_id
-      RETURNING true, likes INTO _liked, _likes;
+      RETURNING community_posts.likes INTO _likes;
+    _liked := true;
   END IF;
 
   IF _likes IS NULL THEN
