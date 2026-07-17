@@ -1,12 +1,52 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { Bell, MapPin, Search, ShieldCheck, Sparkles, ArrowRight, Mountain } from "lucide-react";
 import hero from "@/assets/hero-mountain.jpg";
 import { StatusBar } from "@/components/StatusBar";
 import { Stars } from "@/components/Stars";
-import { fetchDestinations, fetchPartners, fetchUnreadNotificationCount } from "@/lib/api";
+import { fetchDestinations, fetchMyProfile, fetchPartners, fetchUnreadNotificationCount, type Destination } from "@/lib/api";
 import { useAuth } from "@/hooks/use-auth";
+
+const CATEGORY_KEYS = ["Trilhas", "Cachoeiras", "Montanhas", "Camping", "Caiaque", "Escalada"] as const;
+export type HomeCategory = (typeof CATEGORY_KEYS)[number];
+
+// Função pura de filtro por categoria (mesmo espírito de
+// `filterDestinationsByDifficulty` em explorar.tsx): como `Destination` não
+// tem um campo de categoria dedicado, o critério usa palavras-chave no nome
+// e no `type` já persistidos. "Caiaque" e "Escalada" não têm nenhum destino
+// correspondente nos dados atuais — o chip permanece clicável e com
+// destaque visual, mas resulta em lista vazia (documentado, mesmo padrão
+// de "accessible"/"near" em explorar.tsx que também não filtram de fato).
+const CATEGORY_MATCHERS: Record<HomeCategory, (d: Destination) => boolean> = {
+  Trilhas: (d) => d.type === "Trekking" || /trilha/i.test(d.name),
+  Cachoeiras: (d) => /cachoeira/i.test(d.name),
+  Montanhas: (d) => d.type === "Alpinismo" || /pico|montanha/i.test(d.name),
+  Camping: (d) => /camping/i.test(d.name),
+  Caiaque: (d) => /caiaque/i.test(d.name),
+  Escalada: (d) => /escalada/i.test(d.name),
+};
+
+export function filterDestinationsByCategory(
+  destinations: Destination[],
+  category: HomeCategory | null,
+): Destination[] {
+  if (!category) return destinations;
+  return destinations.filter(CATEGORY_MATCHERS[category]);
+}
+
+// Saudação dinâmica pelo horário real (Requirement solicitado pelo
+// usuário): antes era a string fixa "Bom dia, Rafael" (mock visual, nunca
+// ligada ao relógio nem ao usuário autenticado). Baseada na hora local do
+// navegador de quem acessa — não há integração de geolocalização/timezone
+// por região do mapa neste spec, então "hora local de quem acessa" é a
+// aproximação mais simples e correta sem introduzir uma dependência nova.
+export function greetingKeyForHour(hour: number): "goodMorning" | "goodAfternoon" | "goodEvening" {
+  if (hour >= 5 && hour < 12) return "goodMorning";
+  if (hour >= 12 && hour < 18) return "goodAfternoon";
+  return "goodEvening";
+}
 
 export const Route = createFileRoute("/")({
   component: Home,
@@ -36,6 +76,21 @@ function Home() {
     queryFn: fetchUnreadNotificationCount,
     enabled: !!user,
   });
+  // Mesma queryKey ["my-profile", user?.id] já usada em perfil.tsx/
+  // configuracoes.tsx/compliance.tsx — cache compartilhado entre telas.
+  const { data: profile } = useQuery({
+    queryKey: ["my-profile", user?.id],
+    queryFn: fetchMyProfile,
+    enabled: !!user,
+  });
+  const displayName = profile?.full_name?.split(" ")[0] || user?.email?.split("@")[0] || "";
+  const greetingKey = greetingKeyForHour(new Date().getHours());
+
+  const [category, setCategory] = useState<HomeCategory | null>(null);
+  const filteredDestinations = useMemo(
+    () => filterDestinationsByCategory(destinations, category),
+    [destinations, category],
+  );
   return (
     <div className="animate-float-up">
       {/* Hero */}
@@ -67,7 +122,8 @@ function Home() {
 
         <div className="absolute inset-x-0 bottom-0 z-10 px-5 pb-7 text-white">
           <p className="mb-2 inline-flex items-center gap-1.5 rounded-full bg-white/15 px-2.5 py-1 text-[11px] font-medium backdrop-blur-md">
-            <Sparkles size={12} /> {t("home.greeting")}
+            <Sparkles size={12} />{" "}
+            {displayName ? t(`home.${greetingKey}Name`, { name: displayName }) : t(`home.${greetingKey}`)}
           </p>
           <h1 className="font-display text-[34px] leading-[1.05] font-semibold whitespace-pre-line">
             {t("home.heroTitle")}
@@ -108,11 +164,12 @@ function Home() {
           <h2 className="font-display text-xl font-semibold">{t("home.categoriesTitle")}</h2>
         </div>
         <div className="mt-3 flex gap-2 overflow-x-auto scrollbar-hide -mx-5 px-5 pb-1">
-          {["Trilhas", "Cachoeiras", "Montanhas", "Camping", "Caiaque", "Escalada"].map((c, i) => (
+          {CATEGORY_KEYS.map((c) => (
             <button
               key={c}
+              onClick={() => setCategory((cur) => (cur === c ? null : c))}
               className={`whitespace-nowrap rounded-full border px-4 py-2 text-sm font-medium transition-base ${
-                i === 0 ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card text-foreground"
+                category === c ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card text-foreground"
               }`}
             >
               {c}
@@ -128,7 +185,10 @@ function Home() {
           <Link to="/explorar" className="text-xs font-medium text-primary">{t("common.seeAll")}</Link>
         </div>
         <div className="mt-3 flex gap-3 overflow-x-auto scrollbar-hide px-5 pb-2">
-          {destinations.map((d) => (
+          {filteredDestinations.length === 0 ? (
+            <p className="px-0 text-xs text-muted-foreground">{t("home.noDestinationsForCategory")}</p>
+          ) : null}
+          {filteredDestinations.map((d) => (
             <div key={d.id} className="relative w-[240px] shrink-0 overflow-hidden rounded-2xl shadow-card">
               <img src={d.img} alt={d.name} loading="lazy" className="h-[300px] w-full object-cover" width={800} height={1024} />
               <div className="absolute inset-0 bg-gradient-hero" />

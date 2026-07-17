@@ -83,7 +83,13 @@
     "yourName": "Seu nome"
   },
   "home": {
-    "greeting": "Bom dia, Rafael",
+    "goodMorning": "Bom dia",
+    "goodMorningName": "Bom dia, {{name}}",
+    "goodAfternoon": "Boa tarde",
+    "goodAfternoonName": "Boa tarde, {{name}}",
+    "goodEvening": "Boa noite",
+    "goodEveningName": "Boa noite, {{name}}",
+    "noDestinationsForCategory": "Nenhum destino nessa categoria ainda.",
     "heroTitle": "A vida não é\nsó trilhar.",
     "heroSubtitle": "Viver é diferente de estar vivo. Encontre seu próximo destino.",
     "searchPlaceholder": "Buscar trilhas, parceiros, destinos…",

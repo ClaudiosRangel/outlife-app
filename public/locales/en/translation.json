@@ -83,7 +83,13 @@
     "yourName": "Your name"
   },
   "home": {
-    "greeting": "Good morning, Rafael",
+    "goodMorning": "Good morning",
+    "goodMorningName": "Good morning, {{name}}",
+    "goodAfternoon": "Good afternoon",
+    "goodAfternoonName": "Good afternoon, {{name}}",
+    "goodEvening": "Good evening",
+    "goodEveningName": "Good evening, {{name}}",
+    "noDestinationsForCategory": "No destinations in this category yet.",
     "heroTitle": "Life is not\nonly hiking.",
     "heroSubtitle": "Living is different from being alive. Find your next destination.",
     "searchPlaceholder": "Search trails, partners, destinations…",
