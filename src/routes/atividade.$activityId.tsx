@@ -100,6 +100,25 @@ function ActivityDetailPage() {
           <div className="text-[10px] text-muted-foreground">{t("activity.metrics.date")}</div>
         </div>
       </div>
+
+      {/* Descrição e foto opcionais adicionadas ao finalizar o
+          rastreamento (ver `atividade.rastrear.tsx`). Só exibidas quando
+          presentes. */}
+      {activity?.image_url && (
+        <div className="mx-5 mt-4">
+          <img
+            src={activity.image_url}
+            alt=""
+            loading="lazy"
+            className="h-56 w-full rounded-2xl object-cover shadow-card"
+          />
+        </div>
+      )}
+      {activity?.description && (
+        <div className="mx-5 mt-4 rounded-2xl bg-card p-4 shadow-card">
+          <p className="text-sm leading-relaxed text-foreground/90">{activity.description}</p>
+        </div>
+      )}
     </div>
   );
 }

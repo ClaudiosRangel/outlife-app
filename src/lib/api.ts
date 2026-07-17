@@ -515,6 +515,8 @@ export type UserActivity = {
   distance_meters: number | null;
   route_geojson: GeoJSON.LineString | null;
   status: "in_progress" | "completed";
+  description: string | null;
+  image_url: string | null;
 };
 
 export async function startActivity(destinationId?: string | null): Promise<UserActivity> {
@@ -553,6 +555,8 @@ export async function finishActivity(
     distance_meters: number;
     duration_seconds: number;
     route_geojson: GeoJSON.LineString;
+    description?: string | null;
+    image_url?: string | null;
   },
 ): Promise<UserActivity> {
   if (payload.route_geojson.type !== "LineString" || payload.route_geojson.coordinates.length < 2) {
@@ -563,9 +567,41 @@ export async function finishActivity(
     _geojson: payload.route_geojson as never,
     _distance: payload.distance_meters,
     _duration: payload.duration_seconds,
+    _description: payload.description ?? null,
+    _image_url: payload.image_url ?? null,
   } as never);
   if (error) throw error;
   return data as unknown as UserActivity;
+}
+
+const MAX_ACTIVITY_IMAGE_BYTES = 5 * 1024 * 1024;
+
+// Envia a foto opcional anexada ao finalizar uma User_Activity para o
+// bucket `activity-images` (migration
+// `20260719090000_activity-description-and-image.sql`), seguindo o mesmo
+// padrão de resize/validação/upload de `uploadAvatarImage`/
+// `uploadCommunityPostImage`. Retorna a URL pública, passada como
+// `image_url` para `finishActivity`.
+export async function uploadActivityImage(file: File): Promise<string> {
+  const { data: userData } = await supabase.auth.getUser();
+  if (!userData.user) throw new Error("Não autenticado");
+  const mime = file.type;
+  const ext = ALLOWED_IMAGE_TYPES[mime];
+  if (!ext) {
+    throw new Error("Formato inválido. Use JPG, PNG ou WEBP.");
+  }
+
+  const optimized = await resizeImageForUpload(file, MAX_ACTIVITY_IMAGE_BYTES);
+  if (optimized.size > MAX_ACTIVITY_IMAGE_BYTES) {
+    throw new Error("Imagem muito grande (máx. 5 MB).");
+  }
+  const path = `${userData.user.id}/${Date.now()}.${ext}`;
+  const { error: upErr } = await supabase.storage
+    .from("activity-images")
+    .upload(path, optimized, { upsert: false, contentType: mime });
+  if (upErr) throw upErr;
+  const { data: pub } = supabase.storage.from("activity-images").getPublicUrl(path);
+  return pub.publicUrl;
 }
 
 export async function discardActivity(id: string) {

@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
-import { Play, Pause, Square, Trash2, ArrowLeft, MapPin } from "lucide-react";
+import { Play, Pause, Square, Trash2, ArrowLeft, MapPin, Camera, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/use-auth";
@@ -11,11 +11,20 @@ import {
   updateActivityProgress,
   finishActivity,
   discardActivity,
+  uploadActivityImage,
 } from "@/lib/api";
 import { mapRateLimitErrorToMessage } from "@/lib/rate-limit-error";
 import { Button } from "@/components/ui/button";
 import { StatusBar } from "@/components/StatusBar";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+} from "@/components/ui/sheet";
+import { Label } from "@/components/ui/label";
 import { enqueueActivity } from "@/lib/activity-storage";
 import { useActivitySync } from "@/hooks/use-activity-sync";
 import { ReviewPromptDialog } from "@/components/ReviewPromptDialog";
@@ -59,6 +68,30 @@ function TrackActivityPage() {
   const lastSyncRef = useRef(0);
   useActivitySync();
 
+  // Ao finalizar, antes de persistir, oferece descrição e foto opcionais
+  // (pedido do usuário) através deste Sheet — em vez de salvar
+  // imediatamente ao clicar em "Finalizar".
+  const [finishSheetOpen, setFinishSheetOpen] = useState(false);
+  const [description, setDescription] = useState("");
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const finishFileRef = useRef<HTMLInputElement>(null);
+
+  const resetFinishForm = () => {
+    setDescription("");
+    setImagePreview(null);
+    setImageFile(null);
+  };
+
+  const handleFinishImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImageFile(file);
+    const reader = new FileReader();
+    reader.onloadend = () => setImagePreview(reader.result as string);
+    reader.readAsDataURL(file);
+  };
+
   useEffect(() => {
     if (!authLoading && !user) navigate({ to: "/login" });
   }, [authLoading, user, navigate]);
@@ -74,7 +107,7 @@ function TrackActivityPage() {
   });
 
   const finishMut = useMutation({
-    mutationFn: async () => {
+    mutationFn: async (opts: { skipExtras?: boolean } = {}) => {
       if (!activityId) throw new Error("No activity");
       const result = tracker.finalize();
       if (!result.route) {
@@ -82,10 +115,14 @@ function TrackActivityPage() {
         throw new Error(t("activity.toasts.tooShort"));
       }
       try {
+        const skipExtras = opts?.skipExtras ?? false;
+        const image_url = !skipExtras && imageFile ? await uploadActivityImage(imageFile) : undefined;
         return await finishActivity(activityId, {
           distance_meters: result.distance,
           duration_seconds: result.duration,
           route_geojson: result.route,
+          description: skipExtras ? undefined : description.trim() || undefined,
+          image_url,
         });
       } catch (err) {
         const rateLimitMessage = mapRateLimitErrorToMessage(err);
@@ -116,6 +153,8 @@ function TrackActivityPage() {
       toast.success(t("activity.toasts.saved"));
       tracker.reset();
       setActivityId(null);
+      setFinishSheetOpen(false);
+      resetFinishForm();
       if (a.destination_id) {
         setSavedActivityId(a.id);
         setReviewDestinationId(a.destination_id);
@@ -264,7 +303,7 @@ function TrackActivityPage() {
             <Button
               variant="destructive"
               className="flex-1 h-12 rounded-2xl"
-              onClick={() => finishMut.mutate()}
+              onClick={() => setFinishSheetOpen(true)}
               disabled={isSaving}
             >
               <Square size={16} /> {t("activity.finish")}
@@ -286,6 +325,85 @@ function TrackActivityPage() {
           <MapPin size={12} /> {t("activity.hint")}
         </p>
       )}
+
+      {/* Sheet exibido ao clicar em "Finalizar": permite adicionar descrição
+          e foto opcionais antes de persistir a atividade (pedido do
+          usuário). Segue o mesmo padrão visual do drawer de nova postagem
+          em `comunidade.tsx`. */}
+      <Sheet
+        open={finishSheetOpen}
+        onOpenChange={(open) => {
+          if (!open && !finishMut.isPending) resetFinishForm();
+          setFinishSheetOpen(open);
+        }}
+      >
+        <SheetContent side="bottom" className="rounded-t-3xl max-h-[85vh] overflow-y-auto">
+          <SheetHeader>
+            <SheetTitle className="font-display">{t("activity.finishSheetTitle")}</SheetTitle>
+            <SheetDescription>{t("activity.finishSheetDescription")}</SheetDescription>
+          </SheetHeader>
+
+          <div className="space-y-5 py-4">
+            <div>
+              <Label className="mb-2 block text-sm font-medium">{t("activity.descriptionLabel")}</Label>
+              <textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder={t("activity.descriptionPlaceholder")}
+                rows={4}
+                className="w-full rounded-xl border border-border bg-card p-4 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none"
+              />
+            </div>
+
+            <div>
+              <Label className="mb-2 block text-sm font-medium">{t("activity.addPhoto")}</Label>
+              <button
+                onClick={() => finishFileRef.current?.click()}
+                className="relative flex w-full flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-border bg-secondary/50 p-6 text-muted-foreground transition-colors hover:bg-secondary active:scale-[0.98]"
+              >
+                {imagePreview ? (
+                  <img
+                    src={imagePreview}
+                    alt="Preview"
+                    className="h-40 w-full rounded-xl object-cover"
+                  />
+                ) : (
+                  <>
+                    <Camera size={28} className="text-muted-foreground" />
+                    <span className="text-sm">{t("activity.addPhoto")}</span>
+                    <span className="text-xs text-muted-foreground/70">{t("activity.photoHint")}</span>
+                  </>
+                )}
+                <input
+                  ref={finishFileRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  className="hidden"
+                  onChange={handleFinishImageChange}
+                />
+              </button>
+            </div>
+
+            <div className="flex gap-3 pt-2">
+              <button
+                onClick={() => finishMut.mutate({ skipExtras: true })}
+                disabled={finishMut.isPending}
+                className="flex-1 rounded-xl border border-border bg-card py-3.5 text-sm font-semibold text-foreground active:scale-[0.98] transition-transform disabled:opacity-50"
+              >
+                {t("activity.skip")}
+              </button>
+              <button
+                onClick={() => finishMut.mutate({})}
+                disabled={finishMut.isPending}
+                className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-primary py-3.5 text-sm font-semibold text-primary-foreground shadow-card disabled:opacity-50 disabled:active:scale-100 active:scale-[0.98] transition-transform"
+              >
+                {finishMut.isPending ? <Loader2 size={16} className="animate-spin" /> : <Square size={16} />}
+                {t("activity.saveActivity")}
+              </button>
+            </div>
+          </div>
+        </SheetContent>
+      </Sheet>
 
       {savedActivityId && reviewDestinationId && (
         <ReviewPromptDialog
