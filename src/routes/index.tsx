@@ -129,12 +129,21 @@ function Home() {
             </Link>
             <Link
               to="/notificacoes"
-              aria-label="Notificações"
+              aria-label={
+                unreadCount > 0
+                  ? t("notifications.bellAriaWithCount", { count: unreadCount })
+                  : t("notifications.bellAria")
+              }
               className="relative grid h-10 w-10 place-items-center rounded-full bg-white/15 text-white backdrop-blur-md"
             >
               <Bell size={18} className={bellRinging ? "animate-bell-ring" : undefined} />
+              {/* Requirement solicitado pelo usuário: o sino deve mostrar a
+                  quantidade de notificações não lidas, não só um indicador
+                  neutro. Acima de 9 exibe "9+" para não estourar o círculo. */}
               {unreadCount > 0 && (
-                <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-red-500" />
+                <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-red-500 px-1 text-[10px] font-semibold leading-none text-white">
+                  {unreadCount > 9 ? "9+" : unreadCount}
+                </span>
               )}
             </Link>
           </div>

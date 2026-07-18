@@ -254,6 +254,7 @@
     },
     "follow": "Follow",
     "following": "Following",
+    "emptyTab": "No posts here yet.",
     "showComments": "View {{count}} comments",
     "hideComments": "Hide comments",
     "commentPlaceholder": "Write a comment...",
@@ -478,7 +479,9 @@
     "empty": "You don't have any notifications.",
     "friendRequestText": "sent you a friend request.",
     "postLikeText": "liked your story.",
-    "genericText": "You have a new notification."
+    "genericText": "You have a new notification.",
+    "bellAria": "Notifications",
+    "bellAriaWithCount": "Notifications ({{count}} unread)"
   },
   "settings": {
     "title": "Settings",

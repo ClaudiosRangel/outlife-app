@@ -254,6 +254,7 @@
     },
     "follow": "Seguir",
     "following": "Seguindo",
+    "emptyTab": "Nenhuma publicação por aqui ainda.",
     "showComments": "Ver os {{count}} comentários",
     "hideComments": "Ocultar comentários",
     "commentPlaceholder": "Escreva um comentário...",
@@ -478,7 +479,9 @@
     "empty": "Você não tem notificações.",
     "friendRequestText": "enviou uma solicitação de amizade.",
     "postLikeText": "curtiu seu relato.",
-    "genericText": "Você tem uma nova notificação."
+    "genericText": "Você tem uma nova notificação.",
+    "bellAria": "Notificações",
+    "bellAriaWithCount": "Notificações ({{count}} não lidas)"
   },
   "settings": {
     "title": "Configurações",

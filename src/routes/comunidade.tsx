@@ -67,6 +67,31 @@ type UIPost = {
   following?: boolean;
 };
 
+// Bug corrigido (mesmo espírito do Requirement 12/`filterDestinationsByCategory`
+// em index.tsx): as abas "Para você"/"Seguindo"/"Trilhas"/"Camping"/"Relatos"
+// eram botões sem `onClick`, puramente decorativos. `community_posts` não tem
+// um campo de categoria dedicado, então:
+// - "forYou": sem filtro (todos os posts).
+// - "following": filtro real, reaproveita `followedAuthorIds` já carregado
+//   para o botão de seguir de cada post.
+// - "trails"/"camping": correspondência por palavra-chave em texto/local.
+// - "stories": sem palavra-chave clara nos dados atuais — permanece
+//   clicável e com destaque visual, mas pode resultar em lista vazia
+//   (documentado, mesmo padrão de "Caiaque"/"Escalada" em index.tsx).
+export type CommunityTab = "forYou" | "following" | "trails" | "camping" | "stories";
+
+const COMMUNITY_TAB_MATCHERS: Record<Exclude<CommunityTab, "forYou" | "following">, (p: UIPost) => boolean> = {
+  trails: (p) => /trilha|trekking/i.test(p.text) || /trilha/i.test(p.place),
+  camping: (p) => /camping|acampamento/i.test(p.text) || /camping/i.test(p.place),
+  stories: (p) => /relato|história|estória/i.test(p.text),
+};
+
+export function filterPostsByTab(posts: UIPost[], tab: CommunityTab): UIPost[] {
+  if (tab === "forYou") return posts;
+  if (tab === "following") return posts.filter((p) => p.following);
+  return posts.filter(COMMUNITY_TAB_MATCHERS[tab]);
+}
+
 export const Route = createFileRoute("/comunidade")({
   component: Community,
   head: () => ({
@@ -136,6 +161,9 @@ function Community() {
     following: followedAuthorIdSet.has(p.authorId),
     ...(localOverrides[p.id] ?? {}),
   }));
+
+  const [activeTab, setActiveTab] = useState<CommunityTab>("forYou");
+  const visiblePosts = filterPostsByTab(posts, activeTab);
 
   const [isOpen, setIsOpen] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
@@ -308,11 +336,12 @@ function Community() {
           </button>
         </div>
         <div className="mt-3 flex gap-2 overflow-x-auto scrollbar-hide -mx-5 px-5">
-          {(["forYou", "following", "trails", "camping", "stories"] as const).map((k, i) => (
+          {(["forYou", "following", "trails", "camping", "stories"] as const).map((k) => (
             <button
               key={k}
-              className={`whitespace-nowrap rounded-full px-4 py-1.5 text-xs font-medium ${
-                i === 0
+              onClick={() => setActiveTab(k)}
+              className={`whitespace-nowrap rounded-full px-4 py-1.5 text-xs font-medium transition-base ${
+                activeTab === k
                   ? "bg-primary text-primary-foreground"
                   : "bg-secondary text-secondary-foreground"
               }`}
@@ -342,7 +371,13 @@ function Community() {
                 </div>
               </div>
             ))
-          : posts.map((p) => (
+          : visiblePosts.length === 0
+          ? (
+              <div className="rounded-2xl bg-card p-6 text-center text-xs text-muted-foreground shadow-card">
+                {t("community.emptyTab", "Nenhuma publicação por aqui ainda.")}
+              </div>
+            )
+          : visiblePosts.map((p) => (
               <article key={p.id} className="overflow-hidden rounded-3xl bg-card shadow-card">
                 <header className="flex items-center gap-3 p-4">
                   <img
@@ -609,11 +644,18 @@ function PostComments({ postId, currentUserId }: { postId: string; currentUserId
         })
       )}
       <div className="flex items-center gap-2">
+        {/* Bug corrigido: `text-xs` (12px) fica abaixo do limite de 16px que
+            Safari/Chrome no iOS respeitam sem forçar um zoom automático da
+            página ao focar um campo de texto. Esse zoom empurrava o botão
+            de enviar para fora da área visível (parecia "sumir" atrás do
+            scroll). `text-base` no mobile (16px) evita o zoom; `md:text-sm`
+            mantém o visual compacto original em telas maiores, mesmo padrão
+            já usado pelo componente <Input> em outras telas. */}
         <input
           value={commentText}
           onChange={(e) => setCommentText(e.target.value)}
           placeholder={t("community.commentPlaceholder")}
-          className="flex-1 rounded-full border border-border bg-card px-3 py-2 text-xs outline-none"
+          className="flex-1 rounded-full border border-border bg-card px-3 py-2 text-base outline-none md:text-xs"
         />
         <button
           onClick={handleSubmitComment}
