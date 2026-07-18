@@ -347,6 +347,13 @@ export async function deleteService(id: string) {
 }
 
 // ============ Comunidade ============
+
+// Tipo de publicação (Requirement solicitado pelo usuário: combobox no
+// formulário de criação + filtro real nas abas da tela de comunidade).
+// Persistido em `community_posts.category`, restrito por CHECK constraint
+// no banco (migration 20260720090000_community-post-category.sql).
+export type CommunityPostCategory = "trilha" | "camping" | "relato" | "outro";
+
 export async function fetchCommunityPosts() {
   const { data, error } = await supabase
     .from("community_posts")
@@ -390,6 +397,7 @@ export async function uploadCommunityPostImage(file: File): Promise<string> {
 export async function createCommunityPost(input: {
   text: string;
   place?: string;
+  category?: CommunityPostCategory;
   image_url?: string;
 }) {
   const { data: userData } = await supabase.auth.getUser();
@@ -399,6 +407,7 @@ export async function createCommunityPost(input: {
     .insert({
       text: input.text,
       place: input.place ?? null,
+      category: input.category ?? "outro",
       image_url: input.image_url ?? null,
       author_id: userData.user.id,
     } as never)

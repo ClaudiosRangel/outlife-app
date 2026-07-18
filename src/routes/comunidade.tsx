@@ -22,6 +22,13 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -44,6 +51,7 @@ import {
   fetchPostComments,
   createPostComment,
   type PostComment,
+  type CommunityPostCategory,
 } from "@/lib/api";
 import { useAuth } from "@/hooks/use-auth";
 import { shareContent } from "@/lib/share";
@@ -61,35 +69,34 @@ type UIPost = {
   place: string;
   text: string;
   img: string;
+  category: CommunityPostCategory;
   likes: number;
   comments: number;
   liked?: boolean;
   following?: boolean;
 };
 
-// Bug corrigido (mesmo espírito do Requirement 12/`filterDestinationsByCategory`
-// em index.tsx): as abas "Para você"/"Seguindo"/"Trilhas"/"Camping"/"Relatos"
-// eram botões sem `onClick`, puramente decorativos. `community_posts` não tem
-// um campo de categoria dedicado, então:
+// As abas "Para você"/"Seguindo"/"Trilhas"/"Camping"/"Relatos" agora
+// filtram por `community_posts.category` real (Requirement solicitado pelo
+// usuário: combobox de tipo de publicação no formulário de criação, e o
+// menu de abas deve respeitar esse tipo em vez da correspondência por
+// palavra-chave usada anteriormente como aproximação).
 // - "forYou": sem filtro (todos os posts).
-// - "following": filtro real, reaproveita `followedAuthorIds` já carregado
-//   para o botão de seguir de cada post.
-// - "trails"/"camping": correspondência por palavra-chave em texto/local.
-// - "stories": sem palavra-chave clara nos dados atuais — permanece
-//   clicável e com destaque visual, mas pode resultar em lista vazia
-//   (documentado, mesmo padrão de "Caiaque"/"Escalada" em index.tsx).
+// - "following": filtro por autor seguido, reaproveita `followedAuthorIds`
+//   já carregado para o botão de seguir de cada post.
+// - "trails"/"camping"/"stories": filtro exato por `category`.
 export type CommunityTab = "forYou" | "following" | "trails" | "camping" | "stories";
 
-const COMMUNITY_TAB_MATCHERS: Record<Exclude<CommunityTab, "forYou" | "following">, (p: UIPost) => boolean> = {
-  trails: (p) => /trilha|trekking/i.test(p.text) || /trilha/i.test(p.place),
-  camping: (p) => /camping|acampamento/i.test(p.text) || /camping/i.test(p.place),
-  stories: (p) => /relato|história|estória/i.test(p.text),
+const TAB_TO_CATEGORY: Record<Exclude<CommunityTab, "forYou" | "following">, CommunityPostCategory> = {
+  trails: "trilha",
+  camping: "camping",
+  stories: "relato",
 };
 
 export function filterPostsByTab(posts: UIPost[], tab: CommunityTab): UIPost[] {
   if (tab === "forYou") return posts;
   if (tab === "following") return posts.filter((p) => p.following);
-  return posts.filter(COMMUNITY_TAB_MATCHERS[tab]);
+  return posts.filter((p) => p.category === TAB_TO_CATEGORY[tab]);
 }
 
 export const Route = createFileRoute("/comunidade")({
@@ -119,6 +126,7 @@ function toUIPost(p: any): UIPost {
     place: p.place || "Brasil",
     text: p.text || "",
     img: resolveAsset(p.image_url, community1),
+    category: (p.category ?? "outro") as CommunityPostCategory,
     likes: p.likes ?? 0,
     comments: p.comments_count ?? 0,
   };
@@ -170,6 +178,7 @@ function Community() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [text, setText] = useState("");
   const [place, setPlace] = useState("");
+  const [category, setCategory] = useState<CommunityPostCategory>("outro");
   const [showComments, setShowComments] = useState<Record<string, boolean>>({});
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -178,9 +187,13 @@ function Community() {
   // `createCommunityPost` era chamado sem `image_url`. Agora o arquivo real
   // é enviado via `uploadCommunityPostImage` antes de criar o post.
   const createMutation = useMutation({
-    mutationFn: async ({ text, place }: { text: string; place?: string }) => {
+    mutationFn: async ({
+      text,
+      place,
+      category,
+    }: { text: string; place?: string; category: CommunityPostCategory }) => {
       const image_url = selectedFile ? await uploadCommunityPostImage(selectedFile) : undefined;
-      return createCommunityPost({ text, place, image_url });
+      return createCommunityPost({ text, place, category, image_url });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["community-posts"] });
@@ -204,6 +217,7 @@ function Community() {
     setSelectedFile(null);
     setText("");
     setPlace("");
+    setCategory("outro");
   };
 
   const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -217,7 +231,7 @@ function Community() {
 
   const handleSubmit = () => {
     if (!text.trim()) return;
-    createMutation.mutate({ text: text.trim(), place: place.trim() || undefined });
+    createMutation.mutate({ text: text.trim(), place: place.trim() || undefined, category });
   };
 
   const likeMutation = useMutation({
@@ -503,6 +517,23 @@ function Community() {
                   onChange={handleFile}
                 />
               </button>
+            </div>
+
+            {/* Tipo de publicação */}
+            <div>
+              <label className="mb-2 block text-sm font-medium">{t("community.categoryLabel")}</label>
+              <Select value={category} onValueChange={(v) => setCategory(v as CommunityPostCategory)}>
+                <SelectTrigger className="h-12 rounded-xl">
+                  <SelectValue placeholder={t("community.selectCategory")} />
+                </SelectTrigger>
+                <SelectContent>
+                  {(["trilha", "camping", "relato", "outro"] as const).map((c) => (
+                    <SelectItem key={c} value={c}>
+                      {t(`community.categories.${c}`)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             {/* Local */}
