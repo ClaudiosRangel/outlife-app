@@ -65,7 +65,15 @@ export default function ActivityMap({
     : positions[0] ?? [-15.78, -47.93];
 
   return (
-    <div className="overflow-hidden rounded-2xl shadow-card" style={{ height }}>
+    // `isolate` cria um novo contexto de empilhamento local: os
+    // z-index internos do Leaflet (controles de zoom chegam a 1000,
+    // panes a até 700) são altíssimos e, sem isolamento, "escapam" para o
+    // contexto global — ficando por cima até de overlays renderizados
+    // depois no DOM, como o Sheet de "Finalizar atividade" (bug relatado:
+    // o mapa aparecia flutuando por cima do formulário e do fundo escuro).
+    // `isolate` contém esses z-index dentro deste elemento, então o mapa
+    // volta a respeitar a ordem normal de camadas da tela.
+    <div className="relative isolate w-full overflow-hidden rounded-2xl shadow-card" style={{ height }}>
       <MapContainer
         center={initialCenter}
         zoom={15}

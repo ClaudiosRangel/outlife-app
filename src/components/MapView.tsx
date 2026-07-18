@@ -78,7 +78,11 @@ export default function MapView() {
 
   return (
     <>
-      <div className="mx-5 mb-2 h-40 overflow-hidden rounded-2xl shadow-card bg-gradient-sky">
+      {/* `isolate` contém os z-index internos do Leaflet (controles de zoom
+          chegam a 1000) dentro deste elemento, evitando que "escapem" e
+          apareçam por cima de outros conteúdos da página (mesmo bug
+          corrigido em ActivityMap.tsx). */}
+      <div className="relative isolate mx-5 mb-2 h-40 overflow-hidden rounded-2xl shadow-card bg-gradient-sky">
         <MapContainer
           center={BRAZIL_CENTER}
           zoom={BRAZIL_ZOOM}
