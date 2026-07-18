@@ -125,10 +125,19 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <PhoneFrame>
-          <div className="flex min-h-screen sm:min-h-[860px] flex-col">
+          {/* `h-full` + `min-h-0`: dentro de um contêiner flex, um filho
+              flex (`<main>` com `flex-1`) só encolhe corretamente e passa a
+              rolar internamente se o próprio pai tiver altura definida —
+              sem isso, o flex item cresce para caber TODO o conteúdo (efeito
+              contrário ao pretendido). `min-h-0` sobrescreve o mínimo
+              implícito do flexbox que, por padrão, também impede o encolhimento. */}
+          <div className="flex h-full min-h-0 flex-col">
             {/* id usado por BottomNav para rolar de volta ao topo ao tocar
-                na aba em que você já está (comportamento do Instagram). */}
-            <main id="app-scroll-container" className="flex-1 overflow-y-auto pb-2">
+                na aba em que você já está (comportamento do Instagram).
+                `min-h-0` aqui é o que efetivamente contém a rolagem dentro
+                de <main>, mantendo o BottomNav sempre visível abaixo,
+                independente de quantos posts/itens a lista tiver. */}
+            <main id="app-scroll-container" className="min-h-0 flex-1 overflow-y-auto pb-2">
               <Outlet />
             </main>
             <BottomNav />

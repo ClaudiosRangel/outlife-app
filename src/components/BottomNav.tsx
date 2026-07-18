@@ -1,4 +1,5 @@
 import { Link, useLocation } from "@tanstack/react-router";
+import { useEffect, useRef, useState } from "react";
 import { Home, Search, Compass, Store, Users, User } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useTranslation } from "react-i18next";
@@ -45,10 +46,48 @@ export function getActiveNavKey(pathname: string): NavKey | null {
   return null;
 }
 
+// Comportamento pedido pelo usuário ("como o Facebook"): o menu inferior
+// se esconde enquanto o usuário está deslizando a lista (scroll ativo) e
+// reaparece assim que o deslize para — em vez de ficar sempre visível
+// ocupando espaço da tela, ou de só aparecer ao rolar até o fim de uma
+// lista longa (bug corrigido separadamente no layout do PhoneFrame).
+//
+// Detecta scroll no contêiner `#app-scroll-container` (o `<main>` que
+// realmente rola o conteúdo das telas, ver `__root.tsx`). Um temporizador
+// de "parou de rolar" (`SCROLL_IDLE_MS`) marca o fim do gesto: cada evento
+// de scroll reinicia o temporizador, e o menu só reaparece quando ele
+// termina sem nova rolagem — replicando a sensação de "aparece quando para".
+const SCROLL_IDLE_MS = 250;
+
+function useHideOnScroll() {
+  const [hidden, setHidden] = useState(false);
+  const idleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    const container = document.getElementById("app-scroll-container");
+    if (!container) return;
+
+    const handleScroll = () => {
+      setHidden(true);
+      if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+      idleTimerRef.current = setTimeout(() => setHidden(false), SCROLL_IDLE_MS);
+    };
+
+    container.addEventListener("scroll", handleScroll, { passive: true });
+    return () => {
+      container.removeEventListener("scroll", handleScroll);
+      if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+    };
+  }, []);
+
+  return hidden;
+}
+
 export function BottomNav() {
   const { pathname } = useLocation();
   const { user } = useAuth();
   const { t } = useTranslation();
+  const hidden = useHideOnScroll();
 
   const activeKey = getActiveNavKey(pathname);
 
@@ -71,7 +110,11 @@ export function BottomNav() {
   };
 
   return (
-    <nav className="sticky bottom-0 left-0 right-0 z-40 border-t border-border bg-card/95 backdrop-blur-xl pb-[env(safe-area-inset-bottom)]">
+    <nav
+      className={`sticky bottom-0 left-0 right-0 z-40 border-t border-border bg-card/95 backdrop-blur-xl pb-[env(safe-area-inset-bottom)] transition-transform duration-200 ease-out ${
+        hidden ? "translate-y-full" : "translate-y-0"
+      }`}
+    >
       <ul className="grid grid-cols-6 px-2 pt-2 pb-2">
         {tabs.map(({ key, to, label, icon: Icon }) => {
           const active = key === activeKey;
