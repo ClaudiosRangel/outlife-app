@@ -126,7 +126,9 @@ function RootComponent() {
       <AuthProvider>
         <PhoneFrame>
           <div className="flex min-h-screen sm:min-h-[860px] flex-col">
-            <main className="flex-1 overflow-y-auto pb-2">
+            {/* id usado por BottomNav para rolar de volta ao topo ao tocar
+                na aba em que você já está (comportamento do Instagram). */}
+            <main id="app-scroll-container" className="flex-1 overflow-y-auto pb-2">
               <Outlet />
             </main>
             <BottomNav />
