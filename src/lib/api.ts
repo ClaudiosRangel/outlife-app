@@ -1279,6 +1279,66 @@ export async function fetchMyFollowedAuthorIds(): Promise<string[]> {
   return ((data ?? []) as unknown as Array<{ addressee_id: string }>).map((row) => row.addressee_id);
 }
 
+export type FollowProfile = {
+  id: string;
+  full_name: string | null;
+  username: string | null;
+  avatar_url: string | null;
+};
+
+// Bug corrigido: a tela de perfil abria a lista de "Seguidores"/"Seguindo"
+// chamando `fetchFriends` filtrado por `status = 'accepted'` (Friendship,
+// ou seja, amizade confirmada) — mas os números exibidos nos botões vêm de
+// `profiles.followers_count`/`following_count`, que contam linhas
+// `status = 'following'` (Post_Follow, criado por `toggleAuthorFollow` na
+// Comunidade — ver migration `20260718100000_sync-follow-counts.sql`).
+// São dois conceitos diferentes no schema (amizade vs. seguir), então o
+// número no painel nunca correspondia à lista de pessoas mostrada ao
+// clicar. `fetchMyFollowers`/`fetchMyFollowing` abaixo buscam exatamente o
+// mesmo dado (`status = 'following'`) usado para os contadores.
+
+// Quem segue o usuário autenticado (aparece como addressee_id nas linhas
+// `following`, i.e. quem foi seguido é o usuário atual).
+export async function fetchMyFollowers(): Promise<FollowProfile[]> {
+  const { data: userData } = await supabase.auth.getUser();
+  if (!userData.user) return [];
+  const { data: rows, error } = await supabase
+    .from("user_friends" as never)
+    .select("requester_id")
+    .eq("addressee_id", userData.user.id)
+    .eq("status", "following");
+  if (error) throw error;
+  const ids = ((rows ?? []) as unknown as Array<{ requester_id: string }>).map((r) => r.requester_id);
+  if (ids.length === 0) return [];
+  const { data: profiles, error: profErr } = await supabase
+    .from("profiles")
+    .select("id, full_name, username, avatar_url")
+    .in("id", ids);
+  if (profErr) throw profErr;
+  return (profiles ?? []) as unknown as FollowProfile[];
+}
+
+// Quem o usuário autenticado segue (aparece como addressee_id nas linhas
+// `following` criadas pelo próprio usuário como requester_id).
+export async function fetchMyFollowing(): Promise<FollowProfile[]> {
+  const { data: userData } = await supabase.auth.getUser();
+  if (!userData.user) return [];
+  const { data: rows, error } = await supabase
+    .from("user_friends" as never)
+    .select("addressee_id")
+    .eq("requester_id", userData.user.id)
+    .eq("status", "following");
+  if (error) throw error;
+  const ids = ((rows ?? []) as unknown as Array<{ addressee_id: string }>).map((r) => r.addressee_id);
+  if (ids.length === 0) return [];
+  const { data: profiles, error: profErr } = await supabase
+    .from("profiles")
+    .select("id, full_name, username, avatar_url")
+    .in("id", ids);
+  if (profErr) throw profErr;
+  return (profiles ?? []) as unknown as FollowProfile[];
+}
+
 // ============ Comunidade — comentários (Requirement 8) ============
 
 export type PostComment = {

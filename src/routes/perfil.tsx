@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   Settings,
@@ -38,7 +38,8 @@ import {
   fetchNextAdventure,
   fetchUserChecklists,
   fetchUserActivities,
-  fetchFriends,
+  fetchMyFollowers,
+  fetchMyFollowing,
 } from "@/lib/api";
 import { Activity as ActivityIcon, Clock, Route as RouteIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -123,34 +124,20 @@ function Profile() {
     enabled: !!user,
   });
 
-  // Requirement 12.3 — "seguidores" e "seguindo" não modelam um grafo social
-  // próprio (fora de escopo, ver requirements.md § "Fora de Escopo"). Os dois
-  // botões reaproveitam a mesma Friendship (`user_friends`, status
-  // `accepted`) via `fetchFriends`; `openFriendList` controla qual dos dois
-  // está aberto no momento, garantindo que apenas um seja exibido por vez.
+  // Bug corrigido (Requirement 12.3): os botões "Seguidores"/"Seguindo"
+  // mostram `profiles.followers_count`/`following_count`, que contam
+  // Post_Follow (`user_friends.status = 'following'`, ver migration
+  // `20260718100000_sync-follow-counts.sql`) — não Friendship (`status =
+  // 'accepted'`). Antes, ao clicar, a lista abria com `fetchFriends`
+  // filtrado por `accepted`, mostrando amigos em vez de seguidores/
+  // seguidos reais, o que fazia o número do card não corresponder à lista
+  // exibida. `fetchMyFollowers`/`fetchMyFollowing` buscam exatamente o
+  // mesmo dado usado para os contadores.
   const [openFriendList, setOpenFriendList] = useState<"followers" | "following" | null>(null);
-  const { data: friendRows = [], isLoading: friendRowsLoading } = useQuery({
-    queryKey: ["profile-friends", user?.id],
-    queryFn: fetchFriends,
-    enabled: !!user && openFriendList !== null,
-  });
-  const friendUserIds = useMemo(() => {
-    if (!user) return [];
-    return friendRows
-      .filter((f) => f.status === "accepted")
-      .map((f) => (f.requester_id === user.id ? f.addressee_id : f.requester_id));
-  }, [friendRows, user]);
   const { data: friendProfiles = [], isLoading: friendProfilesLoading } = useQuery({
-    queryKey: ["profile-friends-details", friendUserIds],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("id, full_name, username, avatar_url")
-        .in("id", friendUserIds);
-      if (error) throw error;
-      return data ?? [];
-    },
-    enabled: !!user && openFriendList !== null && friendUserIds.length > 0,
+    queryKey: ["profile-follow-list", user?.id, openFriendList],
+    queryFn: () => (openFriendList === "following" ? fetchMyFollowing() : fetchMyFollowers()),
+    enabled: !!user && openFriendList !== null,
   });
 
 
@@ -571,7 +558,7 @@ function Profile() {
             </SheetTitle>
           </SheetHeader>
           <div className="mt-4 space-y-2 pb-4">
-            {friendRowsLoading || friendProfilesLoading ? (
+            {friendProfilesLoading ? (
               [0, 1, 2].map((i) => <Skeleton key={i} className="h-14 w-full rounded-2xl" />)
             ) : friendProfiles.length === 0 ? (
               <div className="rounded-2xl bg-card p-6 text-center text-xs text-muted-foreground shadow-card">
