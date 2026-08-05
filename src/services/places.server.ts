@@ -75,12 +75,19 @@ function mapPlaceToDestination(place: GooglePlaceResult): GooglePlacesDestinatio
 }
 
 /**
- * Lógica pura do handler de `fetchDestinationsFromGooglePlaces`, extraída do
- * wrapper `createServerFn` para ser testável diretamente em ambiente de
- * teste (vitest), já que `createServerFn` exige o runtime do TanStack Start
- * (AsyncLocalStorage) para ser invocado. O comportamento de produção é
- * idêntico: `createServerFn(...).handler(...)` abaixo apenas delega para
- * esta função.
+ * Lógica interna reutilizável de busca de destinos no Google Places.
+ *
+ * Extraída do wrapper `createServerFn` para ser testável diretamente em
+ * ambiente de teste (vitest), já que `createServerFn` exige o runtime do
+ * TanStack Start (AsyncLocalStorage) para ser invocado. `createServerFn(...)
+ * .handler(...)` abaixo apenas delega para esta função — o comportamento de
+ * produção é idêntico.
+ *
+ * Esta função é também o único ponto de lógica reutilizado pelo futuro
+ * endpoint HTTP `src/routes/api.places.search.ts` (SPA_Build_Target /
+ * Outlife_Native_Shell, Requirement 12.1), evitando duplicar a lógica de
+ * chamada ao Google Places entre a server function local e o endpoint HTTP
+ * remoto (Requirements 1.6, 12.1).
  */
 export async function fetchDestinationsHandler(
   params: FetchDestinationsParams,
@@ -136,9 +143,12 @@ export const fetchDestinationsFromGooglePlaces = createServerFn({ method: 'GET' 
   .handler(async ({ data: params }): Promise<GooglePlacesDestination[]> => fetchDestinationsHandler(params));
 
 /**
- * Lógica pura do handler de `fetchPlacesPhotosFromGooglePlaces`, extraída do
- * wrapper `createServerFn` pelo mesmo motivo documentado em
- * `fetchDestinationsHandler` acima.
+ * Lógica interna reutilizável de busca de fotos de um place no Google
+ * Places, extraída do wrapper `createServerFn` pelo mesmo motivo documentado
+ * em `fetchDestinationsHandler` acima.
+ *
+ * Também reutilizada pelo futuro endpoint HTTP
+ * `src/routes/api.places.photos.ts` (Requirement 12.1), sem duplicar lógica.
  */
 export async function fetchPlacesPhotosHandler(
   params: FetchPlacesPhotosParams,

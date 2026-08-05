@@ -52,6 +52,7 @@
     "clear": "Limpar",
     "continue": "Continuar",
     "delete": "Excluir",
+    "downloaded": "Arquivo baixado!",
     "empty": "Nada por aqui ainda.",
     "linkCopied": "Link copiado!",
     "loading": "Carregando…",
@@ -112,7 +113,9 @@
     "noResults": "Nenhum resultado encontrado.",
     "sectionPartners": "Parceiros",
     "sectionDestinations": "Destinos",
-    "sectionPosts": "Relatos"
+    "sectionPosts": "Relatos",
+    "activeNow": "Amigos em atividade",
+    "nearbyPartners": "Parceiros próximos"
   },
   "explore": {
     "title": "Explorar destinos",
@@ -250,7 +253,9 @@
       "following": "Seguindo",
       "trails": "Trilhas",
       "camping": "Camping",
-      "stories": "Relatos"
+      "stories": "Relatos",
+      "biking": "Pedalada",
+      "walking": "Caminhada"
     },
     "follow": "Seguir",
     "following": "Seguindo",
@@ -268,7 +273,10 @@
       "trilha": "Trilha",
       "camping": "Camping",
       "relato": "Relatos",
-      "outro": "Outros"
+      "outro": "Outros",
+      "pedalada": "Pedalada",
+      "caminhada": "Caminhada",
+      "unspecified": "Não especificada"
     },
     "placeLabel": "Local",
     "placePlaceholder": "Ex: Pedra do Sino · RJ",
@@ -279,6 +287,7 @@
     "published": "Publicado com sucesso!",
     "loginRequired": "Faça login para publicar.",
     "likeError": "Não foi possível curtir. Tente novamente.",
+    "shareBannerError": "Não foi possível gerar a imagem para compartilhar. Tente novamente.",
     "followError": "Não foi possível seguir. Tente novamente.",
     "commentError": "Não foi possível comentar. Tente novamente.",
     "noComments": "Ainda não há comentários. Seja o primeiro!",
@@ -314,7 +323,8 @@
     "achievements": "Conquistas",
     "nextAdventure": "Próxima aventura",
     "checklist": "Checklist outdoor",
-    "trackCta": "Rastrear nova atividade"
+    "trackCta": "Rastrear nova atividade",
+    "trackActive": "Atividade em andamento"
   },
   "activity": {
     "trackTitle": "Rastrear atividade",
@@ -326,7 +336,9 @@
     "discard": "Descartar",
     "hint": "O GPS começa a registrar quando você toca em iniciar.",
     "permissionDenied": "Permissão de localização negada. Ative o GPS no navegador para registrar sua atividade.",
+    "revokedDuringTracking": "O rastreamento foi interrompido porque a permissão de localização em segundo plano foi revogada. Os pontos já registrados foram preservados.",
     "orphanFound": "Encontramos uma atividade em andamento. Deseja retomá-la?",
+    "orphanUnrecoverable": "Encontramos uma atividade em andamento, mas os dados não puderam ser recuperados. Só é possível descartá-la.",
     "noRoute": "Esta atividade não possui trajeto registrado.",
     "emptyList": "Você ainda não registrou nenhuma atividade.",
     "finishSheetTitle": "Finalizar atividade",
@@ -337,16 +349,34 @@
     "photoHint": "JPG, PNG ou WEBP",
     "skip": "Pular",
     "saveActivity": "Salvar atividade",
+    "syncQueuePending_one": "{{count}} atividade pendente de sincronização",
+    "syncQueuePending_other": "{{count}} atividades pendentes de sincronização",
+    "activityTypeLabel": "Tipo de atividade",
+    "selectActivityType": "Selecione o tipo",
+    "activityTypeRequired": "Selecione o tipo de atividade antes de iniciar.",
+    "activityTypes": {
+      "caminhada": "Caminhada",
+      "pedalada": "Pedalada",
+      "trilha": "Trilha",
+      "outro": "Outro"
+    },
     "metrics": {
       "duration": "Duração",
       "distance": "Distância",
-      "date": "Data"
+      "date": "Data",
+      "speed": "Velocidade média",
+      "pace": "Ritmo médio"
     },
+    "shareBanner": "Compartilhar atividade",
+    "generatingBanner": "Gerando imagem…",
+    "shareBannerTitle": "Minha atividade Outlife",
+    "shareBannerError": "Não foi possível gerar a imagem para compartilhar. Tente novamente.",
     "toasts": {
       "started": "Atividade iniciada. Boa trilha!",
       "saved": "Atividade salva com sucesso.",
       "discarded": "Atividade descartada.",
-      "tooShort": "Trajeto muito curto para salvar."
+      "tooShort": "Trajeto muito curto para salvar.",
+      "trackingStartError": "Não foi possível iniciar o rastreamento. Verifique a permissão de localização e tente novamente."
     }
   },
   "checklist": {
@@ -501,7 +531,8 @@
     "saved": "Perfil atualizado!",
     "avatarUpdated": "Foto de perfil atualizada!",
     "usernameTaken": "Esse nome de usuário já está em uso.",
-    "genericError": "Não foi possível concluir a ação. Tente novamente."
+    "genericError": "Não foi possível concluir a ação. Tente novamente.",
+    "appVersion": "Versão {{version}}"
   },
   "adminCompliance": {
     "title": "Moderação Cadastur",

@@ -178,15 +178,15 @@ function Cadastro() {
             <div className="mt-5 space-y-4">
               <div className="space-y-1.5">
                 <Label htmlFor="name">{t("auth.fullName")}</Label>
-                <Input id="name" value={name} onChange={(e) => setName(e.target.value)} placeholder={t("signup.yourName")} />
+                <Input id="name" autoComplete="name" value={name} onChange={(e) => setName(e.target.value)} placeholder={t("signup.yourName")} />
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="email">{t("auth.email")}</Label>
-                <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="voce@email.com" />
+                <Input id="email" type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="voce@email.com" />
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="password">{t("auth.password")}</Label>
-                <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" />
+                <Input id="password" type="password" autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" />
               </div>
             </div>
           )}
@@ -227,15 +227,15 @@ function Cadastro() {
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="name">{t("signup.businessName")}</Label>
-              <Input id="name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Ex: Rafa Trilhas" />
+              <Input id="name" autoComplete="organization" value={name} onChange={(e) => setName(e.target.value)} placeholder="Ex: Rafa Trilhas" />
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="email">{t("auth.email")}</Label>
-              <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="contato@negocio.com" />
+              <Input id="email" type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="contato@negocio.com" />
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="password">{t("auth.password")}</Label>
-              <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" />
+              <Input id="password" type="password" autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" />
             </div>
           </div>
 

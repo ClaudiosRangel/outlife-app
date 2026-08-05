@@ -9,12 +9,14 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SugerirDestinoRouteImport } from './routes/sugerir-destino'
 import { Route as RedefinirSenhaRouteImport } from './routes/redefinir-senha'
 import { Route as PerfilRouteImport } from './routes/perfil'
 import { Route as NotificacoesRouteImport } from './routes/notificacoes'
 import { Route as MarketplaceRouteImport } from './routes/marketplace'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ExplorarRouteImport } from './routes/explorar'
+import { Route as EventosRouteImport } from './routes/eventos'
 import { Route as ConfiguracoesRouteImport } from './routes/configuracoes'
 import { Route as ComunidadeRouteImport } from './routes/comunidade'
 import { Route as ComplianceRouteImport } from './routes/compliance'
@@ -24,12 +26,28 @@ import { Route as AmigosRouteImport } from './routes/amigos'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ParceiroPainelRouteImport } from './routes/parceiro.painel'
 import { Route as ParceiroPartnerIdRouteImport } from './routes/parceiro.$partnerId'
+import { Route as EventosEventIdRouteImport } from './routes/eventos.$eventId'
 import { Route as DestinoDestinationIdRouteImport } from './routes/destino.$destinationId'
 import { Route as ChecklistChecklistIdRouteImport } from './routes/checklist.$checklistId'
 import { Route as AtividadeRastrearRouteImport } from './routes/atividade.rastrear'
 import { Route as AtividadeActivityIdRouteImport } from './routes/atividade.$activityId'
+import { Route as ApiNotifyAdminsRouteImport } from './routes/api.notify-admins'
+import { Route as AdminDestinosRouteImport } from './routes/admin.destinos'
 import { Route as AdminComplianceRouteImport } from './routes/admin.compliance'
+import { Route as AActivityIdRouteImport } from './routes/a.$activityId'
+import { Route as ApiPushSendFcmRouteImport } from './routes/api.push.send-fcm'
+import { Route as ApiPushRegisterWebRouteImport } from './routes/api.push.register-web'
+import { Route as ApiPushRegisterNativeRouteImport } from './routes/api.push.register-native'
+import { Route as ApiPushInvalidateWebRouteImport } from './routes/api.push.invalidate-web'
+import { Route as ApiPushInvalidateNativeRouteImport } from './routes/api.push.invalidate-native'
+import { Route as ApiPlacesSearchRouteImport } from './routes/api.places.search'
+import { Route as ApiPlacesPhotosRouteImport } from './routes/api.places.photos'
 
+const SugerirDestinoRoute = SugerirDestinoRouteImport.update({
+  id: '/sugerir-destino',
+  path: '/sugerir-destino',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RedefinirSenhaRoute = RedefinirSenhaRouteImport.update({
   id: '/redefinir-senha',
   path: '/redefinir-senha',
@@ -58,6 +76,11 @@ const LoginRoute = LoginRouteImport.update({
 const ExplorarRoute = ExplorarRouteImport.update({
   id: '/explorar',
   path: '/explorar',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EventosRoute = EventosRouteImport.update({
+  id: '/eventos',
+  path: '/eventos',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ConfiguracoesRoute = ConfiguracoesRouteImport.update({
@@ -105,6 +128,11 @@ const ParceiroPartnerIdRoute = ParceiroPartnerIdRouteImport.update({
   path: '/parceiro/$partnerId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const EventosEventIdRoute = EventosEventIdRouteImport.update({
+  id: '/$eventId',
+  path: '/$eventId',
+  getParentRoute: () => EventosRoute,
+} as any)
 const DestinoDestinationIdRoute = DestinoDestinationIdRouteImport.update({
   id: '/destino/$destinationId',
   path: '/destino/$destinationId',
@@ -125,9 +153,59 @@ const AtividadeActivityIdRoute = AtividadeActivityIdRouteImport.update({
   path: '/atividade/$activityId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiNotifyAdminsRoute = ApiNotifyAdminsRouteImport.update({
+  id: '/api/notify-admins',
+  path: '/api/notify-admins',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminDestinosRoute = AdminDestinosRouteImport.update({
+  id: '/admin/destinos',
+  path: '/admin/destinos',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminComplianceRoute = AdminComplianceRouteImport.update({
   id: '/admin/compliance',
   path: '/admin/compliance',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AActivityIdRoute = AActivityIdRouteImport.update({
+  id: '/a/$activityId',
+  path: '/a/$activityId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPushSendFcmRoute = ApiPushSendFcmRouteImport.update({
+  id: '/api/push/send-fcm',
+  path: '/api/push/send-fcm',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPushRegisterWebRoute = ApiPushRegisterWebRouteImport.update({
+  id: '/api/push/register-web',
+  path: '/api/push/register-web',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPushRegisterNativeRoute = ApiPushRegisterNativeRouteImport.update({
+  id: '/api/push/register-native',
+  path: '/api/push/register-native',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPushInvalidateWebRoute = ApiPushInvalidateWebRouteImport.update({
+  id: '/api/push/invalidate-web',
+  path: '/api/push/invalidate-web',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPushInvalidateNativeRoute = ApiPushInvalidateNativeRouteImport.update({
+  id: '/api/push/invalidate-native',
+  path: '/api/push/invalidate-native',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPlacesSearchRoute = ApiPlacesSearchRouteImport.update({
+  id: '/api/places/search',
+  path: '/api/places/search',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPlacesPhotosRoute = ApiPlacesPhotosRouteImport.update({
+  id: '/api/places/photos',
+  path: '/api/places/photos',
   getParentRoute: () => rootRouteImport,
 } as any)
 
@@ -139,19 +217,32 @@ export interface FileRoutesByFullPath {
   '/compliance': typeof ComplianceRoute
   '/comunidade': typeof ComunidadeRoute
   '/configuracoes': typeof ConfiguracoesRoute
+  '/eventos': typeof EventosRouteWithChildren
   '/explorar': typeof ExplorarRoute
   '/login': typeof LoginRoute
   '/marketplace': typeof MarketplaceRoute
   '/notificacoes': typeof NotificacoesRoute
   '/perfil': typeof PerfilRoute
   '/redefinir-senha': typeof RedefinirSenhaRoute
+  '/sugerir-destino': typeof SugerirDestinoRoute
+  '/a/$activityId': typeof AActivityIdRoute
   '/admin/compliance': typeof AdminComplianceRoute
+  '/admin/destinos': typeof AdminDestinosRoute
+  '/api/notify-admins': typeof ApiNotifyAdminsRoute
   '/atividade/$activityId': typeof AtividadeActivityIdRoute
   '/atividade/rastrear': typeof AtividadeRastrearRoute
   '/checklist/$checklistId': typeof ChecklistChecklistIdRoute
   '/destino/$destinationId': typeof DestinoDestinationIdRoute
+  '/eventos/$eventId': typeof EventosEventIdRoute
   '/parceiro/$partnerId': typeof ParceiroPartnerIdRoute
   '/parceiro/painel': typeof ParceiroPainelRoute
+  '/api/places/photos': typeof ApiPlacesPhotosRoute
+  '/api/places/search': typeof ApiPlacesSearchRoute
+  '/api/push/invalidate-native': typeof ApiPushInvalidateNativeRoute
+  '/api/push/invalidate-web': typeof ApiPushInvalidateWebRoute
+  '/api/push/register-native': typeof ApiPushRegisterNativeRoute
+  '/api/push/register-web': typeof ApiPushRegisterWebRoute
+  '/api/push/send-fcm': typeof ApiPushSendFcmRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -161,19 +252,32 @@ export interface FileRoutesByTo {
   '/compliance': typeof ComplianceRoute
   '/comunidade': typeof ComunidadeRoute
   '/configuracoes': typeof ConfiguracoesRoute
+  '/eventos': typeof EventosRouteWithChildren
   '/explorar': typeof ExplorarRoute
   '/login': typeof LoginRoute
   '/marketplace': typeof MarketplaceRoute
   '/notificacoes': typeof NotificacoesRoute
   '/perfil': typeof PerfilRoute
   '/redefinir-senha': typeof RedefinirSenhaRoute
+  '/sugerir-destino': typeof SugerirDestinoRoute
+  '/a/$activityId': typeof AActivityIdRoute
   '/admin/compliance': typeof AdminComplianceRoute
+  '/admin/destinos': typeof AdminDestinosRoute
+  '/api/notify-admins': typeof ApiNotifyAdminsRoute
   '/atividade/$activityId': typeof AtividadeActivityIdRoute
   '/atividade/rastrear': typeof AtividadeRastrearRoute
   '/checklist/$checklistId': typeof ChecklistChecklistIdRoute
   '/destino/$destinationId': typeof DestinoDestinationIdRoute
+  '/eventos/$eventId': typeof EventosEventIdRoute
   '/parceiro/$partnerId': typeof ParceiroPartnerIdRoute
   '/parceiro/painel': typeof ParceiroPainelRoute
+  '/api/places/photos': typeof ApiPlacesPhotosRoute
+  '/api/places/search': typeof ApiPlacesSearchRoute
+  '/api/push/invalidate-native': typeof ApiPushInvalidateNativeRoute
+  '/api/push/invalidate-web': typeof ApiPushInvalidateWebRoute
+  '/api/push/register-native': typeof ApiPushRegisterNativeRoute
+  '/api/push/register-web': typeof ApiPushRegisterWebRoute
+  '/api/push/send-fcm': typeof ApiPushSendFcmRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -184,19 +288,32 @@ export interface FileRoutesById {
   '/compliance': typeof ComplianceRoute
   '/comunidade': typeof ComunidadeRoute
   '/configuracoes': typeof ConfiguracoesRoute
+  '/eventos': typeof EventosRouteWithChildren
   '/explorar': typeof ExplorarRoute
   '/login': typeof LoginRoute
   '/marketplace': typeof MarketplaceRoute
   '/notificacoes': typeof NotificacoesRoute
   '/perfil': typeof PerfilRoute
   '/redefinir-senha': typeof RedefinirSenhaRoute
+  '/sugerir-destino': typeof SugerirDestinoRoute
+  '/a/$activityId': typeof AActivityIdRoute
   '/admin/compliance': typeof AdminComplianceRoute
+  '/admin/destinos': typeof AdminDestinosRoute
+  '/api/notify-admins': typeof ApiNotifyAdminsRoute
   '/atividade/$activityId': typeof AtividadeActivityIdRoute
   '/atividade/rastrear': typeof AtividadeRastrearRoute
   '/checklist/$checklistId': typeof ChecklistChecklistIdRoute
   '/destino/$destinationId': typeof DestinoDestinationIdRoute
+  '/eventos/$eventId': typeof EventosEventIdRoute
   '/parceiro/$partnerId': typeof ParceiroPartnerIdRoute
   '/parceiro/painel': typeof ParceiroPainelRoute
+  '/api/places/photos': typeof ApiPlacesPhotosRoute
+  '/api/places/search': typeof ApiPlacesSearchRoute
+  '/api/push/invalidate-native': typeof ApiPushInvalidateNativeRoute
+  '/api/push/invalidate-web': typeof ApiPushInvalidateWebRoute
+  '/api/push/register-native': typeof ApiPushRegisterNativeRoute
+  '/api/push/register-web': typeof ApiPushRegisterWebRoute
+  '/api/push/send-fcm': typeof ApiPushSendFcmRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -208,19 +325,32 @@ export interface FileRouteTypes {
     | '/compliance'
     | '/comunidade'
     | '/configuracoes'
+    | '/eventos'
     | '/explorar'
     | '/login'
     | '/marketplace'
     | '/notificacoes'
     | '/perfil'
     | '/redefinir-senha'
+    | '/sugerir-destino'
+    | '/a/$activityId'
     | '/admin/compliance'
+    | '/admin/destinos'
+    | '/api/notify-admins'
     | '/atividade/$activityId'
     | '/atividade/rastrear'
     | '/checklist/$checklistId'
     | '/destino/$destinationId'
+    | '/eventos/$eventId'
     | '/parceiro/$partnerId'
     | '/parceiro/painel'
+    | '/api/places/photos'
+    | '/api/places/search'
+    | '/api/push/invalidate-native'
+    | '/api/push/invalidate-web'
+    | '/api/push/register-native'
+    | '/api/push/register-web'
+    | '/api/push/send-fcm'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -230,19 +360,32 @@ export interface FileRouteTypes {
     | '/compliance'
     | '/comunidade'
     | '/configuracoes'
+    | '/eventos'
     | '/explorar'
     | '/login'
     | '/marketplace'
     | '/notificacoes'
     | '/perfil'
     | '/redefinir-senha'
+    | '/sugerir-destino'
+    | '/a/$activityId'
     | '/admin/compliance'
+    | '/admin/destinos'
+    | '/api/notify-admins'
     | '/atividade/$activityId'
     | '/atividade/rastrear'
     | '/checklist/$checklistId'
     | '/destino/$destinationId'
+    | '/eventos/$eventId'
     | '/parceiro/$partnerId'
     | '/parceiro/painel'
+    | '/api/places/photos'
+    | '/api/places/search'
+    | '/api/push/invalidate-native'
+    | '/api/push/invalidate-web'
+    | '/api/push/register-native'
+    | '/api/push/register-web'
+    | '/api/push/send-fcm'
   id:
     | '__root__'
     | '/'
@@ -252,19 +395,32 @@ export interface FileRouteTypes {
     | '/compliance'
     | '/comunidade'
     | '/configuracoes'
+    | '/eventos'
     | '/explorar'
     | '/login'
     | '/marketplace'
     | '/notificacoes'
     | '/perfil'
     | '/redefinir-senha'
+    | '/sugerir-destino'
+    | '/a/$activityId'
     | '/admin/compliance'
+    | '/admin/destinos'
+    | '/api/notify-admins'
     | '/atividade/$activityId'
     | '/atividade/rastrear'
     | '/checklist/$checklistId'
     | '/destino/$destinationId'
+    | '/eventos/$eventId'
     | '/parceiro/$partnerId'
     | '/parceiro/painel'
+    | '/api/places/photos'
+    | '/api/places/search'
+    | '/api/push/invalidate-native'
+    | '/api/push/invalidate-web'
+    | '/api/push/register-native'
+    | '/api/push/register-web'
+    | '/api/push/send-fcm'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -275,23 +431,42 @@ export interface RootRouteChildren {
   ComplianceRoute: typeof ComplianceRoute
   ComunidadeRoute: typeof ComunidadeRoute
   ConfiguracoesRoute: typeof ConfiguracoesRoute
+  EventosRoute: typeof EventosRouteWithChildren
   ExplorarRoute: typeof ExplorarRoute
   LoginRoute: typeof LoginRoute
   MarketplaceRoute: typeof MarketplaceRoute
   NotificacoesRoute: typeof NotificacoesRoute
   PerfilRoute: typeof PerfilRoute
   RedefinirSenhaRoute: typeof RedefinirSenhaRoute
+  SugerirDestinoRoute: typeof SugerirDestinoRoute
+  AActivityIdRoute: typeof AActivityIdRoute
   AdminComplianceRoute: typeof AdminComplianceRoute
+  AdminDestinosRoute: typeof AdminDestinosRoute
+  ApiNotifyAdminsRoute: typeof ApiNotifyAdminsRoute
   AtividadeActivityIdRoute: typeof AtividadeActivityIdRoute
   AtividadeRastrearRoute: typeof AtividadeRastrearRoute
   ChecklistChecklistIdRoute: typeof ChecklistChecklistIdRoute
   DestinoDestinationIdRoute: typeof DestinoDestinationIdRoute
   ParceiroPartnerIdRoute: typeof ParceiroPartnerIdRoute
   ParceiroPainelRoute: typeof ParceiroPainelRoute
+  ApiPlacesPhotosRoute: typeof ApiPlacesPhotosRoute
+  ApiPlacesSearchRoute: typeof ApiPlacesSearchRoute
+  ApiPushInvalidateNativeRoute: typeof ApiPushInvalidateNativeRoute
+  ApiPushInvalidateWebRoute: typeof ApiPushInvalidateWebRoute
+  ApiPushRegisterNativeRoute: typeof ApiPushRegisterNativeRoute
+  ApiPushRegisterWebRoute: typeof ApiPushRegisterWebRoute
+  ApiPushSendFcmRoute: typeof ApiPushSendFcmRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/sugerir-destino': {
+      id: '/sugerir-destino'
+      path: '/sugerir-destino'
+      fullPath: '/sugerir-destino'
+      preLoaderRoute: typeof SugerirDestinoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/redefinir-senha': {
       id: '/redefinir-senha'
       path: '/redefinir-senha'
@@ -332,6 +507,13 @@ declare module '@tanstack/react-router' {
       path: '/explorar'
       fullPath: '/explorar'
       preLoaderRoute: typeof ExplorarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/eventos': {
+      id: '/eventos'
+      path: '/eventos'
+      fullPath: '/eventos'
+      preLoaderRoute: typeof EventosRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/configuracoes': {
@@ -397,6 +579,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ParceiroPartnerIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/eventos/$eventId': {
+      id: '/eventos/$eventId'
+      path: '/$eventId'
+      fullPath: '/eventos/$eventId'
+      preLoaderRoute: typeof EventosEventIdRouteImport
+      parentRoute: typeof EventosRoute
+    }
     '/destino/$destinationId': {
       id: '/destino/$destinationId'
       path: '/destino/$destinationId'
@@ -425,6 +614,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AtividadeActivityIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/notify-admins': {
+      id: '/api/notify-admins'
+      path: '/api/notify-admins'
+      fullPath: '/api/notify-admins'
+      preLoaderRoute: typeof ApiNotifyAdminsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/destinos': {
+      id: '/admin/destinos'
+      path: '/admin/destinos'
+      fullPath: '/admin/destinos'
+      preLoaderRoute: typeof AdminDestinosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/compliance': {
       id: '/admin/compliance'
       path: '/admin/compliance'
@@ -432,8 +635,75 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminComplianceRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/a/$activityId': {
+      id: '/a/$activityId'
+      path: '/a/$activityId'
+      fullPath: '/a/$activityId'
+      preLoaderRoute: typeof AActivityIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/push/send-fcm': {
+      id: '/api/push/send-fcm'
+      path: '/api/push/send-fcm'
+      fullPath: '/api/push/send-fcm'
+      preLoaderRoute: typeof ApiPushSendFcmRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/push/register-web': {
+      id: '/api/push/register-web'
+      path: '/api/push/register-web'
+      fullPath: '/api/push/register-web'
+      preLoaderRoute: typeof ApiPushRegisterWebRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/push/register-native': {
+      id: '/api/push/register-native'
+      path: '/api/push/register-native'
+      fullPath: '/api/push/register-native'
+      preLoaderRoute: typeof ApiPushRegisterNativeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/push/invalidate-web': {
+      id: '/api/push/invalidate-web'
+      path: '/api/push/invalidate-web'
+      fullPath: '/api/push/invalidate-web'
+      preLoaderRoute: typeof ApiPushInvalidateWebRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/push/invalidate-native': {
+      id: '/api/push/invalidate-native'
+      path: '/api/push/invalidate-native'
+      fullPath: '/api/push/invalidate-native'
+      preLoaderRoute: typeof ApiPushInvalidateNativeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/places/search': {
+      id: '/api/places/search'
+      path: '/api/places/search'
+      fullPath: '/api/places/search'
+      preLoaderRoute: typeof ApiPlacesSearchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/places/photos': {
+      id: '/api/places/photos'
+      path: '/api/places/photos'
+      fullPath: '/api/places/photos'
+      preLoaderRoute: typeof ApiPlacesPhotosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
+
+interface EventosRouteChildren {
+  EventosEventIdRoute: typeof EventosEventIdRoute
+}
+
+const EventosRouteChildren: EventosRouteChildren = {
+  EventosEventIdRoute: EventosEventIdRoute,
+}
+
+const EventosRouteWithChildren =
+  EventosRoute._addFileChildren(EventosRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
@@ -443,19 +713,31 @@ const rootRouteChildren: RootRouteChildren = {
   ComplianceRoute: ComplianceRoute,
   ComunidadeRoute: ComunidadeRoute,
   ConfiguracoesRoute: ConfiguracoesRoute,
+  EventosRoute: EventosRouteWithChildren,
   ExplorarRoute: ExplorarRoute,
   LoginRoute: LoginRoute,
   MarketplaceRoute: MarketplaceRoute,
   NotificacoesRoute: NotificacoesRoute,
   PerfilRoute: PerfilRoute,
   RedefinirSenhaRoute: RedefinirSenhaRoute,
+  SugerirDestinoRoute: SugerirDestinoRoute,
+  AActivityIdRoute: AActivityIdRoute,
   AdminComplianceRoute: AdminComplianceRoute,
+  AdminDestinosRoute: AdminDestinosRoute,
+  ApiNotifyAdminsRoute: ApiNotifyAdminsRoute,
   AtividadeActivityIdRoute: AtividadeActivityIdRoute,
   AtividadeRastrearRoute: AtividadeRastrearRoute,
   ChecklistChecklistIdRoute: ChecklistChecklistIdRoute,
   DestinoDestinationIdRoute: DestinoDestinationIdRoute,
   ParceiroPartnerIdRoute: ParceiroPartnerIdRoute,
   ParceiroPainelRoute: ParceiroPainelRoute,
+  ApiPlacesPhotosRoute: ApiPlacesPhotosRoute,
+  ApiPlacesSearchRoute: ApiPlacesSearchRoute,
+  ApiPushInvalidateNativeRoute: ApiPushInvalidateNativeRoute,
+  ApiPushInvalidateWebRoute: ApiPushInvalidateWebRoute,
+  ApiPushRegisterNativeRoute: ApiPushRegisterNativeRoute,
+  ApiPushRegisterWebRoute: ApiPushRegisterWebRoute,
+  ApiPushSendFcmRoute: ApiPushSendFcmRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

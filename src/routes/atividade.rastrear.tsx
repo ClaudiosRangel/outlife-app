@@ -12,6 +12,8 @@ import {
   finishActivity,
   discardActivity,
   uploadActivityImage,
+  uploadActivityMapSnapshot,
+  type ActivityType,
 } from "@/lib/api";
 import { mapRateLimitErrorToMessage } from "@/lib/rate-limit-error";
 import { Button } from "@/components/ui/button";
@@ -24,10 +26,21 @@ import {
   SheetTitle,
   SheetDescription,
 } from "@/components/ui/sheet";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { enqueueActivity } from "@/lib/activity-storage";
 import { useActivitySync } from "@/hooks/use-activity-sync";
 import { ReviewPromptDialog } from "@/components/ReviewPromptDialog";
+import { computeActivityMetrics } from "@/lib/activity-metrics";
+import { generateActivityMapSnapshot } from "@/lib/activity-map-snapshot";
+
+const ACTIVITY_TYPES: readonly ActivityType[] = ["caminhada", "pedalada", "trilha", "outro"];
 
 const ActivityMap = lazy(() => import("@/components/ActivityMap"));
 
@@ -61,12 +74,19 @@ function TrackActivityPage() {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const tracker = useActivityTracker();
-  const [activityId, setActivityId] = useState<string | null>(null);
+  // Activity_Type selecionado antes de iniciar o rastreamento (Requirement
+  // 4.1/4.2/4.3). Usa o valor restaurado do tracker quando disponível.
+  const [activityType, setActivityType] = useState<ActivityType | null>(
+    (tracker.activityType as ActivityType) ?? null
+  );
   const [savedActivityId, setSavedActivityId] = useState<string | null>(null);
   const [reviewDestinationId, setReviewDestinationId] = useState<string | null>(null);
   const [reviewOpen, setReviewOpen] = useState(false);
   const lastSyncRef = useRef(0);
   useActivitySync();
+
+  // activityId vem do tracker (persistido), não mais de um useState local
+  const activityId = tracker.activityId;
 
   // Ao finalizar, antes de persistir, oferece descrição e foto opcionais
   // (pedido do usuário) através deste Sheet — em vez de salvar
@@ -96,15 +116,57 @@ function TrackActivityPage() {
     if (!authLoading && !user) navigate({ to: "/login" });
   }, [authLoading, user, navigate]);
 
+  // Ao voltar para esta tela com uma atividade restaurada automaticamente
+  // (tracker.status === "paused" com pontos > 0 e activityId ainda null),
+  // não tenta retomar o GPS automaticamente — o usuário clica em "Retomar"
+  // para reiniciar o rastreamento de onde parou. Isso cobre o cenário de
+  // navegar para outro menu e voltar.
+
   const startMut = useMutation({
-    mutationFn: () => startActivity(),
-    onSuccess: (a) => {
-      setActivityId(a.id);
-      tracker.start();
-      toast.success(t("activity.toasts.started"));
+    mutationFn: () => startActivity(undefined, activityType ?? undefined),
+    onSuccess: async (a) => {
+      tracker.setActivityId(a.id);
+      tracker.setActivityType(activityType);
+      // Bug corrigido: `tracker.start()` é assíncrona (checa permissão de
+      // localização em segundo plano antes de iniciar o rastreamento
+      // nativo) e antes não era aguardada nem tinha tratamento de erro —
+      // uma falha nela (ex.: exceção do plugin nativo) ficava
+      // silenciosamente descartada, deixando a tela travada no estado
+      // inicial (botão "Iniciar" continuava habilitado, contador em 0)
+      // mesmo com o toast de sucesso já exibido, pois o registro da
+      // atividade no banco (aqui) tinha sucesso mesmo que o rastreamento
+      // em si falhasse depois. Esse bug provavelmente sempre existiu, mas
+      // ficava mascarado pelo erro de coluna ausente no banco, que
+      // interrompia o fluxo antes de chegar aqui.
+      try {
+        const started = await tracker.start();
+        if (started) {
+          toast.success(t("activity.toasts.started"));
+        } else {
+          // Bloqueado por permissão negada: `tracker.permissionDenied` já
+          // expõe o aviso específico na tela — não é um erro inesperado.
+          await discardActivity(a.id).catch(() => {});
+          tracker.setActivityId(null);
+        }
+      } catch (err) {
+        await discardActivity(a.id).catch(() => {});
+        tracker.setActivityId(null);
+        toast.error(err instanceof Error ? err.message : t("activity.toasts.trackingStartError"));
+      }
     },
     onError: (e: Error) => toast.error(e.message),
   });
+
+  // Requirement 4.1/4.2: início do rastreamento exige um Activity_Type
+  // válido selecionado; se ausente, bloqueia o início e exibe mensagem
+  // obrigatória em vez de chamar startMut.
+  const handleStart = () => {
+    if (!activityType) {
+      toast.error(t("activity.activityTypeRequired"));
+      return;
+    }
+    startMut.mutate();
+  };
 
   const finishMut = useMutation({
     mutationFn: async (opts: { skipExtras?: boolean } = {}) => {
@@ -117,12 +179,30 @@ function TrackActivityPage() {
       try {
         const skipExtras = opts?.skipExtras ?? false;
         const image_url = !skipExtras && imageFile ? await uploadActivityImage(imageFile) : undefined;
+
+        // Requirement 6.1/6.3: gera e envia o Activity_Map_Snapshot após
+        // finalize(); qualquer falha aqui (geração ou upload) é isolada
+        // neste try/catch e não impede o salvamento da atividade — apenas
+        // o snapshot fica ausente.
+        let map_snapshot_url: string | undefined;
+        try {
+          const snapshotBlob = await generateActivityMapSnapshot(result.points);
+          if (snapshotBlob) {
+            map_snapshot_url = await uploadActivityMapSnapshot(snapshotBlob);
+          }
+        } catch {
+          // Requirement 6.3 — falha na geração/upload do snapshot nunca
+          // impede o salvamento da atividade.
+        }
+
         return await finishActivity(activityId, {
           distance_meters: result.distance,
           duration_seconds: result.duration,
           route_geojson: result.route,
           description: skipExtras ? undefined : description.trim() || undefined,
           image_url,
+          activity_type: activityType ?? undefined,
+          map_snapshot_url,
         });
       } catch (err) {
         const rateLimitMessage = mapRateLimitErrorToMessage(err);
@@ -152,7 +232,7 @@ function TrackActivityPage() {
     onSuccess: (a) => {
       toast.success(t("activity.toasts.saved"));
       tracker.reset();
-      setActivityId(null);
+      tracker.setActivityId(null);
       setFinishSheetOpen(false);
       resetFinishForm();
       if (a.destination_id) {
@@ -166,7 +246,7 @@ function TrackActivityPage() {
     onError: (e: Error) => {
       toast.error(e.message);
       tracker.reset();
-      setActivityId(null);
+      tracker.setActivityId(null);
     },
   });
 
@@ -191,7 +271,7 @@ function TrackActivityPage() {
   const handleDiscard = async () => {
     if (activityId) await discardActivity(activityId).catch(() => {});
     tracker.discard();
-    setActivityId(null);
+    tracker.setActivityId(null);
     toast(t("activity.toasts.discarded"));
   };
 
@@ -218,6 +298,12 @@ function TrackActivityPage() {
       {tracker.permissionDenied && (
         <div className="mx-5 mt-3 rounded-2xl border border-destructive/30 bg-destructive/10 p-3 text-xs text-destructive">
           {t("activity.permissionDenied")}
+        </div>
+      )}
+
+      {tracker.revokedDuringTracking && (
+        <div className="mx-5 mt-3 rounded-2xl border border-destructive/30 bg-destructive/10 p-3 text-xs text-destructive">
+          {t("activity.revokedDuringTracking")}
         </div>
       )}
 
@@ -251,12 +337,70 @@ function TrackActivityPage() {
         </div>
       </div>
 
+      {/* Requirement 4.4/4.5/4.7: Average_Pace (quando Caminhada/Pedalada)
+          e Average_Speed em tempo real, atualizados a cada segundo (mesmo
+          intervalo do timer de duração), a partir de computeActivityMetrics
+          — mesma função usada no resumo final (Requirement 4.6). Exibe "—"
+          quando indisponível, nunca um valor calculado de dados inválidos. */}
+      {(isTracking || isPaused) && (() => {
+        const liveMetrics = computeActivityMetrics({
+          activityType,
+          distanceMeters: tracker.distanceMeters,
+          durationSeconds: tracker.durationSeconds,
+        });
+        return (
+          <div className="mx-5 mt-2 grid grid-cols-2 gap-2">
+            <div className="rounded-2xl bg-card p-3 shadow-card text-center">
+              <div className="text-[11px] uppercase tracking-widest text-muted-foreground">
+                {t("activity.metrics.speed")}
+              </div>
+              <div className="mt-1 font-display text-lg font-semibold text-primary tabular-nums">
+                {liveMetrics.averageSpeedKmh ? `${liveMetrics.averageSpeedKmh} km/h` : "—"}
+              </div>
+            </div>
+            <div className="rounded-2xl bg-card p-3 shadow-card text-center">
+              <div className="text-[11px] uppercase tracking-widest text-muted-foreground">
+                {t("activity.metrics.pace")}
+              </div>
+              <div className="mt-1 font-display text-lg font-semibold text-primary tabular-nums">
+                {liveMetrics.averagePaceLabel ?? "—"}
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* Requirement 4.1/4.2: seletor de Activity_Type obrigatório, exibido
+          antes do botão "Iniciar" (mesmo padrão do seletor de categoria em
+          comunidade.tsx). O botão só chama handleStart quando um valor
+          válido estiver selecionado. */}
+      {isIdle && !tracker.hasOrphan && (
+        <div className="mx-5 mt-4">
+          <Label className="mb-2 block text-sm font-medium">{t("activity.activityTypeLabel")}</Label>
+          <Select
+            value={activityType ?? undefined}
+            onValueChange={(v) => { setActivityType(v as ActivityType); tracker.setActivityType(v); }}
+          >
+            <SelectTrigger className="h-12 rounded-xl">
+              <SelectValue placeholder={t("activity.selectActivityType")} />
+            </SelectTrigger>
+            <SelectContent>
+              {ACTIVITY_TYPES.map((v) => (
+                <SelectItem key={v} value={v}>
+                  {t(`activity.activityTypes.${v}`)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
+
       <div className="mx-5 mt-4 flex flex-col gap-2">
         {isIdle && !tracker.hasOrphan && (
           <Button
             size="lg"
             className="h-14 rounded-2xl text-base font-semibold"
-            onClick={() => startMut.mutate()}
+            onClick={handleStart}
             disabled={isSaving}
           >
             <Play size={18} /> {t("activity.start")}
@@ -265,11 +409,21 @@ function TrackActivityPage() {
 
         {tracker.hasOrphan && isIdle && (
           <div className="rounded-2xl border border-border bg-card p-3 text-sm">
-            <p className="mb-2 font-medium">{t("activity.orphanFound")}</p>
+            <p className="mb-2 font-medium">
+              {tracker.orphanUnrecoverable ? t("activity.orphanUnrecoverable") : t("activity.orphanFound")}
+            </p>
             <div className="flex gap-2">
-              <Button variant="outline" className="flex-1" onClick={tracker.restoreOrphan}>
-                {t("activity.resume")}
-              </Button>
+              {/* Requirement 3.4/3.5: dados corrompidos (orphanUnrecoverable)
+                  oferecem apenas descartar — sem exibir distância, duração
+                  ou trajeto derivados, e sem oferecer retomar. A decisão
+                  (retomar ou descartar) permanece pendente até uma ação
+                  explícita do usuário; os pontos persistidos não são
+                  alterados enquanto essa decisão não é tomada. */}
+              {!tracker.orphanUnrecoverable && (
+                <Button variant="outline" className="flex-1" onClick={tracker.restoreOrphan}>
+                  {t("activity.resume")}
+                </Button>
+              )}
               <Button variant="ghost" className="flex-1" onClick={tracker.discard}>
                 {t("activity.discard")}
               </Button>
@@ -386,11 +540,16 @@ function TrackActivityPage() {
 
             <div className="flex gap-3 pt-2">
               <button
-                onClick={() => finishMut.mutate({ skipExtras: true })}
+                onClick={() => {
+                  setFinishSheetOpen(false);
+                  resetFinishForm();
+                  handleDiscard();
+                }}
                 disabled={finishMut.isPending}
-                className="flex-1 rounded-xl border border-border bg-card py-3.5 text-sm font-semibold text-foreground active:scale-[0.98] transition-transform disabled:opacity-50"
+                className="flex-1 rounded-xl border border-destructive/30 bg-destructive/10 py-3.5 text-sm font-semibold text-destructive active:scale-[0.98] transition-transform disabled:opacity-50"
               >
-                {t("activity.skip")}
+                <Trash2 size={14} className="inline mr-1 -mt-0.5" />
+                {t("activity.discard")}
               </button>
               <button
                 onClick={() => finishMut.mutate({})}

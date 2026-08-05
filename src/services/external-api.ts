@@ -1,12 +1,77 @@
 /**
- * Stubs para integração futura com APIs externas (Google Places, Photos, etc).
+ * Camada de acesso ao Google Places, com seletor de transporte entre
+ * SSR_Build_Target e SPA_Build_Target (Requirements 1.6, 1.7, 12.5).
  *
- * Estes tipos espelham o formato planejado para a UI ANTES da API real existir,
- * permitindo que componentes/queries já dependam de uma forma estável.
- *
- * As funções abaixo são intencionalmente vazias e devem ser implementadas
- * quando as chaves do Google Maps Platform estiverem disponíveis no projeto.
+ * `fetchDestinationsFromGoogle`/`fetchPlacesPhotos` são o único ponto de
+ * chamada usado pela UI. Quando `import.meta.env.VITE_BUILD_TARGET ===
+ * "native"` (build empacotada no Outlife_Native_Shell, sem server functions
+ * em tempo de execução), a chamada é feita via `fetch()` HTTP contra o
+ * endpoint remoto equivalente exposto pelo SSR_Build_Target
+ * (`VITE_API_BASE_URL` + `/api/places/search` ou `/api/places/photos`),
+ * usando `fetchWithTimeoutAndFallback` (timeout de 10s, nunca lança —
+ * Requirement 12.5). Caso contrário, mantém a chamada local já existente à
+ * server function do TanStack Start. A assinatura pública e o formato de
+ * retorno das duas funções não mudam — só a estratégia de transporte.
  */
+import { supabase } from '@/integrations/supabase/client';
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? '';
+const PLACES_PROXY_TIMEOUT_MS = 10_000;
+
+/**
+ * Lê o access token da sessão Supabase atual, para autenticar a chamada ao
+ * endpoint remoto do proxy do Google Places (Requirement 12.4). Nunca lança:
+ * qualquer falha ao obter a sessão resolve com `null`, e a chamada HTTP
+ * segue sem o cabeçalho `Authorization` (o endpoint remoto rejeita com 401
+ * nesse caso, tratado como falha comum por `fetchWithTimeoutAndFallback`).
+ */
+async function getSupabaseAccessToken(): Promise<string | null> {
+  try {
+    const { data } = await supabase.auth.getSession();
+    return data.session?.access_token ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Helper de transporte HTTP para o SPA_Build_Target/Outlife_Native_Shell.
+ *
+ * Faz um `POST` com timeout de `timeoutMs` (default 10s), autenticado com o
+ * token da sessão Supabase atual quando disponível. NUNCA lança exceção:
+ * timeout, erro de rede, erro HTTP (resposta não-2xx) ou falha ao interpretar
+ * o corpo da resposta resolvem todos com `fallback` (Requirement 12.5,
+ * Property 32).
+ */
+export async function fetchWithTimeoutAndFallback<T>(
+  url: string,
+  body: unknown,
+  fallback: T,
+  timeoutMs: number = PLACES_PROXY_TIMEOUT_MS,
+): Promise<T> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const token = await getSupabaseAccessToken();
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify(body),
+      signal: controller.signal,
+    });
+    if (!response.ok) {
+      return fallback;
+    }
+    return (await response.json()) as T;
+  } catch {
+    return fallback;
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
 
 export type GooglePlacesPhoto = {
   /** Identificador opaco fornecido pelo Google */
@@ -61,14 +126,27 @@ export type FetchPlacesPhotosParams = {
 /**
  * Busca destinos turísticos no Google Places.
  *
- * Delega para a TanStack Start server function `fetchDestinationsFromGooglePlaces`
+ * No SPA_Build_Target (`VITE_BUILD_TARGET === "native"`), chama via HTTP o
+ * endpoint remoto `${VITE_API_BASE_URL}/api/places/search` exposto pelo
+ * SSR_Build_Target (Requirement 1.6, 12.1), resolvendo com `[]` em caso de
+ * falha ou timeout (Requirement 1.7, 12.5) — nunca lança.
+ *
+ * No SSR_Build_Target (comportamento default, inalterado), delega para a
+ * TanStack Start server function `fetchDestinationsFromGooglePlaces`
  * (src/services/places.server.ts), que é a única camada que lê o
  * Google_Places_Credential (`GOOGLE_PLACES_API_KEY`), nunca exposto ao
- * bundle do cliente. Assinatura pública preservada.
+ * bundle do cliente. Assinatura pública preservada em ambos os casos.
  */
 export async function fetchDestinationsFromGoogle(
   params: FetchDestinationsParams,
 ): Promise<GooglePlacesDestination[]> {
+  if (import.meta.env.VITE_BUILD_TARGET === 'native') {
+    return fetchWithTimeoutAndFallback<GooglePlacesDestination[]>(
+      `${API_BASE_URL}/api/places/search`,
+      params,
+      [],
+    );
+  }
   const { fetchDestinationsFromGooglePlaces } = await import('./places.server');
   return fetchDestinationsFromGooglePlaces({ data: params });
 }
@@ -76,12 +154,25 @@ export async function fetchDestinationsFromGoogle(
 /**
  * Busca fotos de um place específico no Google Places.
  *
- * Delega para a TanStack Start server function `fetchPlacesPhotosFromGooglePlaces`
- * (src/services/places.server.ts), pelo mesmo motivo acima.
+ * No SPA_Build_Target (`VITE_BUILD_TARGET === "native"`), chama via HTTP o
+ * endpoint remoto `${VITE_API_BASE_URL}/api/places/photos` exposto pelo
+ * SSR_Build_Target, com o mesmo comportamento de resiliência descrito em
+ * `fetchDestinationsFromGoogle` acima.
+ *
+ * No SSR_Build_Target, delega para a TanStack Start server function
+ * `fetchPlacesPhotosFromGooglePlaces` (src/services/places.server.ts), pelo
+ * mesmo motivo acima.
  */
 export async function fetchPlacesPhotos(
   params: FetchPlacesPhotosParams,
 ): Promise<GooglePlacesPhoto[]> {
+  if (import.meta.env.VITE_BUILD_TARGET === 'native') {
+    return fetchWithTimeoutAndFallback<GooglePlacesPhoto[]>(
+      `${API_BASE_URL}/api/places/photos`,
+      params,
+      [],
+    );
+  }
   const { fetchPlacesPhotosFromGooglePlaces } = await import('./places.server');
   return fetchPlacesPhotosFromGooglePlaces({ data: params });
 }

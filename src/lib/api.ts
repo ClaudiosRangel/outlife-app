@@ -352,7 +352,13 @@ export async function deleteService(id: string) {
 // formulário de criação + filtro real nas abas da tela de comunidade).
 // Persistido em `community_posts.category`, restrito por CHECK constraint
 // no banco (migration 20260720090000_community-post-category.sql).
-export type CommunityPostCategory = "trilha" | "camping" | "relato" | "outro";
+export type CommunityPostCategory =
+  | "trilha"
+  | "camping"
+  | "relato"
+  | "outro"
+  | "pedalada"
+  | "caminhada";
 
 export async function fetchCommunityPosts() {
   const { data, error } = await supabase
@@ -514,6 +520,14 @@ export async function fetchReviewsByPartner(partnerId: string): Promise<ReviewIt
 }
 
 // ============ Atividades (rastreio GPS) ============
+
+// Classificador do tipo de esforço físico de uma User_Activity, selecionado
+// antes de iniciar o rastreamento (Requirements 4.1, 4.2, 4.3 do spec
+// app-hibrido-nativo). Restrito pelo CHECK constraint de
+// `user_activities.activity_type` (migration
+// `20260721000000_activity-type-and-map-snapshot.sql`).
+export type ActivityType = "caminhada" | "pedalada" | "trilha" | "outro";
+
 export type UserActivity = {
   id: string;
   user_id: string;
@@ -526,9 +540,14 @@ export type UserActivity = {
   status: "in_progress" | "completed";
   description: string | null;
   image_url: string | null;
+  activity_type: ActivityType | null;
+  map_snapshot_url: string | null;
 };
 
-export async function startActivity(destinationId?: string | null): Promise<UserActivity> {
+export async function startActivity(
+  destinationId?: string | null,
+  activityType?: ActivityType | null,
+): Promise<UserActivity> {
   const { data: userData } = await supabase.auth.getUser();
   if (!userData.user) throw new Error("Não autenticado");
   const { data, error } = await supabase
@@ -537,6 +556,7 @@ export async function startActivity(destinationId?: string | null): Promise<User
       user_id: userData.user.id,
       destination_id: destinationId ?? null,
       status: "in_progress",
+      activity_type: activityType ?? null,
     } as never)
     .select()
     .single();
@@ -566,6 +586,8 @@ export async function finishActivity(
     route_geojson: GeoJSON.LineString;
     description?: string | null;
     image_url?: string | null;
+    activity_type?: ActivityType | null;
+    map_snapshot_url?: string | null;
   },
 ): Promise<UserActivity> {
   if (payload.route_geojson.type !== "LineString" || payload.route_geojson.coordinates.length < 2) {
@@ -578,6 +600,8 @@ export async function finishActivity(
     _duration: payload.duration_seconds,
     _description: payload.description ?? null,
     _image_url: payload.image_url ?? null,
+    _activity_type: payload.activity_type ?? null,
+    _map_snapshot_url: payload.map_snapshot_url ?? null,
   } as never);
   if (error) throw error;
   return data as unknown as UserActivity;
@@ -608,6 +632,31 @@ export async function uploadActivityImage(file: File): Promise<string> {
   const { error: upErr } = await supabase.storage
     .from("activity-images")
     .upload(path, optimized, { upsert: false, contentType: mime });
+  if (upErr) throw upErr;
+  const { data: pub } = supabase.storage.from("activity-images").getPublicUrl(path);
+  return pub.publicUrl;
+}
+
+const MAX_ACTIVITY_MAP_SNAPSHOT_BYTES = 5 * 1024 * 1024;
+
+// Envia o Activity_Map_Snapshot (blob WebP gerado por
+// `generateActivityMapSnapshot`, `src/lib/activity-map-snapshot.ts`) para o
+// bucket `activity-images` já existente, seguindo o mesmo padrão de
+// validação/upload de `uploadActivityImage`. Retorna a URL pública, a ser
+// persistida em `user_activities.map_snapshot_url` (Requirement 6.1).
+export async function uploadActivityMapSnapshot(blob: Blob): Promise<string> {
+  const { data: userData } = await supabase.auth.getUser();
+  if (!userData.user) throw new Error("Não autenticado");
+  const mime = blob.type || "image/webp";
+  const ext = ALLOWED_IMAGE_TYPES[mime] ?? "webp";
+
+  if (blob.size > MAX_ACTIVITY_MAP_SNAPSHOT_BYTES) {
+    throw new Error("Imagem muito grande (máx. 5 MB).");
+  }
+  const path = `${userData.user.id}/map-snapshot-${Date.now()}.${ext}`;
+  const { error: upErr } = await supabase.storage
+    .from("activity-images")
+    .upload(path, blob, { upsert: false, contentType: mime });
   if (upErr) throw upErr;
   const { data: pub } = supabase.storage.from("activity-images").getPublicUrl(path);
   return pub.publicUrl;

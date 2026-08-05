@@ -1,11 +1,16 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Clock, Route as RouteIcon, Calendar } from "lucide-react";
+import { ArrowLeft, Clock, Route as RouteIcon, Calendar, Share2, Loader2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
 import { fetchActivityById } from "@/lib/api";
 import { StatusBar } from "@/components/StatusBar";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import { computeActivityMetrics } from "@/lib/activity-metrics";
+import { generateActivityBanner } from "@/lib/banner-generator";
+import { shareContent } from "@/lib/share";
 
 const ActivityMap = lazy(() => import("@/components/ActivityMap"));
 
@@ -45,6 +50,56 @@ function ActivityDetailPage() {
 
   const coords =
     activity?.route_geojson?.coordinates?.map((c) => ({ lat: c[1], lng: c[0] })) ?? [];
+
+  // Requirement 6.2/6.4: exibe o Activity_Map_Snapshot persistido quando
+  // disponível e carregável, junto com métricas/descrição/foto; quando
+  // ausente/corrompido, o restante da tela continua sendo exibido
+  // normalmente, sem mensagem de erro (mapSnapshotLoadFailed controla
+  // isso via onError da própria <img>).
+  const [mapSnapshotLoadFailed, setMapSnapshotLoadFailed] = useState(false);
+
+  // Requirement 4.6: Average_Speed final sempre exibido, e Average_Pace
+  // final também quando o Activity_Type for Caminhada/Pedalada — ambos a
+  // partir dos totais persistidos, pela mesma função usada durante o
+  // rastreamento em tempo real (computeActivityMetrics).
+  const finalMetrics = computeActivityMetrics({
+    activityType: activity?.activity_type ?? null,
+    distanceMeters: activity?.distance_meters ?? 0,
+    durationSeconds: activity?.duration_seconds ?? 0,
+  });
+
+  const [generatingBanner, setGeneratingBanner] = useState(false);
+
+  // Requirement 7.1/7.2/7.4/7.5/7.7: gera o Share_Banner_Image (mapa +
+  // métricas) e aciona o compartilhamento já existente; exibe indicador de
+  // progresso durante a geração; em falha (incluindo timeout), exibe toast
+  // de erro reexecutável, sem abrir o compartilhamento com resultado
+  // incompleto.
+  const handleShareBanner = async () => {
+    if (!activity) return;
+    setGeneratingBanner(true);
+    try {
+      const blob = await generateActivityBanner({
+        mapSnapshotUrl: activity.map_snapshot_url,
+        distanceMeters: activity.distance_meters ?? 0,
+        durationSeconds: activity.duration_seconds ?? 0,
+        averagePaceLabel: finalMetrics.averagePaceLabel,
+        averageSpeedLabel: finalMetrics.averageSpeedKmh ? `${finalMetrics.averageSpeedKmh} km/h` : "—",
+      });
+      // Deep link: compartilha imagem + texto com link (estilo Strava)
+      const deepLink = `${window.location.origin}/a/${activityId}`;
+      await shareContent({
+        file: blob,
+        fileName: "outlife-atividade.webp",
+        title: t("activity.shareBannerTitle"),
+        text: `Confira minha atividade no OutLife! ${deepLink}`,
+      });
+    } catch {
+      toast.error(t("activity.shareBannerError"));
+    } finally {
+      setGeneratingBanner(false);
+    }
+  };
 
   return (
     <div className="pb-10">
@@ -100,6 +155,59 @@ function ActivityDetailPage() {
           <div className="text-[10px] text-muted-foreground">{t("activity.metrics.date")}</div>
         </div>
       </div>
+
+      {!isLoading && activity && (
+        <div className="mx-5 mt-2 grid grid-cols-2 gap-2">
+          <div className="rounded-2xl bg-card p-3 shadow-card text-center">
+            <div className="text-[11px] uppercase tracking-widest text-muted-foreground">
+              {t("activity.metrics.speed")}
+            </div>
+            <div className="mt-1 font-display text-lg font-semibold text-primary tabular-nums">
+              {finalMetrics.averageSpeedKmh ? `${finalMetrics.averageSpeedKmh} km/h` : "—"}
+            </div>
+          </div>
+          <div className="rounded-2xl bg-card p-3 shadow-card text-center">
+            <div className="text-[11px] uppercase tracking-widest text-muted-foreground">
+              {t("activity.metrics.pace")}
+            </div>
+            <div className="mt-1 font-display text-lg font-semibold text-primary tabular-nums">
+              {finalMetrics.averagePaceLabel ?? "—"}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Requirement 6.2/6.4: Activity_Map_Snapshot, exibido junto com as
+          demais métricas/descrição/foto quando presente e carregável;
+          quando ausente ou o carregamento falhar, simplesmente não
+          renderiza nada aqui, sem mensagem de erro. */}
+      {activity?.map_snapshot_url && !mapSnapshotLoadFailed && (
+        <div className="mx-5 mt-4">
+          <img
+            src={activity.map_snapshot_url}
+            alt=""
+            loading="lazy"
+            className="h-48 w-full rounded-2xl object-cover shadow-card"
+            onError={() => setMapSnapshotLoadFailed(true)}
+          />
+        </div>
+      )}
+
+      {/* Requirement 7.1/7.4/7.5: ação de compartilhar o Share_Banner_Image
+          da atividade, com indicador de progresso durante a geração. */}
+      {!isLoading && activity && (
+        <div className="mx-5 mt-4">
+          <Button
+            variant="outline"
+            className="w-full h-12 rounded-2xl"
+            onClick={handleShareBanner}
+            disabled={generatingBanner}
+          >
+            {generatingBanner ? <Loader2 size={16} className="animate-spin" /> : <Share2 size={16} />}
+            {generatingBanner ? t("activity.generatingBanner") : t("activity.shareBanner")}
+          </Button>
+        </div>
+      )}
 
       {/* Descrição e foto opcionais adicionadas ao finalizar o
           rastreamento (ver `atividade.rastrear.tsx`). Só exibidas quando

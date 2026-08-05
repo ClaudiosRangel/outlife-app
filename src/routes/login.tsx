@@ -116,11 +116,11 @@ function Login() {
       <form onSubmit={submit} className="mt-8 px-5 space-y-4">
         <div className="space-y-1.5">
           <Label htmlFor="email">{t("auth.email")}</Label>
-          <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="voce@email.com" required />
+          <Input id="email" type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="voce@email.com" required />
         </div>
         <div className="space-y-1.5">
           <Label htmlFor="password">{t("auth.password")}</Label>
-          <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" required />
+          <Input id="password" type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" required />
           <button
             type="button"
             onClick={() => setForgotOpen(true)}
@@ -149,6 +149,7 @@ function Login() {
               <Input
                 id="forgot-email"
                 type="email"
+                autoComplete="email"
                 value={forgotEmail}
                 onChange={(e) => setForgotEmail(e.target.value)}
                 placeholder="voce@email.com"

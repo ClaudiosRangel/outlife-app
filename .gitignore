@@ -7,6 +7,9 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Firebase service account (chave privada - NUNCA commitar)
+firebase-service-account.json
+
 node_modules
 dist
 dist-ssr

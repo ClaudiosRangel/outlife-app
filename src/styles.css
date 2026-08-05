@@ -124,8 +124,42 @@
      rolar — só o contêiner interno de cada tela rola. Sem isso, um
      elemento que ultrapasse a altura da viewport faria o documento inteiro
      rolar por baixo do BottomNav fixo, escondendo conteúdo. */
-  html, body { background-color: var(--color-background); color: var(--color-foreground); font-family: var(--font-sans); -webkit-font-smoothing: antialiased; overflow: hidden; max-width: 100vw; height: 100%; }
+  /* `color-scheme: light` (o app não ativa `.dark` — ver comentário acima
+     das variáveis `.dark`, não há toggle de tema): sinaliza explicitamente
+     ao navegador/WebView que esta página só suporta o tema claro,
+     impedindo o Force Dark/Algorithmic Darkening automático do Android
+     WebView (>= Android 10) de reescrever cores de fundo/texto por fora do
+     CSS do app — causa raiz do bug relatado pelo usuário (texto digitado
+     em campos de e-mail/senha ficando invisível, mesma cor do fundo). A
+     correção equivalente no lado nativo Java está em MainActivity.java
+     (WebSettingsCompat.setAlgorithmicDarkeningAllowed). */
+  /* `position: fixed` (além de `overflow: hidden`) no html/body: bug
+     persistente relatado pelo usuário — ao focar o campo de e-mail/senha
+     no APK, a tela inteira "salta", e o BottomNav (último elemento do
+     documento) aparece colado no topo, embaixo da barra de status,
+     escondendo o campo atrás dele. Causa raiz real (confirmada após duas
+     tentativas de correção via JS que não resolveram): `overflow: hidden`
+     sozinho SÓ impede o usuário de arrastar/rolar manualmente — o
+     WebView Android tem um comportamento NATIVO de rolar automaticamente
+     o documento quando um <input> é focado e o teclado abre, e esse
+     comportamento nativo ignora `overflow: hidden` (ele opera por fora do
+     nosso JavaScript, então nenhuma correção em `__root.tsx` conseguiria
+     impedi-lo). `position: fixed` é a técnica correta: um elemento fixo
+     não faz parte da árvore de rolagem do documento, então não existe
+     "scrollTop do documento" algum para o WebView manipular — é assim que
+     apps como Instagram mantêm o shell (menu inferior etc.) sempre
+     estático, com rolagem acontecendo só nos containers internos
+     (`#app-scroll-container` aqui). `inset: 0` preenche a tela inteira no
+     lugar do fluxo normal de documento que `position: fixed` remove. */
+  html, body { color-scheme: light; background-color: var(--color-background); color: var(--color-foreground); font-family: var(--font-sans); -webkit-font-smoothing: antialiased; position: fixed; inset: 0; overflow: hidden; max-width: 100vw; height: 100%; }
   h1, h2, h3, .font-display { font-family: var(--font-display); letter-spacing: -0.02em; }
+
+  /* Reforço direto nos campos de formulário: garante que a cor do texto
+     digitado sempre venha explicitamente do tema do app, nunca herdada de
+     heurísticas de dark-mode do navegador/WebView (`color-scheme` acima já
+     deveria bastar, mas alguns WebViews mais antigos ignoram a propriedade
+     para elementos de formulário especificamente). */
+  input, textarea, select { color: var(--color-foreground); }
 }
 
 @layer utilities {

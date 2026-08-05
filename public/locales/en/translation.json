@@ -56,6 +56,7 @@
     "clear": "Clear",
     "continue": "Continue",
     "delete": "Delete",
+    "downloaded": "File downloaded!",
     "empty": "Nothing here yet.",
     "loading": "Loading…",
     "open": "Open",
@@ -112,7 +113,9 @@
     "noResults": "No results found.",
     "sectionPartners": "Partners",
     "sectionDestinations": "Destinations",
-    "sectionPosts": "Stories"
+    "sectionPosts": "Stories",
+    "activeNow": "Friends active now",
+    "nearbyPartners": "Nearby partners"
   },
   "explore": {
     "title": "Explore destinations",
@@ -250,7 +253,9 @@
       "following": "Following",
       "trails": "Trails",
       "camping": "Camping",
-      "stories": "Stories"
+      "stories": "Stories",
+      "biking": "Biking",
+      "walking": "Walking"
     },
     "follow": "Follow",
     "following": "Following",
@@ -268,7 +273,10 @@
       "trilha": "Trail",
       "camping": "Camping",
       "relato": "Story",
-      "outro": "Other"
+      "outro": "Other",
+      "pedalada": "Biking",
+      "caminhada": "Walking",
+      "unspecified": "Unspecified"
     },
     "placeLabel": "Place",
     "placePlaceholder": "e.g. Pedra do Sino · RJ",
@@ -279,6 +287,7 @@
     "published": "Published successfully!",
     "loginRequired": "Sign in to publish.",
     "likeError": "Couldn't like the post. Please try again.",
+    "shareBannerError": "Couldn't generate the image to share. Please try again.",
     "followError": "Couldn't follow. Please try again.",
     "commentError": "Couldn't comment. Please try again.",
     "noComments": "No comments yet. Be the first!",
@@ -314,7 +323,8 @@
     "achievements": "Achievements",
     "nextAdventure": "Next adventure",
     "checklist": "Outdoor checklist",
-    "trackCta": "Track new activity"
+    "trackCta": "Track new activity",
+    "trackActive": "Activity in progress"
   },
   "activity": {
     "trackTitle": "Track activity",
@@ -326,7 +336,9 @@
     "discard": "Discard",
     "hint": "GPS starts recording when you tap start.",
     "permissionDenied": "Location permission denied. Enable GPS in your browser to record activities.",
+    "revokedDuringTracking": "Tracking was stopped because background location permission was revoked. Points already recorded were preserved.",
     "orphanFound": "We found an unfinished activity. Resume it?",
+    "orphanUnrecoverable": "We found an unfinished activity, but its data couldn't be recovered. You can only discard it.",
     "noRoute": "This activity has no recorded route.",
     "emptyList": "You haven't recorded any activities yet.",
     "finishSheetTitle": "Finish activity",
@@ -337,16 +349,34 @@
     "photoHint": "JPG, PNG or WEBP",
     "skip": "Skip",
     "saveActivity": "Save activity",
+    "syncQueuePending_one": "{{count}} activity pending sync",
+    "syncQueuePending_other": "{{count}} activities pending sync",
+    "activityTypeLabel": "Activity type",
+    "selectActivityType": "Select the type",
+    "activityTypeRequired": "Select the activity type before starting.",
+    "activityTypes": {
+      "caminhada": "Walking",
+      "pedalada": "Biking",
+      "trilha": "Trail",
+      "outro": "Other"
+    },
     "metrics": {
       "duration": "Duration",
       "distance": "Distance",
-      "date": "Date"
+      "date": "Date",
+      "speed": "Average speed",
+      "pace": "Average pace"
     },
+    "shareBanner": "Share activity",
+    "generatingBanner": "Generating image…",
+    "shareBannerTitle": "My Outlife activity",
+    "shareBannerError": "Couldn't generate the image to share. Please try again.",
     "toasts": {
       "started": "Activity started. Have a great trail!",
       "saved": "Activity saved successfully.",
       "discarded": "Activity discarded.",
-      "tooShort": "Route too short to save."
+      "tooShort": "Route too short to save.",
+      "trackingStartError": "Couldn't start tracking. Check location permission and try again."
     }
   },
   "checklist": {
@@ -501,7 +531,8 @@
     "saved": "Profile updated!",
     "avatarUpdated": "Profile photo updated!",
     "usernameTaken": "This username is already taken.",
-    "genericError": "Couldn't complete the action. Please try again."
+    "genericError": "Couldn't complete the action. Please try again.",
+    "appVersion": "Version {{version}}"
   },
   "adminCompliance": {
     "title": "Cadastur Moderation",

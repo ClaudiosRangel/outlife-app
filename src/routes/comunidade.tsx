@@ -55,6 +55,8 @@ import {
 } from "@/lib/api";
 import { useAuth } from "@/hooks/use-auth";
 import { shareContent } from "@/lib/share";
+import { generatePostBanner } from "@/lib/banner-generator";
+import { communityCategoryTranslationKey } from "@/lib/community-category-label";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 
@@ -85,12 +87,21 @@ type UIPost = {
 // - "following": filtro por autor seguido, reaproveita `followedAuthorIds`
 //   já carregado para o botão de seguir de cada post.
 // - "trails"/"camping"/"stories": filtro exato por `category`.
-export type CommunityTab = "forYou" | "following" | "trails" | "camping" | "stories";
+export type CommunityTab =
+  | "forYou"
+  | "following"
+  | "trails"
+  | "camping"
+  | "stories"
+  | "biking"
+  | "walking";
 
 const TAB_TO_CATEGORY: Record<Exclude<CommunityTab, "forYou" | "following">, CommunityPostCategory> = {
   trails: "trilha",
   camping: "camping",
   stories: "relato",
+  biking: "pedalada",
+  walking: "caminhada",
 };
 
 export function filterPostsByTab(posts: UIPost[], tab: CommunityTab): UIPost[] {
@@ -327,11 +338,23 @@ function Community() {
     },
   });
 
-  const handleShare = (p: UIPost) => {
-    const url = typeof window !== "undefined"
-      ? `${window.location.origin}/comunidade#post-${p.id}`
-      : `/comunidade#post-${p.id}`;
-    shareContent({ title: p.user, text: p.text, url });
+  // Requirement 10.1/10.3: reaproveita o botão de compartilhar já existente
+  // no card, agora gerando o Share_Banner_Image (foto + categoria + texto)
+  // via Banner_Generator em vez de compartilhar apenas um link de texto.
+  const handleShare = async (p: UIPost) => {
+    try {
+      const blob = await generatePostBanner({
+        photoUrl: p.img,
+        categoryLabel: t(communityCategoryTranslationKey(p.category)),
+        text: p.text,
+      });
+      await shareContent({ title: p.user, file: blob, fileName: "outlife-comunidade.webp" });
+    } catch {
+      // Requirement 7.7/10.4 — falha na geração do banner (incluindo
+      // timeout) nunca aciona o compartilhamento com um resultado
+      // incompleto; exibe erro reexecutável em vez de propagar.
+      toast.error(t("community.shareBannerError"));
+    }
   };
 
 
@@ -350,7 +373,7 @@ function Community() {
           </button>
         </div>
         <div className="mt-3 flex gap-2 overflow-x-auto scrollbar-hide -mx-5 px-5">
-          {(["forYou", "following", "trails", "camping", "stories"] as const).map((k) => (
+          {(["forYou", "following", "trails", "camping", "stories", "biking", "walking"] as const).map((k) => (
             <button
               key={k}
               onClick={() => setActiveTab(k)}
@@ -440,6 +463,13 @@ function Community() {
                 </div>
 
                 <div className="p-4">
+                  {/* Requirement 9.1/9.2/9.3: rótulo da categoria, sempre
+                      visível sem exigir toque/rolagem, na mesma tradução
+                      usada no seletor do formulário de criação (mesma
+                      fonte, `communityCategoryTranslationKey`). */}
+                  <span className="mb-2 inline-block rounded-full bg-secondary px-2.5 py-0.5 text-[11px] font-medium text-secondary-foreground">
+                    {t(communityCategoryTranslationKey(p.category))}
+                  </span>
                   <div className="flex items-center gap-4 text-foreground">
                     <button
                       onClick={() => handleToggleLike(p.id)}
@@ -527,7 +557,7 @@ function Community() {
                   <SelectValue placeholder={t("community.selectCategory")} />
                 </SelectTrigger>
                 <SelectContent>
-                  {(["trilha", "camping", "relato", "outro"] as const).map((c) => (
+                  {(["trilha", "camping", "relato", "outro", "pedalada", "caminhada"] as const).map((c) => (
                     <SelectItem key={c} value={c}>
                       {t(`community.categories.${c}`)}
                     </SelectItem>

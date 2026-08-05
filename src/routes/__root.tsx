@@ -2,12 +2,16 @@ import { createRootRouteWithContext, HeadContent, Link, Outlet, Scripts, useRout
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Analytics } from "@vercel/analytics/react";
 import { Toaster } from "sonner";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { reportErrorToSentry } from "@/lib/report-error-client";
 import appCss from "../styles.css?url";
 import { PhoneFrame } from "@/components/PhoneFrame";
 import { BottomNav } from "@/components/BottomNav";
+import { Capacitor } from "@capacitor/core";
+import { App } from "@capacitor/app";
 import { AuthProvider } from "@/hooks/use-auth";
+import { registerPushNotificationTapNavigation } from "@/lib/push-registration";
+import { useLocalPushNotifications } from "@/hooks/use-local-push";
 import "@/lib/i18n";
 
 function NotFoundComponent() {
@@ -93,7 +97,30 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   errorComponent: ErrorComponent,
 });
 
+/**
+ * Bug corrigido (usuário relatou: campos de input travando/não aceitando
+ * digitação — reproduzia tanto no APK quanto no Chrome desktop usando o
+ * mesmo bundle do SPA_Build_Target). Causa raiz: `RouterProvider` (usado
+ * puro em `entry-native.tsx`, sem o framework TanStack Start) SEMPRE
+ * renderiza `shellComponent` da rota raiz, independente do entry point —
+ * não é um comportamento exclusivo do SSR (confirmado no código-fonte de
+ * `@tanstack/react-router`, `Match.js`). No SPA_Build_Target,
+ * `entry-native.tsx` já monta a árvore dentro de `<div id="root">` de um
+ * `index.html` próprio (que já tem seu próprio `<html><head><body>`).
+ * Sem esta checagem, `RootShell` gerava um segundo `<html><head><body>`
+ * ANINHADO dentro dessa div — documento HTML inválido (dois `<body>`, um
+ * deles dentro de uma `<div>`), que corrompe o cálculo de foco/IME de
+ * WebViews Android (e reproduz até em Chrome desktop puro, pois o problema
+ * está na estrutura do DOM montada pelo próprio bundle, não no WebView).
+ *
+ * No SPA_Build_Target o `<html>/<head>/<body>` real já vem do
+ * `index.html` estático — aqui só é necessário renderizar os filhos
+ * diretamente, sem wrapper.
+ */
 function RootShell({ children }: { children: React.ReactNode }) {
+  if (import.meta.env.VITE_BUILD_TARGET === "native-spa") {
+    return <>{children}</>;
+  }
   return (
     <html lang="pt-BR">
       <head><HeadContent /></head>
@@ -118,9 +145,142 @@ function useRegisterServiceWorker() {
   }, []);
 }
 
+/**
+ * HISTÓRICO — duas tentativas anteriores de resolver o comportamento do
+ * teclado dentro do Outlife_Native_Shell (Android) tentaram fazer a
+ * WebView encolher (`windowSoftInputMode="adjustResize"` +
+ * `Keyboard.setResizeMode({ mode: Native })`) e então rolar
+ * programaticamente o campo focado para dentro do espaço restante — 1ª
+ * tentativa com `scrollIntoView`, 2ª com cálculo manual de `scrollTo`
+ * restrito ao `#app-scroll-container`. As DUAS tentativas reproduziram o
+ * mesmo bug reportado pelo usuário: o `<BottomNav>` (último elemento do
+ * documento) "subia" e aparecia colado no topo da tela, embaixo da barra
+ * de status, escondendo o campo atrás dele.
+ *
+ * Causa raiz de fundo (não é só o método de rolagem — é a arquitetura
+ * resize+scroll em si): `adjustResize` redimensiona a JANELA nativa
+ * enquanto o teclado abre, e esse redimensionamento é assíncrono e
+ * concorrente com qualquer scroll JS disparado no mesmo instante (evento
+ * `focusin`). Cada tentativa de calcular "quanto rolar" partia de uma
+ * medição (`getBoundingClientRect`) tirada num momento em que a janela
+ * ainda podia estar no meio da transição de tamanho — o que fazia o
+ * cálculo errar e rolar o documento inteiro em vez do container interno.
+ * Depurar caso a caso esse tipo de corrida entre resize nativo e JS não é
+ * confiável.
+ *
+ * SOLUÇÃO (comportamento do Instagram, comparado lado a lado no mesmo
+ * celular pelo usuário): abandonar `adjustResize` totalmente. A Activity
+ * agora usa `windowSoftInputMode="adjustNothing"` (AndroidManifest.xml) —
+ * o teclado aparece como um OVERLAY por cima do conteúdo, sem redimensionar
+ * a janela nem a WebView. Não há mais nenhum resize para disparar scroll
+ * nenhum, então não existe mais janela de corrida nem necessidade de JS
+ * de compensação (os dois hooks `useKeyboardResize`/
+ * `useScrollFocusedFieldIntoView`, e a dependência `@capacitor/keyboard`,
+ * foram removidos). Os formulários de login/cadastro têm os campos na
+ * parte superior/central da tela (ver login.tsx, cadastro.tsx) — o
+ * teclado, ao cobrir só a parte inferior, nunca esconde o texto sendo
+ * digitado, exatamente como no Instagram.
+ */
+
+/**
+ * Requirement 11.5: navega para `/notificacoes` quando o usuário
+ * seleciona uma Push_Notification (Web Push, fora do Outlife_Native_Shell).
+ * `public/sw.js` já tenta focar/navegar a aba diretamente no
+ * `notificationclick`; este listener cobre o caso em que o app já está
+ * aberto e em foreground, recebendo a mensagem via `postMessage` do
+ * service worker e navegando no lado do cliente (sem recarregar a página).
+ */
+function useServiceWorkerNotificationNavigation() {
+  const router = useRouter();
+  useEffect(() => {
+    if (typeof navigator === "undefined" || !("serviceWorker" in navigator)) return;
+    const handler = (event: MessageEvent) => {
+      if (event.data?.type === "outlife-notification-click" && typeof event.data.url === "string") {
+        router.navigate({ to: event.data.url });
+      }
+    };
+    navigator.serviceWorker.addEventListener("message", handler);
+    return () => navigator.serviceWorker.removeEventListener("message", handler);
+  }, [router]);
+}
+
+/**
+ * Requirement 11.5: navega para `/notificacoes` ao tocar numa
+ * Push_Notification nativa (dentro do Outlife_Native_Shell). Registrado
+ * uma única vez na montagem do componente raiz.
+ */
+function useNativePushNotificationNavigation() {
+  const router = useRouter();
+  useEffect(() => {
+    registerPushNotificationTapNavigation((url) => router.navigate({ to: url }));
+  }, [router]);
+}
+
+/**
+ * Indicador de versão/build instalada (pedido do usuário: "seria
+ * interessante ter a versão build para ver se estamos rodando corretamente
+ * as correções"). Colocado aqui, no componente raiz, em vez de uma tela
+ * específica (login/configurações) — a primeira tentativa (na tela de
+ * login) falhou na prática porque um usuário já autenticado nunca vê essa
+ * tela, já entra direto na Home. Renderizado como um selo fixo no topo,
+ * visível em QUALQUER tela do app, logado ou não. Só faz sentido dentro do
+ * Outlife_Native_Shell — fora dele não há um "APK instalado" para
+ * versionar dessa forma.
+ */
+function useAppVersionBadge(): string | null {
+  const [appVersion, setAppVersion] = useState<string | null>(null);
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return;
+    App.getInfo()
+      .then((info) => setAppVersion(`${info.version} (build ${info.build})`))
+      .catch(() => {
+        // Falha ao ler a versão nunca deve impedir o restante do app.
+      });
+  }, []);
+  return appVersion;
+}
+
+/**
+ * Deep Link: quando o app é aberto via link (App Links / intent scheme),
+ * navega para a rota correspondente. Ex: https://outlife-app.vercel.app/a/xxx
+ * ou outlife://atividade/xxx → navega para /atividade/$activityId.
+ */
+function useDeepLinkNavigation() {
+  const router = useRouter();
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return;
+    App.addListener("appUrlOpen", (event) => {
+      try {
+        const url = new URL(event.url);
+        // Links /a/:id → redireciona para /atividade/:id
+        const aMatch = url.pathname.match(/^\/a\/(.+)$/);
+        if (aMatch) {
+          router.navigate({ to: "/atividade/$activityId", params: { activityId: aMatch[1] } });
+          return;
+        }
+        // Qualquer outro path, navega direto
+        if (url.pathname && url.pathname !== "/") {
+          router.navigate({ to: url.pathname });
+        }
+      } catch {
+        // intent:// scheme - parse manual
+        const schemeMatch = event.url.match(/outlife:\/\/atividade\/(.+)/);
+        if (schemeMatch) {
+          router.navigate({ to: "/atividade/$activityId", params: { activityId: schemeMatch[1] } });
+        }
+      }
+    });
+  }, [router]);
+}
+
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   useRegisterServiceWorker();
+  useServiceWorkerNotificationNavigation();
+  useNativePushNotificationNavigation();
+  useLocalPushNotifications();
+  useDeepLinkNavigation();
+  const appVersion = useAppVersionBadge();
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
@@ -142,6 +302,13 @@ function RootComponent() {
             </main>
             <BottomNav />
           </div>
+          {appVersion && (
+            <div className="pointer-events-none absolute left-0 right-0 top-0 z-50 flex justify-center">
+              <span className="rounded-b-md bg-black/60 px-2 py-0.5 text-[10px] text-white">
+                {appVersion}
+              </span>
+            </div>
+          )}
         </PhoneFrame>
         <Toaster position="top-center" richColors />
         {/**

@@ -154,6 +154,17 @@ function Explore() {
           ))}
         </div>
       )}
+
+      {/* CTA sugerir destino */}
+      <div className="px-5 pb-6 mt-4">
+        <Link to="/sugerir-destino" className="flex items-center justify-between rounded-2xl border border-dashed border-primary/40 bg-primary/5 p-4">
+          <div>
+            <span className="text-sm font-semibold text-primary">Conhece um destino incrível?</span>
+            <p className="text-xs text-muted-foreground mt-0.5">Envie para aprovação e ele aparecerá para todos</p>
+          </div>
+          <span className="text-xs font-medium text-primary">Sugerir →</span>
+        </Link>
+      </div>
     </div>
   );
 }

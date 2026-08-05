@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { Bell, MapPin, Search, ShieldCheck, Sparkles, ArrowRight, Mountain } from "lucide-react";
+import { Bell, MapPin, Search, ShieldCheck, Sparkles, ArrowRight, Mountain, Calendar } from "lucide-react";
 import hero from "@/assets/hero-mountain.jpg";
 import { StatusBar } from "@/components/StatusBar";
 import { Stars } from "@/components/Stars";
@@ -172,12 +172,12 @@ function Home() {
         </div>
       </section>
 
-      {/* Quick stats */}
+      {/* Quick stats — dados reais do banco */}
       <section className="mx-5 -mt-6 grid grid-cols-3 gap-2 rounded-2xl bg-card p-3 shadow-card relative z-20">
         {[
-          { v: "1.2k", l: t("home.stats.destinations") },
-          { v: "480+", l: t("home.stats.partners") },
-          { v: "98%", l: t("home.stats.verified") },
+          { v: destinations.length > 0 ? `${destinations.length}` : "—", l: t("home.stats.destinations") },
+          { v: partners.length > 0 ? `${partners.length}` : "—", l: t("home.stats.partners") },
+          { v: partners.length > 0 ? `${Math.round((partners.filter(p => p.verified).length / partners.length) * 100)}%` : "—", l: t("home.stats.verified") },
         ].map((s) => (
           <div key={s.l} className="text-center">
             <div className="font-display text-lg font-semibold text-primary">{s.v}</div>
@@ -186,6 +186,25 @@ function Home() {
         ))}
       </section>
 
+
+      {/* Link para Eventos */}
+      <section className="mx-5 mt-5">
+        <Link
+          to="/eventos"
+          className="flex items-center justify-between rounded-2xl bg-card p-4 shadow-card border border-border"
+        >
+          <div className="flex items-center gap-3">
+            <span className="grid h-10 w-10 place-items-center rounded-xl bg-primary/10 text-primary">
+              <Calendar size={20} />
+            </span>
+            <div>
+              <span className="text-sm font-semibold">Eventos</span>
+              <p className="text-[11px] text-muted-foreground">Participe de aventuras com a comunidade</p>
+            </div>
+          </div>
+          <ArrowRight size={16} className="text-muted-foreground" />
+        </Link>
+      </section>
 
       {/* Categories */}
       <section className="mt-7 px-5">

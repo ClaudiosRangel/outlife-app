@@ -1,0 +1,50 @@
+{
+  "name": "@outlife/capacitor-location-tracking",
+  "version": "0.0.1",
+  "description": "Capacitor plugin for the Native_Location_Tracking_Module: background GPS tracking (Foreground Service on Android, Background Location Mode on iOS).",
+  "private": true,
+  "main": "dist/plugin.cjs.js",
+  "module": "dist/esm/index.js",
+  "types": "dist/esm/index.d.ts",
+  "unpkg": "dist/plugin.js",
+  "files": [
+    "android/src/main/",
+    "android/build.gradle",
+    "dist/",
+    "ios/Plugin/",
+    "OutlifeCapacitorLocationTracking.podspec"
+  ],
+  "author": "OutLife",
+  "license": "UNLICENSED",
+  "keywords": [
+    "capacitor",
+    "plugin",
+    "native",
+    "geolocation"
+  ],
+  "scripts": {
+    "build": "npm run clean && tsc && rollup -c rollup.config.mjs",
+    "clean": "rimraf ./dist",
+    "watch": "tsc --watch",
+    "verify:web": "npm run build"
+  },
+  "capacitor": {
+    "ios": {
+      "src": "ios"
+    },
+    "android": {
+      "src": "android"
+    }
+  },
+  "peerDependencies": {
+    "@capacitor/core": "8.4.2"
+  },
+  "devDependencies": {
+    "@capacitor/android": "8.4.2",
+    "@capacitor/core": "8.4.2",
+    "@capacitor/ios": "8.4.2",
+    "rimraf": "6.0.1",
+    "rollup": "4.29.1",
+    "typescript": "5.8.3"
+  }
+}

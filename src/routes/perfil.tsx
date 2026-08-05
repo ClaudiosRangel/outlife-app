@@ -28,6 +28,7 @@ import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
 import { shouldShowForecast } from "@/lib/profile-decorative";
+import { invalidatePushRegistration } from "@/lib/push-registration";
 import {
   fetchMyProfile,
   resolveAsset,
@@ -49,6 +50,7 @@ import { LocationSharingCard } from "@/components/LocationSharingCard";
 import { useTranslation } from "react-i18next";
 import i18n from "@/lib/i18n";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { loadActive } from "@/lib/activity-storage";
 
 export const Route = createFileRoute("/perfil")({
   component: Profile,
@@ -80,6 +82,21 @@ function Profile() {
   const { t } = useTranslation();
   const { user, loading: authLoading } = useAuth();
   const [darkMode, setDarkMode] = useState(false);
+  const [hasActiveTracking, setHasActiveTracking] = useState(false);
+
+  // Verifica se há atividade em andamento para alterar o CTA
+  useEffect(() => {
+    let cancelled = false;
+    loadActive().then((p) => {
+      if (cancelled) return;
+      setHasActiveTracking(
+        p != null &&
+        !("corrupted" in p) &&
+        (p.status === "tracking" || p.status === "paused")
+      );
+    });
+    return () => { cancelled = true; };
+  }, []);
 
   const { data: profile, isLoading: profileLoading } = useQuery({
     queryKey: ["my-profile", user?.id],
@@ -160,6 +177,10 @@ function Profile() {
   };
 
   const handleSignOut = async () => {
+    // Requirement 11.8: invalida o registro de push do dispositivo/
+    // navegador atual antes de encerrar a sessão — nunca bloqueia o
+    // logout em caso de falha (invalidatePushRegistration nunca lança).
+    await invalidatePushRegistration();
     await supabase.auth.signOut();
     toast.success(t("profile.signedOut"));
     navigate({ to: "/login" });
@@ -279,13 +300,17 @@ function Profile() {
       <div className="mx-5 mt-3">
         <Link
           to="/atividade/rastrear"
-          className="flex items-center justify-between rounded-2xl bg-gradient-forest p-3 text-white shadow-card"
+          className={`flex items-center justify-between rounded-2xl p-3 text-white shadow-card ${
+            hasActiveTracking ? "bg-green-600" : "bg-gradient-forest"
+          }`}
         >
           <div className="flex items-center gap-3">
             <span className="grid h-9 w-9 place-items-center rounded-xl bg-white/15 backdrop-blur-md">
               <ActivityIcon size={16} />
             </span>
-            <span className="text-sm font-semibold">{t("profile.trackCta")}</span>
+            <span className="text-sm font-semibold">
+              {hasActiveTracking ? t("profile.trackActive") : t("profile.trackCta")}
+            </span>
           </div>
           <span className="text-xs font-medium text-white/80">{t("common.open")}</span>
         </Link>

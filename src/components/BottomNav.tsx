@@ -2,6 +2,8 @@ import { Link, useLocation } from "@tanstack/react-router";
 import { Home, Search, Compass, Store, Users, User } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useTranslation } from "react-i18next";
+import { useEffect, useState } from "react";
+import { loadActive } from "@/lib/activity-storage";
 
 type NavKey = "home" | "search" | "explore" | "market" | "community" | "profile";
 
@@ -50,6 +52,27 @@ export function BottomNav() {
   const { user } = useAuth();
   const { t } = useTranslation();
 
+  // Indicador de atividade em andamento: verifica periodicamente se há
+  // atividade ativa persistida localmente, para exibir um ponto pulsante
+  // no ícone de Perfil (onde vive a rota /atividade/rastrear).
+  const [hasActiveTracking, setHasActiveTracking] = useState(false);
+  useEffect(() => {
+    let cancelled = false;
+    const check = () => {
+      loadActive().then((p) => {
+        if (cancelled) return;
+        setHasActiveTracking(
+          p != null &&
+          !("corrupted" in p) &&
+          (p.status === "tracking" || p.status === "paused")
+        );
+      });
+    };
+    check();
+    const interval = setInterval(check, 5000);
+    return () => { cancelled = true; clearInterval(interval); };
+  }, []);
+
   const activeKey = getActiveNavKey(pathname);
 
   const tabs: Array<{ key: NavKey; to: string; label: string; icon: typeof Home }> = [
@@ -58,7 +81,7 @@ export function BottomNav() {
     { key: "explore", to: "/explorar", label: t("nav.explore"), icon: Compass },
     { key: "market", to: "/marketplace", label: t("nav.market"), icon: Store },
     { key: "community", to: "/comunidade", label: t("nav.community"), icon: Users },
-    { key: "profile", to: user ? "/perfil" : "/login", label: t("nav.profile"), icon: User },
+    { key: "profile", to: user ? (hasActiveTracking ? "/atividade/rastrear" : "/perfil") : "/login", label: t("nav.profile"), icon: User },
   ];
 
   // Comportamento pedido pelo usuário: tocar na aba em que você já está
@@ -83,11 +106,14 @@ export function BottomNav() {
                 className="flex flex-col items-center gap-1 py-1.5 transition-base active:scale-90"
               >
                 <span
-                  className={`flex h-9 w-12 items-center justify-center rounded-full transition-base ${
+                  className={`relative flex h-9 w-12 items-center justify-center rounded-full transition-base ${
                     active ? "bg-primary/10 text-primary" : "text-muted-foreground"
                   }`}
                 >
                   <Icon size={20} strokeWidth={active ? 2.4 : 1.8} />
+                  {key === "profile" && hasActiveTracking && (
+                    <span className="absolute -top-0.5 -right-0.5 h-3 w-3 rounded-full bg-green-500 ring-2 ring-card animate-pulse" />
+                  )}
                 </span>
                 <span className={`text-[10px] font-medium ${active ? "text-primary" : "text-muted-foreground"}`}>
                   {label}
