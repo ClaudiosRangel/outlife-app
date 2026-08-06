@@ -35,6 +35,11 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": `${process.cwd()}/src`,
+      // O plugin @outlife/capacitor-location-tracking é um pacote local
+      // cujo dist/ não é commitado. No SSR e SPA build, resolve direto
+      // para o source TS — o bundler vai tree-shake tudo que não é usado
+      // de fato (os métodos nativos nunca são chamados no SSR).
+      "@outlife/capacitor-location-tracking": `${process.cwd()}/native/capacitor-location-tracking/src/index.ts`,
       // SPA_Build_Target: as rotas de API server-only (`api.places.*`,
       // `api.push.*`) acabam incluídas no bundle client-only por
       // construção do TanStack Router (routeTree.gen.ts as importa
