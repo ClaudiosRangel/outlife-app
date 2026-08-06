@@ -192,6 +192,26 @@ function NotificationsScreen() {
       );
     }
 
+    if (n.type === "destination_approved") {
+      const destName = (n.payload as { destinationName?: string }).destinationName ?? "Destino";
+      return (
+        <div key={n.id} className={cardClassName}>
+          <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-green-100 text-green-600">
+            ✓
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="text-sm">
+              Seu destino <span className="font-semibold">{destName}</span> foi aprovado e já está visível para todos!
+            </div>
+            <div className="mt-0.5 text-xs text-muted-foreground">
+              {new Date(n.created_at).toLocaleString("pt-BR")}
+            </div>
+          </div>
+          {!n.is_read && <span className="h-2 w-2 shrink-0 rounded-full bg-primary" />}
+        </div>
+      );
+    }
+
     // Fallback genérico para tipos de notificação futuros/desconhecidos.
     return (
       <div key={n.id} className={cardClassName}>

@@ -54,6 +54,8 @@ function getNotificationText(type: string, payload: Record<string, unknown>): { 
       return { title: "OutLife", body: "Você recebeu uma solicitação de amizade!" };
     case "post_like":
       return { title: "OutLife", body: "Alguém curtiu sua publicação!" };
+    case "destination_approved":
+      return { title: "OutLife", body: `Seu destino "${(payload as any).destinationName ?? ""}" foi aprovado!` };
     default:
       return { title: "OutLife", body: "Você tem uma nova notificação" };
   }

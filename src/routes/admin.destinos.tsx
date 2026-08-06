@@ -73,12 +73,23 @@ function AdminDestinosPage() {
   });
 
   const approveMut = useMutation({
-    mutationFn: async (id: string) => {
+    mutationFn: async (dest: { id: string; created_by: string; name: string }) => {
       const { error } = await supabase
         .from("destinations")
         .update({ status: "approved" } as never)
-        .eq("id", id);
+        .eq("id", dest.id);
       if (error) throw error;
+
+      // Notificar o criador que seu destino foi aprovado (best-effort)
+      try {
+        await supabase.rpc("notify_destination_approved" as never, {
+          _recipient_id: dest.created_by,
+          _destination_id: dest.id,
+          _destination_name: dest.name,
+        } as never);
+      } catch {
+        // Best-effort
+      }
     },
     onSuccess: () => {
       toast.success("Destino aprovado!");
@@ -155,7 +166,7 @@ function AdminDestinosPage() {
               Sugerido por {d.creator?.full_name ?? "Usuário"} em {new Date(d.created_at).toLocaleDateString("pt-BR")}
             </div>
             <div className="mt-3 flex gap-2">
-              <Button size="sm" className="flex-1 rounded-xl" onClick={() => approveMut.mutate(d.id)} disabled={approveMut.isPending}>
+              <Button size="sm" className="flex-1 rounded-xl" onClick={() => approveMut.mutate({ id: d.id, created_by: d.created_by, name: d.name })} disabled={approveMut.isPending}>
                 {approveMut.isPending ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />}
                 Aprovar
               </Button>

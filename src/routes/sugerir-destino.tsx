@@ -98,7 +98,8 @@ function SuggestDestinationPage() {
 
       // Notificar admins por e-mail (best-effort, não bloqueia a sugestão)
       try {
-        await fetch("/api/notify-admins", {
+        const apiBase = import.meta.env.VITE_API_BASE_URL || "https://outlife-app.vercel.app";
+        await fetch(`${apiBase}/api/notify-admins`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "687273128648",
+    "project_id": "outlife-62d46",
+    "storage_bucket": "outlife-62d46.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:687273128648:android:4775a8c7096fd10abfabfd",
+        "android_client_info": {
+          "package_name": "app.outlife.mobile"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDWkzuEncKCUFHMF8oCYW4LfIVe1DHM1ao"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
