@@ -9,6 +9,8 @@ lerna-debug.log*
 
 # Firebase service account (chave privada - NUNCA commitar)
 firebase-service-account.json
+android/app/google-services.json
+firebase-service-account.json
 
 # Build artifacts do plugin nativo
 native/capacitor-location-tracking/android/build/

@@ -11,9 +11,16 @@ const CORS_HEADERS: Record<string, string> = {
   "Access-Control-Allow-Headers": "Content-Type, Authorization",
 };
 
-/** Carrega a service account sob demanda (apenas no servidor) */
+/** Carrega a service account sob demanda (apenas no servidor).
+ * Prioridade: env var FIREBASE_SERVICE_ACCOUNT (JSON stringificado) → arquivo local (dev). */
 async function loadServiceAccount() {
   try {
+    // Produção (Vercel): env var com o JSON inteiro
+    const envSa = process.env.FIREBASE_SERVICE_ACCOUNT;
+    if (envSa) {
+      return JSON.parse(envSa) as { project_id: string; client_email: string; private_key: string };
+    }
+    // Dev local: arquivo na raiz do projeto
     const fs = await import("node:fs");
     const path = await import("node:path");
     const saPath = path.resolve(process.cwd(), "firebase-service-account.json");
