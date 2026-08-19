@@ -13,6 +13,7 @@ import { AuthProvider } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { registerPushNotificationTapNavigation } from "@/lib/push-registration";
 import { useLocalPushNotifications } from "@/hooks/use-local-push";
+import { useKeyboardScroll } from "@/hooks/use-keyboard-scroll";
 import "@/lib/i18n";
 
 function NotFoundComponent() {
@@ -337,6 +338,7 @@ function RootComponent() {
   useNativePushNotificationNavigation();
   useLocalPushNotifications();
   useDeepLinkNavigation();
+  useKeyboardScroll();
   const appVersion = useAppVersionBadge();
   return (
     <QueryClientProvider client={queryClient}>
