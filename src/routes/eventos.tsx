@@ -59,6 +59,8 @@ function EventosPage() {
   const { user, loading: authLoading } = useAuth();
   const qc = useQueryClient();
   const [createOpen, setCreateOpen] = useState(false);
+  // "now" fixado no mount para evitar hydration mismatch (server vs client timezone)
+  const [now] = useState(() => new Date());
 
   const { data: events = [], isLoading } = useQuery({
     queryKey: ["events"],
@@ -173,7 +175,7 @@ function EventosPage() {
         {events.map((event) => {
           const isConfirmed = myConfirmedIds.has(event.id);
           const isFull = event.max_participants != null && event.participants_count >= event.max_participants;
-          const isPast = new Date(event.event_date) < new Date();
+          const isPast = new Date(event.event_date) < now;
           return (
             <div key={event.id} className={`rounded-2xl bg-card overflow-hidden shadow-card ${isPast ? "opacity-75" : ""}`}>
               <Link to="/eventos/$eventId" params={{ eventId: event.id }} className="block">
