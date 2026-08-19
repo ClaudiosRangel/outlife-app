@@ -452,14 +452,64 @@ function CreateEventSheet({ open, onOpenChange }: { open: boolean; onOpenChange:
 /* ====== Sheet de detalhe do evento ====== */
 function EventDetailSheet({ event, open, onClose, onEdit }: { event: EventItem | null; open: boolean; onClose: () => void; onEdit: () => void }) {
   const { user } = useAuth();
+  const qc = useQueryClient();
+  const [msg, setMsg] = useState("");
+
+  // Perguntas/mensagens do evento
+  const { data: messages = [] } = useQuery({
+    queryKey: ["event-questions", event?.id],
+    queryFn: async () => {
+      if (!event) return [];
+      const { data } = await supabase
+        .from("event_questions" as never)
+        .select("id, author_id, text, answer, answered_at, created_at, author:author_id(full_name, avatar_url)")
+        .eq("event_id", event.id)
+        .eq("is_private", false)
+        .order("created_at", { ascending: true });
+      return (data ?? []) as Array<{
+        id: string;
+        author_id: string;
+        text: string;
+        answer: string | null;
+        answered_at: string | null;
+        created_at: string;
+        author: { full_name: string | null; avatar_url: string | null } | null;
+      }>;
+    },
+    enabled: open && !!event,
+    refetchInterval: open ? 5000 : false, // atualiza a cada 5s enquanto aberto
+  });
+
+  const sendMut = useMutation({
+    mutationFn: async () => {
+      if (!user || !event) throw new Error("Não autenticado");
+      if (!msg.trim()) return;
+      const { error } = await supabase
+        .from("event_questions" as never)
+        .insert({
+          event_id: event.id,
+          author_id: user.id,
+          text: msg.trim(),
+          is_private: false,
+        } as never);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      setMsg("");
+      qc.invalidateQueries({ queryKey: ["event-questions", event?.id] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   if (!event) return null;
   const isCreator = user?.id === event.created_by;
 
   return (
     <Sheet open={open} onOpenChange={(v) => { if (!v) onClose(); }}>
-      <SheetContent side="bottom" className="rounded-t-3xl max-h-[85vh] overflow-y-auto">
-        <SheetHeader>
+      <SheetContent side="bottom" className="rounded-t-3xl max-h-[85vh] flex flex-col">
+        <SheetHeader className="flex-shrink-0">
           <SheetTitle className="font-display flex items-center gap-2">
+            <MessageCircle size={18} className="text-primary" />
             {event.title}
             {isCreator && (
               <button onClick={onEdit} className="ml-auto grid h-8 w-8 place-items-center rounded-full bg-primary/10 text-primary">
@@ -467,41 +517,63 @@ function EventDetailSheet({ event, open, onClose, onEdit }: { event: EventItem |
               </button>
             )}
           </SheetTitle>
-          <SheetDescription className="capitalize">{event.category}</SheetDescription>
+          <SheetDescription>
+            {event.destination?.name ?? event.category} • {new Date(event.event_date).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" })}
+            {(event as any).meeting_point ? ` • Encontro: ${(event as any).meeting_point}` : ""}
+          </SheetDescription>
         </SheetHeader>
-        <div className="space-y-3 py-4">
-          {event.image_url && (
-            <img src={event.image_url} alt={event.title} className="w-full aspect-[16/9] rounded-2xl object-cover" />
+
+        {/* Área de mensagens (scroll) */}
+        <div className="flex-1 min-h-0 overflow-y-auto py-3 space-y-3">
+          {messages.length === 0 && (
+            <p className="text-center text-xs text-muted-foreground py-8">Nenhuma mensagem ainda. Inicie a conversa!</p>
           )}
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Calendar size={14} />
-            <span>{new Date(event.event_date).toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" })}</span>
-          </div>
-          {event.destination && (
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <MapPin size={14} />
-              <span>{event.destination.name}{event.destination.region ? ` — ${event.destination.region}` : ""}</span>
-            </div>
-          )}
-          {(event as any).meeting_point && (
-            <div className="flex items-center gap-2 text-sm font-medium text-foreground">
-              <MapPin size={14} className="text-primary" />
-              <span>Ponto de encontro: {(event as any).meeting_point}</span>
-            </div>
-          )}
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Users size={14} />
-            <span>{event.participants_count} confirmados{event.max_participants ? ` / ${event.max_participants} vagas` : ""}</span>
-          </div>
-          {event.description && (
-            <p className="text-sm text-foreground/80 leading-relaxed whitespace-pre-wrap">{event.description}</p>
-          )}
-          {event.creator && (
-            <div className="pt-2 border-t border-border">
-              <span className="text-xs text-muted-foreground">Organizado por <strong>{event.creator.full_name ?? "Aventureiro"}</strong></span>
-            </div>
-          )}
+          {messages.map((m) => {
+            const isMe = m.author_id === user?.id;
+            return (
+              <div key={m.id} className={`flex gap-2 ${isMe ? "flex-row-reverse" : ""}`}>
+                <div className="h-7 w-7 flex-shrink-0 rounded-full bg-primary/10 grid place-items-center text-[10px] font-bold text-primary">
+                  {(m.author?.full_name ?? "?")[0]?.toUpperCase()}
+                </div>
+                <div className={`max-w-[75%] rounded-2xl px-3 py-2 ${isMe ? "bg-primary text-primary-foreground" : "bg-muted"}`}>
+                  {!isMe && (
+                    <div className="text-[10px] font-semibold opacity-70 mb-0.5">{m.author?.full_name ?? "Alguém"}</div>
+                  )}
+                  <p className="text-sm leading-relaxed">{m.text}</p>
+                  <div className={`text-[9px] mt-1 ${isMe ? "text-primary-foreground/60" : "text-muted-foreground"}`}>
+                    {new Date(m.created_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
         </div>
+
+        {/* Input de mensagem (fixo no fundo) */}
+        {user ? (
+          <div className="flex-shrink-0 border-t border-border pt-3 pb-1">
+            <div className="flex gap-2">
+              <input
+                value={msg}
+                onChange={(e) => setMsg(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMut.mutate(); } }}
+                placeholder="Escreva uma mensagem..."
+                className="flex-1 h-10 rounded-full border border-border bg-card px-4 text-sm outline-none focus:ring-1 ring-ring"
+              />
+              <button
+                onClick={() => sendMut.mutate()}
+                disabled={sendMut.isPending || !msg.trim()}
+                className="grid h-10 w-10 place-items-center rounded-full bg-primary text-primary-foreground disabled:opacity-40"
+              >
+                {sendMut.isPending ? <Loader2 size={16} className="animate-spin" /> : <MessageCircle size={16} />}
+              </button>
+            </div>
+          </div>
+        ) : (
+          <p className="text-center text-xs text-muted-foreground py-3 border-t border-border">
+            Faça login para participar da conversa
+          </p>
+        )}
       </SheetContent>
     </Sheet>
   );
