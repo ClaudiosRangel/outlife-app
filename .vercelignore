@@ -1,0 +1,4 @@
+# index.html é usado exclusivamente pelo SPA_Build_Target (Capacitor/nativo).
+# Se incluído no deploy Vercel, o filesystem handler o serve diretamente
+# na raiz (/), bypassando o SSR server function — quebrando toda a aplicação.
+index.html
