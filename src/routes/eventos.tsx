@@ -354,7 +354,8 @@ function CreateEventSheet({ open, onOpenChange }: { open: boolean; onOpenChange:
   const createMut = useMutation({
     mutationFn: async () => {
       if (!user) throw new Error("Não autenticado");
-      if (!title.trim()) throw new Error("Título obrigatório");
+      const finalTitle = destinationId ? (selectedDestination?.name ?? title.trim()) : title.trim();
+      if (!finalTitle) throw new Error("Título obrigatório");
       if (!eventDate) throw new Error("Data obrigatória");
 
       // Upload da imagem de banner se houver
@@ -374,7 +375,7 @@ function CreateEventSheet({ open, onOpenChange }: { open: boolean; onOpenChange:
 
       const { error } = await supabase.from("events" as never).insert({
         created_by: user.id,
-        title: title.trim() || selectedDestination?.name || "Evento",
+        title: finalTitle,
         description: description.trim() || null,
         category,
         event_date: new Date(eventDate).toISOString(),
