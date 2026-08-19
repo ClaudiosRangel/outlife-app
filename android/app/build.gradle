@@ -15,8 +15,8 @@ android {
         // `@capacitor/device`. Permite confirmar que o APK instalado é
         // realmente o mais recente antes de reportar se uma correção
         // funcionou ou não.
-        versionCode 22
-        versionName "1.0.3-debug22"
+        versionCode 23
+        versionName "1.0.4-debug23"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.

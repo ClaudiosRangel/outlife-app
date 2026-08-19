@@ -247,35 +247,13 @@ function Home() {
         </div>
       </section>
 
-      {/* Parceiros em destaque */}
+      {/* Parceiros em destaque — carrossel automático 2 em 2 */}
       <section className="mt-7 px-5">
         <div className="flex items-center justify-between">
           <h2 className="font-display text-xl font-semibold">{t("home.featuredPartners")}</h2>
           <Link to="/marketplace" className="text-xs font-medium text-primary">{t("home.market")}</Link>
         </div>
-        <div className="mt-3 space-y-3">
-          {partners.slice(0, 2).map((p) => (
-            <div key={p.id} className="flex items-center gap-3 rounded-2xl bg-card p-3 shadow-card">
-              <img src={p.img} alt={p.name} loading="lazy" className="h-16 w-16 rounded-xl object-cover" width={800} height={800} />
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-1.5">
-                  <span className="truncate font-semibold">{p.name}</span>
-                  {p.verified && (
-                    <span title="Verificado Cadastur" className="grid h-4 w-4 place-items-center rounded-full bg-[var(--verified)] text-white">
-                      <ShieldCheck size={10} strokeWidth={3} />
-                    </span>
-                  )}
-                </div>
-                <div className="text-xs text-muted-foreground">{p.category}</div>
-                <div className="mt-1 flex items-center gap-1.5">
-                  <Stars value={p.rating} />
-                  <span className="text-[11px] text-muted-foreground">{p.rating} · {p.reviews}</span>
-                </div>
-              </div>
-              <Link to="/parceiro/$partnerId" params={{ partnerId: p.id }} className="rounded-full border border-border px-3 py-1.5 text-xs font-medium">Ver</Link>
-            </div>
-          ))}
-        </div>
+        <PartnersCarousel partners={partners} />
       </section>
 
       {/* Slogan */}
@@ -285,6 +263,64 @@ function Home() {
         </p>
         <p className="mt-3 text-xs uppercase tracking-widest text-white/70">Outlife · ecossistema</p>
       </section>
+    </div>
+  );
+}
+
+/* ====== Carrossel de parceiros — roda 2 em 2, auto a cada 4s ====== */
+function PartnersCarousel({ partners }: { partners: Array<{ id: string; name: string; img: string; category: string; rating: number; reviews: number; verified: boolean }> }) {
+  const [page, setPage] = useState(0);
+  const totalPages = Math.ceil(partners.length / 2);
+
+  useEffect(() => {
+    if (totalPages <= 1) return;
+    const interval = setInterval(() => {
+      setPage((p) => (p + 1) % totalPages);
+    }, 4000);
+    return () => clearInterval(interval);
+  }, [totalPages]);
+
+  const visiblePartners = partners.slice(page * 2, page * 2 + 2);
+
+  if (partners.length === 0) return null;
+
+  return (
+    <div className="mt-3">
+      <div className="space-y-3 transition-opacity duration-300">
+        {visiblePartners.map((p) => (
+          <div key={p.id} className="flex items-center gap-3 rounded-2xl bg-card p-3 shadow-card">
+            <img src={p.img} alt={p.name} loading="lazy" className="h-16 w-16 rounded-xl object-cover" width={800} height={800} />
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-1.5">
+                <span className="truncate font-semibold">{p.name}</span>
+                {p.verified && (
+                  <span title="Verificado Cadastur" className="grid h-4 w-4 place-items-center rounded-full bg-[var(--verified)] text-white">
+                    <ShieldCheck size={10} strokeWidth={3} />
+                  </span>
+                )}
+              </div>
+              <div className="text-xs text-muted-foreground">{p.category}</div>
+              <div className="mt-1 flex items-center gap-1.5">
+                <Stars value={p.rating} />
+                <span className="text-[11px] text-muted-foreground">{p.rating} · {p.reviews}</span>
+              </div>
+            </div>
+            <Link to="/parceiro/$partnerId" params={{ partnerId: p.id }} className="rounded-full border border-border px-3 py-1.5 text-xs font-medium">Ver</Link>
+          </div>
+        ))}
+      </div>
+      {/* Pontinhos indicadores */}
+      {totalPages > 1 && (
+        <div className="mt-2 flex justify-center gap-1.5">
+          {Array.from({ length: totalPages }).map((_, i) => (
+            <button
+              key={i}
+              onClick={() => setPage(i)}
+              className={`h-1.5 rounded-full transition-all ${i === page ? "w-4 bg-primary" : "w-1.5 bg-muted-foreground/30"}`}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
