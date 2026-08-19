@@ -95,6 +95,26 @@ function EventosPage() {
     },
   });
 
+  // Contar mensagens por evento (para badge no balãozinho)
+  const { data: messageCounts = new Map<string, number>() } = useQuery({
+    queryKey: ["event-message-counts", events.map((e) => e.id).join(",")],
+    queryFn: async () => {
+      if (events.length === 0) return new Map<string, number>();
+      const eventIds = events.map((e) => e.id);
+      const { data } = await supabase
+        .from("event_questions" as never)
+        .select("event_id")
+        .in("event_id", eventIds)
+        .eq("is_private", false);
+      const counts = new Map<string, number>();
+      for (const row of (data ?? []) as any[]) {
+        counts.set(row.event_id, (counts.get(row.event_id) ?? 0) + 1);
+      }
+      return counts;
+    },
+    enabled: events.length > 0,
+  });
+
   // Meus eventos confirmados (para mostrar badge "Confirmado")
   const { data: myParticipations = [] } = useQuery({
     queryKey: ["my-event-participations", user?.id],
@@ -247,8 +267,13 @@ function EventosPage() {
                     {isFull ? "Lotado" : "Confirmar presença"}
                   </Button>
                 )}
-                <button onClick={() => setDetailEvent(event)} className="grid h-9 w-9 place-items-center rounded-xl border border-border">
+                <button onClick={() => setDetailEvent(event)} className="relative grid h-9 w-9 place-items-center rounded-xl border border-border">
                   <MessageCircle size={14} />
+                  {(messageCounts.get(event.id) ?? 0) > 0 && (
+                    <span className="absolute -top-1.5 -right-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[9px] font-bold text-primary-foreground">
+                      {messageCounts.get(event.id)}
+                    </span>
+                  )}
                 </button>
                 {user?.id === event.created_by && (
                   <button onClick={() => { setDetailEvent(event); setEditOpen(true); }} className="text-[10px] font-medium text-primary underline">
