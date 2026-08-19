@@ -13,6 +13,7 @@ import { Route as SugerirDestinoRouteImport } from './routes/sugerir-destino'
 import { Route as RedefinirSenhaRouteImport } from './routes/redefinir-senha'
 import { Route as PerfilRouteImport } from './routes/perfil'
 import { Route as NotificacoesRouteImport } from './routes/notificacoes'
+import { Route as MercadoRouteImport } from './routes/mercado'
 import { Route as MarketplaceRouteImport } from './routes/marketplace'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ExplorarRouteImport } from './routes/explorar'
@@ -61,6 +62,11 @@ const PerfilRoute = PerfilRouteImport.update({
 const NotificacoesRoute = NotificacoesRouteImport.update({
   id: '/notificacoes',
   path: '/notificacoes',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MercadoRoute = MercadoRouteImport.update({
+  id: '/mercado',
+  path: '/mercado',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MarketplaceRoute = MarketplaceRouteImport.update({
@@ -221,6 +227,7 @@ export interface FileRoutesByFullPath {
   '/explorar': typeof ExplorarRoute
   '/login': typeof LoginRoute
   '/marketplace': typeof MarketplaceRoute
+  '/mercado': typeof MercadoRoute
   '/notificacoes': typeof NotificacoesRoute
   '/perfil': typeof PerfilRoute
   '/redefinir-senha': typeof RedefinirSenhaRoute
@@ -256,6 +263,7 @@ export interface FileRoutesByTo {
   '/explorar': typeof ExplorarRoute
   '/login': typeof LoginRoute
   '/marketplace': typeof MarketplaceRoute
+  '/mercado': typeof MercadoRoute
   '/notificacoes': typeof NotificacoesRoute
   '/perfil': typeof PerfilRoute
   '/redefinir-senha': typeof RedefinirSenhaRoute
@@ -292,6 +300,7 @@ export interface FileRoutesById {
   '/explorar': typeof ExplorarRoute
   '/login': typeof LoginRoute
   '/marketplace': typeof MarketplaceRoute
+  '/mercado': typeof MercadoRoute
   '/notificacoes': typeof NotificacoesRoute
   '/perfil': typeof PerfilRoute
   '/redefinir-senha': typeof RedefinirSenhaRoute
@@ -329,6 +338,7 @@ export interface FileRouteTypes {
     | '/explorar'
     | '/login'
     | '/marketplace'
+    | '/mercado'
     | '/notificacoes'
     | '/perfil'
     | '/redefinir-senha'
@@ -364,6 +374,7 @@ export interface FileRouteTypes {
     | '/explorar'
     | '/login'
     | '/marketplace'
+    | '/mercado'
     | '/notificacoes'
     | '/perfil'
     | '/redefinir-senha'
@@ -399,6 +410,7 @@ export interface FileRouteTypes {
     | '/explorar'
     | '/login'
     | '/marketplace'
+    | '/mercado'
     | '/notificacoes'
     | '/perfil'
     | '/redefinir-senha'
@@ -435,6 +447,7 @@ export interface RootRouteChildren {
   ExplorarRoute: typeof ExplorarRoute
   LoginRoute: typeof LoginRoute
   MarketplaceRoute: typeof MarketplaceRoute
+  MercadoRoute: typeof MercadoRoute
   NotificacoesRoute: typeof NotificacoesRoute
   PerfilRoute: typeof PerfilRoute
   RedefinirSenhaRoute: typeof RedefinirSenhaRoute
@@ -486,6 +499,13 @@ declare module '@tanstack/react-router' {
       path: '/notificacoes'
       fullPath: '/notificacoes'
       preLoaderRoute: typeof NotificacoesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mercado': {
+      id: '/mercado'
+      path: '/mercado'
+      fullPath: '/mercado'
+      preLoaderRoute: typeof MercadoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/marketplace': {
@@ -717,6 +737,7 @@ const rootRouteChildren: RootRouteChildren = {
   ExplorarRoute: ExplorarRoute,
   LoginRoute: LoginRoute,
   MarketplaceRoute: MarketplaceRoute,
+  MercadoRoute: MercadoRoute,
   NotificacoesRoute: NotificacoesRoute,
   PerfilRoute: PerfilRoute,
   RedefinirSenhaRoute: RedefinirSenhaRoute,
