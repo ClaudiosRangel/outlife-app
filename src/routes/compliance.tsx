@@ -154,9 +154,11 @@ function CompliancePage() {
         documentUrl,
       });
 
-      // Publicação direta: atualiza perfil com is_verified e avatar
+      // Publicação direta: promove perfil para parceiro verificado via RPC
+      await supabase.rpc("promote_to_partner" as never, { _user_id: user!.id } as never);
+
+      // Atualiza avatar e descrição do perfil
       await supabase.from("profiles").update({
-        is_verified: true,
         avatar_url: photoUrl,
         description: form.description,
         category: form.category,
