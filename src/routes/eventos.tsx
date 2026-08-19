@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Calendar, MapPin, Users, Plus, MessageCircle, Loader2, Image as ImageIcon, CalendarPlus } from "lucide-react";
+import { ArrowLeft, Calendar, MapPin, Users, Plus, MessageCircle, Loader2, Image as ImageIcon, CalendarPlus, Pencil } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { StatusBar } from "@/components/StatusBar";
@@ -44,6 +44,7 @@ type EventItem = {
   event_date: string;
   image_url: string | null;
   max_participants: number | null;
+  meeting_point: string | null;
   status: string;
   created_by: string;
   destination: { id: string; name: string; region: string | null } | null;
@@ -59,6 +60,8 @@ function EventosPage() {
   const { user, loading: authLoading } = useAuth();
   const qc = useQueryClient();
   const [createOpen, setCreateOpen] = useState(false);
+  const [detailEvent, setDetailEvent] = useState<EventItem | null>(null);
+  const [editOpen, setEditOpen] = useState(false);
   // "now" fixado no mount para evitar hydration mismatch (server vs client timezone)
   const [now] = useState(() => new Date());
 
@@ -199,6 +202,12 @@ function EventosPage() {
                       <span>{event.destination.name}</span>
                     </div>
                   )}
+                  {(event as any).meeting_point && (
+                    <div className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
+                      <MapPin size={12} className="text-primary" />
+                      <span className="font-medium">Encontro: {(event as any).meeting_point}</span>
+                    </div>
+                  )}
                   <div className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
                     <Users size={12} />
                     <span>{event.participants_count} confirmados{event.max_participants ? ` / ${event.max_participants} vagas` : ""}</span>
@@ -238,9 +247,14 @@ function EventosPage() {
                     {isFull ? "Lotado" : "Confirmar presença"}
                   </Button>
                 )}
-                <a href={`/eventos/${event.id}`} className="grid h-9 w-9 place-items-center rounded-xl border border-border">
+                <button onClick={() => setDetailEvent(event)} className="grid h-9 w-9 place-items-center rounded-xl border border-border">
                   <MessageCircle size={14} />
-                </a>
+                </button>
+                {user?.id === event.created_by && (
+                  <button onClick={() => { setDetailEvent(event); setEditOpen(true); }} className="text-[10px] font-medium text-primary underline">
+                    Editar
+                  </button>
+                )}
               </div>
               )}
               </div>
@@ -251,6 +265,10 @@ function EventosPage() {
 
       {/* Sheet criar evento */}
       <CreateEventSheet open={createOpen} onOpenChange={setCreateOpen} />
+
+      {/* Sheet detalhe/edição do evento */}
+      <EventDetailSheet event={detailEvent} open={!!detailEvent && !editOpen} onClose={() => setDetailEvent(null)} onEdit={() => setEditOpen(true)} />
+      <EditEventSheet event={detailEvent} open={editOpen} onClose={() => { setEditOpen(false); setDetailEvent(null); }} />
 
       {/* FAB — Botão flutuante para criar evento (estilo Instagram) */}
       {user && (
@@ -275,6 +293,7 @@ function CreateEventSheet({ open, onOpenChange }: { open: boolean; onOpenChange:
   const [eventDate, setEventDate] = useState("");
   const [maxParticipants, setMaxParticipants] = useState("");
   const [destinationId, setDestinationId] = useState<string>("");
+  const [meetingPoint, setMeetingPoint] = useState("");
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -332,6 +351,7 @@ function CreateEventSheet({ open, onOpenChange }: { open: boolean; onOpenChange:
         max_participants: maxParticipants ? parseInt(maxParticipants) : null,
         destination_id: destinationId || null,
         image_url: imageUrl,
+        meeting_point: meetingPoint.trim() || null,
       } as never);
       if (error) throw error;
     },
@@ -339,7 +359,7 @@ function CreateEventSheet({ open, onOpenChange }: { open: boolean; onOpenChange:
       toast.success("Evento criado!");
       qc.invalidateQueries({ queryKey: ["events"] });
       onOpenChange(false);
-      setTitle(""); setDescription(""); setEventDate(""); setMaxParticipants(""); setDestinationId(""); setImageFile(null); setImagePreview(null);
+      setTitle(""); setDescription(""); setEventDate(""); setMaxParticipants(""); setDestinationId(""); setMeetingPoint(""); setImageFile(null); setImagePreview(null);
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -411,12 +431,165 @@ function CreateEventSheet({ open, onOpenChange }: { open: boolean; onOpenChange:
             <input type="number" value={maxParticipants} onChange={(e) => setMaxParticipants(e.target.value)} placeholder="Sem limite" className="h-11 w-full rounded-xl border border-border bg-card px-3 text-sm outline-none focus:ring-1 ring-ring" />
           </div>
           <div>
+            <Label className="mb-1 text-sm font-medium">Ponto de encontro</Label>
+            <input value={meetingPoint} onChange={(e) => setMeetingPoint(e.target.value)} placeholder="Ex: Portaria do parque, estacionamento principal" className="h-11 w-full rounded-xl border border-border bg-card px-3 text-sm outline-none focus:ring-1 ring-ring" />
+          </div>
+          <div>
             <Label className="mb-1 text-sm font-medium">Descrição</Label>
             <textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Detalhes do evento, ponto de encontro, o que levar..." rows={3} className="w-full rounded-xl border border-border bg-card p-3 text-sm resize-none outline-none focus:ring-1 ring-ring" />
           </div>
           <Button className="w-full h-12 rounded-xl" onClick={() => createMut.mutate()} disabled={createMut.isPending}>
             {createMut.isPending ? <Loader2 size={16} className="animate-spin mr-2" /> : <CalendarPlus size={16} className="mr-2" />}
             Criar evento
+          </Button>
+        </div>
+      </SheetContent>
+    </Sheet>
+  );
+}
+
+
+/* ====== Sheet de detalhe do evento ====== */
+function EventDetailSheet({ event, open, onClose, onEdit }: { event: EventItem | null; open: boolean; onClose: () => void; onEdit: () => void }) {
+  const { user } = useAuth();
+  if (!event) return null;
+  const isCreator = user?.id === event.created_by;
+
+  return (
+    <Sheet open={open} onOpenChange={(v) => { if (!v) onClose(); }}>
+      <SheetContent side="bottom" className="rounded-t-3xl max-h-[85vh] overflow-y-auto">
+        <SheetHeader>
+          <SheetTitle className="font-display flex items-center gap-2">
+            {event.title}
+            {isCreator && (
+              <button onClick={onEdit} className="ml-auto grid h-8 w-8 place-items-center rounded-full bg-primary/10 text-primary">
+                <Pencil size={14} />
+              </button>
+            )}
+          </SheetTitle>
+          <SheetDescription className="capitalize">{event.category}</SheetDescription>
+        </SheetHeader>
+        <div className="space-y-3 py-4">
+          {event.image_url && (
+            <img src={event.image_url} alt={event.title} className="w-full aspect-[16/9] rounded-2xl object-cover" />
+          )}
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Calendar size={14} />
+            <span>{new Date(event.event_date).toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" })}</span>
+          </div>
+          {event.destination && (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <MapPin size={14} />
+              <span>{event.destination.name}{event.destination.region ? ` — ${event.destination.region}` : ""}</span>
+            </div>
+          )}
+          {(event as any).meeting_point && (
+            <div className="flex items-center gap-2 text-sm font-medium text-foreground">
+              <MapPin size={14} className="text-primary" />
+              <span>Ponto de encontro: {(event as any).meeting_point}</span>
+            </div>
+          )}
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Users size={14} />
+            <span>{event.participants_count} confirmados{event.max_participants ? ` / ${event.max_participants} vagas` : ""}</span>
+          </div>
+          {event.description && (
+            <p className="text-sm text-foreground/80 leading-relaxed whitespace-pre-wrap">{event.description}</p>
+          )}
+          {event.creator && (
+            <div className="pt-2 border-t border-border">
+              <span className="text-xs text-muted-foreground">Organizado por <strong>{event.creator.full_name ?? "Aventureiro"}</strong></span>
+            </div>
+          )}
+        </div>
+      </SheetContent>
+    </Sheet>
+  );
+}
+
+/* ====== Sheet de edição do evento (só criador) ====== */
+function EditEventSheet({ event, open, onClose }: { event: EventItem | null; open: boolean; onClose: () => void }) {
+  const { user } = useAuth();
+  const qc = useQueryClient();
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [meetingPoint, setMeetingPoint] = useState("");
+  const [maxParticipants, setMaxParticipants] = useState("");
+  const [eventDate, setEventDate] = useState("");
+
+  useEffect(() => {
+    if (event && open) {
+      setTitle(event.title);
+      setDescription(event.description ?? "");
+      setMeetingPoint((event as any).meeting_point ?? "");
+      setMaxParticipants(event.max_participants?.toString() ?? "");
+      // Converter ISO para datetime-local format
+      if (event.event_date) {
+        const d = new Date(event.event_date);
+        const local = new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+        setEventDate(local);
+      }
+    }
+  }, [event, open]);
+
+  const updateMut = useMutation({
+    mutationFn: async () => {
+      if (!user || !event) throw new Error("Erro");
+      if (!title.trim()) throw new Error("Título obrigatório");
+      const { error } = await supabase
+        .from("events" as never)
+        .update({
+          title: title.trim(),
+          description: description.trim() || null,
+          meeting_point: meetingPoint.trim() || null,
+          max_participants: maxParticipants ? parseInt(maxParticipants) : null,
+          event_date: eventDate ? new Date(eventDate).toISOString() : undefined,
+          updated_at: new Date().toISOString(),
+        } as never)
+        .eq("id", event.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Evento atualizado!");
+      qc.invalidateQueries({ queryKey: ["events"] });
+      onClose();
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  if (!event) return null;
+
+  return (
+    <Sheet open={open} onOpenChange={(v) => { if (!v) onClose(); }}>
+      <SheetContent side="bottom" className="rounded-t-3xl max-h-[90vh] overflow-y-auto">
+        <SheetHeader>
+          <SheetTitle className="font-display">Editar evento</SheetTitle>
+          <SheetDescription>Altere as informações do evento</SheetDescription>
+        </SheetHeader>
+        <div className="space-y-4 py-4">
+          <div>
+            <Label className="mb-1 text-sm font-medium">Título *</Label>
+            <input value={title} onChange={(e) => setTitle(e.target.value)} className="h-11 w-full rounded-xl border border-border bg-card px-3 text-sm outline-none focus:ring-1 ring-ring" />
+          </div>
+          <div>
+            <Label className="mb-1 text-sm font-medium">Data e hora</Label>
+            <input type="datetime-local" value={eventDate} onChange={(e) => setEventDate(e.target.value)} className="h-11 w-full rounded-xl border border-border bg-card px-3 text-sm outline-none focus:ring-1 ring-ring" />
+          </div>
+          <div>
+            <Label className="mb-1 text-sm font-medium">Vagas</Label>
+            <input type="number" value={maxParticipants} onChange={(e) => setMaxParticipants(e.target.value)} placeholder="Sem limite" className="h-11 w-full rounded-xl border border-border bg-card px-3 text-sm outline-none focus:ring-1 ring-ring" />
+          </div>
+          <div>
+            <Label className="mb-1 text-sm font-medium">Ponto de encontro</Label>
+            <input value={meetingPoint} onChange={(e) => setMeetingPoint(e.target.value)} placeholder="Ex: Portaria do parque" className="h-11 w-full rounded-xl border border-border bg-card px-3 text-sm outline-none focus:ring-1 ring-ring" />
+          </div>
+          <div>
+            <Label className="mb-1 text-sm font-medium">Descrição</Label>
+            <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3} className="w-full rounded-xl border border-border bg-card p-3 text-sm resize-none outline-none focus:ring-1 ring-ring" />
+          </div>
+          <Button className="w-full h-12 rounded-xl" onClick={() => updateMut.mutate()} disabled={updateMut.isPending}>
+            {updateMut.isPending ? <Loader2 size={16} className="animate-spin mr-2" /> : <Pencil size={16} className="mr-2" />}
+            Salvar alterações
           </Button>
         </div>
       </SheetContent>
