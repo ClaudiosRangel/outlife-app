@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
-import { ArrowLeft, Building2, Upload, ShieldCheck } from "lucide-react";
+import { ArrowLeft, Building2, Upload, ShieldCheck, Camera } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,6 +13,7 @@ import { toast } from "sonner";
 
 import { ComplianceBadge, type ComplianceStatus } from "@/components/ComplianceBadge";
 import { useAuth } from "@/hooks/use-auth";
+import { supabase } from "@/integrations/supabase/client";
 import {
   fetchMyCadasturRequest,
   fetchMyProfile,
@@ -89,6 +90,8 @@ function CompliancePage() {
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const docName = selectedFile?.name ?? null;
 
   const { data: myCadasturRequest } = useQuery({
@@ -111,11 +114,11 @@ function CompliancePage() {
       : "unverified";
 
   const completion = useMemo(() => {
-    const total = Object.keys(form).length + 1; // +1 for doc
+    const total = Object.keys(form).length + 2; // +1 doc, +1 foto
     const filled =
-      Object.values(form).filter((v) => v.trim().length > 0).length + (docName ? 1 : 0);
+      Object.values(form).filter((v) => v.trim().length > 0).length + (docName ? 1 : 0) + (photoFile ? 1 : 0);
     return Math.round((filled / total) * 100);
-  }, [form, docName]);
+  }, [form, docName, photoFile]);
 
   const update = (key: keyof typeof form, value: string) => {
     setForm((f) => ({ ...f, [key]: value }));
@@ -125,7 +128,20 @@ function CompliancePage() {
   const submitMutation = useMutation({
     mutationFn: async () => {
       if (!selectedFile) throw new Error(t("compliance.attachDoc"));
+      if (!photoFile) throw new Error("Foto do parceiro é obrigatória.");
       const documentUrl = await uploadComplianceDocument(selectedFile);
+      // Upload da foto do parceiro
+      const { resizeImageForUpload } = await import("@/lib/image-resize");
+      const optimizedPhoto = await resizeImageForUpload(photoFile);
+      const ext = photoFile.type === "image/png" ? "png" : "jpg";
+      const photoPath = `compliance/${user!.id}/${Date.now()}-photo.${ext}`;
+      const { error: upErr } = await supabase.storage
+        .from("community-post-images")
+        .upload(photoPath, optimizedPhoto, { upsert: false, contentType: photoFile.type });
+      if (upErr) throw new Error("Erro no upload da foto: " + upErr.message);
+      const { data: pub } = supabase.storage.from("community-post-images").getPublicUrl(photoPath);
+      const photoUrl = pub.publicUrl;
+
       await submitCadasturRequest({
         companyName: form.companyName,
         cnpj: form.cnpj,
@@ -137,10 +153,19 @@ function CompliancePage() {
         description: form.description,
         documentUrl,
       });
+
+      // Publicação direta: atualiza perfil com is_verified e avatar
+      await supabase.from("profiles").update({
+        is_verified: true,
+        avatar_url: photoUrl,
+        description: form.description,
+        category: form.category,
+      } as never).eq("id", user!.id);
     },
     onSuccess: () => {
-      toast.success(t("compliance.submitted"));
+      toast.success("Parceiro publicado com sucesso!");
       qc.invalidateQueries({ queryKey: ["my-cadastur-request", user?.id] });
+      qc.invalidateQueries({ queryKey: ["my-profile", user?.id] });
     },
     onError: (err: Error) => {
       toast.error(err.message || t("compliance.genericError"));
@@ -162,6 +187,10 @@ function CompliancePage() {
     }
     if (!selectedFile) {
       toast.error(t("compliance.attachDoc"));
+      return;
+    }
+    if (!photoFile) {
+      toast.error("Foto do parceiro é obrigatória.");
       return;
     }
 
@@ -327,6 +356,40 @@ function CompliancePage() {
           </Field>
         </div>
 
+
+        <h3 className="mb-3 mt-5 text-sm font-semibold">Foto do parceiro *</h3>
+        <div className="rounded-2xl border border-dashed border-border bg-card p-4">
+          <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl py-4 text-center">
+            {photoPreview ? (
+              <img src={photoPreview} alt="Preview" className="h-32 w-32 rounded-2xl object-cover shadow-card" />
+            ) : (
+              <>
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary">
+                  <Camera size={18} />
+                </div>
+                <span className="text-sm font-medium">Adicionar foto *</span>
+              </>
+            )}
+            <span className="text-[11px] text-muted-foreground">JPG, PNG ou WEBP — será sua foto de perfil como parceiro</span>
+            <input
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              className="hidden"
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (!f) return;
+                if (f.size > 5 * 1024 * 1024) {
+                  toast.error("Imagem muito grande (máx. 5 MB).");
+                  return;
+                }
+                setPhotoFile(f);
+                const reader = new FileReader();
+                reader.onloadend = () => setPhotoPreview(reader.result as string);
+                reader.readAsDataURL(f);
+              }}
+            />
+          </label>
+        </div>
 
         <h3 className="mb-3 mt-5 text-sm font-semibold">{t("compliance.uploadSection")}</h3>
         <div className="rounded-2xl border border-dashed border-border bg-card p-4">

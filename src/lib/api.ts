@@ -1624,7 +1624,7 @@ export async function submitCadasturRequest(input: {
     phone: input.phone,
     description: input.description,
     document_url: input.documentUrl,
-    status: "pending",
+    status: "approved",
   } as never);
 
   if (error) {
