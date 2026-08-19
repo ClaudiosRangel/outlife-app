@@ -224,6 +224,17 @@ function EventosPage() {
 
       {/* Sheet criar evento */}
       <CreateEventSheet open={createOpen} onOpenChange={setCreateOpen} />
+
+      {/* FAB — Botão flutuante para criar evento (estilo Instagram) */}
+      {user && (
+        <button
+          onClick={() => setCreateOpen(true)}
+          className="fixed bottom-24 right-5 z-30 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/30 transition-transform active:scale-90 hover:shadow-xl"
+          aria-label="Criar evento"
+        >
+          <Plus size={24} strokeWidth={2.5} />
+        </button>
+      )}
     </div>
   );
 }
