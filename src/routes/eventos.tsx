@@ -238,9 +238,9 @@ function EventosPage() {
                     {isFull ? "Lotado" : "Confirmar presença"}
                   </Button>
                 )}
-                <Link to="/eventos/$eventId" params={{ eventId: event.id }} className="grid h-9 w-9 place-items-center rounded-xl border border-border">
+                <a href={`/eventos/${event.id}`} className="grid h-9 w-9 place-items-center rounded-xl border border-border">
                   <MessageCircle size={14} />
-                </Link>
+                </a>
               </div>
               )}
               </div>
