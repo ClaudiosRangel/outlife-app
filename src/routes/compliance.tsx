@@ -155,14 +155,15 @@ function CompliancePage() {
       });
 
       // Publicação direta: promove perfil para parceiro verificado via RPC
-      await supabase.rpc("promote_to_partner" as never, { _user_id: user!.id } as never);
+      await supabase.rpc("promote_to_partner" as never, {
+        _user_id: user!.id,
+        _full_name: form.companyName,
+        _avatar_url: photoUrl,
+        _description: form.description,
+        _category: form.category,
+      } as never);
 
-      // Atualiza avatar e descrição do perfil
-      await supabase.from("profiles").update({
-        avatar_url: photoUrl,
-        description: form.description,
-        category: form.category,
-      } as never).eq("id", user!.id);
+      // Remove o update separado - tudo já foi feito na RPC acima
     },
     onSuccess: () => {
       toast.success("Parceiro publicado com sucesso!");
