@@ -319,6 +319,7 @@ function CreateEventSheet({ open, onOpenChange }: { open: boolean; onOpenChange:
   const [maxParticipants, setMaxParticipants] = useState("");
   const [destinationId, setDestinationId] = useState<string>("");
   const [meetingPoint, setMeetingPoint] = useState("");
+  const [responsavel, setResponsavel] = useState("");
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -332,19 +333,23 @@ function CreateEventSheet({ open, onOpenChange }: { open: boolean; onOpenChange:
     reader.readAsDataURL(file);
   };
 
-  // Carregar destinos para o select
+  // Carregar destinos para o select (com imagem)
   const { data: destinations = [] } = useQuery({
     queryKey: ["destinations-for-event"],
     queryFn: async () => {
       const { data } = await supabase
         .from("destinations")
-        .select("id, name, region")
+        .select("id, name, region, main_image_url, difficulty, type, distance, duration")
         .eq("status", "approved")
         .order("name");
-      return (data ?? []) as Array<{ id: string; name: string; region: string | null }>;
+      return (data ?? []) as Array<{ id: string; name: string; region: string | null; main_image_url: string | null; difficulty: string | null; type: string | null; distance: string | null; duration: string | null }>;
     },
     enabled: open,
   });
+
+  // Quando um destino é selecionado, preenche título e imagem com dados do destino
+  const selectedDestination = destinations.find((d) => d.id === destinationId);
+  const destinationImage = selectedDestination?.main_image_url ?? null;
 
   const createMut = useMutation({
     mutationFn: async () => {
@@ -369,13 +374,13 @@ function CreateEventSheet({ open, onOpenChange }: { open: boolean; onOpenChange:
 
       const { error } = await supabase.from("events" as never).insert({
         created_by: user.id,
-        title: title.trim(),
+        title: title.trim() || selectedDestination?.name || "Evento",
         description: description.trim() || null,
         category,
         event_date: new Date(eventDate).toISOString(),
         max_participants: maxParticipants ? parseInt(maxParticipants) : null,
         destination_id: destinationId || null,
-        image_url: imageUrl,
+        image_url: imageUrl || destinationImage,
         meeting_point: meetingPoint.trim() || null,
       } as never);
       if (error) throw error;
@@ -384,7 +389,7 @@ function CreateEventSheet({ open, onOpenChange }: { open: boolean; onOpenChange:
       toast.success("Evento criado!");
       qc.invalidateQueries({ queryKey: ["events"] });
       onOpenChange(false);
-      setTitle(""); setDescription(""); setEventDate(""); setMaxParticipants(""); setDestinationId(""); setMeetingPoint(""); setImageFile(null); setImagePreview(null);
+      setTitle(""); setDescription(""); setEventDate(""); setMaxParticipants(""); setDestinationId(""); setMeetingPoint(""); setResponsavel(""); setImageFile(null); setImagePreview(null);
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -397,9 +402,18 @@ function CreateEventSheet({ open, onOpenChange }: { open: boolean; onOpenChange:
           <SheetDescription>Organize uma aventura com a comunidade</SheetDescription>
         </SheetHeader>
         <div className="space-y-4 py-4">
-          {/* Banner/Imagem — estilo Instagram story */}
+          {/* Banner/Imagem — usa imagem do destino se selecionado */}
           <div>
             <Label className="mb-1.5 text-sm font-medium">Capa do evento</Label>
+            {destinationImage && !imageFile ? (
+              <div className="relative aspect-[16/9] w-full overflow-hidden rounded-2xl border border-border">
+                <img src={destinationImage} alt="Destino" className="h-full w-full object-cover" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
+                <span className="absolute bottom-3 left-3 rounded-full bg-white/90 px-3 py-1 text-xs font-medium text-foreground shadow-sm">
+                  📍 {selectedDestination?.name}
+                </span>
+              </div>
+            ) : (
             <button
               onClick={() => fileRef.current?.click()}
               className="relative w-full overflow-hidden rounded-2xl border-2 border-dashed border-border bg-gradient-to-br from-primary/5 via-secondary/30 to-primary/10 transition-all hover:border-primary/40 hover:shadow-lg active:scale-[0.98]"
@@ -423,11 +437,16 @@ function CreateEventSheet({ open, onOpenChange }: { open: boolean; onOpenChange:
               )}
               <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={handleImageChange} />
             </button>
+            )}
           </div>
 
           <div>
             <Label className="mb-1 text-sm font-medium">Título *</Label>
-            <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Ex: Trilha do Pico da Bandeira" className="h-11 w-full rounded-xl border border-border bg-card px-3 text-sm outline-none focus:ring-1 ring-ring" />
+            <input value={destinationId ? (selectedDestination?.name ?? title) : title} onChange={(e) => setTitle(e.target.value)} placeholder="Ex: Trilha do Pico da Bandeira" disabled={!!destinationId} className="h-11 w-full rounded-xl border border-border bg-card px-3 text-sm outline-none focus:ring-1 ring-ring disabled:opacity-60 disabled:cursor-not-allowed" />
+          </div>
+          <div>
+            <Label className="mb-1 text-sm font-medium">Responsável / Guia</Label>
+            <input value={responsavel} onChange={(e) => setResponsavel(e.target.value)} placeholder="Nome do guia ou responsável" className="h-11 w-full rounded-xl border border-border bg-card px-3 text-sm outline-none focus:ring-1 ring-ring" />
           </div>
           <div>
             <Label className="mb-1 text-sm font-medium">Categoria</Label>

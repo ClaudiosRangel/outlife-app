@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Settings,
   Award,
@@ -41,6 +41,7 @@ import {
   fetchUserActivities,
   fetchMyFollowers,
   fetchMyFollowing,
+  discardActivity,
 } from "@/lib/api";
 import { Activity as ActivityIcon, Clock, Route as RouteIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -139,6 +140,15 @@ function Profile() {
     queryKey: ["user-activities", user?.id],
     queryFn: fetchUserActivities,
     enabled: !!user,
+  });
+
+  const qc = useQueryClient();
+  const deleteActivityMut = useMutation({
+    mutationFn: (id: string) => discardActivity(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["user-activities", user?.id] });
+      qc.invalidateQueries({ queryKey: ["user-trails", user?.id] });
+    },
   });
 
   // Bug corrigido (Requirement 12.3): os botões "Seguidores"/"Seguindo"
@@ -332,12 +342,20 @@ function Profile() {
                 {t("common.empty", "Nada por aqui ainda.")}
               </div>
             ) : myTrails.map((tr) => (
-              <div key={tr.name} className="flex items-center justify-between rounded-2xl bg-card p-3 shadow-card">
+              <div key={tr.id ?? tr.name} className="flex items-center justify-between rounded-2xl bg-card p-3 shadow-card">
                 <div className="flex items-center gap-3">
                   <Mountain size={16} className="text-primary" />
                   <span className="text-sm font-medium">{tr.name}</span>
                 </div>
-                <span className="text-xs text-muted-foreground">{tr.distance}</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-muted-foreground">{tr.distance}</span>
+                  {(tr as any).id && (
+                    <button
+                      onClick={() => { if (confirm("Excluir esta trilha?")) deleteActivityMut.mutate((tr as any).id); }}
+                      className="text-xs text-destructive font-medium"
+                    >✕</button>
+                  )}
+                </div>
               </div>
             ))}
           </TabsContent>
@@ -352,13 +370,15 @@ function Profile() {
               const km = a.distance_meters != null ? (a.distance_meters / 1000).toFixed(2) : "—";
               const mins = a.duration_seconds != null ? Math.round(a.duration_seconds / 60) : 0;
               return (
-                <Link
+                <div
                   key={a.id}
-                  to="/atividade/$activityId"
-                  params={{ activityId: a.id }}
                   className="flex items-center justify-between rounded-2xl bg-card p-3 shadow-card"
                 >
-                  <div className="flex items-center gap-3">
+                  <Link
+                    to="/atividade/$activityId"
+                    params={{ activityId: a.id }}
+                    className="flex items-center gap-3 flex-1 min-w-0"
+                  >
                     <span className="grid h-9 w-9 place-items-center rounded-xl bg-primary/10 text-primary">
                       <RouteIcon size={16} />
                     </span>
@@ -370,9 +390,12 @@ function Profile() {
                         <Clock size={11} /> {mins} min · {km} km
                       </div>
                     </div>
-                  </div>
-                  <span className="text-xs text-primary font-medium">{t("common.open")}</span>
-                </Link>
+                  </Link>
+                  <button
+                    onClick={() => { if (confirm("Excluir esta atividade?")) deleteActivityMut.mutate(a.id); }}
+                    className="text-xs text-destructive font-medium ml-2"
+                  >✕</button>
+                </div>
               );
             })}
           </TabsContent>
