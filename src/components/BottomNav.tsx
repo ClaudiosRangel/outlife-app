@@ -1,5 +1,5 @@
 import { Link, useLocation } from "@tanstack/react-router";
-import { Home, Search, Compass, Store, Users, User } from "lucide-react";
+import { Home, Search, Compass, CalendarDays, Users, User } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useTranslation } from "react-i18next";
 import { useEffect, useState } from "react";
@@ -21,7 +21,7 @@ const NAV_KEY_PREFIXES: Record<NavKey, string[]> = {
   home: ["/"],
   search: ["/busca"],
   explore: ["/explorar", "/destino"],
-  market: ["/marketplace", "/parceiro", "/compliance", "/admin"],
+  market: ["/marketplace", "/parceiro", "/compliance", "/admin", "/eventos"],
   community: ["/comunidade"],
   profile: [
     "/perfil",
@@ -79,7 +79,7 @@ export function BottomNav() {
     { key: "home", to: "/", label: t("nav.home"), icon: Home },
     { key: "search", to: "/busca", label: t("nav.search"), icon: Search },
     { key: "explore", to: "/explorar", label: t("nav.explore"), icon: Compass },
-    { key: "market", to: "/marketplace", label: t("nav.market"), icon: Store },
+    { key: "market", to: "/eventos", label: t("nav.events", "Eventos"), icon: CalendarDays },
     { key: "community", to: "/comunidade", label: t("nav.community"), icon: Users },
     { key: "profile", to: user ? (hasActiveTracking ? "/atividade/rastrear" : "/perfil") : "/login", label: t("nav.profile"), icon: User },
   ];

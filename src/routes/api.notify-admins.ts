@@ -15,7 +15,7 @@ const CORS_HEADERS: Record<string, string> = {
 const ADMIN_EMAILS = [
   "claudiosilvarangel1974@gmail.com",
   "caioestevesrangel14@gmail.com",
-  "rafaelcv.166096@uniacademia.edu.br",
+  "rafa.tom@gmail.com",
 ];
 
 const RESEND_API_KEY = process.env.RESEND_API_KEY || "";

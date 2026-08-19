@@ -133,5 +133,5 @@ CREATE POLICY "Authenticated users can read admin_emails"
 INSERT INTO public.admin_emails (email, role) VALUES
   ('claudiosilvarangel1974@gmail.com', 'approver'),
   ('caioestevesrangel14@gmail.com', 'approver'),
-  ('rafaelcv.166096@uniacademia.edu.br', 'approver')
+  ('rafa.tom@gmail.com', 'approver')
 ON CONFLICT (email) DO NOTHING;

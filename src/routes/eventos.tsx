@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Calendar, MapPin, Users, Plus, MessageCircle, Loader2 } from "lucide-react";
+import { ArrowLeft, Calendar, MapPin, Users, Plus, MessageCircle, Loader2, Image as ImageIcon, CalendarPlus } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { StatusBar } from "@/components/StatusBar";
@@ -237,6 +237,18 @@ function CreateEventSheet({ open, onOpenChange }: { open: boolean; onOpenChange:
   const [eventDate, setEventDate] = useState("");
   const [maxParticipants, setMaxParticipants] = useState("");
   const [destinationId, setDestinationId] = useState<string>("");
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImageFile(file);
+    const reader = new FileReader();
+    reader.onloadend = () => setImagePreview(reader.result as string);
+    reader.readAsDataURL(file);
+  };
 
   // Carregar destinos para o select
   const { data: destinations = [] } = useQuery({
@@ -258,6 +270,21 @@ function CreateEventSheet({ open, onOpenChange }: { open: boolean; onOpenChange:
       if (!title.trim()) throw new Error("Título obrigatório");
       if (!eventDate) throw new Error("Data obrigatória");
 
+      // Upload da imagem de banner se houver
+      let imageUrl: string | null = null;
+      if (imageFile) {
+        const { resizeImageForUpload } = await import("@/lib/image-resize");
+        const optimized = await resizeImageForUpload(imageFile);
+        const ext = imageFile.type === "image/png" ? "png" : imageFile.type === "image/webp" ? "webp" : "jpg";
+        const path = `events/${user.id}/${Date.now()}.${ext}`;
+        const { error: upErr } = await supabase.storage
+          .from("community-post-images")
+          .upload(path, optimized, { upsert: false, contentType: imageFile.type });
+        if (upErr) throw new Error("Erro no upload da imagem: " + upErr.message);
+        const { data: pub } = supabase.storage.from("community-post-images").getPublicUrl(path);
+        imageUrl = pub.publicUrl;
+      }
+
       const { error } = await supabase.from("events" as never).insert({
         created_by: user.id,
         title: title.trim(),
@@ -266,6 +293,7 @@ function CreateEventSheet({ open, onOpenChange }: { open: boolean; onOpenChange:
         event_date: new Date(eventDate).toISOString(),
         max_participants: maxParticipants ? parseInt(maxParticipants) : null,
         destination_id: destinationId || null,
+        image_url: imageUrl,
       } as never);
       if (error) throw error;
     },
@@ -273,7 +301,7 @@ function CreateEventSheet({ open, onOpenChange }: { open: boolean; onOpenChange:
       toast.success("Evento criado!");
       qc.invalidateQueries({ queryKey: ["events"] });
       onOpenChange(false);
-      setTitle(""); setDescription(""); setEventDate(""); setMaxParticipants(""); setDestinationId("");
+      setTitle(""); setDescription(""); setEventDate(""); setMaxParticipants(""); setDestinationId(""); setImageFile(null); setImagePreview(null);
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -286,6 +314,34 @@ function CreateEventSheet({ open, onOpenChange }: { open: boolean; onOpenChange:
           <SheetDescription>Organize uma aventura com a comunidade</SheetDescription>
         </SheetHeader>
         <div className="space-y-4 py-4">
+          {/* Banner/Imagem — estilo Instagram story */}
+          <div>
+            <Label className="mb-1.5 text-sm font-medium">Capa do evento</Label>
+            <button
+              onClick={() => fileRef.current?.click()}
+              className="relative w-full overflow-hidden rounded-2xl border-2 border-dashed border-border bg-gradient-to-br from-primary/5 via-secondary/30 to-primary/10 transition-all hover:border-primary/40 hover:shadow-lg active:scale-[0.98]"
+            >
+              {imagePreview ? (
+                <div className="relative aspect-[16/9] w-full">
+                  <img src={imagePreview} alt="Preview" className="h-full w-full object-cover" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+                  <span className="absolute bottom-3 left-3 rounded-full bg-white/90 px-3 py-1 text-xs font-medium text-foreground shadow-sm">
+                    Trocar imagem
+                  </span>
+                </div>
+              ) : (
+                <div className="flex aspect-[16/9] flex-col items-center justify-center gap-2 text-muted-foreground">
+                  <div className="grid h-12 w-12 place-items-center rounded-full bg-primary/10">
+                    <ImageIcon size={22} className="text-primary" />
+                  </div>
+                  <span className="text-sm font-medium">Adicionar banner</span>
+                  <span className="text-[11px] text-muted-foreground/70">JPG, PNG ou WEBP • Recomendado 16:9</span>
+                </div>
+              )}
+              <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={handleImageChange} />
+            </button>
+          </div>
+
           <div>
             <Label className="mb-1 text-sm font-medium">Título *</Label>
             <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Ex: Trilha do Pico da Bandeira" className="h-11 w-full rounded-xl border border-border bg-card px-3 text-sm outline-none focus:ring-1 ring-ring" />
@@ -321,7 +377,7 @@ function CreateEventSheet({ open, onOpenChange }: { open: boolean; onOpenChange:
             <textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Detalhes do evento, ponto de encontro, o que levar..." rows={3} className="w-full rounded-xl border border-border bg-card p-3 text-sm resize-none outline-none focus:ring-1 ring-ring" />
           </div>
           <Button className="w-full h-12 rounded-xl" onClick={() => createMut.mutate()} disabled={createMut.isPending}>
-            {createMut.isPending ? <Loader2 size={16} className="animate-spin mr-2" /> : null}
+            {createMut.isPending ? <Loader2 size={16} className="animate-spin mr-2" /> : <CalendarPlus size={16} className="mr-2" />}
             Criar evento
           </Button>
         </div>
