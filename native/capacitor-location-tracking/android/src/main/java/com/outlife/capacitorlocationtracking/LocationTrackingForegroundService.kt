@@ -66,8 +66,9 @@ class LocationTrackingForegroundService : Service() {
         stopLocationUpdates()
 
         val locationRequest = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, minIntervalMs)
-            .setMinUpdateIntervalMillis(minIntervalMs)
+            .setMinUpdateIntervalMillis(minIntervalMs / 2) // Fastest interval = metade do intervalo normal
             .setMinUpdateDistanceMeters(minDistanceMeters)
+            .setWaitForAccurateLocation(true) // Espera GPS preciso antes de enviar
             .build()
 
         locationCallback = object : LocationCallback() {

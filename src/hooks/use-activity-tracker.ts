@@ -10,7 +10,7 @@ import {
   type ActivePersisted,
 } from "@/lib/activity-storage";
 
-export type TrackPoint = { lat: number; lng: number; ts: number };
+export type TrackPoint = { lat: number; lng: number; ts: number; alt?: number; speed?: number };
 export type TrackerStatus = "idle" | "tracking" | "paused" | "saving";
 
 export function useActivityTracker() {
@@ -18,6 +18,7 @@ export function useActivityTracker() {
   const [points, setPoints] = useState<TrackPoint[]>([]);
   const [distance, setDistance] = useState(0);
   const [duration, setDuration] = useState(0);
+  const [elevationGain, setElevationGain] = useState(0);
   // ID do registro no Supabase + tipo de atividade, persistidos junto
   // com o estado para sobreviver à navegação entre telas.
   const activityIdRef = useRef<string | null>(null);
@@ -30,6 +31,7 @@ export function useActivityTracker() {
   const pointsRef = useRef<TrackPoint[]>([]);
   const distanceRef = useRef(0);
   const durationRef = useRef(0);
+  const elevationGainRef = useRef(0);
   // Handle do listener nativo `locationUpdate` (Native_Location_Tracking_Module),
   // usado apenas quando `Capacitor.isNativePlatform()` é `true` (Requirement 2.5).
   const nativeListenerRef = useRef<PluginListenerHandle | null>(null);
@@ -37,7 +39,7 @@ export function useActivityTracker() {
   // ocorreu o último checkpoint, independente da fonte dos pontos.
   const lastCheckpointTsRef = useRef(Date.now());
   const lastCheckpointDistanceRef = useRef(0);
-  // Auto-pause: timestamp do último ponto com deslocamento > 5m
+  // Auto-pause: timestamp do último ponto com deslocamento > 2m
   const lastMovementTsRef = useRef(Date.now());
   // Flag para distinguir auto-pause (por inatividade) de pause manual
   const autoPausedRef = useRef(false);
@@ -131,16 +133,30 @@ export function useActivityTracker() {
     // API, alimentando o mesmo pointsRef/setPoints/distanceRef já
     // existentes através do listener `locationUpdate`.
     if (Capacitor.isNativePlatform()) {
-      void LocationTracking.startTracking({ minIntervalMs: 5000, minDistanceMeters: 10 });
+      void LocationTracking.startTracking({ minIntervalMs: 1000, minDistanceMeters: 1 });
       void LocationTracking.addListener("locationUpdate", (point) => {
-        const pt: TrackPoint = { lat: point.lat, lng: point.lng, ts: point.ts };
+        // Filtrar pontos com GPS impreciso (> 20m = ruído)
+        if (point.accuracy > 20) return;
+
+        const alt = point.altitude != null && point.altitude >= 0 ? point.altitude : undefined;
+        const spd = point.speed != null && point.speed >= 0 ? point.speed : undefined;
+        const pt: TrackPoint = { lat: point.lat, lng: point.lng, ts: point.ts, alt, speed: spd };
         setCurrentPos(pt);
         const last = pointsRef.current[pointsRef.current.length - 1];
         if (last) {
           const d = haversineMeters(last, pt);
-          if (d < 5) return;
+          // Threshold reduzido para 2m — captura curvas e trilhas com precisão
+          if (d < 2) return;
           distanceRef.current += d;
           setDistance(distanceRef.current);
+          // Elevation gain: soma apenas subidas (> 2m para filtrar ruído barométrico)
+          if (alt != null && last.alt != null) {
+            const altDiff = alt - last.alt;
+            if (altDiff > 2) {
+              elevationGainRef.current += altDiff;
+              setElevationGain(elevationGainRef.current);
+            }
+          }
           lastMovementTsRef.current = Date.now();
           // Auto-resume se estava em auto-pause
           if (autoPausedRef.current) {
@@ -153,6 +169,9 @@ export function useActivityTracker() {
               }, 1000);
             }
           }
+        } else {
+          // Primeiro ponto: marca como movimento para não disparar auto-pause imediato
+          lastMovementTsRef.current = Date.now();
         }
         pointsRef.current = [...pointsRef.current, pt];
         setPoints(pointsRef.current);
@@ -168,19 +187,30 @@ export function useActivityTracker() {
     watchIdRef.current = navigator.geolocation.watchPosition(
       (pos) => {
         const accuracy = pos.coords.accuracy;
-        if (accuracy != null && accuracy > 30) return;
+        // Filtrar GPS impreciso (> 20m)
+        if (accuracy != null && accuracy > 20) return;
         const pt: TrackPoint = {
           lat: pos.coords.latitude,
           lng: pos.coords.longitude,
           ts: pos.timestamp,
+          alt: pos.coords.altitude != null ? pos.coords.altitude : undefined,
+          speed: pos.coords.speed != null && pos.coords.speed >= 0 ? pos.coords.speed : undefined,
         };
         setCurrentPos(pt);
         const last = pointsRef.current[pointsRef.current.length - 1];
         if (last) {
           const d = haversineMeters(last, pt);
-          if (d < 5) return;
+          if (d < 2) return;
           distanceRef.current += d;
           setDistance(distanceRef.current);
+          // Elevation gain
+          if (pt.alt != null && last.alt != null) {
+            const altDiff = pt.alt - last.alt;
+            if (altDiff > 2) {
+              elevationGainRef.current += altDiff;
+              setElevationGain(elevationGainRef.current);
+            }
+          }
           lastMovementTsRef.current = Date.now();
           // Auto-resume se estava em auto-pause
           if (autoPausedRef.current) {
@@ -193,6 +223,8 @@ export function useActivityTracker() {
               }, 1000);
             }
           }
+        } else {
+          lastMovementTsRef.current = Date.now();
         }
         pointsRef.current = [...pointsRef.current, pt];
         setPoints(pointsRef.current);
@@ -200,7 +232,7 @@ export function useActivityTracker() {
       (err) => {
         if (err.code === err.PERMISSION_DENIED) setPermissionDenied(true);
       },
-      { enableHighAccuracy: true, maximumAge: 2000, timeout: 15000 },
+      { enableHighAccuracy: true, maximumAge: 1000, timeout: 10000 },
     );
   }, []);
 
@@ -283,6 +315,7 @@ export function useActivityTracker() {
     pointsRef.current = [];
     distanceRef.current = 0;
     durationRef.current = 0;
+    elevationGainRef.current = 0;
     lastCheckpointTsRef.current = Date.now();
     lastCheckpointDistanceRef.current = 0;
     lastMovementTsRef.current = Date.now();
@@ -290,6 +323,7 @@ export function useActivityTracker() {
     setPoints([]);
     setDistance(0);
     setDuration(0);
+    setElevationGain(0);
     setStatus("tracking");
     startWatch();
     startTimer();
@@ -319,9 +353,11 @@ export function useActivityTracker() {
     pointsRef.current = [];
     distanceRef.current = 0;
     durationRef.current = 0;
+    elevationGainRef.current = 0;
     setPoints([]);
     setDistance(0);
     setDuration(0);
+    setElevationGain(0);
     setStatus("idle");
     setHasOrphan(false);
     setOrphanUnrecoverable(false);
@@ -367,9 +403,11 @@ export function useActivityTracker() {
     pointsRef.current = [];
     distanceRef.current = 0;
     durationRef.current = 0;
+    elevationGainRef.current = 0;
     setPoints([]);
     setDistance(0);
     setDuration(0);
+    setElevationGain(0);
     setStatus("idle");
     void clearActive();
   }, []);
@@ -394,13 +432,13 @@ export function useActivityTracker() {
     }
   }, [points.length, status, persist]);
 
-  // Auto-pause: se o usuário não se moveu > 5m nos últimos 30 segundos,
+  // Auto-pause: se o usuário não se moveu > 2m nos últimos 15 segundos,
   // pausa o timer automaticamente (como o Strava). O GPS continua captando
   // pontos — ao detectar movimento novamente, retoma o timer
   // automaticamente (ver lógica em startWatch acima).
   useEffect(() => {
     if (status !== "tracking") return;
-    const AUTO_PAUSE_THRESHOLD_MS = 30_000;
+    const AUTO_PAUSE_THRESHOLD_MS = 15_000;
     const interval = setInterval(() => {
       const sinceLastMove = Date.now() - lastMovementTsRef.current;
       if (sinceLastMove >= AUTO_PAUSE_THRESHOLD_MS && !autoPausedRef.current) {
@@ -427,6 +465,7 @@ export function useActivityTracker() {
     points,
     distanceMeters: distance,
     durationSeconds: duration,
+    elevationGainMeters: elevationGain,
     currentPos,
     permissionDenied,
     revokedDuringTracking,

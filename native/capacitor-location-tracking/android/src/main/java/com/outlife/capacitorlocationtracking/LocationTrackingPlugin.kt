@@ -54,6 +54,8 @@ class LocationTrackingPlugin : Plugin() {
                 put("lng", location.longitude)
                 put("ts", location.time)
                 put("accuracy", location.accuracy.toDouble())
+                put("altitude", if (location.hasAltitude()) location.altitude else -1.0)
+                put("speed", if (location.hasSpeed()) location.speed.toDouble() else -1.0)
             }
             plugin.notifyListeners("locationUpdate", data)
         }

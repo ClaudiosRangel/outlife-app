@@ -8,6 +8,10 @@ export interface LocationTrackingPoint {
   lng: number;
   ts: number;
   accuracy: number;
+  /** Altitude em metros (WGS84). -1 se indisponível. */
+  altitude: number;
+  /** Velocidade instantânea em m/s. -1 se indisponível. */
+  speed: number;
 }
 
 export interface BackgroundPermissionStatus {

@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
-import { Play, Pause, Square, Trash2, ArrowLeft, MapPin, Camera, Loader2 } from "lucide-react";
+import { Play, Pause, Square, Trash2, ArrowLeft, MapPin, Camera, Loader2, Mountain } from "lucide-react";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/use-auth";
@@ -318,12 +318,12 @@ function TrackActivityPage() {
         </Suspense>
       </div>
 
-      <div className="mx-5 mt-4 grid grid-cols-2 gap-2">
+      <div className="mx-5 mt-4 grid grid-cols-3 gap-2">
         <div className="rounded-2xl bg-card p-4 shadow-card text-center">
           <div className="text-[11px] uppercase tracking-widest text-muted-foreground">
             {t("activity.metrics.duration")}
           </div>
-          <div className="mt-1 font-display text-2xl font-semibold text-primary tabular-nums">
+          <div className="mt-1 font-display text-xl font-semibold text-primary tabular-nums">
             {formatDuration(tracker.durationSeconds)}
           </div>
         </div>
@@ -331,8 +331,16 @@ function TrackActivityPage() {
           <div className="text-[11px] uppercase tracking-widest text-muted-foreground">
             {t("activity.metrics.distance")}
           </div>
-          <div className="mt-1 font-display text-2xl font-semibold text-primary tabular-nums">
+          <div className="mt-1 font-display text-xl font-semibold text-primary tabular-nums">
             {formatDistance(tracker.distanceMeters)}
+          </div>
+        </div>
+        <div className="rounded-2xl bg-card p-4 shadow-card text-center">
+          <div className="text-[11px] uppercase tracking-widest text-muted-foreground">
+            Elevação
+          </div>
+          <div className="mt-1 font-display text-xl font-semibold text-primary tabular-nums">
+            {tracker.elevationGainMeters > 0 ? `${Math.round(tracker.elevationGainMeters)}m` : "—"}
           </div>
         </div>
       </div>
