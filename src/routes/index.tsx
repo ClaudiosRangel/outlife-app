@@ -2,13 +2,14 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { Bell, MapPin, Search, ShieldCheck, Sparkles, ArrowRight, Mountain, Calendar } from "lucide-react";
+import { Bell, MapPin, Search, ShieldCheck, Sparkles, ArrowRight, Mountain, Calendar, Users } from "lucide-react";
 import hero from "@/assets/hero-mountain.jpg";
 import { StatusBar } from "@/components/StatusBar";
 import { Stars } from "@/components/Stars";
 import { fetchDestinations, fetchMyProfile, fetchPartners, fetchUnreadNotificationCount, type Destination } from "@/lib/api";
 import { useAuth } from "@/hooks/use-auth";
 import { playNotificationSound } from "@/lib/notification-sound";
+import { supabase } from "@/integrations/supabase/client";
 
 const CATEGORY_KEYS = ["Trilhas", "Cachoeiras", "Montanhas", "Camping", "Caiaque", "Escalada"] as const;
 export type HomeCategory = (typeof CATEGORY_KEYS)[number];
@@ -187,24 +188,8 @@ function Home() {
       </section>
 
 
-      {/* Link para Eventos */}
-      <section className="mx-5 mt-5">
-        <Link
-          to="/eventos"
-          className="flex items-center justify-between rounded-2xl bg-card p-4 shadow-card border border-border"
-        >
-          <div className="flex items-center gap-3">
-            <span className="grid h-10 w-10 place-items-center rounded-xl bg-primary/10 text-primary">
-              <Calendar size={20} />
-            </span>
-            <div>
-              <span className="text-sm font-semibold">Eventos</span>
-              <p className="text-[11px] text-muted-foreground">Participe de aventuras com a comunidade</p>
-            </div>
-          </div>
-          <ArrowRight size={16} className="text-muted-foreground" />
-        </Link>
-      </section>
+      {/* Eventos — grid de cards com imagem */}
+      <EventosHomeSection />
 
       {/* Categories */}
       <section className="mt-7 px-5">
@@ -301,5 +286,107 @@ function Home() {
         <p className="mt-3 text-xs uppercase tracking-widest text-white/70">Outlife · ecossistema</p>
       </section>
     </div>
+  );
+}
+
+/* ====== Seção de Eventos na Home — grid de cards com imagem ====== */
+function EventosHomeSection() {
+  const { data: events = [] } = useQuery({
+    queryKey: ["home-events"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("events" as never)
+        .select("id, title, category, event_date, image_url, max_participants, created_by, destination:destinations(name)")
+        .eq("status", "active")
+        .gte("event_date", new Date().toISOString())
+        .order("event_date", { ascending: true })
+        .limit(4);
+
+      if (!data || data.length === 0) return [];
+
+      // Buscar participantes confirmados com avatar
+      const eventIds = (data as any[]).map((e: any) => e.id);
+      const { data: participants } = await supabase
+        .from("event_participants" as never)
+        .select("event_id, profile:user_id(full_name, avatar_url)")
+        .in("event_id", eventIds)
+        .eq("status", "confirmed");
+
+      const participantsByEvent = new Map<string, Array<{ full_name: string | null; avatar_url: string | null }>>();
+      for (const p of (participants ?? []) as any[]) {
+        const list = participantsByEvent.get(p.event_id) ?? [];
+        list.push(p.profile);
+        participantsByEvent.set(p.event_id, list);
+      }
+
+      return (data as any[]).map((e: any) => ({
+        ...e,
+        participants: participantsByEvent.get(e.id) ?? [],
+      }));
+    },
+  });
+
+  if (events.length === 0) return null;
+
+  return (
+    <section className="mt-5 px-5">
+      <div className="flex items-center justify-between mb-3">
+        <h2 className="font-display text-lg font-semibold">Próximos Eventos</h2>
+        <Link to="/eventos" className="text-xs font-medium text-primary">Ver todos</Link>
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        {events.map((event: any) => (
+          <Link key={event.id} to="/eventos" className="block rounded-2xl bg-card overflow-hidden shadow-card border border-border">
+            {event.image_url ? (
+              <div className="relative aspect-[4/3] w-full">
+                <img src={event.image_url} alt={event.title} className="h-full w-full object-cover" />
+                <span className="absolute top-2 left-2 rounded-full bg-white/90 px-2 py-0.5 text-[9px] font-medium text-foreground shadow-sm capitalize">
+                  {event.category}
+                </span>
+              </div>
+            ) : (
+              <div className="relative aspect-[4/3] w-full bg-gradient-to-br from-primary/20 to-primary/5 grid place-items-center">
+                <Calendar size={28} className="text-primary/40" />
+                <span className="absolute top-2 left-2 rounded-full bg-white/90 px-2 py-0.5 text-[9px] font-medium text-foreground shadow-sm capitalize">
+                  {event.category}
+                </span>
+              </div>
+            )}
+            <div className="p-2.5">
+              <h3 className="text-xs font-semibold truncate">{event.title}</h3>
+              <div className="mt-1 flex items-center gap-1 text-[10px] text-muted-foreground">
+                <Calendar size={10} />
+                <span>{new Date(event.event_date).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" })}</span>
+              </div>
+              {event.destination?.name && (
+                <div className="mt-0.5 flex items-center gap-1 text-[10px] text-muted-foreground">
+                  <MapPin size={10} />
+                  <span className="truncate">{event.destination.name}</span>
+                </div>
+              )}
+              {/* Avatares dos confirmados */}
+              {event.participants.length > 0 && (
+                <div className="mt-2 flex items-center">
+                  <div className="flex -space-x-1.5">
+                    {event.participants.slice(0, 4).map((p: any, i: number) => (
+                      <div key={i} className="h-5 w-5 rounded-full border-2 border-card bg-primary/10 grid place-items-center overflow-hidden">
+                        {p.avatar_url ? (
+                          <img src={p.avatar_url} alt="" className="h-full w-full object-cover" />
+                        ) : (
+                          <span className="text-[8px] font-bold text-primary">{(p.full_name ?? "?")[0]?.toUpperCase()}</span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                  <span className="ml-1.5 text-[9px] text-muted-foreground">
+                    {event.participants.length} confirmado{event.participants.length > 1 ? "s" : ""}
+                  </span>
+                </div>
+              )}
+            </div>
+          </Link>
+        ))}
+      </div>
+    </section>
   );
 }

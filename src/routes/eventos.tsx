@@ -505,6 +505,21 @@ function EventDetailSheet({ event, open, onClose, onEdit }: { event: EventItem |
     refetchInterval: open ? 5000 : false, // atualiza a cada 5s enquanto aberto
   });
 
+  // Participantes confirmados
+  const { data: participants = [] } = useQuery({
+    queryKey: ["event-detail-participants", event?.id],
+    queryFn: async () => {
+      if (!event) return [];
+      const { data } = await supabase
+        .from("event_participants" as never)
+        .select("user_id, profile:user_id(full_name, avatar_url)")
+        .eq("event_id", event.id)
+        .eq("status", "confirmed");
+      return (data ?? []) as Array<{ user_id: string; profile: { full_name: string | null; avatar_url: string | null } | null }>;
+    },
+    enabled: open && !!event,
+  });
+
   const sendMut = useMutation({
     mutationFn: async () => {
       if (!user || !event) throw new Error("Não autenticado");
@@ -547,6 +562,27 @@ function EventDetailSheet({ event, open, onClose, onEdit }: { event: EventItem |
             {(event as any).meeting_point ? ` • Encontro: ${(event as any).meeting_point}` : ""}
           </SheetDescription>
         </SheetHeader>
+
+        {/* Participantes confirmados */}
+        {participants.length > 0 && (
+          <div className="flex items-center gap-2 py-2 border-b border-border mb-1">
+            <div className="flex -space-x-2">
+              {participants.slice(0, 6).map((p, i) => (
+                <div key={i} className="h-7 w-7 rounded-full border-2 border-card bg-primary/10 grid place-items-center overflow-hidden">
+                  {p.profile?.avatar_url ? (
+                    <img src={p.profile.avatar_url} alt="" className="h-full w-full object-cover" />
+                  ) : (
+                    <span className="text-[9px] font-bold text-primary">{(p.profile?.full_name ?? "?")[0]?.toUpperCase()}</span>
+                  )}
+                </div>
+              ))}
+            </div>
+            <span className="text-[11px] text-muted-foreground">
+              {participants.length} confirmado{participants.length > 1 ? "s" : ""}
+              {participants.length <= 3 && `: ${participants.map((p) => p.profile?.full_name?.split(" ")[0] ?? "").filter(Boolean).join(", ")}`}
+            </span>
+          </div>
+        )}
 
         {/* Área de mensagens (scroll) */}
         <div className="flex-1 min-h-0 overflow-y-auto py-3 space-y-3">
