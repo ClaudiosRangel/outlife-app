@@ -67,8 +67,7 @@ function EventosPage() {
         .from("events" as never)
         .select("*, destination:destinations(id, name, region), creator:created_by(full_name, avatar_url)")
         .eq("status", "active")
-        .gte("event_date", new Date().toISOString())
-        .order("event_date", { ascending: true });
+        .order("event_date", { ascending: false });
       if (error) return [];
 
       // Contar participantes por evento
@@ -174,8 +173,9 @@ function EventosPage() {
         {events.map((event) => {
           const isConfirmed = myConfirmedIds.has(event.id);
           const isFull = event.max_participants != null && event.participants_count >= event.max_participants;
+          const isPast = new Date(event.event_date) < new Date();
           return (
-            <div key={event.id} className="rounded-2xl bg-card p-4 shadow-card">
+            <div key={event.id} className={`rounded-2xl bg-card p-4 shadow-card ${isPast ? "opacity-75" : ""}`}>
               <Link to="/eventos/$eventId" params={{ eventId: event.id }} className="block">
               <div className="flex items-start gap-3">
                 <div className="flex-1 min-w-0">
@@ -198,11 +198,25 @@ function EventosPage() {
                     <p className="mt-2 text-xs text-muted-foreground line-clamp-2">{event.description}</p>
                   )}
                 </div>
-                <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary capitalize">
-                  {event.category}
-                </span>
+                <div className="flex flex-col items-end gap-1">
+                  <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary capitalize">
+                    {event.category}
+                  </span>
+                  {isPast && (
+                    <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
+                      Realizado
+                    </span>
+                  )}
+                </div>
               </div>
               </Link>
+              {isPast ? (
+                <div className="mt-3">
+                  <span className="block w-full rounded-xl bg-muted py-2.5 text-center text-xs font-medium text-muted-foreground">
+                    ✓ Evento realizado
+                  </span>
+                </div>
+              ) : (
               <div className="mt-3 flex gap-2">
                 {isConfirmed ? (
                   <Button variant="outline" size="sm" className="flex-1 rounded-xl" onClick={() => leaveMut.mutate(event.id)} disabled={leaveMut.isPending}>
@@ -217,6 +231,7 @@ function EventosPage() {
                   <MessageCircle size={14} />
                 </Link>
               </div>
+              )}
             </div>
           );
         })}
