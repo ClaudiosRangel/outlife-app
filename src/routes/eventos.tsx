@@ -175,8 +175,15 @@ function EventosPage() {
           const isFull = event.max_participants != null && event.participants_count >= event.max_participants;
           const isPast = new Date(event.event_date) < new Date();
           return (
-            <div key={event.id} className={`rounded-2xl bg-card p-4 shadow-card ${isPast ? "opacity-75" : ""}`}>
+            <div key={event.id} className={`rounded-2xl bg-card overflow-hidden shadow-card ${isPast ? "opacity-75" : ""}`}>
               <Link to="/eventos/$eventId" params={{ eventId: event.id }} className="block">
+              {event.image_url && (
+                <div className="relative aspect-[2.5/1] w-full">
+                  <img src={event.image_url} alt={event.title} className="h-full w-full object-cover" />
+                  {isPast && <div className="absolute inset-0 bg-black/20" />}
+                </div>
+              )}
+              <div className="p-4">
               <div className="flex items-start gap-3">
                 <div className="flex-1 min-w-0">
                   <h3 className="font-display text-base font-semibold truncate">{event.title}</h3>
@@ -209,7 +216,9 @@ function EventosPage() {
                   )}
                 </div>
               </div>
+              </div>
               </Link>
+              <div className="px-4 pb-4">
               {isPast ? (
                 <div className="mt-3">
                   <span className="block w-full rounded-xl bg-muted py-2.5 text-center text-xs font-medium text-muted-foreground">
@@ -232,6 +241,7 @@ function EventosPage() {
                 </Link>
               </div>
               )}
+              </div>
             </div>
           );
         })}
