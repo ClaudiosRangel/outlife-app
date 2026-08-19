@@ -21,7 +21,7 @@ const NAV_KEY_PREFIXES: Record<NavKey, string[]> = {
   home: ["/"],
   search: ["/busca"],
   explore: ["/explorar", "/destino"],
-  market: ["/marketplace", "/parceiro", "/compliance", "/admin", "/eventos"],
+  market: ["/marketplace", "/mercado", "/parceiro", "/compliance", "/admin", "/eventos"],
   community: ["/comunidade"],
   profile: [
     "/perfil",

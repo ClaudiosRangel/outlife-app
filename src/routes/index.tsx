@@ -2,8 +2,9 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { Bell, MapPin, Search, ShieldCheck, Sparkles, ArrowRight, Mountain, Calendar, Users } from "lucide-react";
+import { Bell, MapPin, Search, Sparkles, ArrowRight, Mountain, Calendar, Users } from "lucide-react";
 import hero from "@/assets/hero-mountain.jpg";
+import seloCadastur from "@/assets/selo-cadastur.jpg";
 import { StatusBar } from "@/components/StatusBar";
 import { Stars } from "@/components/Stars";
 import { fetchDestinations, fetchMyProfile, fetchPartners, fetchUnreadNotificationCount, type Destination } from "@/lib/api";
@@ -251,7 +252,7 @@ function Home() {
       <section className="mt-7 px-5">
         <div className="flex items-center justify-between">
           <h2 className="font-display text-xl font-semibold">{t("home.featuredPartners")}</h2>
-          <Link to="/marketplace" className="text-xs font-medium text-primary">{t("home.market")}</Link>
+          <Link to="/mercado" className="text-xs font-medium text-primary">{t("home.market")}</Link>
         </div>
         <PartnersCarousel partners={partners} />
       </section>
@@ -294,9 +295,7 @@ function PartnersCarousel({ partners }: { partners: Array<{ id: string; name: st
               <div className="flex items-center gap-1.5">
                 <span className="truncate font-semibold">{p.name}</span>
                 {p.verified && (
-                  <span title="Verificado Cadastur" className="grid h-4 w-4 place-items-center rounded-full bg-[var(--verified)] text-white">
-                    <ShieldCheck size={10} strokeWidth={3} />
-                  </span>
+                  <img src={seloCadastur} alt="Cadastur" className="h-4 w-4 rounded-sm object-contain" />
                 )}
               </div>
               <div className="text-xs text-muted-foreground">{p.category}</div>
