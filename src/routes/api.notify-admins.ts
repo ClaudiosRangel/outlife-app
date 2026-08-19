@@ -82,7 +82,7 @@ export const Route = createFileRoute("/api/notify-admins")({
               ${body.description ? `<p style="margin: 0;"><strong>Descrição:</strong> ${body.description.slice(0, 200)}${body.description.length > 200 ? "..." : ""}</p>` : ""}
             </div>
             <p>Acesse o painel de moderação para aprovar ou rejeitar:</p>
-            <a href="https://outlife-app.vercel.app/admin/compliance" 
+            <a href="https://outlife-app.vercel.app/admin/destinos" 
                style="display: inline-block; background: #1c3d2a; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600;">
               Revisar destino
             </a>
