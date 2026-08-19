@@ -28,7 +28,7 @@ export default defineConfig({
             // Vitest); build e dev normais continuam com a proteção ativa.
             importProtection: { enabled: !process.env.VITEST },
           }),
-          nitro({ preset: "vercel", serverDir: "./server" }),
+          nitro({ preset: "vercel" }),
         ]),
     react(),
   ],

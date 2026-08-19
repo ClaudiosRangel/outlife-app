@@ -119,6 +119,16 @@ CREATE TABLE IF NOT EXISTS public.admin_emails (
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+-- RLS: qualquer usuário autenticado pode verificar se está na lista
+ALTER TABLE public.admin_emails ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Authenticated users can read admin_emails" ON public.admin_emails;
+CREATE POLICY "Authenticated users can read admin_emails"
+  ON public.admin_emails
+  FOR SELECT
+  TO authenticated
+  USING (true);
+
 -- Inserir os 3 responsáveis
 INSERT INTO public.admin_emails (email, role) VALUES
   ('claudiosilvarangel1974@gmail.com', 'approver'),

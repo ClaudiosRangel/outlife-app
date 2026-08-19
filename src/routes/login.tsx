@@ -13,6 +13,7 @@ import {
 import { StatusBar } from "@/components/StatusBar";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { getAuthRedirectUrl } from "@/lib/auth-redirect";
 import { useTranslation } from "react-i18next";
 
 // Traduz mensagens de erro da API do Supabase para pt-BR
@@ -82,7 +83,7 @@ function Login() {
       return;
     }
     setForgotLoading(true);
-    const redirectTo = typeof window !== "undefined" ? `${window.location.origin}/redefinir-senha` : undefined;
+    const redirectTo = getAuthRedirectUrl("/redefinir-senha");
     const { error } = await supabase.auth.resetPasswordForEmail(trimmed, { redirectTo });
     setForgotLoading(false);
     if (error) {

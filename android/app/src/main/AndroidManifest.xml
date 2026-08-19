@@ -32,6 +32,23 @@
                 <data android:scheme="https" android:host="avidanaoesotrilhar.com.br" android:pathPrefix="/a/" />
             </intent-filter>
 
+            <!-- Deep Link: auth callbacks (confirmação de e-mail, redefinição de senha) -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="https" android:host="outlife-app.vercel.app" android:pathPrefix="/redefinir-senha" />
+                <data android:scheme="https" android:host="outlife-app.vercel.app" android:path="/" />
+            </intent-filter>
+
+            <!-- Custom scheme fallback para auth (sempre funciona, sem depender de App Links verification) -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="outlife" android:host="auth" />
+            </intent-filter>
+
             <!-- Intent scheme para fallback (intent://) -->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />

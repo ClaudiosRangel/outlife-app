@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { getAuthRedirectOrigin } from "@/lib/auth-redirect";
 
 // Traduz mensagens de erro da API do Supabase para pt-BR
 function translateAuthError(msg: string): string {
@@ -76,12 +77,11 @@ function Cadastro() {
 
   const doSignUp = async (extra: Record<string, unknown> = {}) => {
     setLoading(true);
-    const redirectTo = typeof window !== "undefined" ? window.location.origin : undefined;
     const { error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        emailRedirectTo: redirectTo,
+        emailRedirectTo: getAuthRedirectOrigin(),
         data: { role, full_name: name, ...extra },
       },
     });

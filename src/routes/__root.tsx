@@ -10,6 +10,7 @@ import { BottomNav } from "@/components/BottomNav";
 import { Capacitor } from "@capacitor/core";
 import { App } from "@capacitor/app";
 import { AuthProvider } from "@/hooks/use-auth";
+import { supabase } from "@/integrations/supabase/client";
 import { registerPushNotificationTapNavigation } from "@/lib/push-registration";
 import { useLocalPushNotifications } from "@/hooks/use-local-push";
 import "@/lib/i18n";
@@ -244,15 +245,52 @@ function useAppVersionBadge(): string | null {
  * Deep Link: quando o app é aberto via link (App Links / intent scheme),
  * navega para a rota correspondente. Ex: https://outlife-app.vercel.app/a/xxx
  * ou outlife://atividade/xxx → navega para /atividade/$activityId.
+ *
+ * Também trata links de auth do Supabase (confirmação de e-mail, redefinição
+ * de senha): quando o link contém hash fragments com tokens de sessão
+ * (#access_token=...&type=recovery), extrai esses parâmetros e os passa ao
+ * supabase-js para estabelecer a sessão de auth corretamente dentro do
+ * WebView nativo — sem isso, o WebView não recebe o hash e o fluxo trava.
  */
 function useDeepLinkNavigation() {
   const router = useRouter();
   useEffect(() => {
     if (!Capacitor.isNativePlatform()) return;
-    App.addListener("appUrlOpen", (event) => {
+    App.addListener("appUrlOpen", async (event) => {
       try {
         const url = new URL(event.url);
-        // Links /a/:id → redireciona para /atividade/:id
+
+        // --- Auth callback: Supabase envia tokens via hash fragment ---
+        // Formato: https://outlife-app.vercel.app/redefinir-senha#access_token=...&type=recovery
+        // Ou:      https://outlife-app.vercel.app/#access_token=...&type=signup
+        const hash = url.hash?.startsWith("#") ? url.hash.slice(1) : "";
+        if (hash && hash.includes("access_token")) {
+          const params = new URLSearchParams(hash);
+          const accessToken = params.get("access_token");
+          const refreshToken = params.get("refresh_token");
+
+          if (accessToken && refreshToken) {
+            // Estabelece a sessão de auth no supabase-js com os tokens do link
+            await supabase.auth.setSession({
+              access_token: accessToken,
+              refresh_token: refreshToken,
+            });
+            // Navega para o path do link (ex: /redefinir-senha).
+            // O listener do AuthProvider (use-auth.tsx) já trata o evento
+            // PASSWORD_RECOVERY e redireciona se necessário, mas navegamos
+            // diretamente para garantir.
+            const targetPath = url.pathname && url.pathname !== "/" ? url.pathname : "/";
+            const type = params.get("type");
+            if (type === "recovery") {
+              router.navigate({ to: "/redefinir-senha" });
+            } else if (targetPath !== "/") {
+              router.navigate({ to: targetPath });
+            }
+            return;
+          }
+        }
+
+        // --- Links /a/:id → redireciona para /atividade/:id ---
         const aMatch = url.pathname.match(/^\/a\/(.+)$/);
         if (aMatch) {
           router.navigate({ to: "/atividade/$activityId", params: { activityId: aMatch[1] } });
@@ -263,10 +301,29 @@ function useDeepLinkNavigation() {
           router.navigate({ to: url.pathname });
         }
       } catch {
-        // intent:// scheme - parse manual
+        // intent:// scheme ou custom scheme - parse manual
         const schemeMatch = event.url.match(/outlife:\/\/atividade\/(.+)/);
         if (schemeMatch) {
           router.navigate({ to: "/atividade/$activityId", params: { activityId: schemeMatch[1] } });
+          return;
+        }
+        // Custom scheme auth: outlife://auth/#access_token=...&type=recovery
+        const authSchemeMatch = event.url.match(/outlife:\/\/auth\/(.*)/);
+        if (authSchemeMatch) {
+          const fragment = authSchemeMatch[1].startsWith("#") ? authSchemeMatch[1].slice(1) : authSchemeMatch[1];
+          if (fragment && fragment.includes("access_token")) {
+            const params = new URLSearchParams(fragment);
+            const accessToken = params.get("access_token");
+            const refreshToken = params.get("refresh_token");
+            if (accessToken && refreshToken) {
+              supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken }).then(() => {
+                const type = params.get("type");
+                if (type === "recovery") {
+                  router.navigate({ to: "/redefinir-senha" });
+                }
+              });
+            }
+          }
         }
       }
     });
