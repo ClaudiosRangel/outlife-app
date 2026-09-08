@@ -1,6 +1,6 @@
 import localforage from "localforage";
 import type { TrackPoint, TrackerStatus } from "@/hooks/use-activity-tracker";
-import { finishActivity, startActivity } from "@/lib/api";
+import { finishActivity, startActivity, uploadActivityMapSnapshot, type ActivityType } from "@/lib/api";
 
 const activeStore = localforage.createInstance({
   name: "outlife",
@@ -37,6 +37,12 @@ export type ActivePersisted = {
   points: TrackPoint[];
   distance: number;
   duration: number;
+  /**
+   * Ganho de elevação acumulado (metros, só subidas). Opcional na validação
+   * para retrocompatibilidade: registros antigos sem o campo são tratados
+   * como `0` e permanecem válidos (Requirement 1.4).
+   */
+  elevationGain: number;
   status: TrackerStatus;
   updatedAt: number;
   /** ID do registro no Supabase (user_activities), para retomar/finalizar após navegação */
@@ -76,6 +82,13 @@ function isValidTrackPoint(value: unknown): value is TrackPoint {
 function isValidActivePersisted(value: unknown): value is ActivePersisted {
   if (typeof value !== "object" || value === null) return false;
   const v = value as Partial<ActivePersisted>;
+  // `elevationGain` é opcional para retrocompatibilidade: registros antigos
+  // gravados antes desta mudança não têm o campo e NÃO devem ser invalidados
+  // (ausência é tratada como `0`). Quando presente, deve ser número finito
+  // >= 0 (Requirement 1.4).
+  const elevationGainOk =
+    v.elevationGain === undefined ||
+    (typeof v.elevationGain === "number" && Number.isFinite(v.elevationGain) && v.elevationGain >= 0);
   return (
     Array.isArray(v.points) &&
     v.points.every(isValidTrackPoint) &&
@@ -83,6 +96,7 @@ function isValidActivePersisted(value: unknown): value is ActivePersisted {
     Number.isFinite(v.distance) &&
     typeof v.duration === "number" &&
     Number.isFinite(v.duration) &&
+    elevationGainOk &&
     typeof v.status === "string" &&
     (TRACKER_STATUSES as readonly string[]).includes(v.status)
   );
@@ -93,7 +107,9 @@ export async function loadActive(): Promise<ActivePersisted | CorruptedActive | 
     const raw = await activeStore.getItem<unknown>(ACTIVE_KEY);
     if (raw == null) return null;
     if (!isValidActivePersisted(raw)) return { corrupted: true };
-    return raw;
+    // Normaliza a ausência de `elevationGain` (registros antigos) para `0`,
+    // garantindo que o consumidor sempre receba um número (Requirement 1.4).
+    return { ...raw, elevationGain: raw.elevationGain ?? 0 };
   } catch {
     // Dados existentes que não puderam ser lidos também são
     // "não recuperáveis" (Requirement 3.4) — distinto de "sem atividade
@@ -127,6 +143,16 @@ export type QueuedActivity = {
   distance_meters: number;
   duration_seconds: number;
   route_geojson: GeoJSON.LineString;
+  /** Tipo da atividade, preservado para o fluxo offline (Requirement 2.1). */
+  activity_type?: ActivityType | null;
+  /** Ganho de elevação acumulado (metros), preservado no fluxo offline (Requirement 1.4). */
+  elevation_gain?: number | null;
+  /**
+   * Snapshot do mapa (WebP) pendente de upload. `localforage` (IndexedDB)
+   * serializa `Blob` nativamente, então o snapshot fica guardado na fila e é
+   * enviado apenas na sincronização (Requirement 2.2).
+   */
+  map_snapshot_blob?: Blob | null;
   attempts: number;
   lastError?: string;
 };
@@ -177,14 +203,37 @@ export async function flushQueue(): Promise<{ synced: number; failed: number }> 
     try {
       let remoteId = item.remoteId;
       if (!remoteId) {
-        const created = await withTimeout(startActivity(item.destinationId ?? null), SYNC_TIMEOUT_MS);
+        // Req 2.3: preserva o Activity_Type ao criar a atividade no sync.
+        const created = await withTimeout(
+          startActivity(item.destinationId ?? null, item.activity_type ?? null),
+          SYNC_TIMEOUT_MS,
+        );
         remoteId = created.id;
       }
+
+      // Req 2.4/2.5: upload do snapshot pendente, isolado em try interno —
+      // uma falha (exceção ou timeout) deixa o snapshot ausente mas NÃO
+      // bloqueia a sincronização da atividade.
+      let map_snapshot_url: string | undefined;
+      if (item.map_snapshot_blob) {
+        try {
+          map_snapshot_url = await withTimeout(
+            uploadActivityMapSnapshot(item.map_snapshot_blob),
+            SYNC_TIMEOUT_MS,
+          );
+        } catch {
+          // snapshot fica ausente; a sincronização da atividade prossegue.
+        }
+      }
+
       await withTimeout(
         finishActivity(remoteId!, {
           distance_meters: item.distance_meters,
           duration_seconds: item.duration_seconds,
           route_geojson: item.route_geojson,
+          activity_type: item.activity_type ?? null, // Req 2.3
+          elevation_gain: item.elevation_gain ?? null, // Req 1.4
+          map_snapshot_url, // Req 2.4 (undefined quando ausente/falhou)
         }),
         SYNC_TIMEOUT_MS,
       );

@@ -17,10 +17,10 @@ export const Route = createFileRoute("/a/$activityId")({
   component: ActivityDeepLinkPage,
   head: ({ params }) => ({
     meta: [
-      { title: "Atividade — Outlife" },
-      { name: "description", content: "Veja esta atividade no OutLife — A vida não é só trilhar." },
-      { property: "og:title", content: "Confira minha atividade no OutLife" },
-      { property: "og:description", content: "Rastreamento de atividade outdoor compartilhado via OutLife." },
+      { title: "Atividade — OutVitar" },
+      { name: "description", content: "Veja esta atividade no OutVitar — A vida não é só trilhar." },
+      { property: "og:title", content: "Confira minha atividade no OutVitar" },
+      { property: "og:description", content: "Rastreamento de atividade outdoor compartilhado via OutVitar." },
       { property: "og:type", content: "website" },
       { property: "og:url", content: `/a/${params.activityId}` },
       { name: "twitter:card", content: "summary_large_image" },
@@ -113,7 +113,7 @@ function ActivityDeepLinkPage() {
       <div className="flex items-center justify-between px-5 pt-6 pb-4">
         <div className="flex items-center gap-2">
           <Mountain size={20} className="text-green-400" />
-          <span className="font-semibold text-lg">OutLife</span>
+          <span className="font-semibold text-lg">OutVitar</span>
         </div>
       </div>
 
@@ -176,7 +176,7 @@ function ActivityDeepLinkPage() {
           href={`intent://atividade/${activityId}#Intent;scheme=outlife;package=app.outlife.mobile;end`}
           className="flex w-full items-center justify-center gap-2 rounded-xl bg-green-500 py-4 text-base font-semibold text-white"
         >
-          <Mountain size={18} /> Abrir no OutLife
+          <Mountain size={18} /> Abrir no OutVitar
         </a>
         <a
           href="https://play.google.com/store/apps/details?id=app.outlife.mobile"
@@ -188,7 +188,7 @@ function ActivityDeepLinkPage() {
 
       {/* Footer */}
       <div className="px-5 mt-10 pb-8 text-center">
-        <p className="text-xs text-white/30">OutLife — A vida não é só trilhar</p>
+        <p className="text-xs text-white/30">OutVitar — A vida não é só trilhar</p>
         <p className="text-[10px] text-white/20 mt-1">avidanaoesotrilhar.com.br</p>
       </div>
     </div>

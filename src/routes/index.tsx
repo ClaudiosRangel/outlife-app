@@ -2,7 +2,8 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { Bell, MapPin, Search, Sparkles, ArrowRight, Mountain, Calendar, Users } from "lucide-react";
+import { Bell, MapPin, Search, Sparkles, ArrowRight, Calendar, Users } from "lucide-react";
+import { BrandLogo } from "@/components/BrandLogo";
 import hero from "@/assets/hero-mountain.jpg";
 import seloCadastur from "@/assets/selo-cadastur.jpg";
 import { StatusBar } from "@/components/StatusBar";
@@ -55,9 +56,9 @@ export const Route = createFileRoute("/")({
   component: Home,
   head: () => ({
     meta: [
-      { title: "Outlife — Trilhas, guias e pousadas verificadas" },
+      { title: "OutVitar — Trilhas, guias e pousadas verificadas" },
       { name: "description", content: "Marketplace outdoor colaborativo: trilhas, guias, pousadas e empresas verificadas via Cadastur." },
-      { property: "og:title", content: "Outlife — Trilhas, guias e pousadas verificadas" },
+      { property: "og:title", content: "OutVitar — Trilhas, guias e pousadas verificadas" },
       { property: "og:description", content: "Marketplace outdoor colaborativo: trilhas, guias, pousadas e empresas verificadas via Cadastur." },
       { property: "og:url", content: "/" },
     ],
@@ -121,9 +122,8 @@ function Home() {
         <div className="absolute inset-0 bg-gradient-hero" />
         <StatusBar light />
         <div className="relative z-10 flex items-center justify-between px-5 pt-2">
-          <div className="flex items-center gap-2 text-white">
-            <Mountain size={22} strokeWidth={2.2} />
-            <span className="font-display text-xl font-semibold tracking-tight">Outlife</span>
+          <div className="text-white">
+            <BrandLogo size={22} className="text-white" />
           </div>
           <div className="flex items-center gap-2">
             <Link to="/busca" className="grid h-10 w-10 place-items-center rounded-full bg-white/15 text-white backdrop-blur-md">
@@ -257,12 +257,12 @@ function Home() {
         <PartnersCarousel partners={partners} />
       </section>
 
-      {/* Slogan */}
+      {/* Slogan oficial da marca (Req 2.1) */}
       <section className="mt-8 mx-5 mb-6 rounded-3xl bg-gradient-forest p-6 text-white shadow-float">
-        <p className="font-display text-xl leading-tight whitespace-pre-line">
-          {t("home.slogan")}
+        <p className="font-display text-2xl leading-tight uppercase tracking-wide">
+          {t("brand.slogan")}
         </p>
-        <p className="mt-3 text-xs uppercase tracking-widest text-white/70">Outlife · ecossistema</p>
+        <p className="mt-3 text-xs uppercase tracking-widest text-white/70">{t("brand.ecosystem")}</p>
       </section>
     </div>
   );

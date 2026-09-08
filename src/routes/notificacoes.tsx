@@ -20,7 +20,7 @@ export const Route = createFileRoute("/notificacoes")({
   component: NotificationsScreen,
   head: () => ({
     meta: [
-      { title: "Notificações — Outlife" },
+      { title: "Notificações — OutVitar" },
       { name: "description", content: "Acompanhe solicitações de amizade e outros eventos importantes." },
       { name: "robots", content: "noindex" },
     ],
@@ -88,12 +88,14 @@ function NotificationsScreen() {
   }, [notifications]);
 
   // Ids de outros perfis referenciados no payload das notificações, para
-  // exibir nome/avatar: `requesterId` (friend_request) e `likerId` (post_like).
+  // exibir nome/avatar: `requesterId` (friend_request), `likerId` (post_like)
+  // e `authorId` (activity_completed).
   const relatedProfileIds = useMemo(() => {
     const ids = notifications
       .map((n) => {
         if (n.type === "friend_request") return (n.payload as { requesterId?: string }).requesterId;
         if (n.type === "post_like") return (n.payload as { likerId?: string }).likerId;
+        if (n.type === "activity_completed") return (n.payload as { authorId?: string }).authorId;
         return undefined;
       })
       .filter((id): id is string => !!id);
@@ -188,6 +190,52 @@ function NotificationsScreen() {
             </div>
           </div>
           {!n.is_read && <span className="h-2 w-2 shrink-0 rounded-full bg-primary" />}
+        </div>
+      );
+    }
+
+    if (n.type === "activity_completed") {
+      const payload = n.payload as { authorId?: string; activityId?: string };
+      const author = payload.authorId ? profilesById[payload.authorId] : undefined;
+      // Requirement 5.4 — ao tocar, leva aos detalhes da atividade concluída.
+      const card = (
+        <>
+          <img
+            src={resolveAsset(author?.avatar_url, avatarFallback)}
+            alt={author?.full_name || ""}
+            className="h-10 w-10 rounded-full object-cover"
+            width={80}
+            height={80}
+          />
+          <div className="min-w-0 flex-1">
+            <div className="text-sm">
+              <span className="font-semibold">{author?.full_name || t("profile.title")}</span>{" "}
+              {t("notifications.activityCompletedText")}
+            </div>
+            <div className="mt-0.5 text-xs text-muted-foreground">
+              {new Date(n.created_at).toLocaleString("pt-BR")}
+            </div>
+          </div>
+          {!n.is_read && <span className="h-2 w-2 shrink-0 rounded-full bg-primary" />}
+        </>
+      );
+
+      if (payload.activityId) {
+        return (
+          <Link
+            key={n.id}
+            to="/atividade/$activityId"
+            params={{ activityId: payload.activityId }}
+            className={cardClassName}
+          >
+            {card}
+          </Link>
+        );
+      }
+
+      return (
+        <div key={n.id} className={cardClassName}>
+          {card}
         </div>
       );
     }

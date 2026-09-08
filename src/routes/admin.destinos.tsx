@@ -17,7 +17,7 @@ export const Route = createFileRoute("/admin/destinos")({
   component: AdminDestinosPage,
   head: () => ({
     meta: [
-      { title: "Moderação de Destinos — Outlife Admin" },
+      { title: "Moderação de Destinos — OutVitar Admin" },
       { name: "robots", content: "noindex" },
     ],
   }),

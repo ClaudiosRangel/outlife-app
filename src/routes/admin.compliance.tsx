@@ -31,7 +31,7 @@ export const Route = createFileRoute("/admin/compliance")({
   component: AdminComplianceScreen,
   head: () => ({
     meta: [
-      { title: "Moderação Cadastur — Outlife Admin" },
+      { title: "Moderação Cadastur — OutVitar Admin" },
       { name: "description", content: "Aprovação ou rejeição de solicitações de verificação Cadastur." },
       { name: "robots", content: "noindex" },
     ],

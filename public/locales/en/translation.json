@@ -1,4 +1,9 @@
 {
+  "brand": {
+    "name": "OutVitar",
+    "slogan": "VIVER É DIFERENTE DE ESTAR VIVO",
+    "ecosystem": "OutVitar · ecosystem"
+  },
   "nav": {
     "home": "Home",
     "search": "Search",
@@ -68,7 +73,7 @@
   },
   "signup": {
     "stepOf": "Step {{step}} of {{total}}",
-    "howUse": "How will you use Outlife?",
+    "howUse": "How will you use OutVitar?",
     "chooseProfile": "Choose your profile to start.",
     "adventurer": "I'm an adventurer",
     "adventurerDesc": "I want to discover trails, destinations and partners.",
@@ -117,10 +122,25 @@
     "activeNow": "Friends active now",
     "nearbyPartners": "Nearby partners"
   },
+  "liveFriends": {
+    "empty": "No friends active right now.",
+    "unavailable": "This friend's live location is no longer available.",
+    "activityType": {
+      "caminhada": "Hiking",
+      "pedalada": "Cycling",
+      "trilha": "Trail",
+      "outro": "Activity"
+    }
+  },
   "explore": {
     "title": "Explore destinations",
     "headline": "Where to\non this adventure?",
     "placeholder": "Trails, waterfalls, regions…",
+    "tabs": {
+      "destinos": "Destinations",
+      "parceiros": "Partners"
+    },
+    "allPartnerFilters": "See all partner filters",
     "filters": {
       "all": "All",
       "easy": "Easy",
@@ -165,7 +185,7 @@
   },
   "destination": {
     "notFound": "Destination not found",
-    "notFoundDescription": "The destination you're looking for isn't available on Outlife.",
+    "notFoundDescription": "The destination you're looking for isn't available on OutVitar.",
     "backToExplore": "Back to Explore",
     "pendingBadge": "Under review",
     "pendingNotice": "This destination is still under review and is only visible to you until it's approved.",
@@ -189,7 +209,7 @@
   "destinationSuggestion": {
     "trigger": "Suggest a new destination",
     "title": "Suggest a new destination",
-    "description": "Tell us about a destination that isn't on Outlife yet. We'll review it before publishing.",
+    "description": "Tell us about a destination that isn't on OutVitar yet. We'll review it before publishing.",
     "nameLabel": "Destination name",
     "namePlaceholder": "E.g.: Escorrega Waterfall",
     "descriptionLabel": "Description (optional)",
@@ -211,7 +231,7 @@
   },
   "partner": {
     "notFound": "Partner not found",
-    "notFoundDescription": "The partner you are looking for is not registered on Outlife.",
+    "notFoundDescription": "The partner you are looking for is not registered on OutVitar.",
     "backToMarketplace": "Back to Marketplace",
     "reviews": "reviews",
     "topRated": "Top rated",
@@ -227,7 +247,7 @@
     "callNow": "Call now",
     "reviewsTitle": "Reviews",
     "noReviewsYet": "No reviews yet. Be the first!",
-    "contactNote": "Use the Book button to contact the partner through Outlife.",
+    "contactNote": "Use the Book button to contact the partner through OutVitar.",
     "gallery": "Gallery",
     "noGallery": "No gallery available yet.",
     "noLocation": "Location not provided."
@@ -267,6 +287,10 @@
     "photoLabel": "Adventure photo",
     "addPhoto": "Tap to add a photo",
     "photoHint": "JPG, PNG · up to 5MB",
+    "videoLabel": "Video (optional)",
+    "addVideo": "Tap to add a video",
+    "videoHint": "MP4, WebM or MOV · up to 30MB · 60s",
+    "removeVideo": "Remove video",
     "categoryLabel": "Post type",
     "selectCategory": "Select the type",
     "categories": {
@@ -320,11 +344,47 @@
     },
     "level": "Explorer Level {{level}}",
     "levelHint": "{{remaining}}% to next level.",
+    "levels": {
+      "iniciante": "Beginner",
+      "intermediario": "Intermediate",
+      "avancado": "Advanced"
+    },
     "achievements": "Achievements",
     "nextAdventure": "Next adventure",
     "checklist": "Outdoor checklist",
     "trackCta": "Track new activity",
-    "trackActive": "Activity in progress"
+    "trackActive": "Activity in progress",
+    "logoutBlocked": {
+      "title": "Activity in progress",
+      "description": "You have an activity being tracked. Finish or discard it before signing out.",
+      "finish": "Finish activity",
+      "discard": "Discard activity",
+      "cancel": "Cancel"
+    }
+  },
+  "ranking": {
+    "title": "Rankings",
+    "subtitle": "Compare yourself with the community",
+    "metric": {
+      "distancia": "Distance",
+      "tempo": "Best time",
+      "altimetria": "Elevation"
+    },
+    "scope": {
+      "global": "Global",
+      "seguidos": "Following"
+    },
+    "period": {
+      "semana": "Week",
+      "mes": "Month",
+      "ano": "Year",
+      "sempre": "All time"
+    },
+    "you": "You",
+    "empty": "No activities in the ranking yet.",
+    "loadError": "Couldn't load the ranking. Please try again.",
+    "position": "Position",
+    "byDestination": "Ranking at this destination"
   },
   "activity": {
     "trackTitle": "Track activity",
@@ -337,6 +397,7 @@
     "hint": "GPS starts recording when you tap start.",
     "permissionDenied": "Location permission denied. Enable GPS in your browser to record activities.",
     "revokedDuringTracking": "Tracking was stopped because background location permission was revoked. Points already recorded were preserved.",
+    "autoPaused": "Auto-paused",
     "orphanFound": "We found an unfinished activity. Resume it?",
     "orphanUnrecoverable": "We found an unfinished activity, but its data couldn't be recovered. You can only discard it.",
     "noRoute": "This activity has no recorded route.",
@@ -347,6 +408,9 @@
     "descriptionPlaceholder": "How was the trail?",
     "addPhoto": "Add photo",
     "photoHint": "JPG, PNG or WEBP",
+    "addVideo": "Add video",
+    "videoHint": "MP4, WebM or MOV · up to 30MB · 60s",
+    "videoOfflineDisabled": "Video requires a connection. Available when you're online.",
     "skip": "Skip",
     "saveActivity": "Save activity",
     "syncQueuePending_one": "{{count}} activity pending sync",
@@ -365,11 +429,18 @@
       "distance": "Distance",
       "date": "Date",
       "speed": "Average speed",
-      "pace": "Average pace"
+      "currentSpeed": "Speed",
+      "pace": "Average pace",
+      "elevation": "Elevation"
+    },
+    "gpsSignal": {
+      "aquisitando": "Acquiring GPS signal…",
+      "fraco": "Weak GPS signal",
+      "semSinal": "No GPS signal"
     },
     "shareBanner": "Share activity",
     "generatingBanner": "Generating image…",
-    "shareBannerTitle": "My Outlife activity",
+    "shareBannerTitle": "My OutVitar activity",
     "shareBannerError": "Couldn't generate the image to share. Please try again.",
     "toasts": {
       "started": "Activity started. Have a great trail!",
@@ -458,11 +529,11 @@
   },
   "compliance": {
     "title": "Compliance",
-    "subtitle": "Cadastur verification · Outlife",
+    "subtitle": "Cadastur verification · OutVitar",
     "back": "Back",
     "progress": "Signup",
     "whyTitle": "Why verify?",
-    "whyDesc": "The Cadastur seal guarantees transparency to travelers, ranks your business higher and enables direct bookings on Outlife.",
+    "whyDesc": "The Cadastur seal guarantees transparency to travelers, ranks your business higher and enables direct bookings on OutVitar.",
     "businessData": "Business data",
     "companyName": "Company name",
     "cnpj": "CNPJ",
@@ -480,7 +551,7 @@
     "uploadCta": "Upload proof (PDF, JPG, PNG)",
     "uploadHint": "Up to 5MB. Document issued by the Ministry of Tourism.",
     "submit": "Submit for verification",
-    "termsNote": "By submitting, you agree to Outlife's compliance terms.",
+    "termsNote": "By submitting, you agree to OutVitar's compliance terms.",
     "submitted": "Application sent. Review within 48h.",
     "verified": "Business verified! Cadastur seal activated.",
     "checkFields": "Please check the highlighted fields.",
@@ -517,6 +588,7 @@
     "empty": "You don't have any notifications.",
     "friendRequestText": "sent you a friend request.",
     "postLikeText": "liked your story.",
+    "activityCompletedText": "completed an activity.",
     "genericText": "You have a new notification.",
     "bellAria": "Notifications",
     "bellAriaWithCount": "Notifications ({{count}} unread)"
@@ -532,11 +604,27 @@
     "avatarUpdated": "Profile photo updated!",
     "usernameTaken": "This username is already taken.",
     "genericError": "Couldn't complete the action. Please try again.",
-    "appVersion": "Version {{version}}"
+    "appVersion": "Version {{version}}",
+    "completeTitle": "Complete profile",
+    "personType": "Person type",
+    "personTypes": {
+      "pf": "Individual",
+      "pj": "Company"
+    },
+    "cpf": "CPF",
+    "cnpj": "CNPJ",
+    "phone": "Phone",
+    "zip": "ZIP code",
+    "street": "Street",
+    "number": "Number",
+    "complement": "Complement",
+    "neighborhood": "Neighborhood",
+    "city": "City",
+    "state": "State"
   },
   "adminCompliance": {
     "title": "Cadastur Moderation",
-    "subtitle": "Pending requests · Outlife Admin",
+    "subtitle": "Pending requests · OutVitar Admin",
     "back": "Back",
     "accessDeniedTitle": "Restricted access",
     "accessDeniedDescription": "This area is for administrators only.",
@@ -571,7 +659,7 @@
       "friends": "Friends only",
       "friendsDesc": "Only your confirmed friends can see your pin.",
       "public": "Visible to everyone",
-      "publicDesc": "Anyone on Outlife can see your pin on the map."
+      "publicDesc": "Anyone on OutVitar can see your pin on the map."
     },
     "updateNow": "Update now",
     "lastUpdate": "Updated",

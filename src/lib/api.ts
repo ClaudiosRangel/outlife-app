@@ -3,6 +3,17 @@ import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { resizeImageForUpload } from "@/lib/image-resize";
+import { validateVideoFileMeta, videoRejectionMessage } from "@/lib/video-validation";
+import { isValidCPF, isValidCNPJ } from "@/lib/document-validation";
+import type { LevelStats } from "@/lib/user-level";
+import {
+  sortRanking,
+  periodStartIso,
+  type RankingRow,
+  type RankingMetric,
+  type RankingScope,
+  type RankingPeriod,
+} from "@/lib/ranking-format";
 
 import waterfall from "@/assets/cachoeira_do_tabuleiro.jpg";
 import trail from "@/assets/trilha_pedra_do_sino.jpg";
@@ -274,6 +285,16 @@ const PROFILE_EDITABLE_FIELDS = [
   "gallery",
   "latitude",
   "longitude",
+  // Cadastro completo (item 13): tipo de pessoa + endereço estruturado. Não são
+  // dados sensíveis de contato (documento/telefone vão para profile_contacts).
+  "person_type",
+  "address_zip",
+  "address_street",
+  "address_number",
+  "address_complement",
+  "address_neighborhood",
+  "address_city",
+  "address_state",
 ] as const;
 
 export type ProfilePatch = Partial<Record<(typeof PROFILE_EDITABLE_FIELDS)[number], unknown>>;
@@ -297,6 +318,87 @@ export async function updateMyProfile(patch: ProfilePatch) {
     .single();
   if (error) throw error;
   return data;
+}
+
+// ============ Contatos owner-only (cadastro completo — item 13) ============
+// Dados sensíveis de contato/documento vivem em `profile_contacts` (RLS
+// owner-only), nunca em colunas publicamente legíveis de `profiles`.
+
+export type PersonType = "pf" | "pj";
+
+export interface MyContacts {
+  phone: string | null;
+  phoneSecondary: string | null;
+  cnpj: string | null;
+  cpf: string | null;
+  cadasturNumber: string | null;
+  instagram: string | null;
+}
+
+export async function fetchMyContacts(): Promise<MyContacts> {
+  const empty: MyContacts = {
+    phone: null,
+    phoneSecondary: null,
+    cnpj: null,
+    cpf: null,
+    cadasturNumber: null,
+    instagram: null,
+  };
+  const { data: userData } = await supabase.auth.getUser();
+  if (!userData.user) return empty;
+  const { data, error } = await supabase
+    .from("profile_contacts" as never)
+    .select("phone, phone_secondary, cnpj, cpf, cadastur_number, instagram")
+    .eq("id", userData.user.id)
+    .maybeSingle();
+  if (error) throw error;
+  if (!data) return empty;
+  const row = data as unknown as {
+    phone: string | null;
+    phone_secondary: string | null;
+    cnpj: string | null;
+    cpf: string | null;
+    cadastur_number: string | null;
+    instagram: string | null;
+  };
+  return {
+    phone: row.phone,
+    phoneSecondary: row.phone_secondary,
+    cnpj: row.cnpj,
+    cpf: row.cpf,
+    cadasturNumber: row.cadastur_number,
+    instagram: row.instagram,
+  };
+}
+
+/**
+ * Grava (upsert) os dados owner-only em `profile_contacts`. Valida CPF/CNPJ por
+ * dígito verificador ANTES de gravar — documento inválido é recusado e nada é
+ * persistido (Req 4.4). Nunca toca campos de confiança do perfil.
+ */
+export async function updateMyContacts(patch: Partial<MyContacts>): Promise<void> {
+  const { data: userData } = await supabase.auth.getUser();
+  if (!userData.user) throw new Error("Não autenticado");
+
+  if (patch.cpf != null && patch.cpf.trim() !== "" && !isValidCPF(patch.cpf)) {
+    throw new Error("CPF inválido.");
+  }
+  if (patch.cnpj != null && patch.cnpj.trim() !== "" && !isValidCNPJ(patch.cnpj)) {
+    throw new Error("CNPJ inválido.");
+  }
+
+  const row: Record<string, unknown> = { id: userData.user.id };
+  if ("phone" in patch) row.phone = patch.phone ?? null;
+  if ("phoneSecondary" in patch) row.phone_secondary = patch.phoneSecondary ?? null;
+  if ("cnpj" in patch) row.cnpj = patch.cnpj ?? null;
+  if ("cpf" in patch) row.cpf = patch.cpf ?? null;
+  if ("cadasturNumber" in patch) row.cadastur_number = patch.cadasturNumber ?? null;
+  if ("instagram" in patch) row.instagram = patch.instagram ?? null;
+
+  const { error } = await supabase
+    .from("profile_contacts" as never)
+    .upsert(row as never, { onConflict: "id" });
+  if (error) throw error;
 }
 
 // ============ Serviços ============
@@ -400,11 +502,39 @@ export async function uploadCommunityPostImage(file: File): Promise<string> {
   return pub.publicUrl;
 }
 
+// Envia o vídeo anexado a um Community_Post para o bucket
+// `community-post-videos` (migration `20260908120000_community-post-video.sql`).
+//
+// Estratégia (spec video-atividade-comunidade / lição do Bloco B): NÃO
+// transcodificar no cliente. Validamos tipo/tamanho via `validateVideoFileMeta`
+// (a duração é validada no componente, que tem acesso ao `<video>`), e subimos
+// o arquivo original. Retorna a URL pública, passada como `video_url` em
+// `createCommunityPost`. Lança erro claro em tipo/tamanho inválido — a UI o
+// exibe e nunca cria um post com `video_url` quebrado (Req 3.3).
+export async function uploadCommunityPostVideo(file: File): Promise<string> {
+  const { data: userData } = await supabase.auth.getUser();
+  if (!userData.user) throw new Error("Não autenticado");
+
+  const meta = validateVideoFileMeta({ type: file.type, size: file.size });
+  if (!meta.ok) {
+    throw new Error(videoRejectionMessage(meta.reason));
+  }
+
+  const path = `${userData.user.id}/${Date.now()}.${meta.ext}`;
+  const { error: upErr } = await supabase.storage
+    .from("community-post-videos")
+    .upload(path, file, { upsert: false, contentType: file.type });
+  if (upErr) throw upErr;
+  const { data: pub } = supabase.storage.from("community-post-videos").getPublicUrl(path);
+  return pub.publicUrl;
+}
+
 export async function createCommunityPost(input: {
   text: string;
   place?: string;
   category?: CommunityPostCategory;
   image_url?: string;
+  video_url?: string;
 }) {
   const { data: userData } = await supabase.auth.getUser();
   if (!userData.user) throw new Error("Você precisa estar logado para publicar.");
@@ -415,6 +545,7 @@ export async function createCommunityPost(input: {
       place: input.place ?? null,
       category: input.category ?? "outro",
       image_url: input.image_url ?? null,
+      video_url: input.video_url ?? null,
       author_id: userData.user.id,
     } as never)
     .select("*, author:profiles(full_name, username, avatar_url)")
@@ -542,6 +673,7 @@ export type UserActivity = {
   image_url: string | null;
   activity_type: ActivityType | null;
   map_snapshot_url: string | null;
+  elevation_gain: number | null;
 };
 
 export async function startActivity(
@@ -588,6 +720,8 @@ export async function finishActivity(
     image_url?: string | null;
     activity_type?: ActivityType | null;
     map_snapshot_url?: string | null;
+    elevation_gain?: number | null;
+    video_url?: string | null;
   },
 ): Promise<UserActivity> {
   if (payload.route_geojson.type !== "LineString" || payload.route_geojson.coordinates.length < 2) {
@@ -602,6 +736,8 @@ export async function finishActivity(
     _image_url: payload.image_url ?? null,
     _activity_type: payload.activity_type ?? null,
     _map_snapshot_url: payload.map_snapshot_url ?? null,
+    _elevation_gain: payload.elevation_gain ?? null,
+    _video_url: payload.video_url ?? null,
   } as never);
   if (error) throw error;
   return data as unknown as UserActivity;
@@ -688,6 +824,107 @@ export async function fetchActivityById(id: string): Promise<UserActivity | null
     .maybeSingle();
   if (error) throw error;
   return (data ?? null) as unknown as UserActivity | null;
+}
+
+// ============ Gamificação: níveis e rankings ============
+// (spec gamificacao-niveis-rank, itens 10 e 12)
+
+/**
+ * Estatísticas agregadas de nível: total geral (somando todos os tipos) e por
+ * Activity_Type. Alimenta `classifyLevel`/`levelProgress` (funções puras) —
+ * lê a VIEW `user_level_stats` (migration 20260908130000). Nulos → 0.
+ */
+export interface UserLevelStats {
+  overall: LevelStats;
+  byType: Partial<Record<ActivityType, LevelStats>>;
+}
+
+export async function fetchUserLevelStats(userId?: string): Promise<UserLevelStats> {
+  const empty: UserLevelStats = {
+    overall: { completedActivities: 0, totalKm: 0, totalElevationGain: 0 },
+    byType: {},
+  };
+  let uid = userId;
+  if (!uid) {
+    const { data: userData } = await supabase.auth.getUser();
+    if (!userData.user) return empty;
+    uid = userData.user.id;
+  }
+  const { data, error } = await supabase
+    .from("user_level_stats" as never)
+    .select("activity_type, completed_activities, total_km, total_elevation")
+    .eq("user_id", uid);
+  if (error) throw error;
+
+  const rows = (data ?? []) as unknown as Array<{
+    activity_type: ActivityType | null;
+    completed_activities: number | null;
+    total_km: number | null;
+    total_elevation: number | null;
+  }>;
+
+  const result: UserLevelStats = {
+    overall: { completedActivities: 0, totalKm: 0, totalElevationGain: 0 },
+    byType: {},
+  };
+  for (const r of rows) {
+    const stats: LevelStats = {
+      completedActivities: Number(r.completed_activities ?? 0),
+      totalKm: Number(r.total_km ?? 0),
+      totalElevationGain: Number(r.total_elevation ?? 0),
+    };
+    // Total geral: soma de todos os tipos.
+    result.overall.completedActivities += stats.completedActivities;
+    result.overall.totalKm += stats.totalKm;
+    result.overall.totalElevationGain += stats.totalElevationGain;
+    // Por tipo (ignora activity_type nulo — não classificável por modalidade).
+    if (r.activity_type) {
+      result.byType[r.activity_type] = stats;
+    }
+  }
+  return result;
+}
+
+/**
+ * Ranking de atividades via RPC `fetch_activity_ranking` (SECURITY DEFINER —
+ * a RLS de user_activities não permite leitura entre usuários). Passa o ISO de
+ * período calculado por `periodStartIso` (regra única de janela) e aplica
+ * `sortRanking` como salvaguarda de ordenação/desempate. Retorna só campos
+ * públicos (nome/username/avatar/valor).
+ */
+export async function fetchActivityRanking(params: {
+  metric: RankingMetric;
+  scope: RankingScope;
+  period: RankingPeriod;
+  destinationId?: string | null;
+  limit?: number;
+  now?: Date;
+}): Promise<RankingRow[]> {
+  const since = periodStartIso(params.period, params.now ?? new Date());
+  const { data, error } = await supabase.rpc("fetch_activity_ranking" as never, {
+    _metric: params.metric,
+    _scope: params.scope,
+    _since: since,
+    _destination_id: params.destinationId ?? null,
+    _limit: params.limit ?? 50,
+  } as never);
+  if (error) throw error;
+
+  const rows = ((data ?? []) as unknown as Array<{
+    user_id: string;
+    full_name: string | null;
+    username: string | null;
+    avatar_url: string | null;
+    value: number | string | null;
+  }>).map<RankingRow>((r) => ({
+    userId: r.user_id,
+    fullName: r.full_name,
+    username: r.username,
+    avatarUrl: r.avatar_url,
+    value: Number(r.value ?? 0),
+  }));
+
+  return sortRanking(rows, params.metric);
 }
 
 // ============ Placeholders (preparados para integração futura) ============
@@ -1182,6 +1419,32 @@ export async function fetchSharedUserLocations(): Promise<SharedLocation[]> {
     .select("id, full_name, username, avatar_url, latitude, longitude, location_updated_at, location_sharing_mode");
   if (error) throw error;
   return ((data ?? []) as unknown as SharedLocation[])
+    .filter((r) => r.id !== myId)
+    .map((r) => ({ ...r, latitude: Number(r.latitude), longitude: Number(r.longitude) }));
+}
+
+// Amigo em atividade ao vivo: superset de SharedLocation com o activity_type da
+// atividade in_progress associada (Req 1.3) e o indicador is_live derivado pelo
+// servidor na VIEW public_user_locations_live (in_progress + recência de 120s).
+export type LiveActivityFriend = SharedLocation & {
+  activity_type: ActivityType | null;
+  is_live: boolean;
+};
+
+// SELECT na VIEW public_user_locations_live (migração 20260821090000), que é um
+// superset de public_user_locations + activity_type + is_live. Mantém o mesmo
+// padrão de fetchSharedUserLocations: usuário autenticado/myId, conversão de
+// lat/lng para Number e exclusão do próprio usuário (r.id !== myId).
+export async function fetchLiveActivityFriends(): Promise<LiveActivityFriend[]> {
+  const { data: userData } = await supabase.auth.getUser();
+  const myId = userData.user?.id ?? null;
+  const { data, error } = await supabase
+    .from("public_user_locations_live" as never)
+    .select(
+      "id, full_name, username, avatar_url, latitude, longitude, location_updated_at, location_sharing_mode, activity_type, is_live",
+    );
+  if (error) throw error;
+  return ((data ?? []) as unknown as LiveActivityFriend[])
     .filter((r) => r.id !== myId)
     .map((r) => ({ ...r, latitude: Number(r.latitude), longitude: Number(r.longitude) }));
 }

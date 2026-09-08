@@ -7,7 +7,7 @@ export const Route = createFileRoute("/mercado")({
   component: MercadoPage,
   head: () => ({
     meta: [
-      { title: "Mercado — Outlife" },
+      { title: "Mercado — OutVitar" },
       { name: "description", content: "Encontre parceiros outdoor ou cadastre-se como parceiro." },
       { name: "robots", content: "noindex" },
     ],
@@ -20,7 +20,7 @@ function MercadoPage() {
       <div className="bg-gradient-forest px-5 pb-6 text-white">
         <StatusBar light />
         <div className="pt-8 text-center">
-          <h1 className="font-display text-2xl font-semibold">Mercado Outlife</h1>
+          <h1 className="font-display text-2xl font-semibold">Mercado OutVitar</h1>
           <p className="mt-1 text-sm text-white/70">Conecte-se ao ecossistema outdoor</p>
         </div>
       </div>

@@ -19,15 +19,17 @@ import {
   fetchMyProfile,
   submitCadasturRequest,
   uploadComplianceDocument,
+  updateMyContacts,
 } from "@/lib/api";
+import { isValidCNPJ } from "@/lib/document-validation";
 
 export const Route = createFileRoute("/compliance")({
   component: CompliancePage,
   head: () => ({
     meta: [
-      { title: "Compliance Outlife — Verificação Cadastur" },
-      { name: "description", content: "Cadastre sua empresa, envie o Cadastur e receba o selo de verificação Outlife." },
-      { property: "og:title", content: "Compliance Outlife — Verificação Cadastur" },
+      { title: "Compliance OutVitar — Verificação Cadastur" },
+      { name: "description", content: "Cadastre sua empresa, envie o Cadastur e receba o selo de verificação OutVitar." },
+      { property: "og:title", content: "Compliance OutVitar — Verificação Cadastur" },
       { property: "og:url", content: "/compliance" },
     ],
     links: [{ rel: "canonical", href: "/compliance" }],
@@ -42,7 +44,8 @@ const schema = z.object({
   cnpj: z
     .string()
     .trim()
-    .regex(/^\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}$/, "CNPJ inválido (formato 00.000.000/0000-00)"),
+    .regex(/^\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}$/, "CNPJ inválido (formato 00.000.000/0000-00)")
+    .refine((v) => isValidCNPJ(v), "CNPJ inválido (dígito verificador)"),
   cadastur: z
     .string()
     .trim()
@@ -152,6 +155,16 @@ function CompliancePage() {
         phone: form.phone,
         description: form.description,
         documentUrl,
+      });
+
+      // Cadastro completo do parceiro (item 13): persiste CNPJ, telefone e
+      // CADASTUR também no perfil owner-only (profile_contacts), não só na
+      // request de verificação — assim o parceiro tem um cadastro completo
+      // real. updateMyContacts revalida o CNPJ por dígito verificador.
+      await updateMyContacts({
+        cnpj: form.cnpj,
+        phone: form.phone,
+        cadasturNumber: form.cadastur,
       });
 
       // Publicação direta: promove perfil para parceiro verificado via RPC

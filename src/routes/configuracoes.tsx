@@ -12,18 +12,22 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/hooks/use-auth";
 import {
   fetchMyProfile,
+  fetchMyContacts,
   isUsernameTaken,
   resolveAsset,
   updateMyProfile,
+  updateMyContacts,
   uploadAvatarImage,
+  type PersonType,
 } from "@/lib/api";
+import { maskCPF, maskCNPJ, maskCEP, isValidCPF, isValidCNPJ } from "@/lib/document-validation";
 import avatarFallback from "@/assets/avatar-rafael.jpg";
 
 export const Route = createFileRoute("/configuracoes")({
   component: SettingsScreen,
   head: () => ({
     meta: [
-      { title: "Configurações — Outlife" },
+      { title: "Configurações — OutVitar" },
       { name: "description", content: "Troque sua foto de perfil e edite seus dados pessoais." },
       { name: "robots", content: "noindex" },
     ],
@@ -52,13 +56,49 @@ function SettingsScreen() {
   const [username, setUsername] = useState("");
   const [location, setLocation] = useState("");
 
+  // Cadastro completo (item 13). Dados owner-only vêm de fetchMyContacts.
+  const { data: contacts } = useQuery({
+    queryKey: ["my-contacts", user?.id],
+    queryFn: fetchMyContacts,
+    enabled: !!user,
+  });
+
+  const [personType, setPersonType] = useState<PersonType>("pf");
+  const [cpf, setCpf] = useState("");
+  const [cnpj, setCnpj] = useState("");
+  const [phone, setPhone] = useState("");
+  const [zip, setZip] = useState("");
+  const [street, setStreet] = useState("");
+  const [addrNumber, setAddrNumber] = useState("");
+  const [complement, setComplement] = useState("");
+  const [neighborhood, setNeighborhood] = useState("");
+  const [city, setCity] = useState("");
+  const [uf, setUf] = useState("");
+
   useEffect(() => {
     if (profile) {
       setFullName(profile.full_name ?? "");
       setUsername(profile.username ?? "");
       setLocation(profile.location ?? "");
+      const p = profile as Record<string, unknown>;
+      setPersonType(((p.person_type as PersonType) ?? "pf"));
+      setZip((p.address_zip as string) ?? "");
+      setStreet((p.address_street as string) ?? "");
+      setAddrNumber((p.address_number as string) ?? "");
+      setComplement((p.address_complement as string) ?? "");
+      setNeighborhood((p.address_neighborhood as string) ?? "");
+      setCity((p.address_city as string) ?? "");
+      setUf((p.address_state as string) ?? "");
     }
   }, [profile]);
+
+  useEffect(() => {
+    if (contacts) {
+      setCpf(contacts.cpf ?? "");
+      setCnpj(contacts.cnpj ?? "");
+      setPhone(contacts.phone ?? "");
+    }
+  }, [contacts]);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const avatarUrl = resolveAsset(profile?.avatar_url, avatarFallback);
@@ -111,6 +151,48 @@ function SettingsScreen() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     updateProfileMutation.mutate();
+  };
+
+  // Cadastro completo (item 13): salva person_type/endereço no perfil e
+  // documento/telefone owner-only em profile_contacts. Validação de documento
+  // (dígito verificador) ocorre em updateMyContacts — inválido é recusado
+  // (Req 4.4). Campos opcionais (Req 4.1/4.3): só valida o que foi preenchido.
+  const updateCompleteMutation = useMutation({
+    mutationFn: async () => {
+      // Validação local para feedback imediato antes de bater no servidor.
+      if (personType === "pf" && cpf.trim() && !isValidCPF(cpf)) {
+        throw new Error("CPF inválido.");
+      }
+      if (personType === "pj" && cnpj.trim() && !isValidCNPJ(cnpj)) {
+        throw new Error("CNPJ inválido.");
+      }
+      await updateMyProfile({
+        person_type: personType,
+        address_zip: zip.trim() || null,
+        address_street: street.trim() || null,
+        address_number: addrNumber.trim() || null,
+        address_complement: complement.trim() || null,
+        address_neighborhood: neighborhood.trim() || null,
+        address_city: city.trim() || null,
+        address_state: uf.trim() || null,
+      } as never);
+      await updateMyContacts({
+        phone: phone.trim() || null,
+        cpf: personType === "pf" ? cpf.trim() || null : null,
+        cnpj: personType === "pj" ? cnpj.trim() || null : null,
+      });
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["my-profile", user?.id] });
+      qc.invalidateQueries({ queryKey: ["my-contacts", user?.id] });
+      toast.success(t("settings.saved"));
+    },
+    onError: (err: Error) => toast.error(err.message || t("settings.genericError")),
+  });
+
+  const handleCompleteSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    updateCompleteMutation.mutate();
   };
 
   return (
@@ -214,6 +296,112 @@ function SettingsScreen() {
           </form>
         )}
       </section>
+
+      {/* Cadastro completo (item 13) — opcional para todos; obrigatório só no
+          fluxo de verificação do parceiro (tela Compliance). */}
+      {!profileLoading && (
+        <section className="px-5 mt-8">
+          <h2 className="mb-3 font-display text-lg font-semibold">{t("settings.completeTitle")}</h2>
+          <form onSubmit={handleCompleteSubmit} className="space-y-4">
+            {/* Tipo de pessoa */}
+            <div className="space-y-1.5">
+              <Label>{t("settings.personType")}</Label>
+              <div className="flex gap-2">
+                {(["pf", "pj"] as PersonType[]).map((pt) => (
+                  <button
+                    key={pt}
+                    type="button"
+                    onClick={() => setPersonType(pt)}
+                    className={`flex-1 rounded-xl px-4 py-2 text-sm font-semibold transition-base ${
+                      personType === pt ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground"
+                    }`}
+                  >
+                    {t(`settings.personTypes.${pt}`)}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Documento conforme tipo */}
+            {personType === "pf" ? (
+              <div className="space-y-1.5">
+                <Label htmlFor="cpf">{t("settings.cpf")}</Label>
+                <Input
+                  id="cpf"
+                  inputMode="numeric"
+                  value={cpf}
+                  onChange={(e) => setCpf(maskCPF(e.target.value))}
+                  placeholder="000.000.000-00"
+                />
+              </div>
+            ) : (
+              <div className="space-y-1.5">
+                <Label htmlFor="cnpj">{t("settings.cnpj")}</Label>
+                <Input
+                  id="cnpj"
+                  inputMode="numeric"
+                  value={cnpj}
+                  onChange={(e) => setCnpj(maskCNPJ(e.target.value))}
+                  placeholder="00.000.000/0000-00"
+                />
+              </div>
+            )}
+
+            {/* Telefone */}
+            <div className="space-y-1.5">
+              <Label htmlFor="phone">{t("settings.phone")}</Label>
+              <Input
+                id="phone"
+                inputMode="tel"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder="(11) 90000-0000"
+              />
+            </div>
+
+            {/* Endereço estruturado */}
+            <div className="grid grid-cols-3 gap-2">
+              <div className="col-span-1 space-y-1.5">
+                <Label htmlFor="zip">{t("settings.zip")}</Label>
+                <Input id="zip" inputMode="numeric" value={zip} onChange={(e) => setZip(maskCEP(e.target.value))} placeholder="00000-000" />
+              </div>
+              <div className="col-span-2 space-y-1.5">
+                <Label htmlFor="street">{t("settings.street")}</Label>
+                <Input id="street" value={street} onChange={(e) => setStreet(e.target.value)} />
+              </div>
+            </div>
+            <div className="grid grid-cols-3 gap-2">
+              <div className="col-span-1 space-y-1.5">
+                <Label htmlFor="addrNumber">{t("settings.number")}</Label>
+                <Input id="addrNumber" value={addrNumber} onChange={(e) => setAddrNumber(e.target.value)} />
+              </div>
+              <div className="col-span-2 space-y-1.5">
+                <Label htmlFor="complement">{t("settings.complement")}</Label>
+                <Input id="complement" value={complement} onChange={(e) => setComplement(e.target.value)} />
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="neighborhood">{t("settings.neighborhood")}</Label>
+              <Input id="neighborhood" value={neighborhood} onChange={(e) => setNeighborhood(e.target.value)} />
+            </div>
+            <div className="grid grid-cols-3 gap-2">
+              <div className="col-span-2 space-y-1.5">
+                <Label htmlFor="city">{t("settings.city")}</Label>
+                <Input id="city" value={city} onChange={(e) => setCity(e.target.value)} />
+              </div>
+              <div className="col-span-1 space-y-1.5">
+                <Label htmlFor="uf">{t("settings.state")}</Label>
+                <Input id="uf" maxLength={2} value={uf} onChange={(e) => setUf(e.target.value.toUpperCase())} placeholder="UF" />
+              </div>
+            </div>
+
+            <Button type="submit" className="w-full" disabled={updateCompleteMutation.isPending}>
+              {updateCompleteMutation.isPending ? <Loader2 size={16} className="mr-2 animate-spin" /> : null}
+              {t("settings.save")}
+            </Button>
+          </form>
+        </section>
+      )}
     </div>
   );
 }

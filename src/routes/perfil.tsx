@@ -42,7 +42,10 @@ import {
   fetchMyFollowers,
   fetchMyFollowing,
   discardActivity,
+  fetchUserLevelStats,
 } from "@/lib/api";
+import { classifyLevel, levelProgress, type UserLevel } from "@/lib/user-level";
+import type { ActivityType } from "@/lib/activity-metrics";
 import { Activity as ActivityIcon, Clock, Route as RouteIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -51,13 +54,13 @@ import { LocationSharingCard } from "@/components/LocationSharingCard";
 import { useTranslation } from "react-i18next";
 import i18n from "@/lib/i18n";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { loadActive } from "@/lib/activity-storage";
+import { loadActive, clearActive } from "@/lib/activity-storage";
 
 export const Route = createFileRoute("/perfil")({
   component: Profile,
   head: () => ({
     meta: [
-      { title: "Meu perfil — Outlife" },
+      { title: "Meu perfil — OutVitar" },
       { name: "description", content: "Seu painel pessoal: trilhas, destinos salvos, parceiros favoritos e conquistas." },
       { name: "robots", content: "noindex" },
     ],
@@ -84,6 +87,7 @@ function Profile() {
   const { user, loading: authLoading } = useAuth();
   const [darkMode, setDarkMode] = useState(false);
   const [hasActiveTracking, setHasActiveTracking] = useState(false);
+  const [logoutBlockedOpen, setLogoutBlockedOpen] = useState(false);
 
   // Verifica se há atividade em andamento para alterar o CTA
   useEffect(() => {
@@ -142,6 +146,14 @@ function Profile() {
     enabled: !!user,
   });
 
+  // Estatísticas de nível derivadas das atividades reais (item 10). O nível é
+  // calculado no cliente por `classifyLevel`/`levelProgress` (funções puras).
+  const { data: levelStats } = useQuery({
+    queryKey: ["user-level-stats", user?.id],
+    queryFn: () => fetchUserLevelStats(user?.id),
+    enabled: !!user,
+  });
+
   const qc = useQueryClient();
   const deleteActivityMut = useMutation({
     mutationFn: (id: string) => discardActivity(id),
@@ -186,10 +198,32 @@ function Profile() {
     localStorage.setItem("darkMode", String(v));
   };
 
+  // Requirement 6.1/6.6: guarda de logout. Antes de executar qualquer
+  // efeito de logout, re-checa o estado atual da atividade rastreada (não
+  // confia apenas no snapshot lido no mount). Se houver atividade em
+  // andamento (`tracking`/`paused`, incluindo Auto_Pause), abre o diálogo
+  // de bloqueio e retorna SEM executar nenhum efeito de logout — a sessão
+  // permanece ativa. `{corrupted:true}` é tratado como "sem atividade
+  // recuperável", permitindo o logout normal (Requirement 6.5).
   const handleSignOut = async () => {
-    // Requirement 11.8: invalida o registro de push do dispositivo/
-    // navegador atual antes de encerrar a sessão — nunca bloqueia o
-    // logout em caso de falha (invalidatePushRegistration nunca lança).
+    const active = await loadActive();
+    const inProgress =
+      active != null &&
+      !("corrupted" in active) &&
+      (active.status === "tracking" || active.status === "paused");
+    if (inProgress) {
+      setLogoutBlockedOpen(true);
+      return;
+    }
+    await performSignOut();
+  };
+
+  // Requirement 6: logout real, extraído de `handleSignOut`. Preserva
+  // exatamente os efeitos originais.
+  // Requirement 11.8: invalida o registro de push do dispositivo/
+  // navegador atual antes de encerrar a sessão — nunca bloqueia o
+  // logout em caso de falha (invalidatePushRegistration nunca lança).
+  const performSignOut = async () => {
     await invalidatePushRegistration();
     await supabase.auth.signOut();
     toast.success(t("profile.signedOut"));
@@ -432,14 +466,60 @@ function Profile() {
 
 
       <section className="px-5 mt-6">
-        <div className="rounded-2xl bg-card p-4 shadow-card">
-          <div className="flex items-center justify-between">
-            <span className="text-sm font-semibold">{t("profile.level", { level: profile?.level ?? 1 })}</span>
-            <span className="text-xs text-muted-foreground">{profile?.progress_to_next_level ?? 0}%</span>
-          </div>
-          <Progress value={profile?.progress_to_next_level ?? 0} className="mt-3" />
-          <p className="mt-2 text-[11px] text-muted-foreground">{t("profile.levelHint", { remaining: 100 - (profile?.progress_to_next_level ?? 0) })}</p>
-        </div>
+        {(() => {
+          // Nível geral derivado das atividades reais (item 10). Fallback para
+          // stats vazias enquanto carrega → iniciante/0% (piso).
+          const overall = levelStats?.overall ?? {
+            completedActivities: 0,
+            totalKm: 0,
+            totalElevationGain: 0,
+          };
+          const level = classifyLevel(overall);
+          const progress = levelProgress(overall);
+          const perType: Array<{ type: ActivityType; level: UserLevel }> = (
+            ["caminhada", "pedalada", "trilha"] as ActivityType[]
+          ).map((type) => ({ type, level: classifyLevel(levelStats?.byType?.[type]) }));
+
+          return (
+            <div className="rounded-2xl bg-card p-4 shadow-card">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-semibold">
+                  {t(`profile.levels.${level}`)}
+                </span>
+                <span className="text-xs text-muted-foreground">{progress}%</span>
+              </div>
+              <Progress value={progress} className="mt-3" />
+              {level !== "avancado" && (
+                <p className="mt-2 text-[11px] text-muted-foreground">
+                  {t("profile.levelHint", { remaining: 100 - progress })}
+                </p>
+              )}
+
+              {/* Nível por tipo de atividade (item 10 — detalhe por modalidade). */}
+              <div className="mt-3 flex flex-wrap gap-2">
+                {perType.map(({ type, level: lvl }) => (
+                  <span
+                    key={type}
+                    className="rounded-full bg-secondary px-2.5 py-0.5 text-[11px] font-medium text-secondary-foreground"
+                  >
+                    {t(`activity.activityTypes.${type}`)}: {t(`profile.levels.${lvl}`)}
+                  </span>
+                ))}
+              </div>
+
+              {/* Atalho para os rankings (item 12). */}
+              <Link
+                to="/ranking"
+                className="mt-3 flex items-center justify-between rounded-xl bg-secondary/60 px-3 py-2 text-xs font-semibold text-foreground transition-base active:scale-[0.99]"
+              >
+                <span className="flex items-center gap-2">
+                  <Award size={14} className="text-primary" /> {t("ranking.title")}
+                </span>
+                <span className="text-primary">{t("common.open")}</span>
+              </Link>
+            </div>
+          );
+        })()}
       </section>
       <LocationSharingCard
         currentMode={(profile?.location_sharing_mode as "none" | "friends" | "public" | undefined) ?? "none"}
@@ -629,6 +709,57 @@ function Profile() {
                 </div>
               ))
             )}
+          </div>
+        </SheetContent>
+      </Sheet>
+
+      {/* Requirement 6.2/6.3/6.4: diálogo de bloqueio de logout quando há
+          atividade em andamento. Segue o padrão de Sheet já usado neste
+          arquivo (seguidores). As três ações refletem o design.md:
+          - Finalizar: navega para /atividade/rastrear (fluxo de finalização
+            já existente); após finalizar, loadActive() deixa de indicar
+            atividade em andamento e o logout subsequente é permitido (6.3).
+          - Descartar: limpa o active_activity local (clearActive, função real
+            de activity-storage) e executa o logout real (6.4).
+          - Cancelar: fecha o diálogo mantendo sessão e atividade intactas
+            (6.6). */}
+      <Sheet open={logoutBlockedOpen} onOpenChange={setLogoutBlockedOpen}>
+        <SheetContent side="bottom" className="rounded-t-3xl">
+          <SheetHeader>
+            <SheetTitle className="font-display flex items-center gap-2">
+              <ActivityIcon size={18} className="text-primary" />
+              {t("profile.logoutBlocked.title")}
+            </SheetTitle>
+          </SheetHeader>
+          <p className="mt-2 text-sm text-muted-foreground">
+            {t("profile.logoutBlocked.description")}
+          </p>
+          <div className="mt-5 space-y-2 pb-4">
+            <button
+              onClick={() => {
+                setLogoutBlockedOpen(false);
+                navigate({ to: "/atividade/rastrear" });
+              }}
+              className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-forest py-3.5 text-sm font-semibold text-white active:scale-[0.98] transition-transform"
+            >
+              {t("profile.logoutBlocked.finish")}
+            </button>
+            <button
+              onClick={async () => {
+                setLogoutBlockedOpen(false);
+                await clearActive();
+                await performSignOut();
+              }}
+              className="flex w-full items-center justify-center gap-2 rounded-xl border border-destructive/40 bg-card py-3.5 text-sm font-semibold text-destructive active:scale-[0.98] transition-transform"
+            >
+              {t("profile.logoutBlocked.discard")}
+            </button>
+            <button
+              onClick={() => setLogoutBlockedOpen(false)}
+              className="flex w-full items-center justify-center gap-2 rounded-xl border border-border bg-card py-3.5 text-sm font-semibold text-foreground active:scale-[0.98] transition-transform"
+            >
+              {t("profile.logoutBlocked.cancel")}
+            </button>
           </div>
         </SheetContent>
       </Sheet>

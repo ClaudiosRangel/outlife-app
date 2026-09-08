@@ -24,9 +24,9 @@ export const Route = createFileRoute("/marketplace")({
   component: Marketplace,
   head: () => ({
     meta: [
-      { title: "Marketplace Outdoor — Outlife" },
+      { title: "Marketplace Outdoor — OutVitar" },
       { name: "description", content: "Encontre empresas e profissionais outdoor verificados pelo selo Cadastur: guias, pousadas, aluguel de equipamentos e mais." },
-      { property: "og:title", content: "Marketplace Outdoor — Outlife" },
+      { property: "og:title", content: "Marketplace Outdoor — OutVitar" },
       { property: "og:description", content: "Empresas e profissionais outdoor verificados pelo selo Cadastur." },
       { property: "og:url", content: "/marketplace" },
     ],

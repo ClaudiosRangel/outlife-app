@@ -26,7 +26,7 @@ export const Route = createFileRoute("/amigos")({
   component: FriendsScreen,
   head: () => ({
     meta: [
-      { title: "Amigos — Outlife" },
+      { title: "Amigos — OutVitar" },
       { name: "description", content: "Busque pessoas, envie e aceite solicitações de amizade." },
       { name: "robots", content: "noindex" },
     ],

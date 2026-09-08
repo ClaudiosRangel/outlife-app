@@ -21,8 +21,8 @@ export const Route = createFileRoute("/sugerir-destino")({
   component: SuggestDestinationPage,
   head: () => ({
     meta: [
-      { title: "Sugerir destino — Outlife" },
-      { name: "description", content: "Indique um novo destino para a comunidade OutLife." },
+      { title: "Sugerir destino — OutVitar" },
+      { name: "description", content: "Indique um novo destino para a comunidade OutVitar." },
       { name: "robots", content: "noindex" },
     ],
     links: [{ rel: "canonical", href: "/sugerir-destino" }],
@@ -249,7 +249,7 @@ function SuggestDestinationPage() {
         </Button>
 
         <p className="text-[11px] text-muted-foreground text-center">
-          Após envio, os responsáveis da OutLife analisarão e aprovarão seu destino.
+          Após envio, os responsáveis da OutVitar analisarão e aprovarão seu destino.
         </p>
       </div>
     </div>

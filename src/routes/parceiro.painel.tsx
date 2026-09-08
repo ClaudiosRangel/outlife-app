@@ -56,8 +56,8 @@ export const Route = createFileRoute("/parceiro/painel")({
   component: PartnerPanel,
   head: () => ({
     meta: [
-      { title: "Painel do parceiro — Outlife" },
-      { name: "description", content: "Gerencie seu perfil, galeria, serviços e métricas como parceiro Outlife." },
+      { title: "Painel do parceiro — OutVitar" },
+      { name: "description", content: "Gerencie seu perfil, galeria, serviços e métricas como parceiro OutVitar." },
       { name: "robots", content: "noindex" },
     ],
     links: [{ rel: "canonical", href: "/parceiro/painel" }],

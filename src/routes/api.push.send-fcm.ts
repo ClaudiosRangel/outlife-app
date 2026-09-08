@@ -68,9 +68,9 @@ async function sendFcmPush(sa: { project_id: string; client_email: string; priva
 
 function getNotificationContent(type: string): { title: string; body: string } {
   switch (type) {
-    case "friend_request": return { title: "OutLife", body: "Você recebeu uma solicitação de amizade!" };
-    case "post_like": return { title: "OutLife", body: "Alguém curtiu sua publicação!" };
-    default: return { title: "OutLife", body: "Você tem uma nova notificação" };
+    case "friend_request": return { title: "OutVitar", body: "Você recebeu uma solicitação de amizade!" };
+    case "post_like": return { title: "OutVitar", body: "Alguém curtiu sua publicação!" };
+    default: return { title: "OutVitar", body: "Você tem uma nova notificação" };
   }
 }
 

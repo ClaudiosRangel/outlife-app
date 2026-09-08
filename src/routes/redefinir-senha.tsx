@@ -27,8 +27,8 @@ export const Route = createFileRoute("/redefinir-senha")({
   component: RedefinirSenha,
   head: () => ({
     meta: [
-      { title: "Redefinir senha — Outlife" },
-      { name: "description", content: "Defina uma nova senha para sua conta Outlife." },
+      { title: "Redefinir senha — OutVitar" },
+      { name: "description", content: "Defina uma nova senha para sua conta OutVitar." },
       { name: "robots", content: "noindex" },
     ],
     links: [{ rel: "canonical", href: "/redefinir-senha" }],

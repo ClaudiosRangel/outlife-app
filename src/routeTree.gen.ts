@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SugerirDestinoRouteImport } from './routes/sugerir-destino'
 import { Route as RedefinirSenhaRouteImport } from './routes/redefinir-senha'
+import { Route as RankingRouteImport } from './routes/ranking'
 import { Route as PerfilRouteImport } from './routes/perfil'
 import { Route as NotificacoesRouteImport } from './routes/notificacoes'
 import { Route as MercadoRouteImport } from './routes/mercado'
@@ -52,6 +53,11 @@ const SugerirDestinoRoute = SugerirDestinoRouteImport.update({
 const RedefinirSenhaRoute = RedefinirSenhaRouteImport.update({
   id: '/redefinir-senha',
   path: '/redefinir-senha',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RankingRoute = RankingRouteImport.update({
+  id: '/ranking',
+  path: '/ranking',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PerfilRoute = PerfilRouteImport.update({
@@ -230,6 +236,7 @@ export interface FileRoutesByFullPath {
   '/mercado': typeof MercadoRoute
   '/notificacoes': typeof NotificacoesRoute
   '/perfil': typeof PerfilRoute
+  '/ranking': typeof RankingRoute
   '/redefinir-senha': typeof RedefinirSenhaRoute
   '/sugerir-destino': typeof SugerirDestinoRoute
   '/a/$activityId': typeof AActivityIdRoute
@@ -266,6 +273,7 @@ export interface FileRoutesByTo {
   '/mercado': typeof MercadoRoute
   '/notificacoes': typeof NotificacoesRoute
   '/perfil': typeof PerfilRoute
+  '/ranking': typeof RankingRoute
   '/redefinir-senha': typeof RedefinirSenhaRoute
   '/sugerir-destino': typeof SugerirDestinoRoute
   '/a/$activityId': typeof AActivityIdRoute
@@ -303,6 +311,7 @@ export interface FileRoutesById {
   '/mercado': typeof MercadoRoute
   '/notificacoes': typeof NotificacoesRoute
   '/perfil': typeof PerfilRoute
+  '/ranking': typeof RankingRoute
   '/redefinir-senha': typeof RedefinirSenhaRoute
   '/sugerir-destino': typeof SugerirDestinoRoute
   '/a/$activityId': typeof AActivityIdRoute
@@ -341,6 +350,7 @@ export interface FileRouteTypes {
     | '/mercado'
     | '/notificacoes'
     | '/perfil'
+    | '/ranking'
     | '/redefinir-senha'
     | '/sugerir-destino'
     | '/a/$activityId'
@@ -377,6 +387,7 @@ export interface FileRouteTypes {
     | '/mercado'
     | '/notificacoes'
     | '/perfil'
+    | '/ranking'
     | '/redefinir-senha'
     | '/sugerir-destino'
     | '/a/$activityId'
@@ -413,6 +424,7 @@ export interface FileRouteTypes {
     | '/mercado'
     | '/notificacoes'
     | '/perfil'
+    | '/ranking'
     | '/redefinir-senha'
     | '/sugerir-destino'
     | '/a/$activityId'
@@ -450,6 +462,7 @@ export interface RootRouteChildren {
   MercadoRoute: typeof MercadoRoute
   NotificacoesRoute: typeof NotificacoesRoute
   PerfilRoute: typeof PerfilRoute
+  RankingRoute: typeof RankingRoute
   RedefinirSenhaRoute: typeof RedefinirSenhaRoute
   SugerirDestinoRoute: typeof SugerirDestinoRoute
   AActivityIdRoute: typeof AActivityIdRoute
@@ -485,6 +498,13 @@ declare module '@tanstack/react-router' {
       path: '/redefinir-senha'
       fullPath: '/redefinir-senha'
       preLoaderRoute: typeof RedefinirSenhaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ranking': {
+      id: '/ranking'
+      path: '/ranking'
+      fullPath: '/ranking'
+      preLoaderRoute: typeof RankingRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/perfil': {
@@ -740,6 +760,7 @@ const rootRouteChildren: RootRouteChildren = {
   MercadoRoute: MercadoRoute,
   NotificacoesRoute: NotificacoesRoute,
   PerfilRoute: PerfilRoute,
+  RankingRoute: RankingRoute,
   RedefinirSenhaRoute: RedefinirSenhaRoute,
   SugerirDestinoRoute: SugerirDestinoRoute,
   AActivityIdRoute: AActivityIdRoute,

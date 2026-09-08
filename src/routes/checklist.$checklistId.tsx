@@ -56,7 +56,7 @@ export const Route = createFileRoute("/checklist/$checklistId")({
   component: ChecklistDetail,
   head: () => ({
     meta: [
-      { title: "Checklist — Outlife" },
+      { title: "Checklist — OutVitar" },
       { name: "robots", content: "noindex" },
     ],
   }),

@@ -1,4 +1,9 @@
 {
+  "brand": {
+    "name": "OutVitar",
+    "slogan": "VIVER É DIFERENTE DE ESTAR VIVO",
+    "ecosystem": "OutVitar · ecossistema"
+  },
   "nav": {
     "home": "Início",
     "search": "Buscar",
@@ -68,7 +73,7 @@
   },
   "signup": {
     "stepOf": "Passo {{step}} de {{total}}",
-    "howUse": "Como você usa o Outlife?",
+    "howUse": "Como você usa o OutVitar?",
     "chooseProfile": "Escolha seu perfil para começar.",
     "adventurer": "Sou aventureiro",
     "adventurerDesc": "Quero descobrir trilhas, destinos e parceiros.",
@@ -117,10 +122,25 @@
     "activeNow": "Amigos em atividade",
     "nearbyPartners": "Parceiros próximos"
   },
+  "liveFriends": {
+    "empty": "Nenhum amigo em atividade agora.",
+    "unavailable": "A posição ao vivo desse amigo não está mais disponível.",
+    "activityType": {
+      "caminhada": "Caminhada",
+      "pedalada": "Pedalada",
+      "trilha": "Trilha",
+      "outro": "Atividade"
+    }
+  },
   "explore": {
     "title": "Explorar destinos",
     "headline": "Onde vamos\nnessa aventura?",
     "placeholder": "Trilhas, cachoeiras, regiões…",
+    "tabs": {
+      "destinos": "Destinos",
+      "parceiros": "Parceiros"
+    },
+    "allPartnerFilters": "Ver todos os filtros de parceiros",
     "filters": {
       "all": "Todos",
       "easy": "Fácil",
@@ -165,7 +185,7 @@
   },
   "destination": {
     "notFound": "Destino não encontrado",
-    "notFoundDescription": "O destino que você busca não está disponível no Outlife.",
+    "notFoundDescription": "O destino que você busca não está disponível no OutVitar.",
     "backToExplore": "Voltar a Explorar",
     "pendingBadge": "Análise pendente",
     "pendingNotice": "Este destino ainda está em análise e só é visível para você até ser aprovado.",
@@ -189,7 +209,7 @@
   "destinationSuggestion": {
     "trigger": "Sugerir novo destino",
     "title": "Sugerir novo destino",
-    "description": "Conte para nós sobre um destino que ainda não está no Outlife. Vamos analisar antes de publicar.",
+    "description": "Conte para nós sobre um destino que ainda não está no OutVitar. Vamos analisar antes de publicar.",
     "nameLabel": "Nome do destino",
     "namePlaceholder": "Ex: Cachoeira do Escorrega",
     "descriptionLabel": "Descrição (opcional)",
@@ -211,7 +231,7 @@
   },
   "partner": {
     "notFound": "Parceiro não encontrado",
-    "notFoundDescription": "O parceiro que você busca não está cadastrado no Outlife.",
+    "notFoundDescription": "O parceiro que você busca não está cadastrado no OutVitar.",
     "backToMarketplace": "Voltar ao Marketplace",
     "reviews": "avaliações",
     "topRated": "Top avaliado",
@@ -227,7 +247,7 @@
     "callNow": "Ligar agora",
     "reviewsTitle": "Avaliações",
     "noReviewsYet": "Ainda não há avaliações. Seja o primeiro!",
-    "contactNote": "Use o botão Reservar para falar com o parceiro pelo Outlife.",
+    "contactNote": "Use o botão Reservar para falar com o parceiro pelo OutVitar.",
     "gallery": "Galeria",
     "noGallery": "Galeria ainda não disponível.",
     "noLocation": "Localização não informada."
@@ -267,6 +287,10 @@
     "photoLabel": "Foto da aventura",
     "addPhoto": "Toque para adicionar foto",
     "photoHint": "JPG, PNG · até 5MB",
+    "videoLabel": "Vídeo (opcional)",
+    "addVideo": "Toque para adicionar vídeo",
+    "videoHint": "MP4, WebM ou MOV · até 30MB · 60s",
+    "removeVideo": "Remover vídeo",
     "categoryLabel": "Tipo de publicação",
     "selectCategory": "Selecione o tipo",
     "categories": {
@@ -320,11 +344,47 @@
     },
     "level": "Explorador Nível {{level}}",
     "levelHint": "Faltam {{remaining}}% para o próximo nível.",
+    "levels": {
+      "iniciante": "Iniciante",
+      "intermediario": "Intermediário",
+      "avancado": "Avançado"
+    },
     "achievements": "Conquistas",
     "nextAdventure": "Próxima aventura",
     "checklist": "Checklist outdoor",
     "trackCta": "Rastrear nova atividade",
-    "trackActive": "Atividade em andamento"
+    "trackActive": "Atividade em andamento",
+    "logoutBlocked": {
+      "title": "Atividade em andamento",
+      "description": "Você tem uma atividade sendo rastreada. Finalize ou descarte antes de sair.",
+      "finish": "Finalizar atividade",
+      "discard": "Descartar atividade",
+      "cancel": "Cancelar"
+    }
+  },
+  "ranking": {
+    "title": "Rankings",
+    "subtitle": "Compare-se com a comunidade",
+    "metric": {
+      "distancia": "Distância",
+      "tempo": "Menor tempo",
+      "altimetria": "Altimetria"
+    },
+    "scope": {
+      "global": "Global",
+      "seguidos": "Seguindo"
+    },
+    "period": {
+      "semana": "Semana",
+      "mes": "Mês",
+      "ano": "Ano",
+      "sempre": "Sempre"
+    },
+    "you": "Você",
+    "empty": "Nenhuma atividade no ranking ainda.",
+    "loadError": "Não foi possível carregar o ranking. Tente novamente.",
+    "position": "Posição",
+    "byDestination": "Ranking neste destino"
   },
   "activity": {
     "trackTitle": "Rastrear atividade",
@@ -337,6 +397,7 @@
     "hint": "O GPS começa a registrar quando você toca em iniciar.",
     "permissionDenied": "Permissão de localização negada. Ative o GPS no navegador para registrar sua atividade.",
     "revokedDuringTracking": "O rastreamento foi interrompido porque a permissão de localização em segundo plano foi revogada. Os pontos já registrados foram preservados.",
+    "autoPaused": "Pausado automaticamente",
     "orphanFound": "Encontramos uma atividade em andamento. Deseja retomá-la?",
     "orphanUnrecoverable": "Encontramos uma atividade em andamento, mas os dados não puderam ser recuperados. Só é possível descartá-la.",
     "noRoute": "Esta atividade não possui trajeto registrado.",
@@ -347,6 +408,9 @@
     "descriptionPlaceholder": "Como foi a trilha?",
     "addPhoto": "Adicionar foto",
     "photoHint": "JPG, PNG ou WEBP",
+    "addVideo": "Adicionar vídeo",
+    "videoHint": "MP4, WebM ou MOV · até 30MB · 60s",
+    "videoOfflineDisabled": "O vídeo requer conexão. Disponível quando você estiver online.",
     "skip": "Pular",
     "saveActivity": "Salvar atividade",
     "syncQueuePending_one": "{{count}} atividade pendente de sincronização",
@@ -365,11 +429,18 @@
       "distance": "Distância",
       "date": "Data",
       "speed": "Velocidade média",
-      "pace": "Ritmo médio"
+      "currentSpeed": "Velocidade",
+      "pace": "Ritmo médio",
+      "elevation": "Elevação"
+    },
+    "gpsSignal": {
+      "aquisitando": "Buscando sinal de GPS…",
+      "fraco": "Sinal de GPS fraco",
+      "semSinal": "Sem sinal de GPS"
     },
     "shareBanner": "Compartilhar atividade",
     "generatingBanner": "Gerando imagem…",
-    "shareBannerTitle": "Minha atividade Outlife",
+    "shareBannerTitle": "Minha atividade OutVitar",
     "shareBannerError": "Não foi possível gerar a imagem para compartilhar. Tente novamente.",
     "toasts": {
       "started": "Atividade iniciada. Boa trilha!",
@@ -458,11 +529,11 @@
   },
   "compliance": {
     "title": "Compliance",
-    "subtitle": "Verificação Cadastur · Outlife",
+    "subtitle": "Verificação Cadastur · OutVitar",
     "back": "Voltar",
     "progress": "Cadastro",
     "whyTitle": "Por que verificar?",
-    "whyDesc": "O selo Cadastur garante transparência ao viajante, prioriza sua empresa na busca e libera reservas diretas no Outlife.",
+    "whyDesc": "O selo Cadastur garante transparência ao viajante, prioriza sua empresa na busca e libera reservas diretas no OutVitar.",
     "businessData": "Dados da empresa",
     "companyName": "Nome da empresa",
     "cnpj": "CNPJ",
@@ -480,7 +551,7 @@
     "uploadCta": "Enviar comprovante (PDF, JPG, PNG)",
     "uploadHint": "Até 5MB. Documento emitido pelo Ministério do Turismo.",
     "submit": "Enviar para verificação",
-    "termsNote": "Ao enviar, você concorda com os termos de compliance do Outlife.",
+    "termsNote": "Ao enviar, você concorda com os termos de compliance do OutVitar.",
     "submitted": "Cadastro enviado. Análise em até 48h.",
     "verified": "Empresa verificada! Selo Cadastur ativado.",
     "checkFields": "Verifique os campos destacados.",
@@ -517,6 +588,7 @@
     "empty": "Você não tem notificações.",
     "friendRequestText": "enviou uma solicitação de amizade.",
     "postLikeText": "curtiu seu relato.",
+    "activityCompletedText": "concluiu uma atividade.",
     "genericText": "Você tem uma nova notificação.",
     "bellAria": "Notificações",
     "bellAriaWithCount": "Notificações ({{count}} não lidas)"
@@ -532,11 +604,27 @@
     "avatarUpdated": "Foto de perfil atualizada!",
     "usernameTaken": "Esse nome de usuário já está em uso.",
     "genericError": "Não foi possível concluir a ação. Tente novamente.",
-    "appVersion": "Versão {{version}}"
+    "appVersion": "Versão {{version}}",
+    "completeTitle": "Dados completos",
+    "personType": "Tipo de pessoa",
+    "personTypes": {
+      "pf": "Pessoa Física",
+      "pj": "Pessoa Jurídica"
+    },
+    "cpf": "CPF",
+    "cnpj": "CNPJ",
+    "phone": "Telefone",
+    "zip": "CEP",
+    "street": "Logradouro",
+    "number": "Número",
+    "complement": "Complemento",
+    "neighborhood": "Bairro",
+    "city": "Cidade",
+    "state": "UF"
   },
   "adminCompliance": {
     "title": "Moderação Cadastur",
-    "subtitle": "Solicitações pendentes · Outlife Admin",
+    "subtitle": "Solicitações pendentes · OutVitar Admin",
     "back": "Voltar",
     "accessDeniedTitle": "Acesso restrito",
     "accessDeniedDescription": "Esta área é exclusiva para administradores.",
@@ -571,7 +659,7 @@
       "friends": "Apenas amigos",
       "friendsDesc": "Somente seus amigos confirmados podem ver seu ponto.",
       "public": "Visível para todos",
-      "publicDesc": "Qualquer pessoa no Outlife pode ver seu ponto no mapa."
+      "publicDesc": "Qualquer pessoa no OutVitar pode ver seu ponto no mapa."
     },
     "updateNow": "Atualizar agora",
     "lastUpdate": "Atualizado",

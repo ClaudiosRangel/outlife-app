@@ -16,7 +16,7 @@ export const Route = createFileRoute("/eventos/$eventId")({
   component: EventDetailPage,
   head: () => ({
     meta: [
-      { title: "Evento — Outlife" },
+      { title: "Evento — OutVitar" },
       { name: "description", content: "Detalhes do evento outdoor." },
       { name: "robots", content: "noindex" },
     ],

@@ -31,9 +31,9 @@ export const Route = createFileRoute("/parceiro/$partnerId")({
   component: PartnerDetail,
   head: ({ params }) => ({
     meta: [
-      { title: "Parceiro verificado — Outlife" },
-      { name: "description", content: "Conheça este parceiro outdoor verificado pelo selo Cadastur no Outlife." },
-      { property: "og:title", content: "Parceiro verificado — Outlife" },
+      { title: "Parceiro verificado — OutVitar" },
+      { name: "description", content: "Conheça este parceiro outdoor verificado pelo selo Cadastur no OutVitar." },
+      { property: "og:title", content: "Parceiro verificado — OutVitar" },
       { property: "og:type", content: "profile" },
       { property: "og:url", content: `/parceiro/${params.partnerId}` },
     ],

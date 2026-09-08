@@ -29,7 +29,7 @@ export const Route = createFileRoute("/eventos")({
   component: EventosPage,
   head: () => ({
     meta: [
-      { title: "Eventos — Outlife" },
+      { title: "Eventos — OutVitar" },
       { name: "description", content: "Encontre e crie eventos outdoor com a comunidade." },
     ],
     links: [{ rel: "canonical", href: "/eventos" }],

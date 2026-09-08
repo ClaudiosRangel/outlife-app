@@ -20,7 +20,7 @@ const ADMIN_EMAILS = [
 
 const RESEND_API_KEY = process.env.RESEND_API_KEY || "";
 const FROM_EMAIL = "naoresponda@avidanaoesotrilhar.com.br";
-const FROM_NAME = "OutLife";
+const FROM_NAME = "OutVitar";
 
 type NotifyBody = {
   destinationName: string;
@@ -74,7 +74,7 @@ export const Route = createFileRoute("/api/notify-admins")({
         const subject = `🏔️ Novo destino sugerido: ${body.destinationName}`;
         const html = `
           <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-            <h2 style="color: #1c3d2a;">Novo destino sugerido no OutLife</h2>
+            <h2 style="color: #1c3d2a;">Novo destino sugerido no OutVitar</h2>
             <p>Um usuário sugeriu um novo destino para aprovação:</p>
             <div style="background: #f8faf9; border-radius: 12px; padding: 16px; margin: 16px 0;">
               <p style="margin: 0 0 8px;"><strong>Destino:</strong> ${body.destinationName}</p>
@@ -87,7 +87,7 @@ export const Route = createFileRoute("/api/notify-admins")({
               Revisar destino
             </a>
             <p style="margin-top: 24px; font-size: 12px; color: #666;">
-              OutLife — A vida não é só trilhar<br>
+              OutVitar — A vida não é só trilhar<br>
               Este e-mail foi enviado automaticamente.
             </p>
           </div>

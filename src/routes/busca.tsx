@@ -18,9 +18,9 @@ export const Route = createFileRoute("/busca")({
   component: Busca,
   head: () => ({
     meta: [
-      { title: "Buscar — Outlife" },
-      { name: "description", content: "Busque destinos, parceiros e experiências outdoor no Outlife." },
-      { property: "og:title", content: "Buscar — Outlife" },
+      { title: "Buscar — OutVitar" },
+      { name: "description", content: "Busque destinos, parceiros e experiências outdoor no OutVitar." },
+      { property: "og:title", content: "Buscar — OutVitar" },
       { property: "og:description", content: "Busque destinos, parceiros e experiências outdoor." },
       { property: "og:url", content: "/busca" },
     ],

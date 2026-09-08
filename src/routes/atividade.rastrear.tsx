@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
-import { Play, Pause, Square, Trash2, ArrowLeft, MapPin, Camera, Loader2, Mountain } from "lucide-react";
+import { Play, Pause, Square, Trash2, ArrowLeft, MapPin, Camera, Video, Loader2, Mountain, PauseCircle, Satellite } from "lucide-react";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/use-auth";
@@ -13,8 +13,15 @@ import {
   discardActivity,
   uploadActivityImage,
   uploadActivityMapSnapshot,
+  uploadCommunityPostVideo,
   type ActivityType,
 } from "@/lib/api";
+import {
+  validateVideoFileMeta,
+  validateVideoDuration,
+  videoRejectionMessage,
+} from "@/lib/video-validation";
+import { readVideoDurationSeconds } from "@/lib/video-duration";
 import { mapRateLimitErrorToMessage } from "@/lib/rate-limit-error";
 import { Button } from "@/components/ui/button";
 import { StatusBar } from "@/components/StatusBar";
@@ -38,6 +45,7 @@ import { enqueueActivity } from "@/lib/activity-storage";
 import { useActivitySync } from "@/hooks/use-activity-sync";
 import { ReviewPromptDialog } from "@/components/ReviewPromptDialog";
 import { computeActivityMetrics } from "@/lib/activity-metrics";
+import { mpsToKmh } from "@/lib/instant-speed";
 import { generateActivityMapSnapshot } from "@/lib/activity-map-snapshot";
 
 const ACTIVITY_TYPES: readonly ActivityType[] = ["caminhada", "pedalada", "trilha", "outro"];
@@ -48,7 +56,7 @@ export const Route = createFileRoute("/atividade/rastrear")({
   component: TrackActivityPage,
   head: () => ({
     meta: [
-      { title: "Rastrear atividade — Outlife" },
+      { title: "Rastrear atividade — OutVitar" },
       { name: "description", content: "Registre sua trilha em tempo real." },
       { name: "robots", content: "noindex" },
     ],
@@ -96,12 +104,47 @@ function TrackActivityPage() {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const finishFileRef = useRef<HTMLInputElement>(null);
+  // Vídeo opcional no finish (Req 5). Preview via Object_URL (nunca base64),
+  // com revogação disciplinada ao trocar/limpar/desmontar (memória — Bloco B).
+  const [videoPreview, setVideoPreview] = useState<string | null>(null);
+  const [videoFile, setVideoFile] = useState<File | null>(null);
+  const finishVideoRef = useRef<HTMLInputElement>(null);
+  const videoUrlRef = useRef<string | null>(null);
+  // Estado de conexão: o vídeo é desabilitado offline (Req 5.4) — não
+  // enfileiramos blobs grandes na Sync_Queue.
+  const [isOnline, setIsOnline] = useState(
+    typeof navigator === "undefined" ? true : navigator.onLine,
+  );
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const on = () => setIsOnline(true);
+    const off = () => setIsOnline(false);
+    window.addEventListener("online", on);
+    window.addEventListener("offline", off);
+    return () => {
+      window.removeEventListener("online", on);
+      window.removeEventListener("offline", off);
+    };
+  }, []);
+
+  const revokeVideoPreview = () => {
+    if (videoUrlRef.current) {
+      URL.revokeObjectURL(videoUrlRef.current);
+      videoUrlRef.current = null;
+    }
+  };
 
   const resetFinishForm = () => {
     setDescription("");
     setImagePreview(null);
     setImageFile(null);
+    revokeVideoPreview();
+    setVideoPreview(null);
+    setVideoFile(null);
   };
+
+  // Revoga o Object_URL do vídeo ao desmontar a tela (memória — Bloco B).
+  useEffect(() => revokeVideoPreview, []);
 
   const handleFinishImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -110,6 +153,31 @@ function TrackActivityPage() {
     const reader = new FileReader();
     reader.onloadend = () => setImagePreview(reader.result as string);
     reader.readAsDataURL(file);
+  };
+
+  const handleFinishVideoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    if (!isOnline) {
+      toast.error(t("activity.videoOfflineDisabled"));
+      return;
+    }
+    const meta = validateVideoFileMeta({ type: file.type, size: file.size });
+    if (!meta.ok) {
+      toast.error(videoRejectionMessage(meta.reason));
+      return;
+    }
+    const seconds = await readVideoDurationSeconds(file);
+    if (!validateVideoDuration(seconds).ok) {
+      toast.error(videoRejectionMessage("duration"));
+      return;
+    }
+    revokeVideoPreview();
+    const url = URL.createObjectURL(file);
+    videoUrlRef.current = url;
+    setVideoFile(file);
+    setVideoPreview(url);
   };
 
   useEffect(() => {
@@ -176,9 +244,18 @@ function TrackActivityPage() {
         await discardActivity(activityId).catch(() => {});
         throw new Error(t("activity.toasts.tooShort"));
       }
+      // Blob do snapshot gerado dentro do try abaixo. Declarado no escopo
+      // do mutationFn para que, em caso de falha de rede, o `catch` externo
+      // possa enfileirá-lo na Sync_Queue (Requirement 2.2). Fica `null`
+      // quando a geração falha ou não produz imagem (Requirement 2.5).
+      let snapshotBlob: Blob | null = null;
       try {
         const skipExtras = opts?.skipExtras ?? false;
         const image_url = !skipExtras && imageFile ? await uploadActivityImage(imageFile) : undefined;
+        // Req 5.2: sobe o vídeo (se houver) antes de finalizar; a URL entra no
+        // post automático via finish_user_activity. Vídeo só existe online
+        // (desabilitado na seleção offline — Req 5.4).
+        const video_url = !skipExtras && videoFile ? await uploadCommunityPostVideo(videoFile) : undefined;
 
         // Requirement 6.1/6.3: gera e envia o Activity_Map_Snapshot após
         // finalize(); qualquer falha aqui (geração ou upload) é isolada
@@ -186,7 +263,12 @@ function TrackActivityPage() {
         // o snapshot fica ausente.
         let map_snapshot_url: string | undefined;
         try {
-          const snapshotBlob = await generateActivityMapSnapshot(result.points);
+          // Composição do snapshot: quando há foto anexada (e não é
+          // skipExtras), a imagem do post fica lado a lado — foto 60% à
+          // esquerda + mapa 40% à direita. Sem foto, o mapa ocupa 100%.
+          snapshotBlob = await generateActivityMapSnapshot(result.points, {
+            photo: !skipExtras && imageFile ? imageFile : null,
+          });
           if (snapshotBlob) {
             map_snapshot_url = await uploadActivityMapSnapshot(snapshotBlob);
           }
@@ -203,6 +285,9 @@ function TrackActivityPage() {
           image_url,
           activity_type: activityType ?? undefined,
           map_snapshot_url,
+          // Requirement 1.1: persiste o ganho de elevação no fluxo online.
+          elevation_gain: result.elevationGain,
+          video_url,
         });
       } catch (err) {
         const rateLimitMessage = mapRateLimitErrorToMessage(err);
@@ -212,7 +297,11 @@ function TrackActivityPage() {
           // imediato (voltaria a falhar até a janela expirar).
           throw new Error(rateLimitMessage);
         }
-        // Offline / falha de rede: enfileira em IndexedDB para sincronização posterior.
+        // Offline / falha de rede: enfileira em IndexedDB para sincronização
+        // posterior com o payload completo (Requirements 2.1, 2.2, 1.4) —
+        // Activity_Type, ganho de elevação e o blob do snapshot já gerado
+        // (quando houver). Se a geração do snapshot falhou, `snapshotBlob`
+        // permanece `null` e o snapshot fica ausente (Requirement 2.5).
         await enqueueActivity({
           localId: crypto.randomUUID(),
           remoteId: activityId,
@@ -221,6 +310,9 @@ function TrackActivityPage() {
           distance_meters: result.distance,
           duration_seconds: result.duration,
           route_geojson: result.route,
+          activity_type: activityType ?? null,
+          elevation_gain: result.elevationGain,
+          map_snapshot_blob: snapshotBlob,
         });
         throw new Error(
           err instanceof Error
@@ -307,6 +399,29 @@ function TrackActivityPage() {
         </div>
       )}
 
+      {/* Requirement 3.1/3.2/3.4: indicador visual explícito de pausa
+          automática (estilo Strava), visualmente distinto da pausa manual
+          (que exibe o botão "Retomar" sem este banner). Permanece visível
+          enquanto o Auto_Pause estiver ativo e desaparece no auto-resume. */}
+      {tracker.autoPaused && (
+        <div className="mx-5 mt-3 flex items-center gap-2 rounded-2xl border border-amber-400/40 bg-amber-50 p-3 text-xs text-amber-700 animate-pulse">
+          <PauseCircle size={16} />
+          {t("activity.autoPaused")}
+        </div>
+      )}
+
+      {/* Indicador de qualidade do sinal de GPS (Requirement 6.5/6.7/6.8):
+          exibido durante o rastreamento apenas quando o estado é diferente
+          de "bom"; some assim que o sinal fica bom. */}
+      {(isTracking || isPaused) && tracker.gpsSignalState !== "bom" && (
+        <div className="mx-5 mt-3 flex items-center gap-2 rounded-2xl border border-amber-400/40 bg-amber-50 p-3 text-xs text-amber-700">
+          <Satellite size={16} />
+          {tracker.gpsSignalState === "aquisitando" && t("activity.gpsSignal.aquisitando")}
+          {tracker.gpsSignalState === "fraco" && t("activity.gpsSignal.fraco")}
+          {tracker.gpsSignalState === "sem_sinal" && t("activity.gpsSignal.semSinal")}
+        </div>
+      )}
+
       <div className="mx-5 mt-3">
         <Suspense fallback={<Skeleton className="h-[320px] w-full rounded-2xl" />}>
           <ActivityMap
@@ -356,14 +471,20 @@ function TrackActivityPage() {
           distanceMeters: tracker.distanceMeters,
           durationSeconds: tracker.durationSeconds,
         });
+        // Requirement 4.2/4.3/4.4/4.5: ao vivo, exibe a Smoothed_Speed
+        // (velocidade instantânea suavizada), não a média — reflete o
+        // movimento atual. "—" quando indisponível (null); zero durante
+        // pausa. O ritmo médio permanece derivado dos totais.
+        const smoothed = tracker.smoothedSpeedMps;
+        const speedLabel = smoothed == null ? "—" : `${mpsToKmh(smoothed).toFixed(1)} km/h`;
         return (
           <div className="mx-5 mt-2 grid grid-cols-2 gap-2">
             <div className="rounded-2xl bg-card p-3 shadow-card text-center">
               <div className="text-[11px] uppercase tracking-widest text-muted-foreground">
-                {t("activity.metrics.speed")}
+                {t("activity.metrics.currentSpeed")}
               </div>
               <div className="mt-1 font-display text-lg font-semibold text-primary tabular-nums">
-                {liveMetrics.averageSpeedKmh ? `${liveMetrics.averageSpeedKmh} km/h` : "—"}
+                {speedLabel}
               </div>
             </div>
             <div className="rounded-2xl bg-card p-3 shadow-card text-center">
@@ -542,6 +663,48 @@ function TrackActivityPage() {
                   accept="image/jpeg,image/png,image/webp"
                   className="hidden"
                   onChange={handleFinishImageChange}
+                />
+              </button>
+            </div>
+
+            {/* Vídeo opcional (Req 5) — limites 30 MB / 60 s. Desabilitado
+                offline (Req 5.4): não enfileiramos blobs grandes. */}
+            <div>
+              <Label className="mb-2 block text-sm font-medium">{t("activity.addVideo")}</Label>
+              <button
+                onClick={() => {
+                  if (!isOnline) {
+                    toast.error(t("activity.videoOfflineDisabled"));
+                    return;
+                  }
+                  finishVideoRef.current?.click();
+                }}
+                disabled={!isOnline}
+                className="relative flex w-full flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-border bg-secondary/50 p-6 text-muted-foreground transition-colors hover:bg-secondary active:scale-[0.98] disabled:opacity-50"
+              >
+                {videoPreview ? (
+                  <video
+                    src={videoPreview}
+                    controls
+                    playsInline
+                    preload="metadata"
+                    className="h-40 w-full rounded-xl object-cover"
+                  />
+                ) : (
+                  <>
+                    <Video size={28} className="text-muted-foreground" />
+                    <span className="text-sm">{t("activity.addVideo")}</span>
+                    <span className="text-xs text-muted-foreground/70">
+                      {isOnline ? t("activity.videoHint") : t("activity.videoOfflineDisabled")}
+                    </span>
+                  </>
+                )}
+                <input
+                  ref={finishVideoRef}
+                  type="file"
+                  accept="video/mp4,video/webm,video/quicktime"
+                  className="hidden"
+                  onChange={handleFinishVideoChange}
                 />
               </button>
             </div>

@@ -3,8 +3,9 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
-import { ChevronLeft, Clock, MapPin, Mountain, Route as RouteIcon, Star, Tag } from "lucide-react";
-import { fetchDestinationById, fetchReviewsByDestination, fetchSavedDestinations, submitReview } from "@/lib/api";
+import { ChevronLeft, Clock, MapPin, Mountain, Route as RouteIcon, Star, Tag, Trophy } from "lucide-react";
+import { fetchDestinationById, fetchReviewsByDestination, fetchSavedDestinations, submitReview, fetchActivityRanking } from "@/lib/api";
+import { formatRankingValue, type RankingMetric } from "@/lib/ranking-format";
 import { StatusBar } from "@/components/StatusBar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CollectionToggleButton } from "@/components/CollectionToggleButton";
@@ -14,7 +15,7 @@ export const Route = createFileRoute("/destino/$destinationId")({
   component: DestinationDetailPage,
   head: ({ params }) => ({
     meta: [
-      { title: "Destino — Outlife" },
+      { title: "Destino — OutVitar" },
       { name: "description", content: "Detalhes do destino outdoor." },
       { name: "robots", content: "noindex" },
     ],
@@ -163,6 +164,8 @@ function DestinationDetailPage() {
           </div>
         </div>
 
+        <DestinationRanking destinationId={destination.id} />
+
         <div className="mt-6">
           <h3 className="text-sm font-semibold">{t("review.reviewsTitle")}</h3>
 
@@ -272,6 +275,67 @@ function LeaveDestinationReview({
       >
         {submitting ? t("common.loading") : t("review.submit")}
       </button>
+    </div>
+  );
+}
+
+// Ranking por destino (spec gamificacao-niveis-rank, Req 6). Reutiliza a RPC
+// `fetch_activity_ranking` com `destinationId`. Só atividades daquele destino
+// (atividades sem destino não aparecem — Req 6.3). Estado vazio claro (6.4).
+function DestinationRanking({ destinationId }: { destinationId: string }) {
+  const { t } = useTranslation();
+  const [metric, setMetric] = useState<RankingMetric>("tempo");
+  const metrics: RankingMetric[] = ["tempo", "distancia", "altimetria"];
+
+  const { data: rows = [], isLoading } = useQuery({
+    queryKey: ["destination-ranking", destinationId, metric],
+    queryFn: () =>
+      fetchActivityRanking({ metric, scope: "global", period: "sempre", destinationId, limit: 10 }),
+    enabled: !!destinationId,
+  });
+
+  return (
+    <div className="mt-6">
+      <div className="flex items-center gap-2">
+        <Trophy size={16} className="text-primary" />
+        <h3 className="text-sm font-semibold">{t("ranking.byDestination")}</h3>
+      </div>
+
+      <div className="mt-2 flex gap-2 overflow-x-auto scrollbar-hide">
+        {metrics.map((m) => (
+          <button
+            key={m}
+            onClick={() => setMetric(m)}
+            className={`whitespace-nowrap rounded-full px-3 py-1 text-[11px] font-medium transition-base ${
+              metric === m ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground"
+            }`}
+          >
+            {t(`ranking.metric.${m}`)}
+          </button>
+        ))}
+      </div>
+
+      <div className="mt-3 space-y-2">
+        {isLoading ? (
+          <Skeleton className="h-12 w-full rounded-2xl" />
+        ) : rows.length === 0 ? (
+          <p className="text-xs text-muted-foreground">{t("ranking.empty")}</p>
+        ) : (
+          rows.map((r, idx) => (
+            <div key={r.userId} className="flex items-center gap-3 rounded-2xl bg-card p-3 shadow-card">
+              <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full text-xs font-bold text-muted-foreground">
+                {idx + 1}
+              </span>
+              <span className="min-w-0 flex-1 truncate text-sm font-medium">
+                {r.fullName || (r.username ? `@${r.username}` : "Aventureiro")}
+              </span>
+              <span className="shrink-0 font-display text-sm font-semibold text-primary tabular-nums">
+                {formatRankingValue(r.value, metric)}
+              </span>
+            </div>
+          ))
+        )}
+      </div>
     </div>
   );
 }

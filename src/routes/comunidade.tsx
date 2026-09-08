@@ -1,5 +1,5 @@
-import { useState, useRef, useCallback } from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import { useState, useRef, useCallback, useEffect } from "react";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Heart,
@@ -9,6 +9,7 @@ import {
   Plus,
   Send,
   Camera,
+  Video,
   Loader2,
   Trash2,
 } from "lucide-react";
@@ -42,6 +43,7 @@ import {
   fetchCommunityPosts,
   createCommunityPost,
   uploadCommunityPostImage,
+  uploadCommunityPostVideo,
   deleteCommunityPost,
   resolveAsset,
   togglePostLike,
@@ -57,6 +59,15 @@ import { useAuth } from "@/hooks/use-auth";
 import { shareContent } from "@/lib/share";
 import { generatePostBanner } from "@/lib/banner-generator";
 import { communityCategoryTranslationKey } from "@/lib/community-category-label";
+import { createObjectUrlManager } from "@/lib/object-url-preview";
+import { SafeImage } from "@/components/SafeImage";
+import { SafeVideo } from "@/components/SafeVideo";
+import {
+  validateVideoFileMeta,
+  validateVideoDuration,
+  videoRejectionMessage,
+} from "@/lib/video-validation";
+import { readVideoDurationSeconds } from "@/lib/video-duration";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 
@@ -71,11 +82,17 @@ type UIPost = {
   place: string;
   text: string;
   img: string;
+  /** URL do vídeo do post (Req 1.3/4.4): quando presente, o feed mostra
+   *  SafeVideo usando `img` como poster; senão mantém SafeImage. */
+  videoUrl?: string | null;
   category: CommunityPostCategory;
   likes: number;
   comments: number;
   liked?: boolean;
   following?: boolean;
+  /** Quando o post foi gerado ao finalizar uma atividade, o id dela — permite
+   *  abrir o detalhe da atividade e incluir o deep link no compartilhamento. */
+  activityId?: string | null;
 };
 
 // As abas "Para você"/"Seguindo"/"Trilhas"/"Camping"/"Relatos" agora
@@ -114,9 +131,9 @@ export const Route = createFileRoute("/comunidade")({
   component: Community,
   head: () => ({
     meta: [
-      { title: "Comunidade — Outlife" },
-      { name: "description", content: "Compartilhe relatos, fotos e dicas de aventuras outdoor com a comunidade Outlife." },
-      { property: "og:title", content: "Comunidade — Outlife" },
+      { title: "Comunidade — OutVitar" },
+      { name: "description", content: "Compartilhe relatos, fotos e dicas de aventuras outdoor com a comunidade OutVitar." },
+      { property: "og:title", content: "Comunidade — OutVitar" },
       { property: "og:description", content: "Relatos, fotos e dicas da comunidade outdoor." },
       { property: "og:url", content: "/comunidade" },
     ],
@@ -137,9 +154,11 @@ function toUIPost(p: any): UIPost {
     place: p.place || "Brasil",
     text: p.text || "",
     img: resolveAsset(p.image_url, community1),
+    videoUrl: p.video_url ?? null,
     category: (p.category ?? "outro") as CommunityPostCategory,
     likes: p.likes ?? 0,
     comments: p.comments_count ?? 0,
+    activityId: p.activity_id ?? null,
   };
 }
 
@@ -147,6 +166,7 @@ function Community() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   // Poll a cada 20s para refletir novos posts/curtidas/comentários de
   // outros usuários sem precisar recarregar a página manualmente
@@ -187,11 +207,67 @@ function Community() {
   const [isOpen, setIsOpen] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [videoPreview, setVideoPreview] = useState<string | null>(null);
+  const [selectedVideo, setSelectedVideo] = useState<File | null>(null);
   const [text, setText] = useState("");
   const [place, setPlace] = useState("");
   const [category, setCategory] = useState<CommunityPostCategory>("outro");
   const [showComments, setShowComments] = useState<Record<string, boolean>>({});
   const fileRef = useRef<HTMLInputElement>(null);
+  const videoRef = useRef<HTMLInputElement>(null);
+  // Object_URL do preview atual (spec estabilidade-comunidade-midia): usamos
+  // URL.createObjectURL em vez de FileReader.readAsDataURL para não
+  // materializar a imagem inteira como base64 em memória (causa de crash em
+  // fotos grandes). A ref guarda o URL vigente para revogá-lo ao trocar de
+  // foto, fechar o formulário, publicar ou desmontar.
+  const previewManagerRef = useRef(
+    createObjectUrlManager({
+      create: (f) => URL.createObjectURL(f),
+      revoke: (u) => URL.revokeObjectURL(u),
+    }),
+  );
+  // Gerenciador de Object_URL separado para o preview de VÍDEO (mesma
+  // disciplina de memória do Bloco B: nunca base64, revogar ao trocar/limpar).
+  const videoPreviewManagerRef = useRef(
+    createObjectUrlManager({
+      create: (f) => URL.createObjectURL(f),
+      revoke: (u) => URL.revokeObjectURL(u),
+    }),
+  );
+
+  const setPreviewFromFile = useCallback((file: File) => {
+    const url = previewManagerRef.current.set(file); // revoga anterior (Req 1.3)
+    setSelectedFile(file);
+    setPreview(url);
+  }, []);
+
+  const clearPreview = useCallback(() => {
+    previewManagerRef.current.clear(); // revoga atual (Req 1.2)
+    setSelectedFile(null);
+    setPreview(null);
+  }, []);
+
+  const setVideoFromFile = useCallback((file: File) => {
+    const url = videoPreviewManagerRef.current.set(file); // revoga anterior (Req 1.2)
+    setSelectedVideo(file);
+    setVideoPreview(url);
+  }, []);
+
+  const clearVideo = useCallback(() => {
+    videoPreviewManagerRef.current.clear();
+    setSelectedVideo(null);
+    setVideoPreview(null);
+  }, []);
+
+  // Revoga qualquer Object_URL pendente ao desmontar (Req 1.2).
+  useEffect(() => {
+    const manager = previewManagerRef.current;
+    const videoManager = videoPreviewManagerRef.current;
+    return () => {
+      manager.clear();
+      videoManager.clear();
+    };
+  }, []);
 
   // Corrige o bug em que toda foto escolhida caía sempre na imagem padrão:
   // antes, o formulário só gerava uma preview local (base64, `handleFile`) e
@@ -204,12 +280,15 @@ function Community() {
       category,
     }: { text: string; place?: string; category: CommunityPostCategory }) => {
       const image_url = selectedFile ? await uploadCommunityPostImage(selectedFile) : undefined;
-      return createCommunityPost({ text, place, category, image_url });
+      // Vídeo é enviado ANTES de criar o post; se o upload falhar, a exceção
+      // sobe (onError) e o post não é criado com `video_url` quebrado (Req 3.3).
+      const video_url = selectedVideo ? await uploadCommunityPostVideo(selectedVideo) : undefined;
+      return createCommunityPost({ text, place, category, image_url, video_url });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["community-posts"] });
       toast.success(t("community.published"));
-      closeDrawer();
+      closeDrawer(); // já revoga o Object_URL via clearPreview (Req 1.2)
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -224,8 +303,8 @@ function Community() {
 
   const closeDrawer = () => {
     setIsOpen(false);
-    setPreview(null);
-    setSelectedFile(null);
+    clearPreview(); // revoga o Object_URL e limpa preview/arquivo (Req 1.2)
+    clearVideo();
     setText("");
     setPlace("");
     setCategory("outro");
@@ -234,10 +313,29 @@ function Community() {
   const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    setSelectedFile(file);
-    const reader = new FileReader();
-    reader.onloadend = () => setPreview(reader.result as string);
-    reader.readAsDataURL(file);
+    setPreviewFromFile(file); // Object_URL em vez de base64 (Req 1.1/1.3)
+  };
+
+  // Seleção de vídeo: valida tipo/tamanho (puro) e duração (via <video>
+  // metadata) ANTES de aceitar — recusa com mensagem clara, sem travar
+  // (Req 2.1/2.2/2.3/2.5). Só cria o preview se passar em tudo.
+  const handleVideoFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    // Permite reescolher o mesmo arquivo depois (reset do input).
+    e.target.value = "";
+    if (!file) return;
+
+    const meta = validateVideoFileMeta({ type: file.type, size: file.size });
+    if (!meta.ok) {
+      toast.error(videoRejectionMessage(meta.reason));
+      return;
+    }
+    const seconds = await readVideoDurationSeconds(file);
+    if (!validateVideoDuration(seconds).ok) {
+      toast.error(videoRejectionMessage("duration"));
+      return;
+    }
+    setVideoFromFile(file); // Object_URL, nunca base64 (Req 1.2)
   };
 
   const handleSubmit = () => {
@@ -348,7 +446,19 @@ function Community() {
         categoryLabel: t(communityCategoryTranslationKey(p.category)),
         text: p.text,
       });
-      await shareContent({ title: p.user, file: blob, fileName: "outlife-comunidade.webp" });
+      // Quando o post veio de uma atividade, inclui o deep link /a/:id no
+      // texto do compartilhamento (mesmo padrão da tela de detalhe da
+      // atividade): abrir o link leva ao app (se instalado) ou à página de
+      // preview. Posts manuais compartilham só o banner, sem link.
+      const shareText = p.activityId
+        ? `${p.text ? p.text + " " : ""}${window.location.origin}/a/${p.activityId}`
+        : undefined;
+      await shareContent({
+        title: p.user,
+        file: blob,
+        fileName: "outlife-comunidade.webp",
+        text: shareText,
+      });
     } catch {
       // Requirement 7.7/10.4 — falha na geração do banner (incluindo
       // timeout) nunca aciona o compartilhamento com um resultado
@@ -458,9 +568,25 @@ function Community() {
                   )}
                 </header>
 
-                <div className="relative aspect-[4/5]">
-                  <img src={p.img} alt="" loading="lazy" className="h-full w-full object-cover" />
-                </div>
+                {/* Post de atividade (activityId presente): a imagem vira um
+                    botão que leva ao detalhe da atividade (/atividade/:id).
+                    Posts manuais (sem activityId) seguem como imagem estática. */}
+                {p.videoUrl ? (
+                  // Precedência (Req 1.3/4.4): quando há vídeo, ele é a mídia
+                  // principal; a imagem do post vira o poster. SafeVideo não faz
+                  // autoplay/preload — só o poster é decodificado até o play.
+                  <SafeVideo src={p.videoUrl} posterSrc={p.img} />
+                ) : p.activityId ? (
+                  <SafeImage
+                    src={p.img}
+                    alt=""
+                    fallbackSrc={community1}
+                    onClick={() => navigate({ to: "/atividade/$activityId", params: { activityId: p.activityId! } })}
+                    ariaLabel={t("activity.detailTitle")}
+                  />
+                ) : (
+                  <SafeImage src={p.img} alt="" fallbackSrc={community1} />
+                )}
 
                 <div className="p-4">
                   {/* Requirement 9.1/9.2/9.3: rótulo da categoria, sempre
@@ -547,6 +673,49 @@ function Community() {
                   onChange={handleFile}
                 />
               </button>
+            </div>
+
+            {/* Vídeo (opcional) — limites 30 MB / 60 s validados na seleção.
+                Sem autoplay no preview; preview via Object_URL (nunca base64). */}
+            <div>
+              <label className="mb-2 block text-sm font-medium">{t("community.videoLabel")}</label>
+              <button
+                onClick={() => videoRef.current?.click()}
+                className="relative flex w-full flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-border bg-secondary/50 p-6 text-muted-foreground transition-colors hover:bg-secondary active:scale-[0.98]"
+              >
+                {videoPreview ? (
+                  <video
+                    src={videoPreview}
+                    controls
+                    playsInline
+                    preload="metadata"
+                    className="h-40 w-full rounded-xl object-cover"
+                  />
+                ) : (
+                  <>
+                    <Video size={28} className="text-muted-foreground" />
+                    <span className="text-sm">{t("community.addVideo")}</span>
+                    <span className="text-xs text-muted-foreground/70">{t("community.videoHint")}</span>
+                  </>
+                )}
+
+                <input
+                  ref={videoRef}
+                  type="file"
+                  accept="video/mp4,video/webm,video/quicktime"
+                  className="hidden"
+                  onChange={handleVideoFile}
+                />
+              </button>
+              {videoPreview && (
+                <button
+                  onClick={clearVideo}
+                  type="button"
+                  className="mt-2 text-xs text-muted-foreground underline"
+                >
+                  {t("community.removeVideo")}
+                </button>
+              )}
             </div>
 
             {/* Tipo de publicação */}

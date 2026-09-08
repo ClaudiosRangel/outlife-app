@@ -3,6 +3,19 @@ import { Capacitor, type PluginListenerHandle } from "@capacitor/core";
 import { LocationTracking } from "@outlife/capacitor-location-tracking";
 import { haversineMeters } from "@/lib/haversine";
 import { shouldCheckpoint } from "@/lib/location-checkpoint";
+import { getProfile, MISSING_ACCURACY_POLICY } from "@/lib/tracking-config";
+import { validatePoint, type RawSample } from "@/lib/point-validation";
+import {
+  computeSmoothedSpeed,
+  pushWindow,
+  type SpeedWindowPoint,
+} from "@/lib/instant-speed";
+import {
+  deriveGpsSignal,
+  pushAccuracy,
+  type GpsSignalState,
+} from "@/lib/gps-signal";
+import type { ActivityType } from "@/lib/activity-metrics";
 import {
   loadActive,
   saveActive,
@@ -19,6 +32,14 @@ export function useActivityTracker() {
   const [distance, setDistance] = useState(0);
   const [duration, setDuration] = useState(0);
   const [elevationGain, setElevationGain] = useState(0);
+  // Estado observável de pausa automática (Requirement 3): espelha
+  // `autoPausedRef` de forma reativa para a UI distinguir o auto-pause
+  // (por inatividade) da pausa manual. Ação manual sempre tem precedência.
+  const [autoPaused, setAutoPaused] = useState(false);
+  // Velocidade instantânea suavizada (m/s) e estado de qualidade do sinal de
+  // GPS, expostos para a UI (spec rastreamento-preciso-gps, Req 4 e 6).
+  const [smoothedSpeed, setSmoothedSpeed] = useState<number | null>(null);
+  const [gpsSignalState, setGpsSignalState] = useState<GpsSignalState>("aquisitando");
   // ID do registro no Supabase + tipo de atividade, persistidos junto
   // com o estado para sobreviver à navegação entre telas.
   const activityIdRef = useRef<string | null>(null);
@@ -43,6 +64,16 @@ export function useActivityTracker() {
   const lastMovementTsRef = useRef(Date.now());
   // Flag para distinguir auto-pause (por inatividade) de pause manual
   const autoPausedRef = useRef(false);
+  // Point_Validation: última Accepted_Point (referência de validação). Só é
+  // atualizada quando uma amostra é aceita (Req 2.7/3.6). Substitui o uso de
+  // pointsRef[last] como referência.
+  const lastAcceptedRef = useRef<{ lat: number; lng: number; ts: number } | null>(null);
+  // Janela curta de Accepted_Points para a Smoothed_Speed (Req 4.2).
+  const speedWindowRef = useRef<SpeedWindowPoint[]>([]);
+  // Janela de acurácias recentes + timestamp da última amostra recebida
+  // (qualquer amostra, aceita ou não), para o GPS_Signal_State (Req 6).
+  const signalAccuraciesRef = useRef<number[]>([]);
+  const lastSampleTsRef = useRef(0);
 
   const [hasOrphan, setHasOrphan] = useState(false);
   const [orphanUnrecoverable, setOrphanUnrecoverable] = useState(false);
@@ -60,6 +91,7 @@ export function useActivityTracker() {
       points: pointsRef.current,
       distance: distanceRef.current,
       duration: durationRef.current,
+      elevationGain: elevationGainRef.current,
       status: nextStatus,
       updatedAt: Date.now(),
       activityId: activityIdRef.current,
@@ -126,115 +158,125 @@ export function useActivityTracker() {
     }
   };
 
+  // Caminho único de processamento de uma amostra de localização (web ou
+  // nativa), spec rastreamento-preciso-gps. Aplica Point_Validation antes de
+  // acumular distância/trajeto/elevação; a posição do mapa (currentPos) é
+  // sempre atualizada, mesmo quando a amostra é rejeitada (Req 3.7).
+  const ingestSample = useCallback((sample: RawSample) => {
+    // Registra a chegada da amostra para o GPS_Signal_State (Req 6), qualquer
+    // que seja o destino da validação.
+    lastSampleTsRef.current = Date.now();
+    if (sample.accuracy != null && Number.isFinite(sample.accuracy)) {
+      signalAccuraciesRef.current = pushAccuracy(signalAccuraciesRef.current, sample.accuracy);
+    }
+
+    // Posição exibida no mapa acompanha o usuário mesmo em rejeição (Req 3.7).
+    const displayPt: TrackPoint = {
+      lat: sample.lat,
+      lng: sample.lng,
+      ts: sample.ts,
+      alt: sample.altitude ?? undefined,
+      speed: sample.speed ?? undefined,
+    };
+    setCurrentPos(displayPt);
+
+    const profile = getProfile(activityTypeRef.current as ActivityType | null);
+    const res = validatePoint(
+      sample,
+      { lastAccepted: lastAcceptedRef.current },
+      profile,
+      MISSING_ACCURACY_POLICY,
+    );
+
+    // Amostra rejeitada: referência e agregados intactos (Req 1.1, 2.3, 3.1).
+    if (!res.accepted) return;
+
+    const prev = lastAcceptedRef.current;
+    const acceptedPt: TrackPoint = {
+      lat: sample.lat,
+      lng: sample.lng,
+      ts: sample.ts,
+      alt: sample.altitude ?? undefined,
+      speed: sample.speed ?? undefined,
+    };
+
+    if (prev) {
+      // Distância só entre Accepted_Points (Req 4.1, 7.2, Property 10).
+      distanceRef.current += haversineMeters(prev, acceptedPt);
+      setDistance(distanceRef.current);
+      // Elevation gain: soma apenas subidas > 2m (filtra ruído barométrico),
+      // usando a última Accepted_Point como referência.
+      const prevAlt = pointsRef.current[pointsRef.current.length - 1]?.alt;
+      if (acceptedPt.alt != null && prevAlt != null) {
+        const altDiff = acceptedPt.alt - prevAlt;
+        if (altDiff > 2) {
+          elevationGainRef.current += altDiff;
+          setElevationGain(elevationGainRef.current);
+        }
+      }
+    }
+
+    // Auto-resume se estava em auto-pause (movimento detectado).
+    lastMovementTsRef.current = Date.now();
+    if (autoPausedRef.current) {
+      autoPausedRef.current = false;
+      setAutoPaused(false);
+      setStatus("tracking");
+      if (!timerRef.current) {
+        timerRef.current = setInterval(() => {
+          durationRef.current += 1;
+          setDuration(durationRef.current);
+        }, 1000);
+      }
+    }
+
+    // Atualiza a referência de validação SOMENTE em accept (Req 2.7/3.6).
+    lastAcceptedRef.current = { lat: sample.lat, lng: sample.lng, ts: sample.ts };
+    pointsRef.current = [...pointsRef.current, acceptedPt];
+    setPoints(pointsRef.current);
+    speedWindowRef.current = pushWindow(speedWindowRef.current, acceptedPt);
+  }, []);
+
   const startWatch = useCallback(() => {
-    // Requirement 2.1/2.5: dentro do Outlife_Native_Shell, a captura de
-    // localização usa o Native_Location_Tracking_Module (Foreground Service
-    // Android / Background Location Mode iOS) em vez da Web Geolocation
-    // API, alimentando o mesmo pointsRef/setPoints/distanceRef já
-    // existentes através do listener `locationUpdate`.
+    // Requirement 2.5: dentro do Outlife_Native_Shell, a captura usa o
+    // Native_Location_Tracking_Module; fora dele, a Web Geolocation API.
+    // Ambas as fontes alimentam o mesmo `ingestSample` (caminho único).
     if (Capacitor.isNativePlatform()) {
       void LocationTracking.startTracking({ minIntervalMs: 1000, minDistanceMeters: 1 });
       void LocationTracking.addListener("locationUpdate", (point) => {
-        // Filtrar pontos com GPS impreciso (> 20m = ruído)
-        if (point.accuracy > 20) return;
-
-        const alt = point.altitude != null && point.altitude >= 0 ? point.altitude : undefined;
-        const spd = point.speed != null && point.speed >= 0 ? point.speed : undefined;
-        const pt: TrackPoint = { lat: point.lat, lng: point.lng, ts: point.ts, alt, speed: spd };
-        setCurrentPos(pt);
-        const last = pointsRef.current[pointsRef.current.length - 1];
-        if (last) {
-          const d = haversineMeters(last, pt);
-          // Threshold reduzido para 2m — captura curvas e trilhas com precisão
-          if (d < 2) return;
-          distanceRef.current += d;
-          setDistance(distanceRef.current);
-          // Elevation gain: soma apenas subidas (> 2m para filtrar ruído barométrico)
-          if (alt != null && last.alt != null) {
-            const altDiff = alt - last.alt;
-            if (altDiff > 2) {
-              elevationGainRef.current += altDiff;
-              setElevationGain(elevationGainRef.current);
-            }
-          }
-          lastMovementTsRef.current = Date.now();
-          // Auto-resume se estava em auto-pause
-          if (autoPausedRef.current) {
-            autoPausedRef.current = false;
-            setStatus("tracking");
-            if (!timerRef.current) {
-              timerRef.current = setInterval(() => {
-                durationRef.current += 1;
-                setDuration(durationRef.current);
-              }, 1000);
-            }
-          }
-        } else {
-          // Primeiro ponto: marca como movimento para não disparar auto-pause imediato
-          lastMovementTsRef.current = Date.now();
-        }
-        pointsRef.current = [...pointsRef.current, pt];
-        setPoints(pointsRef.current);
+        ingestSample({
+          lat: point.lat,
+          lng: point.lng,
+          ts: point.ts,
+          accuracy: point.accuracy,
+          // Plugin nativo usa -1 para indisponível; normaliza para null.
+          altitude: point.altitude != null && point.altitude >= 0 ? point.altitude : null,
+          speed: point.speed != null && point.speed >= 0 ? point.speed : null,
+        });
       }).then((handle) => {
         nativeListenerRef.current = handle;
       });
       return;
     }
 
-    // Fora do Outlife_Native_Shell: mantém a Web Geolocation API já
-    // existente, inalterada (Requirement 2.5).
     if (!("geolocation" in navigator)) return;
     watchIdRef.current = navigator.geolocation.watchPosition(
       (pos) => {
-        const accuracy = pos.coords.accuracy;
-        // Filtrar GPS impreciso (> 20m)
-        if (accuracy != null && accuracy > 20) return;
-        const pt: TrackPoint = {
+        ingestSample({
           lat: pos.coords.latitude,
           lng: pos.coords.longitude,
           ts: pos.timestamp,
-          alt: pos.coords.altitude != null ? pos.coords.altitude : undefined,
-          speed: pos.coords.speed != null && pos.coords.speed >= 0 ? pos.coords.speed : undefined,
-        };
-        setCurrentPos(pt);
-        const last = pointsRef.current[pointsRef.current.length - 1];
-        if (last) {
-          const d = haversineMeters(last, pt);
-          if (d < 2) return;
-          distanceRef.current += d;
-          setDistance(distanceRef.current);
-          // Elevation gain
-          if (pt.alt != null && last.alt != null) {
-            const altDiff = pt.alt - last.alt;
-            if (altDiff > 2) {
-              elevationGainRef.current += altDiff;
-              setElevationGain(elevationGainRef.current);
-            }
-          }
-          lastMovementTsRef.current = Date.now();
-          // Auto-resume se estava em auto-pause
-          if (autoPausedRef.current) {
-            autoPausedRef.current = false;
-            setStatus("tracking");
-            if (!timerRef.current) {
-              timerRef.current = setInterval(() => {
-                durationRef.current += 1;
-                setDuration(durationRef.current);
-              }, 1000);
-            }
-          }
-        } else {
-          lastMovementTsRef.current = Date.now();
-        }
-        pointsRef.current = [...pointsRef.current, pt];
-        setPoints(pointsRef.current);
+          accuracy: pos.coords.accuracy ?? null,
+          altitude: pos.coords.altitude ?? null,
+          speed: pos.coords.speed != null && pos.coords.speed >= 0 ? pos.coords.speed : null,
+        });
       },
       (err) => {
         if (err.code === err.PERMISSION_DENIED) setPermissionDenied(true);
       },
       { enableHighAccuracy: true, maximumAge: 1000, timeout: 10000 },
     );
-  }, []);
+  }, [ingestSample]);
 
   const startTimer = useCallback(() => {
     timerRef.current = setInterval(() => {
@@ -263,14 +305,32 @@ export function useActivityTracker() {
           ? p.duration + Math.max(0, elapsedSinceLastSave)
           : p.duration;
 
+        // Recupera o ganho de elevação persistido. O campo é opcional em
+        // registros antigos (retrocompat) e ainda pode não existir no tipo
+        // `ActivePersisted` neste momento (adicionado pela task 3.1), por
+        // isso o acesso é defensivo, tratando ausência como 0.
+        const restoredElevationGain =
+          (p as { elevationGain?: number }).elevationGain ?? 0;
+
         pointsRef.current = p.points;
         distanceRef.current = p.distance;
         durationRef.current = restoredDuration;
+        elevationGainRef.current = restoredElevationGain;
         activityIdRef.current = p.activityId ?? null;
         activityTypeRef.current = p.activityType ?? null;
+        // Reidrata a referência de validação do último ponto persistido (só
+        // Accepted_Points), evitando salto artificial ao retomar (Req 7.4/7.5).
+        const lastPt = p.points[p.points.length - 1];
+        lastAcceptedRef.current = lastPt
+          ? { lat: lastPt.lat, lng: lastPt.lng, ts: lastPt.ts }
+          : null;
+        speedWindowRef.current = p.points.slice(-5).map((pt) => ({ lat: pt.lat, lng: pt.lng, ts: pt.ts }));
+        signalAccuraciesRef.current = [];
+        lastSampleTsRef.current = Date.now();
         setPoints(p.points);
         setDistance(p.distance);
         setDuration(restoredDuration);
+        setElevationGain(restoredElevationGain);
         setStatus("tracking");
         startWatch();
         startTimer();
@@ -320,6 +380,14 @@ export function useActivityTracker() {
     lastCheckpointDistanceRef.current = 0;
     lastMovementTsRef.current = Date.now();
     autoPausedRef.current = false;
+    setAutoPaused(false);
+    // Reset da filtragem/velocidade/sinal (spec rastreamento-preciso-gps).
+    lastAcceptedRef.current = null;
+    speedWindowRef.current = [];
+    signalAccuraciesRef.current = [];
+    lastSampleTsRef.current = Date.now();
+    setSmoothedSpeed(null);
+    setGpsSignalState("aquisitando");
     setPoints([]);
     setDistance(0);
     setDuration(0);
@@ -337,11 +405,17 @@ export function useActivityTracker() {
   const pause = useCallback(() => {
     stopWatch();
     stopTimer();
+    // Ação manual tem precedência sobre o auto-pause (Requirement 3.4/3.5).
+    autoPausedRef.current = false;
+    setAutoPaused(false);
     setStatus("paused");
     persist("paused");
   }, [persist]);
 
   const resume = useCallback(() => {
+    // Ação manual tem precedência sobre o auto-pause (Requirement 3.5).
+    autoPausedRef.current = false;
+    setAutoPaused(false);
     setStatus("tracking");
     startWatch();
     startTimer();
@@ -350,14 +424,22 @@ export function useActivityTracker() {
   const discard = useCallback(() => {
     stopWatch();
     stopTimer();
+    // Ação manual tem precedência sobre o auto-pause (Requirement 3.5).
+    autoPausedRef.current = false;
+    setAutoPaused(false);
     pointsRef.current = [];
     distanceRef.current = 0;
     durationRef.current = 0;
     elevationGainRef.current = 0;
+    lastAcceptedRef.current = null;
+    speedWindowRef.current = [];
+    signalAccuraciesRef.current = [];
     setPoints([]);
     setDistance(0);
     setDuration(0);
     setElevationGain(0);
+    setSmoothedSpeed(null);
+    setGpsSignalState("aquisitando");
     setStatus("idle");
     setHasOrphan(false);
     setOrphanUnrecoverable(false);
@@ -383,6 +465,9 @@ export function useActivityTracker() {
   const finalize = useCallback(() => {
     stopWatch();
     stopTimer();
+    // Ação manual tem precedência sobre o auto-pause (Requirement 3.5).
+    autoPausedRef.current = false;
+    setAutoPaused(false);
     setStatus("saving");
     const route: GeoJSON.LineString | null =
       pointsRef.current.length >= 2
@@ -396,6 +481,7 @@ export function useActivityTracker() {
       distance: distanceRef.current,
       duration: durationRef.current,
       points: pointsRef.current,
+      elevationGain: elevationGainRef.current,
     };
   }, []);
 
@@ -404,10 +490,15 @@ export function useActivityTracker() {
     distanceRef.current = 0;
     durationRef.current = 0;
     elevationGainRef.current = 0;
+    lastAcceptedRef.current = null;
+    speedWindowRef.current = [];
+    signalAccuraciesRef.current = [];
     setPoints([]);
     setDistance(0);
     setDuration(0);
     setElevationGain(0);
+    setSmoothedSpeed(null);
+    setGpsSignalState("aquisitando");
     setStatus("idle");
     void clearActive();
   }, []);
@@ -443,6 +534,7 @@ export function useActivityTracker() {
       const sinceLastMove = Date.now() - lastMovementTsRef.current;
       if (sinceLastMove >= AUTO_PAUSE_THRESHOLD_MS && !autoPausedRef.current) {
         autoPausedRef.current = true;
+        setAutoPaused(true);
         setStatus("paused");
         // Para o timer mas NÃO o GPS — continua escutando pontos
         if (timerRef.current) {
@@ -455,6 +547,35 @@ export function useActivityTracker() {
     return () => clearInterval(interval);
   }, [status, persist]);
 
+  // Recálculo de Smoothed_Speed e GPS_Signal_State a cada 1s (spec
+  // rastreamento-preciso-gps, Req 4 e 6). Evita re-render por ponto e aplica
+  // as janelas de validade (SPEED_STALE_MS / NO_SIGNAL_TIMEOUT_MS).
+  useEffect(() => {
+    if (status === "idle" || status === "saving") {
+      setSmoothedSpeed(null);
+      return;
+    }
+    const interval = setInterval(() => {
+      const now = Date.now();
+      // Durante pausa (manual ou auto), exibe velocidade zero (Req 4.4/4.5).
+      if (status === "paused" || autoPausedRef.current) {
+        setSmoothedSpeed(0);
+      } else {
+        setSmoothedSpeed(computeSmoothedSpeed(speedWindowRef.current, now));
+      }
+      const profile = getProfile(activityTypeRef.current as ActivityType | null);
+      setGpsSignalState(
+        deriveGpsSignal({
+          recentAccuracies: signalAccuraciesRef.current,
+          msSinceLastSample: now - lastSampleTsRef.current,
+          hasFirstAcceptedPoint: lastAcceptedRef.current != null,
+          maxAccuracyMeters: profile.maxAccuracyMeters,
+        }),
+      );
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [status]);
+
   useEffect(() => () => {
     stopWatch();
     stopTimer();
@@ -466,6 +587,9 @@ export function useActivityTracker() {
     distanceMeters: distance,
     durationSeconds: duration,
     elevationGainMeters: elevationGain,
+    autoPaused,
+    smoothedSpeedMps: smoothedSpeed,
+    gpsSignalState,
     currentPos,
     permissionDenied,
     revokedDuringTracking,

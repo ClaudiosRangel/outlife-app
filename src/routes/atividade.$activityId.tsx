@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { lazy, Suspense, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Clock, Route as RouteIcon, Calendar, Share2, Loader2 } from "lucide-react";
+import { ArrowLeft, Clock, Route as RouteIcon, Calendar, Share2, Loader2, Mountain } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { fetchActivityById } from "@/lib/api";
@@ -18,7 +18,7 @@ export const Route = createFileRoute("/atividade/$activityId")({
   component: ActivityDetailPage,
   head: ({ params }) => ({
     meta: [
-      { title: "Atividade — Outlife" },
+      { title: "Atividade — OutVitar" },
       { name: "description", content: "Detalhes da atividade registrada." },
       { name: "robots", content: "noindex" },
     ],
@@ -68,6 +68,16 @@ function ActivityDetailPage() {
     durationSeconds: activity?.duration_seconds ?? 0,
   });
 
+  // Requirement 1.2/1.3 (Property P1): o rótulo de Elevation_Gain é sempre
+  // "—" OU "<inteiro>m". Para null, <= 0, NaN, Infinity ou não-finitos,
+  // exibe "—" (nunca NaN nem "0m" derivado de ausência) — mesmo padrão de
+  // fallback "—" já usado nos cards de velocidade/ritmo.
+  const elev = activity?.elevation_gain;
+  const elevLabel =
+    typeof elev === "number" && Number.isFinite(elev) && elev > 0
+      ? `${Math.round(elev)}m`
+      : "—";
+
   const [generatingBanner, setGeneratingBanner] = useState(false);
 
   // Requirement 7.1/7.2/7.4/7.5/7.7: gera o Share_Banner_Image (mapa +
@@ -92,7 +102,7 @@ function ActivityDetailPage() {
         file: blob,
         fileName: "outlife-atividade.webp",
         title: t("activity.shareBannerTitle"),
-        text: `Confira minha atividade no OutLife! ${deepLink}`,
+        text: `Confira minha atividade no OutVitar! ${deepLink}`,
       });
     } catch {
       toast.error(t("activity.shareBannerError"));
@@ -172,6 +182,17 @@ function ActivityDetailPage() {
             </div>
             <div className="mt-1 font-display text-lg font-semibold text-primary tabular-nums">
               {finalMetrics.averagePaceLabel ?? "—"}
+            </div>
+          </div>
+          {/* Requirement 1.2/1.3: card de Elevação (Elevation_Gain) — exibe
+              "<inteiro>m" quando > 0 e "—" quando ausente/zero, nunca NaN. */}
+          <div className="col-span-2 rounded-2xl bg-card p-3 shadow-card text-center">
+            <Mountain size={16} className="mx-auto text-primary" />
+            <div className="mt-1 text-[11px] uppercase tracking-widest text-muted-foreground">
+              {t("activity.metrics.elevation")}
+            </div>
+            <div className="mt-1 font-display text-lg font-semibold text-primary tabular-nums">
+              {elevLabel}
             </div>
           </div>
         </div>

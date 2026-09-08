@@ -33,9 +33,9 @@ export const Route = createFileRoute("/cadastro")({
   component: Cadastro,
   head: () => ({
     meta: [
-      { title: "Criar conta — Outlife" },
-      { name: "description", content: "Cadastre-se gratuitamente como aventureiro ou parceiro no Outlife." },
-      { property: "og:title", content: "Criar conta — Outlife" },
+      { title: "Criar conta — OutVitar" },
+      { name: "description", content: "Cadastre-se gratuitamente como aventureiro ou parceiro no OutVitar." },
+      { property: "og:title", content: "Criar conta — OutVitar" },
       { property: "og:url", content: "/cadastro" },
       { name: "robots", content: "noindex" },
     ],

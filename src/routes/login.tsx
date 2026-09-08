@@ -36,9 +36,9 @@ export const Route = createFileRoute("/login")({
   component: Login,
   head: () => ({
     meta: [
-      { title: "Entrar — Outlife" },
-      { name: "description", content: "Acesse sua conta Outlife para continuar suas aventuras." },
-      { property: "og:title", content: "Entrar — Outlife" },
+      { title: "Entrar — OutVitar" },
+      { name: "description", content: "Acesse sua conta OutVitar para continuar suas aventuras." },
+      { property: "og:title", content: "Entrar — OutVitar" },
       { property: "og:url", content: "/login" },
       { name: "robots", content: "noindex" },
     ],

@@ -7,8 +7,13 @@ import type { CapacitorConfig } from "@capacitor/cli";
  * app-hibrido-nativo).
  */
 const config: CapacitorConfig = {
+  // appId técnico MANTIDO como app.outlife.mobile por decisão do usuário:
+  // trocá-lo exigiria re-registrar o app no Firebase (google-services.json),
+  // ajustar deep links (assetlinks.json) e demais configs de backend. O
+  // rebranding OutVitar é só de nome exibido no front. appName é o rótulo
+  // sob o ícone — pode ser "OutVitar" sem quebrar nada.
   appId: "app.outlife.mobile",
-  appName: "Outlife",
+  appName: "OutVitar",
   webDir: "dist/native-spa",
   server: {
     androidScheme: "https",

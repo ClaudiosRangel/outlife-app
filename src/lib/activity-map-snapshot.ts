@@ -41,6 +41,19 @@ export interface GenerateActivityMapSnapshotOptions {
   paddingPx?: number;
   /** Qualidade de compressão WebP (0 a 1) passada a `canvas.toBlob`. Padrão: 0.85. */
   quality?: number;
+  /**
+   * Foto opcional da atividade (o mesmo `File` anexado no fluxo de
+   * finalização). Quando presente, a imagem gerada fica dividida "lado a
+   * lado": a FOTO ocupa a metade esquerda (60% da largura) e o MAPA ocupa a
+   * metade direita (40%). Quando ausente/`null`, o mapa ocupa 100% da
+   * largura (comportamento original preservado).
+   */
+  photo?: Blob | null;
+  /**
+   * Fração da largura total (0 a 1) reservada à foto quando `photo` está
+   * presente. Padrão: 0.6 (foto 60% / mapa 40%).
+   */
+  photoFraction?: number;
 }
 
 /** Template de URL dos tiles OSM, idêntico ao usado em `ActivityMap.tsx`. */
@@ -69,6 +82,9 @@ const DEFAULT_HEIGHT = 400;
 const DEFAULT_PADDING_PX = 24;
 const DEFAULT_QUALITY = 0.85;
 
+/** Fração da largura reservada à foto na composição lado a lado (60%). */
+const DEFAULT_PHOTO_FRACTION = 0.6;
+
 /**
  * Gera o Activity_Map_Snapshot de um trajeto: um `<canvas>` offscreen com
  * os tiles OSM correspondentes à área do trajeto e a polyline do percurso
@@ -91,24 +107,34 @@ export async function generateActivityMapSnapshot(
   const height = options.height ?? DEFAULT_HEIGHT;
   const paddingPx = options.paddingPx ?? DEFAULT_PADDING_PX;
   const quality = options.quality ?? DEFAULT_QUALITY;
+  const photo = options.photo ?? null;
+  const photoFraction = options.photoFraction ?? DEFAULT_PHOTO_FRACTION;
+
+  // Quando há foto, a composição fica EMPILHADA (cima/baixo): foto no topo
+  // (photoFraction da altura, padrão 60%) e mapa embaixo (o restante,
+  // padrão 40%). Sem foto, o mapa ocupa toda a altura.
+  const photoHeight = photo ? Math.round(height * photoFraction) : 0;
+  const mapY = photoHeight;
+  const mapHeight = height - photoHeight;
 
   const bounds = computeBounds(points);
 
-  // Área útil disponível para o trajeto em si, descontada a margem
-  // interna — equivalente ao `padding` do `fitBounds` do Leaflet.
+  // Área útil disponível para o trajeto, descontada a margem interna —
+  // equivalente ao `padding` do `fitBounds` do Leaflet. Usa a altura da
+  // REGIÃO do mapa (que pode ser só 40% quando há foto).
   const usableWidth = Math.max(1, width - paddingPx * 2);
-  const usableHeight = Math.max(1, height - paddingPx * 2);
+  const usableHeight = Math.max(1, mapHeight - paddingPx * 2);
   const zoom = computeFitZoom(bounds, usableWidth, usableHeight);
 
   // Centro geográfico do bounding box, projetado para pixels no zoom
   // escolhido, define o canto superior-esquerdo (origem) do viewport do
-  // canvas — o mesmo efeito visual de `map.fitBounds` centralizando o
-  // trajeto na área visível.
+  // mapa — o mesmo efeito visual de `map.fitBounds` centralizando o trajeto
+  // na região do mapa (width x mapHeight).
   const centerLat = (bounds.minLat + bounds.maxLat) / 2;
   const centerLng = (bounds.minLng + bounds.maxLng) / 2;
   const centerPixel = project(centerLat, centerLng, zoom);
   const originX = centerPixel.x - width / 2;
-  const originY = centerPixel.y - height / 2;
+  const originY = centerPixel.y - mapHeight / 2;
 
   const canvas = document.createElement("canvas");
   canvas.width = width;
@@ -118,8 +144,26 @@ export async function generateActivityMapSnapshot(
     throw new Error("Contexto 2D do canvas indisponível para gerar o Activity_Map_Snapshot.");
   }
 
-  await drawOsmTiles(ctx, originX, originY, width, height, zoom);
-  drawTrackPolyline(ctx, points, originX, originY, zoom);
+  // Desenha os tiles + polyline recortados na REGIÃO do mapa (a partir de
+  // mapY, embaixo da foto). Um clip garante que nada do mapa invada a foto.
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(0, mapY, width, mapHeight);
+  ctx.clip();
+  await drawOsmTiles(ctx, originX, originY, width, mapHeight, zoom, 0, mapY);
+  drawTrackPolyline(ctx, points, originX, originY, zoom, 0, mapY);
+  ctx.restore();
+
+  // Foto no topo (cover, sem distorcer). Isolada em try/catch: se a foto
+  // não carregar, mantém a composição com o mapa desenhado — o fallback de
+  // "sem snapshot" continua a cargo do chamador.
+  if (photo) {
+    try {
+      await drawPhotoCover(ctx, photo, 0, 0, width, photoHeight);
+    } catch {
+      // Foto indisponível: segue com o mapa já desenhado na região dele.
+    }
+  }
 
   return canvasToWebpBlob(canvas, quality);
 }
@@ -194,6 +238,8 @@ async function drawOsmTiles(
   width: number,
   height: number,
   zoom: number,
+  offsetX = 0,
+  offsetY = 0,
 ): Promise<void> {
   const tileCountAtZoom = 2 ** zoom;
   const firstTileX = Math.floor(originX / TILE_SIZE);
@@ -213,8 +259,11 @@ async function drawOsmTiles(
       // trajetos próximos ao antimeridiano.
       const wrappedTileX = ((tileX % tileCountAtZoom) + tileCountAtZoom) % tileCountAtZoom;
 
-      const drawX = tileX * TILE_SIZE - originX;
-      const drawY = tileY * TILE_SIZE - originY;
+      // `offsetX`/`offsetY` deslocam o desenho para a região do mapa dentro
+      // do canvas (0/0 quando o mapa ocupa tudo; offsetY = altura da foto na
+      // composição empilhada).
+      const drawX = tileX * TILE_SIZE - originX + offsetX;
+      const drawY = tileY * TILE_SIZE - originY + offsetY;
 
       tileLoads.push(
         loadTileImage(zoom, wrappedTileX, tileY).then((image) => {
@@ -250,6 +299,8 @@ function drawTrackPolyline(
   originX: number,
   originY: number,
   zoom: number,
+  offsetX = 0,
+  offsetY = 0,
 ): void {
   ctx.save();
   ctx.globalAlpha = POLYLINE_OPACITY;
@@ -261,8 +312,8 @@ function drawTrackPolyline(
   ctx.beginPath();
   points.forEach((point, index) => {
     const pixel = project(point.lat, point.lng, zoom);
-    const x = pixel.x - originX;
-    const y = pixel.y - originY;
+    const x = pixel.x - originX + offsetX;
+    const y = pixel.y - originY + offsetY;
     if (index === 0) {
       ctx.moveTo(x, y);
     } else {
@@ -272,6 +323,53 @@ function drawTrackPolyline(
   ctx.stroke();
 
   ctx.restore();
+}
+
+/**
+ * Desenha uma foto (Blob) cobrindo o retângulo `[dx, dy, dw, dh]` do canvas
+ * com semântica `object-fit: cover`: preenche toda a região recortando o
+ * excedente, sem distorcer a proporção da foto. Carrega via object URL
+ * local (a foto vem do próprio dispositivo, então não há problema de CORS/
+ * canvas "tainted"). O object URL é revogado ao final.
+ */
+async function drawPhotoCover(
+  ctx: CanvasRenderingContext2D,
+  photo: Blob,
+  dx: number,
+  dy: number,
+  dw: number,
+  dh: number,
+): Promise<void> {
+  const objectUrl = URL.createObjectURL(photo);
+  try {
+    const image = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = () => reject(new Error("Falha ao carregar a foto da atividade para composição."));
+      img.src = objectUrl;
+    });
+
+    const srcW = image.naturalWidth;
+    const srcH = image.naturalHeight;
+    if (srcW <= 0 || srcH <= 0) return;
+
+    // cover: escala pelo maior fator para preencher a região e recorta o
+    // excedente, centralizando a área visível.
+    const scale = Math.max(dw / srcW, dh / srcH);
+    const cropW = dw / scale;
+    const cropH = dh / scale;
+    const sx = (srcW - cropW) / 2;
+    const sy = (srcH - cropH) / 2;
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(dx, dy, dw, dh);
+    ctx.clip();
+    ctx.drawImage(image, sx, sy, cropW, cropH, dx, dy, dw, dh);
+    ctx.restore();
+  } finally {
+    URL.revokeObjectURL(objectUrl);
+  }
 }
 
 /** Exporta o canvas como WebP via `canvas.toBlob`, envolvido numa Promise. */
