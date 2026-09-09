@@ -6,9 +6,10 @@ import { Bell, MapPin, Search, Sparkles, ArrowRight, Calendar, Users } from "luc
 import { BrandLogo } from "@/components/BrandLogo";
 import hero from "@/assets/hero-mountain.jpg";
 import seloCadastur from "@/assets/selo-cadastur.jpg";
+import avatarFallback from "@/assets/avatar-rafael.jpg";
 import { StatusBar } from "@/components/StatusBar";
 import { Stars } from "@/components/Stars";
-import { fetchDestinations, fetchMyProfile, fetchPartners, fetchUnreadNotificationCount, type Destination } from "@/lib/api";
+import { fetchDestinations, fetchMyProfile, fetchPartners, fetchUnreadNotificationCount, resolveAsset, type Destination } from "@/lib/api";
 import { useAuth } from "@/hooks/use-auth";
 import { playNotificationSound } from "@/lib/notification-sound";
 import { supabase } from "@/integrations/supabase/client";
@@ -122,13 +123,27 @@ function Home() {
         <div className="absolute inset-0 bg-gradient-hero" />
         <StatusBar light />
         <div className="relative z-10 flex items-center justify-between px-5 pt-2">
-          <div className="text-white">
-            <BrandLogo size={30} className="text-white" onImage />
-          </div>
+          {/* Logo transparente maior (a arte já contém o wordmark "OutVitar",
+              então não repetimos o texto ao lado). */}
+          <BrandLogo size={46} withWordmark={false} onImage />
           <div className="flex items-center gap-2">
             <Link to="/busca" className="grid h-10 w-10 place-items-center rounded-full bg-white/15 text-white backdrop-blur-md">
               <Search size={18} />
             </Link>
+            {/* Avatar do usuário logado no topo (atalho para o perfil). */}
+            {user && (
+              <Link
+                to="/perfil"
+                aria-label={t("nav.you", "Você")}
+                className="grid h-10 w-10 place-items-center overflow-hidden rounded-full bg-white/15 ring-2 ring-white/40 backdrop-blur-md"
+              >
+                <img
+                  src={resolveAsset(profile?.avatar_url, avatarFallback)}
+                  alt=""
+                  className="h-full w-full object-cover"
+                />
+              </Link>
+            )}
             <Link
               to="/notificacoes"
               aria-label={
@@ -216,7 +231,7 @@ function Home() {
       <section className="mt-7">
         <div className="flex items-center justify-between px-5">
           <h2 className="font-display text-xl font-semibold">{t("home.popularDestinations")}</h2>
-          <Link to="/explorar" className="text-xs font-medium text-primary">{t("common.seeAll")}</Link>
+          <Link to="/explorar" className="rounded-full bg-secondary px-3 py-1 text-xs font-medium text-primary">{t("common.seeAll")}</Link>
         </div>
         <div className="mt-3 flex gap-3 overflow-x-auto scrollbar-hide px-5 pb-2">
           {filteredDestinations.length === 0 ? (
@@ -252,7 +267,7 @@ function Home() {
       <section className="mt-7 px-5">
         <div className="flex items-center justify-between">
           <h2 className="font-display text-xl font-semibold">{t("home.featuredPartners")}</h2>
-          <Link to="/mercado" className="text-xs font-medium text-primary">{t("home.market")}</Link>
+          <Link to="/mercado" className="rounded-full bg-secondary px-3 py-1 text-xs font-medium text-primary">{t("home.market")}</Link>
         </div>
         <PartnersCarousel partners={partners} />
       </section>
@@ -367,7 +382,7 @@ function EventosHomeSection() {
     <section className="mt-5 px-5">
       <div className="flex items-center justify-between mb-3">
         <h2 className="font-display text-lg font-semibold">Próximos Eventos</h2>
-        <Link to="/eventos" className="text-xs font-medium text-primary">Ver todos</Link>
+        <Link to="/eventos" className="rounded-full bg-secondary px-3 py-1 text-xs font-medium text-primary">Ver todos</Link>
       </div>
       <div className="grid grid-cols-2 gap-3">
         {events.map((event: any) => (
