@@ -967,9 +967,13 @@ export async function fetchUserTrails(_userId?: string): Promise<UserTrail[]> {
 export async function saveDestination(destinationId: string): Promise<void> {
   const { data: userData } = await supabase.auth.getUser();
   if (!userData.user) throw new Error("Não autenticado");
+  // upsert idempotente (mesma lógica de favoritePartner).
   const { error } = await supabase
     .from("saved_destinations" as never)
-    .insert({ user_id: userData.user.id, destination_id: destinationId } as never);
+    .upsert(
+      { user_id: userData.user.id, destination_id: destinationId } as never,
+      { onConflict: "user_id,destination_id", ignoreDuplicates: true } as never,
+    );
   if (error) throw error;
 }
 
@@ -1006,9 +1010,15 @@ export async function fetchSavedDestinations(_userId?: string): Promise<SavedDes
 export async function favoritePartner(partnerId: string): Promise<void> {
   const { data: userData } = await supabase.auth.getUser();
   if (!userData.user) throw new Error("Não autenticado");
+  // upsert (idempotente): se já existir a linha (UNIQUE user_id+partner_id),
+  // não falha — evita erro quando o estado do botão está dessincronizado ou
+  // há uma tentativa duplicada. `ignoreDuplicates` faz um no-op no conflito.
   const { error } = await supabase
     .from("favorite_partners" as never)
-    .insert({ user_id: userData.user.id, partner_id: partnerId } as never);
+    .upsert(
+      { user_id: userData.user.id, partner_id: partnerId } as never,
+      { onConflict: "user_id,partner_id", ignoreDuplicates: true } as never,
+    );
   if (error) throw error;
 }
 
