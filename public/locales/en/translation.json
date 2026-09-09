@@ -501,6 +501,11 @@
       "instagram": "Instagram clicks"
     },
     "last7days": "Last 7 days",
+    "favoritesLabel": "people favorited your profile",
+    "leadsTitle": "Interests / Bookings",
+    "leadsEmpty": "No one has shown interest yet.",
+    "reviewsTitle": "Reviews received",
+    "reviewsEmpty": "You haven't received reviews yet.",
     "edit": "Edit profile",
     "gallery": "Gallery",
     "editTitle": "Edit profile",

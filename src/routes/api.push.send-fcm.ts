@@ -70,6 +70,9 @@ function getNotificationContent(type: string): { title: string; body: string } {
   switch (type) {
     case "friend_request": return { title: "OutVitar", body: "Você recebeu uma solicitação de amizade!" };
     case "post_like": return { title: "OutVitar", body: "Alguém curtiu sua publicação!" };
+    case "activity_completed": return { title: "OutVitar", body: "Um amigo concluiu uma atividade!" };
+    case "partner_lead": return { title: "OutVitar", body: "Alguém demonstrou interesse no seu perfil!" };
+    case "review_received": return { title: "OutVitar", body: "Você recebeu uma nova avaliação!" };
     default: return { title: "OutVitar", body: "Você tem uma nova notificação" };
   }
 }

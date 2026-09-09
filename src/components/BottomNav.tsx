@@ -114,33 +114,40 @@ export function BottomNav() {
   };
 
   return (
-    <nav className="sticky bottom-0 left-0 right-0 z-40 border-t border-border bg-card/95 backdrop-blur-xl pb-[env(safe-area-inset-bottom)]">
-      <ul className="flex items-end px-2 pt-2 pb-2">
-        {leftTabs.map(renderTab)}
+    <nav className="sticky bottom-0 left-0 right-0 z-40 pb-[env(safe-area-inset-bottom)]">
+      {/* Recorte arredondado (notch) acima do Gravar: um círculo com o MESMO
+          fundo da barra, centralizado no topo, cria a concavidade que "abraça"
+          o botão — efeito FAB embutido do mockup aprovado. */}
+      <div className="pointer-events-none absolute left-1/2 top-0 z-0 h-9 w-[76px] -translate-x-1/2 -translate-y-1/2 rounded-full border-t border-border bg-card/95 backdrop-blur-xl" />
 
-        {/* Botão central Gravar — destacado (círculo laranja/sol da marca). */}
-        <li className="flex-1">
-          <Link
-            to={recordTo}
-            aria-label={t("nav.record", "Gravar")}
-            className="flex flex-col items-center gap-1 transition-base active:scale-90"
-          >
-            <span
-              className={`relative -mt-6 grid h-14 w-14 place-items-center rounded-full text-white shadow-float ring-4 ring-card transition-base ${
-                activeKey === "record" ? "bg-[var(--sun,#E8821E)]" : "bg-[var(--sun,#E8821E)]"
-              }`}
+      <div className="relative border-t border-border bg-card/95 backdrop-blur-xl">
+        <ul className="flex items-end px-2 pt-2 pb-2">
+          {leftTabs.map(renderTab)}
+
+          {/* Botão central Gravar — destacado (círculo laranja/sol), assentado
+              dentro do recorte. O anel usa o fundo da barra para "fundir" com o
+              notch. */}
+          <li className="flex-1">
+            <Link
+              to={recordTo}
+              aria-label={t("nav.record", "Gravar")}
+              className="flex flex-col items-center gap-1 transition-base active:scale-90"
             >
-              <CircleDot size={26} strokeWidth={2.2} />
-              {hasActiveTracking && (
-                <span className="absolute -top-0.5 -right-0.5 h-3.5 w-3.5 rounded-full bg-green-500 ring-2 ring-card animate-pulse" />
-              )}
-            </span>
-            <span className="text-[10px] font-semibold text-foreground">{t("nav.record", "Gravar")}</span>
-          </Link>
-        </li>
+              <span
+                className="relative -mt-7 grid h-14 w-14 place-items-center rounded-full bg-[var(--sun,#E8821E)] text-white shadow-float ring-[5px] ring-card transition-base"
+              >
+                <CircleDot size={26} strokeWidth={2.2} />
+                {hasActiveTracking && (
+                  <span className="absolute -top-0.5 -right-0.5 h-3.5 w-3.5 rounded-full bg-green-500 ring-2 ring-card animate-pulse" />
+                )}
+              </span>
+              <span className="text-[10px] font-semibold text-foreground">{t("nav.record", "Gravar")}</span>
+            </Link>
+          </li>
 
-        {rightTabs.map(renderTab)}
-      </ul>
+          {rightTabs.map(renderTab)}
+        </ul>
+      </div>
     </nav>
   );
 }

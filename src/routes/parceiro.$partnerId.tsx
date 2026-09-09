@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import { StatusBar } from "@/components/StatusBar";
 import { Stars } from "@/components/Stars";
-import { fetchPartnerById, fetchServicesByPartner, fetchReviewsByPartner, fetchFavoritePartners, submitReview, trackPartnerProfileView, trackPartnerContactClick } from "@/lib/api";
+import { fetchPartnerById, fetchServicesByPartner, fetchReviewsByPartner, fetchFavoritePartners, submitReview, trackPartnerProfileView, trackPartnerContactClick, createPartnerLead } from "@/lib/api";
 import { mapRateLimitErrorToMessage } from "@/lib/rate-limit-error";
 import { shareContent } from "@/lib/share";
 import { Badge } from "@/components/ui/badge";
@@ -100,23 +100,24 @@ function PartnerDetail() {
 
   const handleContactClick = () => {
     if (!partnerId) return;
-    // Registra o interesse (métrica do parceiro) e dá feedback claro ao
-    // usuário. O contato direto (WhatsApp/chat) depende de o parceiro expor um
-    // canal público — hoje o telefone vive em profile_contacts (owner-only),
-    // então confirmamos o interesse em vez de deixar o botão "sem ação".
-    trackPartnerContactClick(partnerId)
+    if (!user) {
+      toast.error(t("collection.loginRequired"));
+      return;
+    }
+    // Registra um LEAD real (o parceiro vê no painel quem se interessou) e
+    // notifica o parceiro (push). Também incrementa a métrica agregada.
+    createPartnerLead(partnerId)
       .then(() => toast.success(t("partner.bookRequested")))
       .catch((err: unknown) => {
         const rateLimitMessage = mapRateLimitErrorToMessage(err);
-        if (rateLimitMessage) {
-          toast.error(rateLimitMessage);
-        } else {
-          // Mesmo se a métrica falhar, o usuário recebe a confirmação do
-          // interesse — a métrica é secundária.
-          toast.success(t("partner.bookRequested"));
+        if (rateLimitMessage) toast.error(rateLimitMessage);
+        else {
+          toast.error(t("collection.toggleError"));
           console.error(err);
         }
       });
+    // Métrica agregada (best-effort, não bloqueia o feedback).
+    trackPartnerContactClick(partnerId).catch(() => {});
   };
 
   if (isLoading) {

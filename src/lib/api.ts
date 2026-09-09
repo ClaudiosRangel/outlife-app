@@ -1163,6 +1163,50 @@ export async function trackPartnerContactClick(partnerId: string): Promise<void>
   if (error) throw error;
 }
 
+// ============ Painel do parceiro: leads/reservas, favoritos ============
+
+/** Registra um interesse (lead) do usuário logado no parceiro + notifica o
+ *  parceiro (push). Chamado ao tocar em "Reservar". */
+export async function createPartnerLead(partnerId: string, message?: string): Promise<void> {
+  const { error } = await supabase.rpc("create_partner_lead" as never, {
+    _partner_id: partnerId,
+    _message: message ?? null,
+  } as never);
+  if (error) throw error;
+}
+
+export type PartnerLead = {
+  id: string;
+  userId: string;
+  fullName: string | null;
+  avatarUrl: string | null;
+  message: string | null;
+  createdAt: string;
+};
+
+/** Lista os leads/reservas recebidos pelo parceiro logado (para o painel). */
+export async function fetchPartnerLeads(limit = 50): Promise<PartnerLead[]> {
+  const { data, error } = await supabase.rpc("fetch_partner_leads" as never, { _limit: limit } as never);
+  if (error) throw error;
+  return ((data ?? []) as unknown as Array<{
+    id: string; user_id: string; full_name: string | null; avatar_url: string | null; message: string | null; created_at: string;
+  }>).map((r) => ({
+    id: r.id,
+    userId: r.user_id,
+    fullName: r.full_name,
+    avatarUrl: r.avatar_url,
+    message: r.message,
+    createdAt: r.created_at,
+  }));
+}
+
+/** Conta quantas pessoas favoritaram o parceiro logado (sem expor quem). */
+export async function countMyPartnerFavorites(): Promise<number> {
+  const { data, error } = await supabase.rpc("count_my_partner_favorites" as never);
+  if (error) throw error;
+  return Number(data ?? 0);
+}
+
 // Agrega `partner_metric_daily` dos últimos 7 dias (hoje e os 6 anteriores)
 // para o gráfico real do painel do parceiro (Requirement 12.2), substituindo
 // o array fixo anterior. `v` reflete `views + contact_clicks` do dia — o

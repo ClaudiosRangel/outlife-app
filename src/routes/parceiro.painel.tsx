@@ -13,7 +13,12 @@ import {
   Plus,
   Trash2,
   Briefcase,
+  Heart,
+  Star,
+  CalendarClock,
 } from "lucide-react";
+import avatarFallback from "@/assets/avatar-rafael.jpg";
+import i18n from "@/lib/i18n";
 import { useTranslation } from "react-i18next";
 import { StatusBar } from "@/components/StatusBar";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -44,6 +49,9 @@ import {
   createService,
   deleteService,
   fetchDestinations,
+  fetchPartnerLeads,
+  countMyPartnerFavorites,
+  fetchReviewsByPartner,
 } from "@/lib/api";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -118,6 +126,25 @@ function PartnerPanel() {
   const { data: destinations = [] } = useQuery({
     queryKey: ["destinations-list"],
     queryFn: fetchDestinations,
+    enabled: !!user,
+  });
+
+  // Interações recebidas (painel do parceiro): leads/reservas, contador de
+  // favoritos e avaliações recebidas.
+  const { data: leads = [], isLoading: leadsLoading } = useQuery({
+    queryKey: ["partner-leads", user?.id],
+    queryFn: () => fetchPartnerLeads(50),
+    enabled: !!user,
+    refetchInterval: 30_000,
+  });
+  const { data: favoritesCount = 0 } = useQuery({
+    queryKey: ["partner-favorites-count", user?.id],
+    queryFn: countMyPartnerFavorites,
+    enabled: !!user,
+  });
+  const { data: receivedReviews = [], isLoading: reviewsLoading } = useQuery({
+    queryKey: ["partner-received-reviews", user?.id],
+    queryFn: () => fetchReviewsByPartner(user!.id),
     enabled: !!user,
   });
 
@@ -373,6 +400,96 @@ function PartnerPanel() {
           );
         })}
       </div>
+
+      {/* Favoritos (só número, sem expor quem) + resumo de interações */}
+      <div className="mt-4 px-5">
+        <div className="flex items-center gap-3 rounded-2xl bg-card p-4 shadow-card">
+          <span className="grid h-11 w-11 place-items-center rounded-full bg-red-500/10 text-red-500">
+            <Heart size={20} fill="currentColor" />
+          </span>
+          <div className="flex-1">
+            <div className="font-display text-2xl font-semibold tabular-nums">{favoritesCount}</div>
+            <div className="text-[11px] text-muted-foreground">{t("panel.favoritesLabel")}</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Reservas / interesses recebidos (leads) */}
+      <section className="mt-6 px-5">
+        <div className="flex items-center gap-2">
+          <CalendarClock size={18} className="text-primary" />
+          <h2 className="font-display text-lg font-semibold">{t("panel.leadsTitle")}</h2>
+        </div>
+        <div className="mt-3 space-y-2">
+          {leadsLoading ? (
+            <Skeleton className="h-16 w-full rounded-2xl" />
+          ) : leads.length === 0 ? (
+            <div className="rounded-2xl border-2 border-dashed border-border py-6 text-center text-xs text-muted-foreground">
+              {t("panel.leadsEmpty")}
+            </div>
+          ) : (
+            leads.map((lead) => (
+              <div key={lead.id} className="flex items-center gap-3 rounded-2xl bg-card p-3 shadow-card">
+                <img
+                  src={resolveAsset(lead.avatarUrl, avatarFallback)}
+                  alt=""
+                  className="h-10 w-10 rounded-full object-cover"
+                />
+                <div className="min-w-0 flex-1">
+                  <div className="truncate text-sm font-semibold">{lead.fullName ?? "Aventureiro"}</div>
+                  <div className="text-[11px] text-muted-foreground">
+                    {new Date(lead.createdAt).toLocaleDateString(i18n.language)} ·{" "}
+                    {new Date(lead.createdAt).toLocaleTimeString(i18n.language, { hour: "2-digit", minute: "2-digit" })}
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </section>
+
+      {/* Avaliações recebidas */}
+      <section className="mt-6 px-5">
+        <div className="flex items-center gap-2">
+          <Star size={18} className="text-[var(--sun)]" />
+          <h2 className="font-display text-lg font-semibold">{t("panel.reviewsTitle")}</h2>
+        </div>
+        <div className="mt-3 space-y-2">
+          {reviewsLoading ? (
+            <Skeleton className="h-16 w-full rounded-2xl" />
+          ) : receivedReviews.length === 0 ? (
+            <div className="rounded-2xl border-2 border-dashed border-border py-6 text-center text-xs text-muted-foreground">
+              {t("panel.reviewsEmpty")}
+            </div>
+          ) : (
+            receivedReviews.map((r) => {
+              const name = r.author?.full_name ?? "Aventureiro";
+              return (
+                <div key={r.id} className="rounded-2xl bg-card p-4 shadow-card">
+                  <div className="flex items-center gap-3">
+                    <img
+                      src={resolveAsset(r.author?.avatar_url, avatarFallback)}
+                      alt=""
+                      className="h-9 w-9 rounded-full object-cover"
+                    />
+                    <div className="min-w-0 flex-1">
+                      <div className="truncate text-sm font-semibold">{name}</div>
+                      <div className="text-[11px] text-muted-foreground">
+                        {new Date(r.created_at).toLocaleDateString(i18n.language)}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1 rounded-full bg-[var(--sun)]/10 px-2 py-0.5">
+                      <Star size={10} className="fill-[var(--sun)] text-[var(--sun)]" />
+                      <span className="text-[11px] font-medium">{r.rating}</span>
+                    </div>
+                  </div>
+                  {r.comment && <p className="mt-2 text-sm leading-relaxed text-foreground/80">{r.comment}</p>}
+                </div>
+              );
+            })
+          )}
+        </div>
+      </section>
 
       <section className="mt-6 px-5">
         <h2 className="font-display text-lg font-semibold">{t("panel.last7days")}</h2>
