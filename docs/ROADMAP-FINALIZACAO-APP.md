@@ -5,8 +5,56 @@
 > `.kiro/steering/roadmap-outvitar.md`). **Mantenha-o atualizado** ao
 > concluir qualquer tarefa/bloco: marque status, data e resumo.
 
-**Última atualização:** 08/09/2026 (Bloco F concluído)
+**Última atualização:** 09/09/2026 (rodada de ajustes pós-teste + APK)
 **App:** OutVitar — slogan "VIVER É DIFERENTE DE ESTAR VIVO"
+
+> **⚠️ ESTADO ATUAL (ler primeiro numa nova sessão) — 09/09/2026**
+>
+> Blocos A–F concluídos. Estamos numa fase de **ajustes de UX/bugfix pós-teste
+> do APK** (usuário testando no celular real, iOS + Android). Muita coisa
+> depende de **rodar `supabase/migrations-pendentes.sql` no SQL Editor do
+> Supabase** (arquivo idempotente, consolidado; rodar INTEIRO). O usuário
+> aplica; eu não tenho acesso ao banco.
+>
+> **Já feito nesta rodada (commitado + APK gerado):** curtir parceiro (upsert
+> idempotente), avaliações recalculam rating/reviews_count (trigger + backfill),
+> painel do parceiro (leads/reservas + avaliações recebidas + contador de
+> favoritos), push ao parceiro (tipos partner_lead/review_received), área
+> administrativa `/admin` (hub aprovar cadastros/destinos, atalho no perfil só
+> p/ admin), badge do ícone (contagem de não-lidas no payload FCM), menu com
+> concavidade SVG no botão Gravar, logo transparente no topo, StatusBar
+> decorativa removida.
+>
+> **PENDÊNCIAS ABERTAS (o que fazer a seguir):**
+> 1. **Avaliações não aparecem no painel** — DIAGNOSTICADO: não é bug de RLS
+>    (reviews é SELECT público). O usuário avaliou o parceiro SEED "Maria
+>    Teresa Trilhas" (id 2222…), mas abriu o painel da PRÓPRIA conta (Caio) —
+>    que não recebeu avaliações. O painel está tecnicamente correto. FALTA:
+>    (a) corrigir o estado vazio que aparece como caixa cinza (mostrar texto
+>    "Você ainda não recebeu avaliações"); (b) opcional: um modo de o usuário
+>    testar (seed de review no próprio usuário, ou logar como parceiro real).
+> 2. **Logo do topo ainda pequena** — aumentar BEM, proporcional. Está em
+>    size=56 no BrandLogo (index.tsx). Subir para ~72–84. A logo é
+>    `src/assets/logo-outvitar.png` (transparente, símbolo+wordmark empilhados).
+> 3. **Badge de notificação não aparece no ícone nem na central do celular** —
+>    o payload FCM já manda notification_count/aps.badge (item 12 do
+>    migrations-pendentes), MAS: (a) depende de rodar o item 12 no Supabase;
+>    (b) no iOS o badge exige permissão de badge + APNs configurado no
+>    Firebase; (c) a "central de notificações" vazia sugere que o PUSH em si
+>    não está chegando — investigar se native_push_tokens está sendo populado
+>    (registro do token no device) e se o fn_send_native_push→/api/push/send-fcm
+>    está funcionando em produção (FIREBASE_SERVICE_ACCOUNT na Vercel). Pode ser
+>    que push nunca tenha chegado no device de teste — validar a cadeia inteira.
+> 4. **Ponto adicional** que o usuário mencionou mas ainda não descreveu.
+> 5. Dashboard Supabase: templates de e-mail OutVitar (docs/EMAILS-SUPABASE-
+>    OUTVITAR.md) — pendente o usuário aplicar.
+>
+> **Como buildar APK:** `npm run build:native` → `npx cap sync android` →
+> `cd android && .\gradlew.bat assembleDebug`. APK em
+> `android/app/build/outputs/apk/debug/app-debug.apk`. Rotas novas (ex.: /admin)
+> exigem regenerar `routeTree.gen.ts` — o `build:native` já regenera.
+> **git:** commitar + push na `main` (repo ClaudiosRangel/outlife-app). tsc só
+> deve ter os 6 erros pré-existentes de use-local-push.ts.
 **Objetivo final:** finalizar as 14 frentes solicitadas, com confiabilidade
 de registro estilo Strava, e publicar na App Store (via Codemagic, sem Mac) e
 Play Store.
