@@ -115,27 +115,38 @@ export function BottomNav() {
 
   return (
     <nav className="sticky bottom-0 left-0 right-0 z-40 pb-[env(safe-area-inset-bottom)]">
-      {/* Recorte arredondado (notch) acima do Gravar: um círculo com o MESMO
-          fundo da barra, centralizado no topo, cria a concavidade que "abraça"
-          o botão — efeito FAB embutido do mockup aprovado. */}
-      <div className="pointer-events-none absolute left-1/2 top-0 z-0 h-9 w-[76px] -translate-x-1/2 -translate-y-1/2 rounded-full border-t border-border bg-card/95 backdrop-blur-xl" />
+      <div className="relative">
+        {/* A superfície da barra é um SVG que já vem com a CONCAVIDADE (curva
+            côncava) recortada no topo, no centro — onde o botão Gravar se
+            encaixa. Isso entalha a própria barra (sem caixinha solta e sem a
+            linha reta atravessando o botão). O SVG usa currentColor = cor do
+            card, respeitando tema claro/escuro. */}
+        <svg
+          className="absolute inset-0 h-full w-full text-card drop-shadow-[0_-2px_8px_rgba(0,0,0,0.06)]"
+          preserveAspectRatio="none"
+          viewBox="0 0 375 64"
+          aria-hidden="true"
+        >
+          {/* Barra de 0..375 de largura, 64 de altura, com um "vão" côncavo
+              centrado em x=187.5 e raio ~34. */}
+          <path
+            fill="currentColor"
+            d="M0 12 C0 5.4 5.4 0 12 0 H150 C158 0 163 10 168 15 C173 20 180 24 187.5 24 C195 24 202 20 207 15 C212 10 217 0 225 0 H363 C369.6 0 375 5.4 375 12 V64 H0 Z"
+          />
+        </svg>
 
-      <div className="relative border-t border-border bg-card/95 backdrop-blur-xl">
-        <ul className="flex items-end px-2 pt-2 pb-2">
+        <ul className="relative flex items-end px-2 pb-2 pt-3">
           {leftTabs.map(renderTab)}
 
-          {/* Botão central Gravar — destacado (círculo laranja/sol), assentado
-              dentro do recorte. O anel usa o fundo da barra para "fundir" com o
-              notch. */}
+          {/* Botão Gravar assentado DENTRO da concavidade (sobe metade para fora
+              do vão). Anel da cor do card para fundir com o recorte. */}
           <li className="flex-1">
             <Link
               to={recordTo}
               aria-label={t("nav.record", "Gravar")}
               className="flex flex-col items-center gap-1 transition-base active:scale-90"
             >
-              <span
-                className="relative -mt-7 grid h-14 w-14 place-items-center rounded-full bg-[var(--sun,#E8821E)] text-white shadow-float ring-[5px] ring-card transition-base"
-              >
+              <span className="relative -mt-8 grid h-14 w-14 place-items-center rounded-full bg-[var(--sun,#E8821E)] text-white shadow-float ring-4 ring-card transition-base">
                 <CircleDot size={26} strokeWidth={2.2} />
                 {hasActiveTracking && (
                   <span className="absolute -top-0.5 -right-0.5 h-3.5 w-3.5 rounded-full bg-green-500 ring-2 ring-card animate-pulse" />
