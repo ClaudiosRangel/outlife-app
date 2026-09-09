@@ -10,7 +10,10 @@
     "explore": "Explore",
     "market": "Market",
     "community": "Community",
-    "profile": "Profile"
+    "profile": "Profile",
+    "record": "Record",
+    "you": "You",
+    "events": "Events"
   },
   "auth": {
     "signIn": "Sign in",

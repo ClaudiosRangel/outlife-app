@@ -123,7 +123,7 @@ function Home() {
         <StatusBar light />
         <div className="relative z-10 flex items-center justify-between px-5 pt-2">
           <div className="text-white">
-            <BrandLogo size={22} className="text-white" />
+            <BrandLogo size={30} className="text-white" onImage />
           </div>
           <div className="flex items-center gap-2">
             <Link to="/busca" className="grid h-10 w-10 place-items-center rounded-full bg-white/15 text-white backdrop-blur-md">

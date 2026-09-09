@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
+import logoOutvitar from "@/assets/logo-outvitar.png";
 
 /**
  * BrandLogo — marca OutVitar centralizada (spec rebranding-outvitar).
@@ -10,16 +11,12 @@ import { cn } from "@/lib/utils";
  * nem o texto estiver disponível, o container fica vazio sem quebrar o layout
  * (Req 3.3).
  *
- * O asset da logo (`assets/logo-outvitar.png`) é um pré-requisito fornecido
- * pelo usuário; enquanto não existir, `logoSrc` é undefined e o componente
- * mostra apenas o wordmark textual — que já é a identidade correta.
+ * A logo oficial vive em `src/assets/logo-outvitar.png` (montanha + sol +
+ * trilha no pin). O import resolve para a URL do asset empacotado pelo Vite;
+ * se o arquivo não existir no build, o `onError` cai para o wordmark textual.
  */
 
-// O import do asset é opcional: quando o arquivo não existe, mantemos
-// `logoSrc` undefined e exibimos só o wordmark. Trocar por
-// `import logoOutvitar from "@/assets/logo-outvitar.png"` quando o arquivo
-// for adicionado (tarefa 6 / pré-requisito de assets).
-const logoSrc: string | undefined = undefined;
+const logoSrc: string | undefined = logoOutvitar;
 
 /**
  * Decisão pura de exibição do símbolo (Property 3): dado o estado de erro da
@@ -40,13 +37,29 @@ export interface BrandLogoProps {
   className?: string;
   /** Exibe o nome ao lado do símbolo (default true). */
   withWordmark?: boolean;
+  /**
+   * Aplica sombra ao wordmark e ao símbolo para garantir legibilidade quando
+   * a marca é exibida sobre uma foto/gradiente (ex.: hero da Home). Padrão de
+   * mercado (Strava/AllTrails) para wordmark branco sobre imagem.
+   */
+  onImage?: boolean;
 }
 
-export function BrandLogo({ size = 24, className, withWordmark = true }: BrandLogoProps) {
+export function BrandLogo({
+  size = 24,
+  className,
+  withWordmark = true,
+  onImage = false,
+}: BrandLogoProps) {
   const { t } = useTranslation();
   const [imageErrored, setImageErrored] = useState(false);
   const name = t("brand.name", "OutVitar");
   const showSymbol = shouldShowLogoSymbol({ hasAsset: logoSrc != null, imageErrored });
+
+  // Sombra sutil para contraste sobre foto (não afeta uso sobre fundo sólido).
+  const imageShadow = onImage
+    ? "drop-shadow(0 1px 3px rgba(0,0,0,0.55)) drop-shadow(0 0 1px rgba(0,0,0,0.4))"
+    : undefined;
 
   return (
     <span className={cn("inline-flex items-center gap-2", className)}>
@@ -55,13 +68,16 @@ export function BrandLogo({ size = 24, className, withWordmark = true }: BrandLo
           src={logoSrc}
           alt={name}
           height={size}
-          style={{ height: size, width: "auto" }}
+          style={{ height: size, width: "auto", filter: imageShadow }}
           onError={() => setImageErrored(true)}
           className="object-contain"
         />
       )}
       {withWordmark && (
-        <span className="font-display font-semibold tracking-tight" style={{ fontSize: size * 0.85 }}>
+        <span
+          className="font-display font-semibold tracking-tight"
+          style={{ fontSize: size * 0.85, textShadow: onImage ? "0 1px 4px rgba(0,0,0,0.55)" : undefined }}
+        >
           {name}
         </span>
       )}
