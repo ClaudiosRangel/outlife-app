@@ -123,9 +123,9 @@ function Home() {
         <div className="absolute inset-0 bg-gradient-hero" />
         <StatusBar light />
         <div className="relative z-10 flex items-center justify-between px-5 pt-2">
-          {/* Logo transparente maior (a arte já contém o wordmark "OutVitar",
-              então não repetimos o texto ao lado). */}
-          <BrandLogo size={46} withWordmark={false} onImage />
+          {/* Logo transparente, um pouco maior que o avatar (a arte já contém
+              o wordmark "OutVitar", então não repetimos o texto ao lado). */}
+          <BrandLogo size={56} withWordmark={false} onImage />
           <div className="flex items-center gap-2">
             <Link to="/busca" className="grid h-10 w-10 place-items-center rounded-full bg-white/15 text-white backdrop-blur-md">
               <Search size={18} />
