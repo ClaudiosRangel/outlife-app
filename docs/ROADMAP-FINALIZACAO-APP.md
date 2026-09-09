@@ -11,10 +11,20 @@
 > **⚠️ ESTADO ATUAL (ler primeiro numa nova sessão) — 09/09/2026**
 >
 > Blocos A–F concluídos. Estamos numa fase de **ajustes de UX/bugfix pós-teste
-> do APK** (usuário testando no celular real, iOS + Android). Muita coisa
-> depende de **rodar `supabase/migrations-pendentes.sql` no SQL Editor do
-> Supabase** (arquivo idempotente, consolidado; rodar INTEIRO). O usuário
-> aplica; eu não tenho acesso ao banco.
+> do APK** (usuário testando no celular real, iOS + Android).
+>
+> **✓ MIGRAÇÕES APLICADAS EM PRODUÇÃO (09/09/2026):** o
+> `supabase/migrations-pendentes.sql` INTEIRO foi executado direto no banco
+> de produção via `scripts/run-migrations.mjs` (lib `pg` + `SUPABASE_DB_URL`
+> no `.env`, connection string direta do Postgres). Todos os 23 objetos
+> verificados presentes (`scripts/verify-all-objects.mjs`). Corrigida também
+> uma ambiguidade `PGRST203` de `finish_user_activity` (existiam 2 versões,
+> 9 e 10 args; dropada a de 9 via `scripts/fix-finish-fn.mjs`, mantida a de 10
+> com `_video_url` que o frontend chama). A partir de agora eu POSSO rodar SQL
+> em produção com esses scripts — não depende mais do SQL Editor manual.
+> **Nota de segurança:** a senha do banco foi exposta no chat; o usuário deve
+> trocá-la (Settings → Database → Reset database password) e atualizar o
+> `.env`.
 >
 > **Já feito nesta rodada (commitado + APK gerado):** curtir parceiro (upsert
 > idempotente), avaliações recalculam rating/reviews_count (trigger + backfill),
@@ -26,20 +36,18 @@
 > decorativa removida.
 >
 > **PENDÊNCIAS ABERTAS (o que fazer a seguir):**
-> 1. **Avaliações não aparecem no painel** — DIAGNOSTICADO: não é bug de RLS
->    (reviews é SELECT público). O usuário avaliou o parceiro SEED "Maria
->    Teresa Trilhas" (id 2222…), mas abriu o painel da PRÓPRIA conta (Caio) —
->    que não recebeu avaliações. O painel está tecnicamente correto. FALTA:
->    (a) corrigir o estado vazio que aparece como caixa cinza (mostrar texto
->    "Você ainda não recebeu avaliações"); (b) opcional: um modo de o usuário
->    testar (seed de review no próprio usuário, ou logar como parceiro real).
-> 2. **Logo do topo ainda pequena** — aumentar BEM, proporcional. Está em
->    size=56 no BrandLogo (index.tsx). Subir para ~72–84. A logo é
->    `src/assets/logo-outvitar.png` (transparente, símbolo+wordmark empilhados).
+> 1. **Avaliações não aparecem no painel** — DIAGNOSTICADO E RESOLVIDO no
+>    código: não é bug de RLS (reviews é SELECT público) e o painel já mostra
+>    o estado vazio correto ("Você ainda não recebeu avaliações"). O usuário
+>    avaliou o parceiro SEED "Maria Teresa Trilhas", mas abriu o painel da
+>    PRÓPRIA conta (Caio) — que não recebeu avaliações. Para ver a avaliação,
+>    logar como o parceiro avaliado. Migração do trigger de recálculo já
+>    aplicada em produção.
+> 2. **Logo do topo** — ✓ FEITO: size=78 no BrandLogo (index.tsx), no APK.
 > 3. **Badge de notificação não aparece no ícone nem na central do celular** —
 >    o payload FCM já manda notification_count/aps.badge (item 12 do
->    migrations-pendentes), MAS: (a) depende de rodar o item 12 no Supabase;
->    (b) no iOS o badge exige permissão de badge + APNs configurado no
+>    migrations-pendentes, JÁ APLICADO em produção), MAS: (a) ✓ item 12 já
+>    rodado; (b) no iOS o badge exige permissão de badge + APNs configurado no
 >    Firebase; (c) a "central de notificações" vazia sugere que o PUSH em si
 >    não está chegando — investigar se native_push_tokens está sendo populado
 >    (registro do token no device) e se o fn_send_native_push→/api/push/send-fcm
