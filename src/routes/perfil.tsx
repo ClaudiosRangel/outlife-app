@@ -18,6 +18,7 @@ import {
   Briefcase,
   LogOut,
   Users,
+  ShieldCheck,
 } from "lucide-react";
 import { StatusBar } from "@/components/StatusBar";
 import { Stars } from "@/components/Stars";
@@ -43,6 +44,7 @@ import {
   fetchMyFollowing,
   discardActivity,
   fetchUserLevelStats,
+  isCurrentUserAdmin,
 } from "@/lib/api";
 import { classifyLevel, levelProgress, type UserLevel } from "@/lib/user-level";
 import type { ActivityType } from "@/lib/activity-metrics";
@@ -151,6 +153,13 @@ function Profile() {
   const { data: levelStats } = useQuery({
     queryKey: ["user-level-stats", user?.id],
     queryFn: () => fetchUserLevelStats(user?.id),
+    enabled: !!user,
+  });
+
+  // Só os responsáveis (Admin_Role) veem o atalho da área administrativa.
+  const { data: isAdmin = false } = useQuery({
+    queryKey: ["is-current-user-admin", user?.id],
+    queryFn: isCurrentUserAdmin,
     enabled: !!user,
   });
 
@@ -325,6 +334,20 @@ function Profile() {
           <span className="text-xs text-primary font-medium">{t("common.open")}</span>
         </Link>
       </div>
+
+      {isAdmin && (
+        <div className="mx-5 mt-3">
+          <Link to="/admin" className="flex items-center justify-between rounded-2xl bg-card p-3 shadow-card">
+            <div className="flex items-center gap-3">
+              <span className="grid h-9 w-9 place-items-center rounded-xl bg-primary/10 text-primary">
+                <ShieldCheck size={16} />
+              </span>
+              <span className="text-sm font-semibold">{t("admin.openCta")}</span>
+            </div>
+            <span className="text-xs text-primary font-medium">{t("common.open")}</span>
+          </Link>
+        </div>
+      )}
 
       {profile?.role === "partner" && (
         <div className="mx-5 mt-3">

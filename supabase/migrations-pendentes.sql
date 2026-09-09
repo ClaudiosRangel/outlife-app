@@ -598,3 +598,65 @@ RETURNS INTEGER LANGUAGE sql SECURITY DEFINER SET search_path = public AS $$
   SELECT COUNT(*)::INTEGER FROM public.favorite_partners WHERE partner_id = auth.uid();
 $$;
 GRANT EXECUTE ON FUNCTION public.count_my_partner_favorites() TO authenticated;
+
+
+-- ############################################################################
+-- 12) Badge do ícone do app: incluir a contagem de não-lidas no push
+--     Recalcula fn_send_native_push para enviar tambevery o "badge" (nº de
+--     notificações não lidas do destinatário) ao endpoint FCM.
+-- ############################################################################
+
+CREATE OR REPLACE FUNCTION public.fn_dispatch_push_notification()
+RETURNS TRIGGER LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+DECLARE
+  token_row RECORD;
+  sub_row RECORD;
+  v_unread INTEGER;
+BEGIN
+  SELECT COUNT(*) INTO v_unread
+    FROM public.notifications
+   WHERE recipient_id = NEW.recipient_id AND is_read = false;
+
+  FOR token_row IN
+    SELECT token, platform FROM public.native_push_tokens
+    WHERE user_id = NEW.recipient_id AND is_active
+  LOOP
+    BEGIN
+      PERFORM public.fn_send_native_push(token_row.token, token_row.platform, NEW.type,
+        jsonb_build_object('badge', v_unread) || to_jsonb(NEW));
+    EXCEPTION WHEN OTHERS THEN NULL; END;
+  END LOOP;
+
+  FOR sub_row IN
+    SELECT endpoint, p256dh, auth FROM public.web_push_subscriptions
+    WHERE user_id = NEW.recipient_id AND is_active
+  LOOP
+    BEGIN
+      PERFORM public.fn_send_web_push(sub_row.endpoint, sub_row.p256dh, sub_row.auth, NEW.type, to_jsonb(NEW));
+    EXCEPTION WHEN OTHERS THEN NULL; END;
+  END LOOP;
+
+  RETURN NEW;
+END; $$;
+
+-- Recalcula fn_send_native_push para repassar o badge ao endpoint HTTP.
+CREATE OR REPLACE FUNCTION public.fn_send_native_push(
+  _token TEXT, _platform TEXT, _type TEXT, _payload JSONB
+) RETURNS VOID LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+DECLARE
+  _app_url TEXT := 'https://outlife-app.vercel.app';
+  _secret TEXT := 'outlife-push-2026';
+BEGIN
+  PERFORM extensions.http_post(
+    url := _app_url || '/api/push/send-fcm',
+    body := jsonb_build_object(
+      'token', _token,
+      'type', _type,
+      'badge', COALESCE((_payload ->> 'badge')::int, 0),
+      'secret', _secret
+    )::text,
+    headers := jsonb_build_object('Content-Type', 'application/json')
+  );
+EXCEPTION WHEN OTHERS THEN
+  RAISE NOTICE 'fn_send_native_push falhou: %', SQLERRM;
+END; $$;

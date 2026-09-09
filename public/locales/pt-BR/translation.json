@@ -366,6 +366,16 @@
       "cancel": "Cancelar"
     }
   },
+  "admin": {
+    "title": "Administração",
+    "hubTitle": "Área administrativa",
+    "hubSubtitle": "Ferramentas de moderação e gestão.",
+    "cadasturTitle": "Aprovar cadastros (Cadastur)",
+    "cadasturDesc": "Verificar e aprovar parceiros.",
+    "destinationsTitle": "Aprovar destinos",
+    "destinationsDesc": "Revisar destinos sugeridos.",
+    "openCta": "Área administrativa"
+  },
   "ranking": {
     "title": "Rankings",
     "subtitle": "Compare-se com a comunidade",

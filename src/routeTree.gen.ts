@@ -26,6 +26,7 @@ import { Route as CadastroRouteImport } from './routes/cadastro'
 import { Route as BuscaRouteImport } from './routes/busca'
 import { Route as AmigosRouteImport } from './routes/amigos'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as ParceiroPainelRouteImport } from './routes/parceiro.painel'
 import { Route as ParceiroPartnerIdRouteImport } from './routes/parceiro.$partnerId'
 import { Route as EventosEventIdRouteImport } from './routes/eventos.$eventId'
@@ -128,6 +129,11 @@ const AmigosRoute = AmigosRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/admin/',
+  path: '/admin/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ParceiroPainelRoute = ParceiroPainelRouteImport.update({
@@ -250,6 +256,7 @@ export interface FileRoutesByFullPath {
   '/eventos/$eventId': typeof EventosEventIdRoute
   '/parceiro/$partnerId': typeof ParceiroPartnerIdRoute
   '/parceiro/painel': typeof ParceiroPainelRoute
+  '/admin/': typeof AdminIndexRoute
   '/api/places/photos': typeof ApiPlacesPhotosRoute
   '/api/places/search': typeof ApiPlacesSearchRoute
   '/api/push/invalidate-native': typeof ApiPushInvalidateNativeRoute
@@ -287,6 +294,7 @@ export interface FileRoutesByTo {
   '/eventos/$eventId': typeof EventosEventIdRoute
   '/parceiro/$partnerId': typeof ParceiroPartnerIdRoute
   '/parceiro/painel': typeof ParceiroPainelRoute
+  '/admin': typeof AdminIndexRoute
   '/api/places/photos': typeof ApiPlacesPhotosRoute
   '/api/places/search': typeof ApiPlacesSearchRoute
   '/api/push/invalidate-native': typeof ApiPushInvalidateNativeRoute
@@ -325,6 +333,7 @@ export interface FileRoutesById {
   '/eventos/$eventId': typeof EventosEventIdRoute
   '/parceiro/$partnerId': typeof ParceiroPartnerIdRoute
   '/parceiro/painel': typeof ParceiroPainelRoute
+  '/admin/': typeof AdminIndexRoute
   '/api/places/photos': typeof ApiPlacesPhotosRoute
   '/api/places/search': typeof ApiPlacesSearchRoute
   '/api/push/invalidate-native': typeof ApiPushInvalidateNativeRoute
@@ -364,6 +373,7 @@ export interface FileRouteTypes {
     | '/eventos/$eventId'
     | '/parceiro/$partnerId'
     | '/parceiro/painel'
+    | '/admin/'
     | '/api/places/photos'
     | '/api/places/search'
     | '/api/push/invalidate-native'
@@ -401,6 +411,7 @@ export interface FileRouteTypes {
     | '/eventos/$eventId'
     | '/parceiro/$partnerId'
     | '/parceiro/painel'
+    | '/admin'
     | '/api/places/photos'
     | '/api/places/search'
     | '/api/push/invalidate-native'
@@ -438,6 +449,7 @@ export interface FileRouteTypes {
     | '/eventos/$eventId'
     | '/parceiro/$partnerId'
     | '/parceiro/painel'
+    | '/admin/'
     | '/api/places/photos'
     | '/api/places/search'
     | '/api/push/invalidate-native'
@@ -475,6 +487,7 @@ export interface RootRouteChildren {
   DestinoDestinationIdRoute: typeof DestinoDestinationIdRoute
   ParceiroPartnerIdRoute: typeof ParceiroPartnerIdRoute
   ParceiroPainelRoute: typeof ParceiroPainelRoute
+  AdminIndexRoute: typeof AdminIndexRoute
   ApiPlacesPhotosRoute: typeof ApiPlacesPhotosRoute
   ApiPlacesSearchRoute: typeof ApiPlacesSearchRoute
   ApiPushInvalidateNativeRoute: typeof ApiPushInvalidateNativeRoute
@@ -603,6 +616,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/': {
+      id: '/admin/'
+      path: '/admin'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/parceiro/painel': {
@@ -773,6 +793,7 @@ const rootRouteChildren: RootRouteChildren = {
   DestinoDestinationIdRoute: DestinoDestinationIdRoute,
   ParceiroPartnerIdRoute: ParceiroPartnerIdRoute,
   ParceiroPainelRoute: ParceiroPainelRoute,
+  AdminIndexRoute: AdminIndexRoute,
   ApiPlacesPhotosRoute: ApiPlacesPhotosRoute,
   ApiPlacesSearchRoute: ApiPlacesSearchRoute,
   ApiPushInvalidateNativeRoute: ApiPushInvalidateNativeRoute,

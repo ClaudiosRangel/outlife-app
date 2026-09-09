@@ -366,6 +366,16 @@
       "cancel": "Cancel"
     }
   },
+  "admin": {
+    "title": "Administration",
+    "hubTitle": "Admin area",
+    "hubSubtitle": "Moderation and management tools.",
+    "cadasturTitle": "Approve registrations (Cadastur)",
+    "cadasturDesc": "Verify and approve partners.",
+    "destinationsTitle": "Approve destinations",
+    "destinationsDesc": "Review suggested destinations.",
+    "openCta": "Admin area"
+  },
   "ranking": {
     "title": "Rankings",
     "subtitle": "Compare yourself with the community",

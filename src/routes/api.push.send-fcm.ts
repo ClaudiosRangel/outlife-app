@@ -53,14 +53,31 @@ async function getFcmAccessToken(sa: { client_email: string; private_key: string
   return data.access_token;
 }
 
-/** Envia push via FCM API V1 */
-async function sendFcmPush(sa: { project_id: string; client_email: string; private_key: string }, token: string, title: string, body: string): Promise<void> {
+/** Envia push via FCM API V1 (inclui o badge do ícone quando informado). */
+async function sendFcmPush(
+  sa: { project_id: string; client_email: string; private_key: string },
+  token: string,
+  title: string,
+  body: string,
+  badge?: number,
+): Promise<void> {
   const accessToken = await getFcmAccessToken(sa);
+  const count = Number.isFinite(badge) && (badge as number) >= 0 ? Math.floor(badge as number) : undefined;
   const response = await fetch(`https://fcm.googleapis.com/v1/projects/${sa.project_id}/messages:send`, {
     method: "POST",
     headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
     body: JSON.stringify({
-      message: { token, notification: { title, body }, android: { priority: "high" } },
+      message: {
+        token,
+        notification: { title, body },
+        // Android: pinta o número no ícone do launcher (badge).
+        android: {
+          priority: "high",
+          ...(count !== undefined ? { notification: { notification_count: count } } : {}),
+        },
+        // iOS (APNs): badge do ícone.
+        ...(count !== undefined ? { apns: { payload: { aps: { badge: count } } } } : {}),
+      },
     }),
   });
   if (!response.ok) throw new Error(`FCM error: ${response.status} ${await response.text()}`);
@@ -77,7 +94,7 @@ function getNotificationContent(type: string): { title: string; body: string } {
   }
 }
 
-type SendFcmBody = { token: string; type: string; secret?: string };
+type SendFcmBody = { token: string; type: string; secret?: string; badge?: number };
 
 export const Route = createFileRoute("/api/push/send-fcm")({
   server: {
@@ -98,7 +115,7 @@ export const Route = createFileRoute("/api/push/send-fcm")({
         }
         try {
           const { title, body: notifBody } = getNotificationContent(body.type);
-          await sendFcmPush(sa, body.token, title, notifBody);
+          await sendFcmPush(sa, body.token, title, notifBody, body.badge);
           return Response.json({ ok: true }, { headers: CORS_HEADERS });
         } catch (err) {
           const message = err instanceof Error ? err.message : String(err);
