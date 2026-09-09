@@ -410,3 +410,49 @@ ALTER TABLE public.profile_contacts
 -- ============================================================================
 -- FIM. Após rodar sem erro, os recursos dos Blocos D/E/F estão ativos no banco.
 -- ============================================================================
+
+
+-- ############################################################################
+-- 8) FIX — saved_destinations + favorite_partners (idempotente)
+--    Corrige o erro "Não foi possível concluir a ação" ao salvar destino /
+--    favoritar parceiro, quando a migration 20260715160100 não foi aplicada
+--    em produção. Seguro rodar de novo: só cria o que faltar.
+-- ############################################################################
+
+CREATE TABLE IF NOT EXISTS public.saved_destinations (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  destination_id UUID NOT NULL REFERENCES public.destinations(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE (user_id, destination_id)
+);
+ALTER TABLE public.saved_destinations ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Users can view their own saved destinations" ON public.saved_destinations;
+CREATE POLICY "Users can view their own saved destinations"
+  ON public.saved_destinations FOR SELECT USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can save their own destinations" ON public.saved_destinations;
+CREATE POLICY "Users can save their own destinations"
+  ON public.saved_destinations FOR INSERT WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can unsave their own destinations" ON public.saved_destinations;
+CREATE POLICY "Users can unsave their own destinations"
+  ON public.saved_destinations FOR DELETE USING (auth.uid() = user_id);
+
+CREATE TABLE IF NOT EXISTS public.favorite_partners (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  partner_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE (user_id, partner_id)
+);
+ALTER TABLE public.favorite_partners ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Users can view their own favorite partners" ON public.favorite_partners;
+CREATE POLICY "Users can view their own favorite partners"
+  ON public.favorite_partners FOR SELECT USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can favorite partners" ON public.favorite_partners;
+CREATE POLICY "Users can favorite partners"
+  ON public.favorite_partners FOR INSERT WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can unfavorite partners" ON public.favorite_partners;
+CREATE POLICY "Users can unfavorite partners"
+  ON public.favorite_partners FOR DELETE USING (auth.uid() = user_id);

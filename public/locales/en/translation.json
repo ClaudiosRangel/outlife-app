@@ -250,7 +250,8 @@
     "callNow": "Call now",
     "reviewsTitle": "Reviews",
     "noReviewsYet": "No reviews yet. Be the first!",
-    "contactNote": "Use the Book button to contact the partner through OutVitar.",
+    "contactNote": "Tap Book to register your interest. The partner will be notified and reach out.",
+    "bookRequested": "Interest registered! The partner will be notified.",
     "gallery": "Gallery",
     "noGallery": "No gallery available yet.",
     "noLocation": "Location not provided."

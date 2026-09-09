@@ -81,9 +81,14 @@ type UIPost = {
   time: string;
   place: string;
   text: string;
+  /** Imagem exibida (com fallback genérico quando o post não tem mídia). */
   img: string;
+  /** Imagem REAL do post (image_url), ou null quando não há foto própria.
+   *  Usada como poster de vídeo e base do banner de compartilhamento — nunca
+   *  cai no fallback genérico, para não pôr uma foto que não é do post. */
+  realImg: string | null;
   /** URL do vídeo do post (Req 1.3/4.4): quando presente, o feed mostra
-   *  SafeVideo usando `img` como poster; senão mantém SafeImage. */
+   *  SafeVideo usando `realImg` como poster (se houver); senão SafeImage. */
   videoUrl?: string | null;
   category: CommunityPostCategory;
   likes: number;
@@ -154,6 +159,7 @@ function toUIPost(p: any): UIPost {
     place: p.place || "Brasil",
     text: p.text || "",
     img: resolveAsset(p.image_url, community1),
+    realImg: p.image_url ? resolveAsset(p.image_url, community1) : null,
     videoUrl: p.video_url ?? null,
     category: (p.category ?? "outro") as CommunityPostCategory,
     likes: p.likes ?? 0,
@@ -442,7 +448,10 @@ function Community() {
   const handleShare = async (p: UIPost) => {
     try {
       const blob = await generatePostBanner({
-        photoUrl: p.img,
+        // Usa a imagem REAL do post (nunca o fallback genérico). Sem foto real
+        // (ex.: post só com vídeo), o banner usa o fundo padrão — não uma foto
+        // que não é do post.
+        photoUrl: p.realImg,
         categoryLabel: t(communityCategoryTranslationKey(p.category)),
         text: p.text,
       });
@@ -575,7 +584,7 @@ function Community() {
                   // Precedência (Req 1.3/4.4): quando há vídeo, ele é a mídia
                   // principal; a imagem do post vira o poster. SafeVideo não faz
                   // autoplay/preload — só o poster é decodificado até o play.
-                  <SafeVideo src={p.videoUrl} posterSrc={p.img} />
+                  <SafeVideo src={p.videoUrl} posterSrc={p.realImg ?? undefined} />
                 ) : p.activityId ? (
                   <SafeImage
                     src={p.img}

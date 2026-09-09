@@ -250,7 +250,8 @@
     "callNow": "Ligar agora",
     "reviewsTitle": "Avaliações",
     "noReviewsYet": "Ainda não há avaliações. Seja o primeiro!",
-    "contactNote": "Use o botão Reservar para falar com o parceiro pelo OutVitar.",
+    "contactNote": "Toque em Reservar para registrar seu interesse. O parceiro será avisado e entrará em contato.",
+    "bookRequested": "Interesse registrado! O parceiro será avisado.",
     "gallery": "Galeria",
     "noGallery": "Galeria ainda não disponível.",
     "noLocation": "Localização não informada."

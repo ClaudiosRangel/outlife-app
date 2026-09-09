@@ -109,6 +109,10 @@ function Explore() {
     queryKey: ["shared-locations"],
     queryFn: fetchLiveActivityFriends,
     refetchInterval: 60_000,
+    // Ao ENTRAR na aba Explorar, força buscar os amigos ao vivo na hora
+    // (antes só atualizava a cada 60s ou ao clicar em "Atualizar agora").
+    refetchOnMount: "always",
+    refetchOnWindowFocus: true,
     enabled: !!user,
   });
 

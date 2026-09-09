@@ -124,42 +124,19 @@ function SettingsScreen() {
   };
 
   // Requirement 10.5, 10.6 — atualização de nome/username/localização, com
-  // verificação prévia de `isUsernameTaken` quando o username foi alterado.
-  const updateProfileMutation = useMutation({
+  // Salvamento ÚNICO (pedido do usuário: um só "Salvar alterações"): grava o
+  // perfil básico (nome/username/localização) + cadastro completo (person_type/
+  // endereço) via updateMyProfile, e documento/telefone owner-only via
+  // updateMyContacts. Valida username (isUsernameTaken) e documento (dígito
+  // verificador) antes de gravar — inválido é recusado, nada é persistido.
+  const saveAllMutation = useMutation({
     mutationFn: async () => {
       const trimmedUsername = username.trim();
       const usernameChanged = trimmedUsername !== (profile?.username ?? "");
       if (usernameChanged) {
         const taken = await isUsernameTaken(trimmedUsername);
-        if (taken) {
-          throw new Error(t("settings.usernameTaken"));
-        }
+        if (taken) throw new Error(t("settings.usernameTaken"));
       }
-      await updateMyProfile({
-        full_name: fullName.trim(),
-        username: trimmedUsername,
-        location: location.trim(),
-      });
-    },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["my-profile", user?.id] });
-      toast.success(t("settings.saved"));
-    },
-    onError: (err: Error) => toast.error(err.message || t("settings.genericError")),
-  });
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    updateProfileMutation.mutate();
-  };
-
-  // Cadastro completo (item 13): salva person_type/endereço no perfil e
-  // documento/telefone owner-only em profile_contacts. Validação de documento
-  // (dígito verificador) ocorre em updateMyContacts — inválido é recusado
-  // (Req 4.4). Campos opcionais (Req 4.1/4.3): só valida o que foi preenchido.
-  const updateCompleteMutation = useMutation({
-    mutationFn: async () => {
-      // Validação local para feedback imediato antes de bater no servidor.
       if (personType === "pf" && cpf.trim() && !isValidCPF(cpf)) {
         throw new Error("CPF inválido.");
       }
@@ -167,6 +144,9 @@ function SettingsScreen() {
         throw new Error("CNPJ inválido.");
       }
       await updateMyProfile({
+        full_name: fullName.trim(),
+        username: trimmedUsername,
+        location: location.trim(),
         person_type: personType,
         address_zip: zip.trim() || null,
         address_street: street.trim() || null,
@@ -190,9 +170,9 @@ function SettingsScreen() {
     onError: (err: Error) => toast.error(err.message || t("settings.genericError")),
   });
 
-  const handleCompleteSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    updateCompleteMutation.mutate();
+    saveAllMutation.mutate();
   };
 
   return (
@@ -287,22 +267,10 @@ function SettingsScreen() {
                 onChange={(e) => setLocation(e.target.value)}
               />
             </div>
-            <Button type="submit" className="w-full" disabled={updateProfileMutation.isPending}>
-              {updateProfileMutation.isPending ? (
-                <Loader2 size={16} className="mr-2 animate-spin" />
-              ) : null}
-              {t("settings.save")}
-            </Button>
-          </form>
-        )}
-      </section>
-
-      {/* Cadastro completo (item 13) — opcional para todos; obrigatório só no
-          fluxo de verificação do parceiro (tela Compliance). */}
-      {!profileLoading && (
-        <section className="px-5 mt-8">
-          <h2 className="mb-3 font-display text-lg font-semibold">{t("settings.completeTitle")}</h2>
-          <form onSubmit={handleCompleteSubmit} className="space-y-4">
+            {/* Cadastro completo (item 13) — na mesma sessão/formulário, um
+                único "Salvar alterações" no fim. Opcional para todos;
+                obrigatório só no fluxo de verificação do parceiro (Compliance). */}
+            <h2 className="mt-6 mb-1 font-display text-lg font-semibold">{t("settings.completeTitle")}</h2>
             {/* Tipo de pessoa */}
             <div className="space-y-1.5">
               <Label>{t("settings.personType")}</Label>
@@ -395,13 +363,13 @@ function SettingsScreen() {
               </div>
             </div>
 
-            <Button type="submit" className="w-full" disabled={updateCompleteMutation.isPending}>
-              {updateCompleteMutation.isPending ? <Loader2 size={16} className="mr-2 animate-spin" /> : null}
+            <Button type="submit" className="w-full" disabled={saveAllMutation.isPending}>
+              {saveAllMutation.isPending ? <Loader2 size={16} className="mr-2 animate-spin" /> : null}
               {t("settings.save")}
             </Button>
           </form>
-        </section>
-      )}
+        )}
+      </section>
     </div>
   );
 }

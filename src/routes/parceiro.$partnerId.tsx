@@ -90,14 +90,23 @@ function PartnerDetail() {
 
   const handleContactClick = () => {
     if (!partnerId) return;
-    trackPartnerContactClick(partnerId).catch((err: unknown) => {
-      const rateLimitMessage = mapRateLimitErrorToMessage(err);
-      if (rateLimitMessage) {
-        toast.error(rateLimitMessage);
-      } else {
-        console.error(err);
-      }
-    });
+    // Registra o interesse (métrica do parceiro) e dá feedback claro ao
+    // usuário. O contato direto (WhatsApp/chat) depende de o parceiro expor um
+    // canal público — hoje o telefone vive em profile_contacts (owner-only),
+    // então confirmamos o interesse em vez de deixar o botão "sem ação".
+    trackPartnerContactClick(partnerId)
+      .then(() => toast.success(t("partner.bookRequested")))
+      .catch((err: unknown) => {
+        const rateLimitMessage = mapRateLimitErrorToMessage(err);
+        if (rateLimitMessage) {
+          toast.error(rateLimitMessage);
+        } else {
+          // Mesmo se a métrica falhar, o usuário recebe a confirmação do
+          // interesse — a métrica é secundária.
+          toast.success(t("partner.bookRequested"));
+          console.error(err);
+        }
+      });
   };
 
   if (isLoading) {
