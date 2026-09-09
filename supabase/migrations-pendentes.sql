@@ -456,3 +456,81 @@ CREATE POLICY "Users can favorite partners"
 DROP POLICY IF EXISTS "Users can unfavorite partners" ON public.favorite_partners;
 CREATE POLICY "Users can unfavorite partners"
   ON public.favorite_partners FOR DELETE USING (auth.uid() = user_id);
+
+
+-- ############################################################################
+-- 9) FIX — recálculo de rating/reviews_count ao avaliar (idempotente)
+--    Corrige "0 avaliações" e estrelas que não incrementavam após avaliar.
+-- ############################################################################
+
+CREATE OR REPLACE FUNCTION public.recalc_review_aggregates(
+  _partner_id UUID,
+  _destination_id UUID
+) RETURNS VOID
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+DECLARE v_avg NUMERIC; v_count INTEGER;
+BEGIN
+  IF _partner_id IS NOT NULL THEN
+    SELECT COALESCE(ROUND(AVG(rating)::numeric, 2), 0), COUNT(*) INTO v_avg, v_count
+      FROM public.reviews WHERE partner_id = _partner_id;
+    UPDATE public.profiles SET rating = v_avg, reviews_count = v_count, updated_at = now()
+     WHERE id = _partner_id;
+  END IF;
+  IF _destination_id IS NOT NULL THEN
+    SELECT COALESCE(ROUND(AVG(rating)::numeric, 2), 0) INTO v_avg
+      FROM public.reviews WHERE destination_id = _destination_id;
+    UPDATE public.destinations SET rating = v_avg WHERE id = _destination_id;
+  END IF;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.trg_recalc_review_aggregates()
+RETURNS TRIGGER LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+BEGIN
+  IF TG_OP <> 'DELETE' THEN
+    PERFORM public.recalc_review_aggregates(NEW.partner_id, NEW.destination_id);
+  END IF;
+  IF TG_OP <> 'INSERT' THEN
+    PERFORM public.recalc_review_aggregates(OLD.partner_id, OLD.destination_id);
+  END IF;
+  RETURN NULL;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS trg_recalc_review_aggregates ON public.reviews;
+CREATE TRIGGER trg_recalc_review_aggregates
+  AFTER INSERT OR UPDATE OR DELETE ON public.reviews
+  FOR EACH ROW EXECUTE FUNCTION public.trg_recalc_review_aggregates();
+
+-- Backfill (recalcula o que já existe, ex.: a avaliação que você já fez)
+UPDATE public.profiles p
+   SET rating = sub.avg_rating, reviews_count = sub.cnt, updated_at = now()
+  FROM (SELECT partner_id, ROUND(AVG(rating)::numeric, 2) AS avg_rating, COUNT(*) AS cnt
+          FROM public.reviews WHERE partner_id IS NOT NULL GROUP BY partner_id) sub
+ WHERE p.id = sub.partner_id;
+
+UPDATE public.destinations d
+   SET rating = sub.avg_rating
+  FROM (SELECT destination_id, ROUND(AVG(rating)::numeric, 2) AS avg_rating
+          FROM public.reviews WHERE destination_id IS NOT NULL GROUP BY destination_id) sub
+ WHERE d.id = sub.destination_id;
+
+
+-- ############################################################################
+-- 10) FIX — backfill de profiles para usuários sem perfil (idempotente)
+--     Causa provável do "curtir" falhar mesmo com favorite_partners criada:
+--     contas antigas (criadas antes do trigger handle_new_user) não têm linha
+--     em public.profiles, então o INSERT em favorite_partners/saved_destinations
+--     viola a FK user_id -> profiles(id). Aqui criamos o profile que faltar.
+-- ############################################################################
+
+INSERT INTO public.profiles (id, full_name, username, role)
+SELECT
+  u.id,
+  COALESCE(u.raw_user_meta_data ->> 'full_name', u.raw_user_meta_data ->> 'name', split_part(u.email, '@', 1)),
+  COALESCE(u.raw_user_meta_data ->> 'username', split_part(u.email, '@', 1) || '_' || substr(u.id::text, 1, 6)),
+  COALESCE((u.raw_user_meta_data ->> 'role')::public.app_role, 'adventurer')
+FROM auth.users u
+LEFT JOIN public.profiles p ON p.id = u.id
+WHERE p.id IS NULL
+ON CONFLICT (id) DO NOTHING;

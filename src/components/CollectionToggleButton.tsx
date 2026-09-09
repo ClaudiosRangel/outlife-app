@@ -88,9 +88,12 @@ export function CollectionToggleButton({
       setActive(nextActive);
       return { previous };
     },
-    onError: (_err, _nextActive, context) => {
+    onError: (err: unknown, _nextActive, context) => {
       if (context) setActive(context.previous);
-      toast.error(t("collection.toggleError"));
+      // Mostra a causa real quando disponível (ajuda a diagnosticar: tabela
+      // ausente, violação de FK, etc.) em vez do genérico sempre.
+      const msg = (err as { message?: string } | null)?.message;
+      toast.error(msg ? `${t("collection.toggleError")} (${msg})` : t("collection.toggleError"));
     },
     onSuccess: (nextActive) => {
       queryClient.invalidateQueries({ queryKey: [invalidateQueryKey[kind]] });

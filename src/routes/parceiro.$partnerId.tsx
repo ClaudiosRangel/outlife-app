@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { lazy, Suspense, useEffect, useRef, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ChevronLeft,
   ShieldCheck,
@@ -45,6 +45,7 @@ function PartnerDetail() {
   const { partnerId } = Route.useParams();
   const { t } = useTranslation();
   const { user } = useAuth();
+  const qc = useQueryClient();
 
   const { data: partner, isLoading } = useQuery({
     queryKey: ["partner", partnerId],
@@ -66,6 +67,15 @@ function PartnerDetail() {
     queryFn: () => fetchReviewsByPartner(partnerId),
     enabled: !!partnerId,
   });
+
+  // Após uma nova avaliação, além de recarregar a lista, recarrega o parceiro
+  // (a nota média/contagem no cabeçalho é recalculada no banco por trigger) e
+  // as listagens que exibem a nota.
+  const handleReviewSubmitted = () => {
+    refetchReviews();
+    qc.invalidateQueries({ queryKey: ["partner", partnerId] });
+    qc.invalidateQueries({ queryKey: ["partners"] });
+  };
 
   // Registra UMA visualização por sessão de página
   const viewTrackedRef = useRef<string | null>(null);
@@ -374,7 +384,7 @@ function PartnerDetail() {
             })}
           </div>
 
-          <LeaveReview partnerId={partner.id} onSubmitted={() => refetchReviews()} />
+          <LeaveReview partnerId={partner.id} onSubmitted={handleReviewSubmitted} />
         </div>
       </div>
     </div>
