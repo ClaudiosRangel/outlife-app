@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { ArrowLeft, ShieldAlert, ShieldCheck, MapPin, ChevronRight } from "lucide-react";
+import { ArrowLeft, ShieldAlert, ShieldCheck, MapPin, ChevronRight, Lightbulb } from "lucide-react";
 import { StatusBar } from "@/components/StatusBar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/hooks/use-auth";
@@ -93,6 +93,13 @@ function AdminHub() {
       icon: MapPin,
       title: t("admin.destinationsTitle", "Aprovar destinos"),
       desc: t("admin.destinationsDesc", "Revisar destinos sugeridos."),
+      badge: 0,
+    },
+    {
+      to: "/admin/melhorias" as const,
+      icon: Lightbulb,
+      title: t("admin.tipsTitle", "Dicas / Melhorias"),
+      desc: t("admin.tipsDesc", "Checklist de dicas e melhorias do app."),
       badge: 0,
     },
   ];

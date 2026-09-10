@@ -631,9 +631,13 @@ export async function uploadReviewPhoto(file: File): Promise<string> {
 }
 
 export async function fetchReviewsByDestination(destinationId: string): Promise<ReviewItem[]> {
+  // A tabela `reviews` tem DUAS FKs para `profiles` (author_id e partner_id),
+  // então o embed precisa qualificar a FK explicitamente
+  // (`!reviews_author_id_fkey`) — senão o PostgREST retorna PGRST201
+  // (relacionamento ambíguo) e a query falha, deixando a UI presa no loading.
   const { data, error } = await supabase
     .from("reviews")
-    .select("id, created_at, rating, comment, author:profiles(full_name, avatar_url)")
+    .select("id, created_at, rating, comment, author:profiles!reviews_author_id_fkey(full_name, avatar_url)")
     .eq("destination_id", destinationId)
     .order("created_at", { ascending: false });
   if (error) throw error;
@@ -643,7 +647,7 @@ export async function fetchReviewsByDestination(destinationId: string): Promise<
 export async function fetchReviewsByPartner(partnerId: string): Promise<ReviewItem[]> {
   const { data, error } = await supabase
     .from("reviews")
-    .select("id, created_at, rating, comment, author:profiles(full_name, avatar_url)")
+    .select("id, created_at, rating, comment, author:profiles!reviews_author_id_fkey(full_name, avatar_url)")
     .eq("partner_id", partnerId)
     .order("created_at", { ascending: false });
   if (error) throw error;
@@ -2081,4 +2085,65 @@ export async function isCurrentUserAdmin(): Promise<boolean> {
   } as never);
   if (error) throw error;
   return Boolean(data);
+}
+
+// ============ Dicas/Melhorias (checklist administrativo) ============
+// Tabela `admin_suggestions` (migration 20260910100000). Cada item é uma
+// dica/melhoria do app; nasce pendente (done=false) e o admin marca como
+// pronto. RLS restringe tudo a admins (public.is_admin). Uso de `as never`
+// porque a tabela é nova e ainda não está nos tipos gerados do Supabase.
+export type AdminSuggestion = {
+  id: string;
+  title: string;
+  description: string | null;
+  done: boolean;
+  created_at: string;
+  done_at: string | null;
+};
+
+export async function fetchAdminSuggestions(): Promise<AdminSuggestion[]> {
+  // Ordena por status (pendentes primeiro) e depois pela data de criação
+  // (mais recentes no topo dentro de cada grupo).
+  const { data, error } = await supabase
+    .from("admin_suggestions" as never)
+    .select("id, title, description, done, created_at, done_at")
+    .order("done", { ascending: true })
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return (data ?? []) as unknown as AdminSuggestion[];
+}
+
+export async function createAdminSuggestion(input: {
+  title: string;
+  description?: string | null;
+}): Promise<void> {
+  const { data: userData } = await supabase.auth.getUser();
+  if (!userData.user) throw new Error("Não autenticado.");
+  const { error } = await supabase.from("admin_suggestions" as never).insert({
+    title: input.title.trim(),
+    description: input.description?.trim() || null,
+    created_by: userData.user.id,
+  } as never);
+  if (error) throw error;
+}
+
+export async function setAdminSuggestionDone(id: string, done: boolean): Promise<void> {
+  const { data: userData } = await supabase.auth.getUser();
+  const { error } = await supabase
+    .from("admin_suggestions" as never)
+    .update({
+      done,
+      done_at: done ? new Date().toISOString() : null,
+      done_by: done ? userData.user?.id ?? null : null,
+    } as never)
+    .eq("id", id);
+  if (error) throw error;
+}
+
+export async function deleteAdminSuggestion(id: string): Promise<void> {
+  const { error } = await supabase
+    .from("admin_suggestions" as never)
+    .delete()
+    .eq("id", id);
+  if (error) throw error;
 }

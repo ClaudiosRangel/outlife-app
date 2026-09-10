@@ -36,13 +36,17 @@
 > decorativa removida.
 >
 > **PENDÊNCIAS ABERTAS (o que fazer a seguir):**
-> 1. **Avaliações não aparecem no painel** — DIAGNOSTICADO E RESOLVIDO no
->    código: não é bug de RLS (reviews é SELECT público) e o painel já mostra
->    o estado vazio correto ("Você ainda não recebeu avaliações"). O usuário
->    avaliou o parceiro SEED "Maria Teresa Trilhas", mas abriu o painel da
->    PRÓPRIA conta (Caio) — que não recebeu avaliações. Para ver a avaliação,
->    logar como o parceiro avaliado. Migração do trigger de recálculo já
->    aplicada em produção.
+> 1. **Avaliações não aparecem no painel** — ✓ BUG REAL ENCONTRADO E
+>    CORRIGIDO (10/09/2026): a tabela `reviews` tem DUAS FKs para `profiles`
+>    (`author_id` e `partner_id`), então o embed PostgREST `author:profiles(...)`
+>    era AMBÍGUO (PGRST201) e a query falhava — deixando a seção presa no
+>    Skeleton (caixa cinza vazia da tela do usuário). Corrigido qualificando a
+>    FK: `author:profiles!reviews_author_id_fkey(...)` em `fetchReviewsByPartner`
+>    e `fetchReviewsByDestination` (api.ts). Confirmado no banco: o parceiro
+>    `6d97e26d...` tem 8 avaliações reais; a conta do usuário testador (Caio,
+>    author_id `d1542723...`) é quem ESCREVEU as reviews, por isso o painel
+>    dele estava vazio (correto). Agora o painel do parceiro avaliado mostra as
+>    reviews, e o estado vazio mostra o texto certo.
 > 2. **Logo do topo** — ✓ FEITO: size=78 no BrandLogo (index.tsx), no APK.
 > 3. **Badge de notificação não aparece no ícone nem na central do celular** —
 >    o payload FCM já manda notification_count/aps.badge (item 12 do
@@ -53,7 +57,15 @@
 >    (registro do token no device) e se o fn_send_native_push→/api/push/send-fcm
 >    está funcionando em produção (FIREBASE_SERVICE_ACCOUNT na Vercel). Pode ser
 >    que push nunca tenha chegado no device de teste — validar a cadeia inteira.
-> 4. **Ponto adicional** que o usuário mencionou mas ainda não descreveu.
+> 4. **Dicas/Melhorias (checklist admin)** — ✓ FEITO (10/09/2026): novo menu
+>    na Área administrativa (`/admin/melhorias`). O admin registra uma dica/
+>    melhoria (título + descrição opcional) que vira item de checklist
+>    PENDENTE; marca como PRONTO com um toque (círculo → check verde, texto
+>    riscado). Contadores pendentes/prontas, excluir com confirmação, pendentes
+>    no topo. Tabela `admin_suggestions` (migration 20260910100000, RLS só
+>    admin) JÁ APLICADA em produção via `scripts/run-one-migration.mjs`.
+>    Funções em api.ts: `fetchAdminSuggestions`, `createAdminSuggestion`,
+>    `setAdminSuggestionDone`, `deleteAdminSuggestion`. i18n bloco `adminTips.*`.
 > 5. Dashboard Supabase: templates de e-mail OutVitar (docs/EMAILS-SUPABASE-
 >    OUTVITAR.md) — pendente o usuário aplicar.
 >

@@ -35,6 +35,7 @@ import { Route as ChecklistChecklistIdRouteImport } from './routes/checklist.$ch
 import { Route as AtividadeRastrearRouteImport } from './routes/atividade.rastrear'
 import { Route as AtividadeActivityIdRouteImport } from './routes/atividade.$activityId'
 import { Route as ApiNotifyAdminsRouteImport } from './routes/api.notify-admins'
+import { Route as AdminMelhoriasRouteImport } from './routes/admin.melhorias'
 import { Route as AdminDestinosRouteImport } from './routes/admin.destinos'
 import { Route as AdminComplianceRouteImport } from './routes/admin.compliance'
 import { Route as AActivityIdRouteImport } from './routes/a.$activityId'
@@ -176,6 +177,11 @@ const ApiNotifyAdminsRoute = ApiNotifyAdminsRouteImport.update({
   path: '/api/notify-admins',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminMelhoriasRoute = AdminMelhoriasRouteImport.update({
+  id: '/admin/melhorias',
+  path: '/admin/melhorias',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminDestinosRoute = AdminDestinosRouteImport.update({
   id: '/admin/destinos',
   path: '/admin/destinos',
@@ -248,6 +254,7 @@ export interface FileRoutesByFullPath {
   '/a/$activityId': typeof AActivityIdRoute
   '/admin/compliance': typeof AdminComplianceRoute
   '/admin/destinos': typeof AdminDestinosRoute
+  '/admin/melhorias': typeof AdminMelhoriasRoute
   '/api/notify-admins': typeof ApiNotifyAdminsRoute
   '/atividade/$activityId': typeof AtividadeActivityIdRoute
   '/atividade/rastrear': typeof AtividadeRastrearRoute
@@ -286,6 +293,7 @@ export interface FileRoutesByTo {
   '/a/$activityId': typeof AActivityIdRoute
   '/admin/compliance': typeof AdminComplianceRoute
   '/admin/destinos': typeof AdminDestinosRoute
+  '/admin/melhorias': typeof AdminMelhoriasRoute
   '/api/notify-admins': typeof ApiNotifyAdminsRoute
   '/atividade/$activityId': typeof AtividadeActivityIdRoute
   '/atividade/rastrear': typeof AtividadeRastrearRoute
@@ -325,6 +333,7 @@ export interface FileRoutesById {
   '/a/$activityId': typeof AActivityIdRoute
   '/admin/compliance': typeof AdminComplianceRoute
   '/admin/destinos': typeof AdminDestinosRoute
+  '/admin/melhorias': typeof AdminMelhoriasRoute
   '/api/notify-admins': typeof ApiNotifyAdminsRoute
   '/atividade/$activityId': typeof AtividadeActivityIdRoute
   '/atividade/rastrear': typeof AtividadeRastrearRoute
@@ -365,6 +374,7 @@ export interface FileRouteTypes {
     | '/a/$activityId'
     | '/admin/compliance'
     | '/admin/destinos'
+    | '/admin/melhorias'
     | '/api/notify-admins'
     | '/atividade/$activityId'
     | '/atividade/rastrear'
@@ -403,6 +413,7 @@ export interface FileRouteTypes {
     | '/a/$activityId'
     | '/admin/compliance'
     | '/admin/destinos'
+    | '/admin/melhorias'
     | '/api/notify-admins'
     | '/atividade/$activityId'
     | '/atividade/rastrear'
@@ -441,6 +452,7 @@ export interface FileRouteTypes {
     | '/a/$activityId'
     | '/admin/compliance'
     | '/admin/destinos'
+    | '/admin/melhorias'
     | '/api/notify-admins'
     | '/atividade/$activityId'
     | '/atividade/rastrear'
@@ -480,6 +492,7 @@ export interface RootRouteChildren {
   AActivityIdRoute: typeof AActivityIdRoute
   AdminComplianceRoute: typeof AdminComplianceRoute
   AdminDestinosRoute: typeof AdminDestinosRoute
+  AdminMelhoriasRoute: typeof AdminMelhoriasRoute
   ApiNotifyAdminsRoute: typeof ApiNotifyAdminsRoute
   AtividadeActivityIdRoute: typeof AtividadeActivityIdRoute
   AtividadeRastrearRoute: typeof AtividadeRastrearRoute
@@ -681,6 +694,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiNotifyAdminsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/melhorias': {
+      id: '/admin/melhorias'
+      path: '/admin/melhorias'
+      fullPath: '/admin/melhorias'
+      preLoaderRoute: typeof AdminMelhoriasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/destinos': {
       id: '/admin/destinos'
       path: '/admin/destinos'
@@ -786,6 +806,7 @@ const rootRouteChildren: RootRouteChildren = {
   AActivityIdRoute: AActivityIdRoute,
   AdminComplianceRoute: AdminComplianceRoute,
   AdminDestinosRoute: AdminDestinosRoute,
+  AdminMelhoriasRoute: AdminMelhoriasRoute,
   ApiNotifyAdminsRoute: ApiNotifyAdminsRoute,
   AtividadeActivityIdRoute: AtividadeActivityIdRoute,
   AtividadeRastrearRoute: AtividadeRastrearRoute,
