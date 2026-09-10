@@ -6,6 +6,8 @@ import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/use-auth";
 import { useActivityTracker } from "@/hooks/use-activity-tracker";
+import { useLiveActivityPublisher } from "@/hooks/use-live-activity-publisher";
+import { useQuery } from "@tanstack/react-query";
 import {
   startActivity,
   updateActivityProgress,
@@ -14,7 +16,9 @@ import {
   uploadActivityImage,
   uploadActivityMapSnapshot,
   uploadCommunityPostVideo,
+  fetchMyProfile,
   type ActivityType,
+  type LocationSharingMode,
 } from "@/lib/api";
 import {
   validateVideoFileMeta,
@@ -82,6 +86,30 @@ function TrackActivityPage() {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const tracker = useActivityTracker();
+
+  // Modo de compartilhamento de localização do próprio usuário
+  // (profiles.location_sharing_mode). Enquanto a atividade estiver em
+  // andamento, o publisher abaixo republica a posição automaticamente de
+  // tempo em tempo (LIVE_PUBLISH_INTERVAL_MS) para amigos/todos — sem o
+  // usuário precisar clicar em "Atualizar agora".
+  const { data: myProfile } = useQuery({
+    queryKey: ["my-profile", user?.id],
+    queryFn: fetchMyProfile,
+    enabled: !!user,
+  });
+  const sharingMode = (myProfile?.location_sharing_mode as LocationSharingMode | undefined) ?? undefined;
+
+  // Conecta o rastreador ao canal de compartilhamento ao vivo. Reaproveita a
+  // posição já capturada pelo tracker (não abre um segundo watchPosition) e só
+  // publica quando status === 'tracking' e o modo != 'none' (respeitando o
+  // consentimento configurado pelo usuário).
+  useLiveActivityPublisher({
+    status: tracker.status,
+    currentPos: tracker.currentPos,
+    sharingMode,
+    permissionDenied: tracker.permissionDenied,
+  });
+
   // Activity_Type selecionado antes de iniciar o rastreamento (Requirement
   // 4.1/4.2/4.3). Usa o valor restaurado do tracker quando disponível.
   const [activityType, setActivityType] = useState<ActivityType | null>(
