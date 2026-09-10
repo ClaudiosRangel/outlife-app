@@ -125,7 +125,7 @@ function Home() {
         <div className="relative z-10 flex items-center justify-between px-5 pt-2">
           {/* Logo transparente, bem maior (a arte já contém o wordmark
               "OutVitar", então não repetimos o texto ao lado). */}
-          <BrandLogo size={78} withWordmark={false} onImage />
+          <BrandLogo size={104} withWordmark={false} onImage />
           <div className="flex items-center gap-2">
             <Link to="/busca" className="grid h-10 w-10 place-items-center rounded-full bg-white/15 text-white backdrop-blur-md">
               <Search size={18} />
@@ -238,7 +238,12 @@ function Home() {
             <p className="px-0 text-xs text-muted-foreground">{t("home.noDestinationsForCategory")}</p>
           ) : null}
           {filteredDestinations.map((d) => (
-            <div key={d.id} className="relative w-[240px] shrink-0 overflow-hidden rounded-2xl shadow-card">
+            <Link
+              key={d.id}
+              to="/destino/$destinationId"
+              params={{ destinationId: d.id }}
+              className="relative w-[240px] shrink-0 overflow-hidden rounded-2xl shadow-card active:scale-[0.98] transition-transform"
+            >
               <img src={d.img} alt={d.name} loading="lazy" className="h-[300px] w-full object-cover" width={800} height={1024} />
               <div className="absolute inset-0 bg-gradient-hero" />
               <div className="absolute top-3 left-3 inline-flex items-center gap-1 rounded-full bg-white/20 px-2 py-1 text-[10px] font-medium text-white backdrop-blur-md">
@@ -258,7 +263,7 @@ function Home() {
                   <span className="rounded-full bg-white/20 px-2 py-0.5 text-[10px] font-medium text-white backdrop-blur-sm">{d.elevation}m</span>
                 </div>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       </section>

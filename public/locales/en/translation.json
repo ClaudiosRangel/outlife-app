@@ -633,6 +633,8 @@
     "friendRequestText": "sent you a friend request.",
     "postLikeText": "liked your story.",
     "activityCompletedText": "completed an activity.",
+    "reviewReceivedText": "You received a new review.",
+    "partnerLeadText": "Someone showed interest in your profile.",
     "genericText": "You have a new notification.",
     "bellAria": "Notifications",
     "bellAriaWithCount": "Notifications ({{count}} unread)"

@@ -260,6 +260,49 @@ function NotificationsScreen() {
       );
     }
 
+    // Avaliação recebida no perfil de parceiro (trigger trg_notify_partner_review,
+    // type 'review_received', payload { authorId, rating }). Leva ao painel do
+    // parceiro, onde as avaliações recebidas são listadas.
+    if (n.type === "review_received") {
+      const rating = (n.payload as { rating?: number }).rating;
+      return (
+        <Link key={n.id} to="/parceiro/painel" className={cardClassName}>
+          <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[var(--sun)]/15 text-[var(--sun)]">
+            ★
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="text-sm">
+              {t("notifications.reviewReceivedText")}
+              {rating ? ` (${rating}★)` : ""}
+            </div>
+            <div className="mt-0.5 text-xs text-muted-foreground">
+              {new Date(n.created_at).toLocaleString("pt-BR")}
+            </div>
+          </div>
+          {!n.is_read && <span className="h-2 w-2 shrink-0 rounded-full bg-primary" />}
+        </Link>
+      );
+    }
+
+    // Interesse/reserva recebido no perfil de parceiro (RPC create_partner_lead,
+    // type 'partner_lead'). Leva ao painel, seção de leads.
+    if (n.type === "partner_lead") {
+      return (
+        <Link key={n.id} to="/parceiro/painel" className={cardClassName}>
+          <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary/15 text-primary">
+            <Bell size={16} />
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="text-sm">{t("notifications.partnerLeadText")}</div>
+            <div className="mt-0.5 text-xs text-muted-foreground">
+              {new Date(n.created_at).toLocaleString("pt-BR")}
+            </div>
+          </div>
+          {!n.is_read && <span className="h-2 w-2 shrink-0 rounded-full bg-primary" />}
+        </Link>
+      );
+    }
+
     // Fallback genérico para tipos de notificação futuros/desconhecidos.
     return (
       <div key={n.id} className={cardClassName}>

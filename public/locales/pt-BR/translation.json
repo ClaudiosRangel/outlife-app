@@ -633,6 +633,8 @@
     "friendRequestText": "enviou uma solicitação de amizade.",
     "postLikeText": "curtiu seu relato.",
     "activityCompletedText": "concluiu uma atividade.",
+    "reviewReceivedText": "Você recebeu uma nova avaliação.",
+    "partnerLeadText": "Alguém demonstrou interesse no seu perfil.",
     "genericText": "Você tem uma nova notificação.",
     "bellAria": "Notificações",
     "bellAriaWithCount": "Notificações ({{count}} não lidas)"
