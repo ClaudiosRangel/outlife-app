@@ -1,9 +1,34 @@
 # Diagnóstico — Push notifications e badge do ícone
 
-Sintoma: o número de notificações não aparece no ícone do app nem na central
-de notificações do celular. Isso indica que **o push não está chegando ao
-dispositivo** (o badge é só a última etapa; se o push não chega, o badge
-também não).
+> **✅ RESOLVIDO em 10/09/2026 (build 16:21).** Foram encontradas e corrigidas
+> DUAS causas raiz que impediam qualquer push de chegar:
+>
+> 1. **O app nunca registrava o token.** `registerPushForCurrentPlatform()`
+>    existia mas não era chamado em lugar nenhum → `native_push_tokens` vazia.
+>    Criado o hook `useRegisterPush` (src/hooks/use-register-push.ts), chamado
+>    dentro do `<AuthProvider>` no `__root.tsx` (componente `AuthedEffects`),
+>    que dispara o registro assim que há usuário logado. Também adicionada a
+>    permissão `POST_NOTIFICATIONS` no AndroidManifest (obrigatória Android 13+).
+> 2. **O trigger de envio chamava uma função inexistente.** `fn_send_native_push`
+>    usava `extensions.http_post` (não existe neste projeto). A extensão HTTP é
+>    `pg_net` → função `net.http_post` (body em JSONB). Corrigido via migration
+>    `20260910120000_fix-native-push-http.sql`, aplicada em produção.
+>
+> **Verificado:** o endpoint `/api/push/send-fcm` na Vercel responde com erro
+> do próprio FCM ao token fake (não 503), provando que `FIREBASE_SERVICE_ACCOUNT`
+> está configurado e a autenticação OAuth2 com o Firebase funciona.
+> `google-services.json` presente e plugin gradle aplicado; project_id
+> `outlife-62d46`, package `app.outlife.mobile`.
+>
+> **O que falta para validar no aparelho:** instalar o APK novo, logar, aceitar
+> a permissão de notificações. Isso popula `native_push_tokens`. A partir daí,
+> qualquer curtida/avaliação/lead/amizade gera push real + badge. No iOS, além
+> disso, é preciso APNs configurado no Firebase (upload da chave APNs).
+
+Sintoma (histórico): o número de notificações não aparecia no ícone do app nem
+na central de notificações do celular. Isso indicava que **o push não estava
+chegando ao dispositivo** (o badge é só a última etapa; se o push não chega, o
+badge também não).
 
 A cadeia completa do push é:
 `notifications` (INSERT) → trigger `trg_dispatch_push_notification` →

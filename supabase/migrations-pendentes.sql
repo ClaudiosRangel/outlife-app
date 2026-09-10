@@ -640,6 +640,8 @@ BEGIN
 END; $$;
 
 -- Recalcula fn_send_native_push para repassar o badge ao endpoint HTTP.
+-- IMPORTANTE: usa net.http_post (extensão pg_net), com body JSONB. NÃO usar
+-- extensions.http_post (não existe neste projeto — causava falha silenciosa).
 CREATE OR REPLACE FUNCTION public.fn_send_native_push(
   _token TEXT, _platform TEXT, _type TEXT, _payload JSONB
 ) RETURNS VOID LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
@@ -647,14 +649,14 @@ DECLARE
   _app_url TEXT := 'https://outlife-app.vercel.app';
   _secret TEXT := 'outlife-push-2026';
 BEGIN
-  PERFORM extensions.http_post(
+  PERFORM net.http_post(
     url := _app_url || '/api/push/send-fcm',
     body := jsonb_build_object(
       'token', _token,
       'type', _type,
       'badge', COALESCE((_payload ->> 'badge')::int, 0),
       'secret', _secret
-    )::text,
+    ),
     headers := jsonb_build_object('Content-Type', 'application/json')
   );
 EXCEPTION WHEN OTHERS THEN

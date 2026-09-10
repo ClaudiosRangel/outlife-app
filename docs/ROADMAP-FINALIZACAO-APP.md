@@ -48,10 +48,18 @@
 >    dele estava vazio (correto). Agora o painel do parceiro avaliado mostra as
 >    reviews, e o estado vazio mostra o texto certo.
 > 2. **Logo do topo** — ✓ FEITO: size=78 no BrandLogo (index.tsx), no APK.
-> 3. **Badge de notificação não aparece no ícone nem na central do celular** —
+> 3. **Badge/push no celular** — ✅ CAUSAS RAIZ CORRIGIDAS (10/09/2026): (a) o
+>    app não registrava o token (`registerPushForCurrentPlatform` nunca era
+>    chamado) → criado hook `useRegisterPush` ligado no `__root.tsx` dentro do
+>    AuthProvider; (b) `fn_send_native_push` chamava `extensions.http_post`
+>    inexistente → corrigido para `net.http_post` (pg_net), migration
+>    20260910120000 aplicada; (c) adicionada permissão POST_NOTIFICATIONS
+>    (Android 13+). FIREBASE_SERVICE_ACCOUNT confirmado OK na Vercel (endpoint
+>    responde com erro do FCM, não 503). FALTA validar no aparelho real:
+>    instalar APK novo → logar → aceitar permissão popula native_push_tokens.
+>    iOS ainda exige APNs no Firebase. Detalhe antigo mantido abaixo:
 >    o payload FCM já manda notification_count/aps.badge (item 12 do
->    migrations-pendentes, JÁ APLICADO em produção), MAS: (a) ✓ item 12 já
->    rodado; (b) no iOS o badge exige permissão de badge + APNs configurado no
+>    migrations-pendentes, JÁ APLICADO em produção), MAS: (b) no iOS o badge exige permissão de badge + APNs configurado no
 >    Firebase; (c) a "central de notificações" vazia sugere que o PUSH em si
 >    não está chegando — investigar se native_push_tokens está sendo populado
 >    (registro do token no device) e se o fn_send_native_push→/api/push/send-fcm

@@ -13,6 +13,7 @@ import { AuthProvider } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { registerPushNotificationTapNavigation } from "@/lib/push-registration";
 import { useLocalPushNotifications } from "@/hooks/use-local-push";
+import { useRegisterPush } from "@/hooks/use-register-push";
 import { useKeyboardScroll } from "@/hooks/use-keyboard-scroll";
 import "@/lib/i18n";
 
@@ -331,18 +332,33 @@ function useDeepLinkNavigation() {
   }, [router]);
 }
 
+/**
+ * Efeitos que exigem contexto de autenticação. Renderizado dentro do
+ * <AuthProvider> para que `useAuth()` enxergue o usuário logado — pré-requisito
+ * para registrar o token de push (associado ao usuário) e para as notificações
+ * locais por polling.
+ */
+function AuthedEffects() {
+  useRegisterPush();
+  useLocalPushNotifications();
+  return null;
+}
+
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   useRegisterServiceWorker();
   useServiceWorkerNotificationNavigation();
   useNativePushNotificationNavigation();
-  useLocalPushNotifications();
   useDeepLinkNavigation();
   useKeyboardScroll();
   const appVersion = useAppVersionBadge();
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
+        {/* Efeitos que dependem do usuário autenticado precisam rodar DENTRO
+            do AuthProvider (senão useAuth() sempre vê user=null). Registro de
+            push (FCM/APNs) + notificação local por polling ficam aqui. */}
+        <AuthedEffects />
         <PhoneFrame>
           {/* `h-full` + `min-h-0`: dentro de um contêiner flex, um filho
               flex (`<main>` com `flex-1`) só encolhe corretamente e passa a

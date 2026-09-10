@@ -71,4 +71,8 @@
     <!-- Permissions -->
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Android 13+ (API 33): obrigatória para exibir notificações push.
+         Sem ela o diálogo de permissão não aparece e nenhuma notificação
+         chega à central do sistema. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 </manifest>
