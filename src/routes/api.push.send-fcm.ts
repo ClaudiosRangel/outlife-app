@@ -63,6 +63,11 @@ async function sendFcmPush(
 ): Promise<void> {
   const accessToken = await getFcmAccessToken(sa);
   const count = Number.isFinite(badge) && (badge as number) >= 0 ? Math.floor(badge as number) : undefined;
+  // Tag única por envio: no Android, o badge do launcher deriva do número de
+  // notificações ATIVAS na bandeja. Se todas compartilham a mesma tag, uma
+  // substitui a outra (bandeja fica com 1 → badge 1). Uma tag distinta por
+  // push faz cada notificação acumular, e o badge acompanha a contagem.
+  const uniqueTag = `outvitar-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
   const response = await fetch(`https://fcm.googleapis.com/v1/projects/${sa.project_id}/messages:send`, {
     method: "POST",
     headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
@@ -70,12 +75,17 @@ async function sendFcmPush(
       message: {
         token,
         notification: { title, body },
-        // Android: pinta o número no ícone do launcher (badge).
         android: {
           priority: "high",
-          ...(count !== undefined ? { notification: { notification_count: count } } : {}),
+          notification: {
+            // Cada push é uma notificação distinta na bandeja (badge cresce).
+            tag: uniqueTag,
+            notification_priority: "PRIORITY_HIGH",
+            // Reforço do contador (alguns launchers/OEMs respeitam).
+            ...(count !== undefined ? { notification_count: count } : {}),
+          },
         },
-        // iOS (APNs): badge do ícone.
+        // iOS (APNs): badge do ícone definido diretamente pelo número.
         ...(count !== undefined ? { apns: { payload: { aps: { badge: count } } } } : {}),
       },
     }),
