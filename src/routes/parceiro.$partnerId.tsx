@@ -67,6 +67,11 @@ function PartnerDetail() {
     queryFn: () => fetchReviewsByPartner(partnerId),
     enabled: !!partnerId,
   });
+  // Preview + "ver todas": por padrão mostra só as 3 avaliações mais recentes
+  // para a página não ficar lotada; botão expande a lista inteira.
+  const REVIEWS_PREVIEW = 3;
+  const [reviewsExpanded, setReviewsExpanded] = useState(false);
+  const visibleReviews = reviewsExpanded ? reviewList : reviewList.slice(0, REVIEWS_PREVIEW);
 
   // Após uma nova avaliação, além de recarregar a lista, recarrega o parceiro
   // (a nota média/contagem no cabeçalho é recalculada no banco por trigger) e
@@ -360,7 +365,7 @@ function PartnerDetail() {
             {reviewList.length === 0 && (
               <p className="text-xs text-muted-foreground">{t("partner.noReviewsYet")}</p>
             )}
-            {reviewList.map((r) => {
+            {visibleReviews.map((r) => {
               const name = r.author?.full_name ?? "Aventureiro";
               const initials = name.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase();
               const date = new Date(r.created_at).toLocaleDateString("pt-BR");
@@ -383,6 +388,16 @@ function PartnerDetail() {
                 </div>
               );
             })}
+            {reviewList.length > REVIEWS_PREVIEW && (
+              <button
+                onClick={() => setReviewsExpanded((v) => !v)}
+                className="w-full rounded-2xl border border-border bg-card py-2.5 text-xs font-semibold text-primary"
+              >
+                {reviewsExpanded
+                  ? t("panel.showLess")
+                  : t("panel.showAllCount", { count: reviewList.length })}
+              </button>
+            )}
           </div>
 
           <LeaveReview partnerId={partner.id} onSubmitted={handleReviewSubmitted} />
