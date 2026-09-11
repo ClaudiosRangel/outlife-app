@@ -18,9 +18,11 @@ export function BrandSplash() {
   const [fadingOut, setFadingOut] = useState(false);
 
   useEffect(() => {
-    // Inicia o fade-out perto do fim e desmonta ao terminar a transição.
-    const fadeTimer = setTimeout(() => setFadingOut(true), 1500);
-    const hideTimer = setTimeout(() => setVisible(false), 2000);
+    // A splash NATIVA (verde + logo) já cobre o boot; esta versão React
+    // continua o mesmo visual (verde + logo + slogan) por um tempo curto,
+    // dando continuidade sem parecer "duas telas". Fade-out rápido.
+    const fadeTimer = setTimeout(() => setFadingOut(true), 900);
+    const hideTimer = setTimeout(() => setVisible(false), 1300);
     return () => {
       clearTimeout(fadeTimer);
       clearTimeout(hideTimer);

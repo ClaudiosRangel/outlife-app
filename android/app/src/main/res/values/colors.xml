@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Verde-floresta da marca OutVitar (mesmo do gradiente/splash React). -->
+    <color name="brand_splash_bg">#1C3D2A</color>
+</resources>
