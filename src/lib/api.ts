@@ -2030,6 +2030,27 @@ export async function uploadComplianceDocument(file: File): Promise<string> {
 // parceiros; a tela de admin só funciona corretamente para quem tem
 // Admin_Role (Requirement 11.8), confiando na RLS em vez de reimplementar
 // essa checagem aqui.
+// Contagem de itens que exigem aprovação do admin: pedidos Cadastur pendentes
+// + destinos sugeridos pendentes. Usa count exato sem trazer linhas (head:true)
+// para ser barato. Alimenta o alerta/badge na Área administrativa.
+export type PendingApprovals = { cadastur: number; destinations: number; total: number };
+
+export async function countPendingApprovals(): Promise<PendingApprovals> {
+  const [cad, dest] = await Promise.all([
+    supabase
+      .from("cadastur_verification_requests" as never)
+      .select("id", { count: "exact", head: true })
+      .eq("status", "pending"),
+    supabase
+      .from("destinations")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "pending"),
+  ]);
+  const cadastur = cad.count ?? 0;
+  const destinations = dest.count ?? 0;
+  return { cadastur, destinations, total: cadastur + destinations };
+}
+
 export async function fetchPendingCadasturRequests(): Promise<CadasturRequest[]> {
   const { data, error } = await supabase
     .from("cadastur_verification_requests" as never)

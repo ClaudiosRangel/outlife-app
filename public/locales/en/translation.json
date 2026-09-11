@@ -382,6 +382,8 @@
     "contentDesc": "Edit the home screen slogan and tagline.",
     "publishTitle": "Publish interaction",
     "publishDesc": "Create a post with image or video in any category.",
+    "pendingAlert_one": "{{count}} pending approval",
+    "pendingAlert_other": "{{count}} pending approvals",
     "openCta": "Admin area"
   },
   "adminDash": {
@@ -595,6 +597,8 @@
     "favoritesLabel": "people favorited your profile",
     "leadsTitle": "Interests / Bookings",
     "leadsEmpty": "No one has shown interest yet.",
+    "showAllCount": "Show all ({{count}})",
+    "showLess": "Show less",
     "reviewsTitle": "Reviews received",
     "reviewsEmpty": "You haven't received reviews yet.",
     "edit": "Edit profile",

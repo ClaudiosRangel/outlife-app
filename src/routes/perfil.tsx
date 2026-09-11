@@ -45,6 +45,7 @@ import {
   discardActivity,
   fetchUserLevelStats,
   isCurrentUserAdmin,
+  countPendingApprovals,
 } from "@/lib/api";
 import { classifyLevel, levelProgress, type UserLevel } from "@/lib/user-level";
 import type { ActivityType } from "@/lib/activity-metrics";
@@ -161,6 +162,14 @@ function Profile() {
     queryKey: ["is-current-user-admin", user?.id],
     queryFn: isCurrentUserAdmin,
     enabled: !!user,
+  });
+
+  // Pendências de aprovação para exibir o alerta/badge no atalho admin.
+  const { data: pendingApprovals = { cadastur: 0, destinations: 0, total: 0 } } = useQuery({
+    queryKey: ["pending-approvals"],
+    queryFn: countPendingApprovals,
+    enabled: !!user && isAdmin === true,
+    refetchInterval: 60_000,
   });
 
   const qc = useQueryClient();
@@ -339,10 +348,22 @@ function Profile() {
         <div className="mx-5 mt-3">
           <Link to="/admin" className="flex items-center justify-between rounded-2xl bg-card p-3 shadow-card">
             <div className="flex items-center gap-3">
-              <span className="grid h-9 w-9 place-items-center rounded-xl bg-primary/10 text-primary">
+              <span className="relative grid h-9 w-9 place-items-center rounded-xl bg-primary/10 text-primary">
                 <ShieldCheck size={16} />
+                {pendingApprovals.total > 0 && (
+                  <span className="absolute -right-1 -top-1 grid h-4 min-w-4 place-items-center rounded-full bg-red-500 px-1 text-[9px] font-bold leading-none text-white">
+                    {pendingApprovals.total > 9 ? "9+" : pendingApprovals.total}
+                  </span>
+                )}
               </span>
-              <span className="text-sm font-semibold">{t("admin.openCta")}</span>
+              <div className="flex flex-col">
+                <span className="text-sm font-semibold">{t("admin.openCta")}</span>
+                {pendingApprovals.total > 0 && (
+                  <span className="text-[11px] font-medium text-red-500">
+                    {t("admin.pendingAlert", { count: pendingApprovals.total })}
+                  </span>
+                )}
+              </div>
             </div>
             <span className="text-xs text-primary font-medium">{t("common.open")}</span>
           </Link>

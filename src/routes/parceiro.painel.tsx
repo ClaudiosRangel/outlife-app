@@ -155,6 +155,19 @@ function PartnerPanel() {
   const [phone, setPhone] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Controle de expandir/recolher das listas longas (padrão "preview + ver
+  // todos"): por padrão mostra só os primeiros PREVIEW_COUNT itens.
+  const PREVIEW_COUNT = 3;
+  const [leadsExpanded, setLeadsExpanded] = useState(false);
+  const [reviewsExpanded, setReviewsExpanded] = useState(false);
+  const visibleLeads = leadsExpanded ? leads : leads.slice(0, PREVIEW_COUNT);
+  const visibleReviews = reviewsExpanded ? receivedReviews : receivedReviews.slice(0, PREVIEW_COUNT);
+  // Média e distribuição das avaliações recebidas (resumo no cabeçalho).
+  const reviewsAvg =
+    receivedReviews.length > 0
+      ? receivedReviews.reduce((s, r) => s + Number(r.rating || 0), 0) / receivedReviews.length
+      : 0;
+
   useEffect(() => {
     if (profile) {
       setName(profile.full_name ?? "");
@@ -414,11 +427,18 @@ function PartnerPanel() {
         </div>
       </div>
 
-      {/* Reservas / interesses recebidos (leads) */}
+      {/* Reservas / interesses recebidos (leads) — resumo + expandir */}
       <section className="mt-6 px-5">
-        <div className="flex items-center gap-2">
-          <CalendarClock size={18} className="text-primary" />
-          <h2 className="font-display text-lg font-semibold">{t("panel.leadsTitle")}</h2>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <CalendarClock size={18} className="text-primary" />
+            <h2 className="font-display text-lg font-semibold">{t("panel.leadsTitle")}</h2>
+          </div>
+          {leads.length > 0 && (
+            <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary tabular-nums">
+              {leads.length}
+            </span>
+          )}
         </div>
         <div className="mt-3 space-y-2">
           {leadsLoading ? (
@@ -428,31 +448,53 @@ function PartnerPanel() {
               {t("panel.leadsEmpty")}
             </div>
           ) : (
-            leads.map((lead) => (
-              <div key={lead.id} className="flex items-center gap-3 rounded-2xl bg-card p-3 shadow-card">
-                <img
-                  src={resolveAsset(lead.avatarUrl, avatarFallback)}
-                  alt=""
-                  className="h-10 w-10 rounded-full object-cover"
-                />
-                <div className="min-w-0 flex-1">
-                  <div className="truncate text-sm font-semibold">{lead.fullName ?? "Aventureiro"}</div>
-                  <div className="text-[11px] text-muted-foreground">
-                    {new Date(lead.createdAt).toLocaleDateString(i18n.language)} ·{" "}
-                    {new Date(lead.createdAt).toLocaleTimeString(i18n.language, { hour: "2-digit", minute: "2-digit" })}
+            <>
+              {visibleLeads.map((lead) => (
+                <div key={lead.id} className="flex items-center gap-3 rounded-2xl bg-card p-3 shadow-card">
+                  <img
+                    src={resolveAsset(lead.avatarUrl, avatarFallback)}
+                    alt=""
+                    className="h-10 w-10 rounded-full object-cover"
+                  />
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate text-sm font-semibold">{lead.fullName ?? "Aventureiro"}</div>
+                    <div className="text-[11px] text-muted-foreground">
+                      {new Date(lead.createdAt).toLocaleDateString(i18n.language)} ·{" "}
+                      {new Date(lead.createdAt).toLocaleTimeString(i18n.language, { hour: "2-digit", minute: "2-digit" })}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))
+              ))}
+              {leads.length > PREVIEW_COUNT && (
+                <button
+                  onClick={() => setLeadsExpanded((v) => !v)}
+                  className="w-full rounded-2xl border border-border bg-card py-2.5 text-xs font-semibold text-primary"
+                >
+                  {leadsExpanded
+                    ? t("panel.showLess")
+                    : t("panel.showAllCount", { count: leads.length })}
+                </button>
+              )}
+            </>
           )}
         </div>
       </section>
 
-      {/* Avaliações recebidas */}
+      {/* Avaliações recebidas — resumo (média + total) + expandir */}
       <section className="mt-6 px-5">
-        <div className="flex items-center gap-2">
-          <Star size={18} className="text-[var(--sun)]" />
-          <h2 className="font-display text-lg font-semibold">{t("panel.reviewsTitle")}</h2>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Star size={18} className="text-[var(--sun)]" />
+            <h2 className="font-display text-lg font-semibold">{t("panel.reviewsTitle")}</h2>
+          </div>
+          {receivedReviews.length > 0 && (
+            <div className="flex items-center gap-1 rounded-full bg-[var(--sun)]/10 px-2.5 py-0.5">
+              <Star size={12} className="fill-[var(--sun)] text-[var(--sun)]" />
+              <span className="text-xs font-semibold tabular-nums">
+                {reviewsAvg.toFixed(1)} · {receivedReviews.length}
+              </span>
+            </div>
+          )}
         </div>
         <div className="mt-3 space-y-2">
           {reviewsLoading ? (
@@ -462,7 +504,8 @@ function PartnerPanel() {
               {t("panel.reviewsEmpty")}
             </div>
           ) : (
-            receivedReviews.map((r) => {
+            <>
+            {visibleReviews.map((r) => {
               const name = r.author?.full_name ?? "Aventureiro";
               return (
                 <div key={r.id} className="rounded-2xl bg-card p-4 shadow-card">
@@ -486,7 +529,18 @@ function PartnerPanel() {
                   {r.comment && <p className="mt-2 text-sm leading-relaxed text-foreground/80">{r.comment}</p>}
                 </div>
               );
-            })
+            })}
+            {receivedReviews.length > PREVIEW_COUNT && (
+              <button
+                onClick={() => setReviewsExpanded((v) => !v)}
+                className="w-full rounded-2xl border border-border bg-card py-2.5 text-xs font-semibold text-primary"
+              >
+                {reviewsExpanded
+                  ? t("panel.showLess")
+                  : t("panel.showAllCount", { count: receivedReviews.length })}
+              </button>
+            )}
+            </>
           )}
         </div>
       </section>

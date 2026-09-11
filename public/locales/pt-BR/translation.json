@@ -382,6 +382,8 @@
     "contentDesc": "Editar o slogan e a chamada da tela inicial.",
     "publishTitle": "Publicar interação",
     "publishDesc": "Criar post com imagem ou vídeo em qualquer categoria.",
+    "pendingAlert_one": "{{count}} aprovação pendente",
+    "pendingAlert_other": "{{count}} aprovações pendentes",
     "openCta": "Área administrativa"
   },
   "adminDash": {
@@ -595,6 +597,8 @@
     "favoritesLabel": "pessoas favoritaram seu perfil",
     "leadsTitle": "Interesses / Reservas",
     "leadsEmpty": "Ninguém demonstrou interesse ainda.",
+    "showAllCount": "Ver todos ({{count}})",
+    "showLess": "Ver menos",
     "reviewsTitle": "Avaliações recebidas",
     "reviewsEmpty": "Você ainda não recebeu avaliações.",
     "edit": "Editar perfil",

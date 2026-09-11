@@ -6,7 +6,7 @@ import { ArrowLeft, ShieldAlert, ShieldCheck, MapPin, ChevronRight, Lightbulb, L
 import { StatusBar } from "@/components/StatusBar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/hooks/use-auth";
-import { isCurrentUserAdmin, fetchPendingCadasturRequests } from "@/lib/api";
+import { isCurrentUserAdmin, countPendingApprovals } from "@/lib/api";
 
 export const Route = createFileRoute("/admin/")({
   component: AdminHub,
@@ -39,11 +39,13 @@ function AdminHub() {
     enabled: !!user,
   });
 
-  // Contador de cadastros pendentes (badge no card de Cadastur).
-  const { data: pending = [] } = useQuery({
-    queryKey: ["pending-cadastur-requests"],
-    queryFn: fetchPendingCadasturRequests,
+  // Pendências que exigem aprovação (Cadastur + destinos), para os badges e o
+  // alerta no topo. Poll a cada 60s para refletir novas aprovações sem recarregar.
+  const { data: pending = { cadastur: 0, destinations: 0, total: 0 } } = useQuery({
+    queryKey: ["pending-approvals"],
+    queryFn: countPendingApprovals,
     enabled: !!user && isAdmin === true,
+    refetchInterval: 60_000,
   });
 
   if (authLoading || (!!user && isAdminLoading)) {
@@ -86,14 +88,14 @@ function AdminHub() {
       icon: ShieldCheck,
       title: t("admin.cadasturTitle", "Aprovar cadastros (Cadastur)"),
       desc: t("admin.cadasturDesc", "Verificar e aprovar parceiros."),
-      badge: pending.length,
+      badge: pending.cadastur,
     },
     {
       to: "/admin/destinos" as const,
       icon: MapPin,
       title: t("admin.destinationsTitle", "Aprovar destinos"),
       desc: t("admin.destinationsDesc", "Revisar destinos sugeridos."),
-      badge: 0,
+      badge: pending.destinations,
     },
     {
       to: "/admin/dashboard" as const,
@@ -141,6 +143,20 @@ function AdminHub() {
         <h1 className="mt-4 font-display text-2xl font-semibold">{t("admin.hubTitle", "Área administrativa")}</h1>
         <p className="mt-1 text-sm text-white/80">{t("admin.hubSubtitle", "Ferramentas de moderação e gestão.")}</p>
       </div>
+
+      {/* Alerta de aprovações pendentes (Cadastur + destinos) */}
+      {pending.total > 0 && (
+        <div className="mx-5 mt-4 flex items-center gap-3 rounded-2xl border border-[var(--sun)]/40 bg-[var(--sun)]/10 p-4">
+          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[var(--sun)]/20 text-[var(--sun)]">
+            <ShieldAlert size={18} />
+          </span>
+          <div className="flex-1 text-sm">
+            <span className="font-semibold">
+              {t("admin.pendingAlert", { count: pending.total })}
+            </span>
+          </div>
+        </div>
+      )}
 
       <section className="px-5 mt-4 space-y-2">
         {cards.map((c) => {
