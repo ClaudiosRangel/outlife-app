@@ -14,6 +14,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { registerPushNotificationTapNavigation } from "@/lib/push-registration";
 import { useLocalPushNotifications } from "@/hooks/use-local-push";
 import { useRegisterPush } from "@/hooks/use-register-push";
+import { BrandSplash } from "@/components/BrandSplash";
 import { useKeyboardScroll } from "@/hooks/use-keyboard-scroll";
 import "@/lib/i18n";
 
@@ -354,6 +355,8 @@ function RootComponent() {
   const appVersion = useAppVersionBadge();
   return (
     <QueryClientProvider client={queryClient}>
+      {/* Splash de marca (logo grande + slogan) ao abrir o app. */}
+      <BrandSplash />
       <AuthProvider>
         {/* Efeitos que dependem do usuário autenticado precisam rodar DENTRO
             do AuthProvider (senão useAuth() sempre vê user=null). Registro de

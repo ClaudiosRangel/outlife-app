@@ -19,9 +19,12 @@ import {
   LogOut,
   Users,
   ShieldCheck,
+  MessageSquarePlus,
+  Star,
 } from "lucide-react";
 import { StatusBar } from "@/components/StatusBar";
 import { Stars } from "@/components/Stars";
+import { Textarea } from "@/components/ui/textarea";
 import avatar from "@/assets/avatar-rafael.jpg";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
@@ -46,6 +49,7 @@ import {
   fetchUserLevelStats,
   isCurrentUserAdmin,
   countPendingApprovals,
+  submitUserFeedback,
 } from "@/lib/api";
 import { classifyLevel, levelProgress, type UserLevel } from "@/lib/user-level";
 import type { ActivityType } from "@/lib/activity-metrics";
@@ -91,6 +95,10 @@ function Profile() {
   const [darkMode, setDarkMode] = useState(false);
   const [hasActiveTracking, setHasActiveTracking] = useState(false);
   const [logoutBlockedOpen, setLogoutBlockedOpen] = useState(false);
+  // "Dê sua opinião" — Sheet de feedback do app (visível a todos).
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const [feedbackMsg, setFeedbackMsg] = useState("");
+  const [feedbackRating, setFeedbackRating] = useState(0);
 
   // Verifica se há atividade em andamento para alterar o CTA
   useEffect(() => {
@@ -179,6 +187,17 @@ function Profile() {
       qc.invalidateQueries({ queryKey: ["user-activities", user?.id] });
       qc.invalidateQueries({ queryKey: ["user-trails", user?.id] });
     },
+  });
+
+  const feedbackMutation = useMutation({
+    mutationFn: () => submitUserFeedback({ message: feedbackMsg, rating: feedbackRating || null }),
+    onSuccess: () => {
+      toast.success(t("feedback.sent"));
+      setFeedbackOpen(false);
+      setFeedbackMsg("");
+      setFeedbackRating(0);
+    },
+    onError: (e: Error) => toast.error(e.message),
   });
 
   // Bug corrigido (Requirement 12.3): os botões "Seguidores"/"Seguindo"
@@ -402,6 +421,22 @@ function Profile() {
           </div>
           <span className="text-xs font-medium text-white/80">{t("common.open")}</span>
         </Link>
+      </div>
+
+      {/* Dê sua opinião — visível para todos os usuários */}
+      <div className="mx-5 mt-3">
+        <button
+          onClick={() => setFeedbackOpen(true)}
+          className="flex w-full items-center justify-between rounded-2xl bg-card p-3 shadow-card"
+        >
+          <div className="flex items-center gap-3">
+            <span className="grid h-9 w-9 place-items-center rounded-xl bg-[var(--sun)]/15 text-[var(--sun)]">
+              <MessageSquarePlus size={16} />
+            </span>
+            <span className="text-sm font-semibold">{t("feedback.cta")}</span>
+          </div>
+          <span className="text-xs text-primary font-medium">{t("common.open")}</span>
+        </button>
       </div>
 
       <section className="px-5 mt-6">
@@ -803,6 +838,55 @@ function Profile() {
               className="flex w-full items-center justify-center gap-2 rounded-xl border border-border bg-card py-3.5 text-sm font-semibold text-foreground active:scale-[0.98] transition-transform"
             >
               {t("profile.logoutBlocked.cancel")}
+            </button>
+          </div>
+        </SheetContent>
+      </Sheet>
+
+      {/* Dê sua opinião */}
+      <Sheet open={feedbackOpen} onOpenChange={setFeedbackOpen}>
+        <SheetContent side="bottom" className="rounded-t-3xl">
+          <SheetHeader>
+            <SheetTitle className="font-display">{t("feedback.title")}</SheetTitle>
+          </SheetHeader>
+          <div className="space-y-4 py-4">
+            <p className="text-sm text-muted-foreground">{t("feedback.description")}</p>
+            <div>
+              <div className="mb-1.5 text-xs font-medium text-muted-foreground">{t("feedback.ratingLabel")}</div>
+              <div className="flex items-center gap-1.5">
+                {[1, 2, 3, 4, 5].map((n) => (
+                  <button
+                    key={n}
+                    type="button"
+                    onClick={() => setFeedbackRating(n)}
+                    aria-label={`${n}`}
+                  >
+                    <Star
+                      size={28}
+                      className={n <= feedbackRating ? "fill-[var(--sun)] text-[var(--sun)]" : "text-muted-foreground"}
+                    />
+                  </button>
+                ))}
+              </div>
+            </div>
+            <Textarea
+              value={feedbackMsg}
+              onChange={(e) => setFeedbackMsg(e.target.value)}
+              rows={4}
+              placeholder={t("feedback.placeholder")}
+            />
+            <button
+              onClick={() => {
+                if (!feedbackMsg.trim()) {
+                  toast.error(t("feedback.errorEmpty"));
+                  return;
+                }
+                feedbackMutation.mutate();
+              }}
+              disabled={feedbackMutation.isPending}
+              className="w-full rounded-xl bg-primary py-3.5 text-sm font-semibold text-primary-foreground shadow-card disabled:opacity-60"
+            >
+              {feedbackMutation.isPending ? t("common.loading") : t("feedback.send")}
             </button>
           </div>
         </SheetContent>

@@ -36,6 +36,7 @@ import { Route as AtividadeRastrearRouteImport } from './routes/atividade.rastre
 import { Route as AtividadeActivityIdRouteImport } from './routes/atividade.$activityId'
 import { Route as ApiNotifyAdminsRouteImport } from './routes/api.notify-admins'
 import { Route as AdminPublicarRouteImport } from './routes/admin.publicar'
+import { Route as AdminOpinioesRouteImport } from './routes/admin.opinioes'
 import { Route as AdminMelhoriasRouteImport } from './routes/admin.melhorias'
 import { Route as AdminDestinosRouteImport } from './routes/admin.destinos'
 import { Route as AdminDashboardRouteImport } from './routes/admin.dashboard'
@@ -185,6 +186,11 @@ const AdminPublicarRoute = AdminPublicarRouteImport.update({
   path: '/admin/publicar',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminOpinioesRoute = AdminOpinioesRouteImport.update({
+  id: '/admin/opinioes',
+  path: '/admin/opinioes',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminMelhoriasRoute = AdminMelhoriasRouteImport.update({
   id: '/admin/melhorias',
   path: '/admin/melhorias',
@@ -275,6 +281,7 @@ export interface FileRoutesByFullPath {
   '/admin/dashboard': typeof AdminDashboardRoute
   '/admin/destinos': typeof AdminDestinosRoute
   '/admin/melhorias': typeof AdminMelhoriasRoute
+  '/admin/opinioes': typeof AdminOpinioesRoute
   '/admin/publicar': typeof AdminPublicarRoute
   '/api/notify-admins': typeof ApiNotifyAdminsRoute
   '/atividade/$activityId': typeof AtividadeActivityIdRoute
@@ -317,6 +324,7 @@ export interface FileRoutesByTo {
   '/admin/dashboard': typeof AdminDashboardRoute
   '/admin/destinos': typeof AdminDestinosRoute
   '/admin/melhorias': typeof AdminMelhoriasRoute
+  '/admin/opinioes': typeof AdminOpinioesRoute
   '/admin/publicar': typeof AdminPublicarRoute
   '/api/notify-admins': typeof ApiNotifyAdminsRoute
   '/atividade/$activityId': typeof AtividadeActivityIdRoute
@@ -360,6 +368,7 @@ export interface FileRoutesById {
   '/admin/dashboard': typeof AdminDashboardRoute
   '/admin/destinos': typeof AdminDestinosRoute
   '/admin/melhorias': typeof AdminMelhoriasRoute
+  '/admin/opinioes': typeof AdminOpinioesRoute
   '/admin/publicar': typeof AdminPublicarRoute
   '/api/notify-admins': typeof ApiNotifyAdminsRoute
   '/atividade/$activityId': typeof AtividadeActivityIdRoute
@@ -404,6 +413,7 @@ export interface FileRouteTypes {
     | '/admin/dashboard'
     | '/admin/destinos'
     | '/admin/melhorias'
+    | '/admin/opinioes'
     | '/admin/publicar'
     | '/api/notify-admins'
     | '/atividade/$activityId'
@@ -446,6 +456,7 @@ export interface FileRouteTypes {
     | '/admin/dashboard'
     | '/admin/destinos'
     | '/admin/melhorias'
+    | '/admin/opinioes'
     | '/admin/publicar'
     | '/api/notify-admins'
     | '/atividade/$activityId'
@@ -488,6 +499,7 @@ export interface FileRouteTypes {
     | '/admin/dashboard'
     | '/admin/destinos'
     | '/admin/melhorias'
+    | '/admin/opinioes'
     | '/admin/publicar'
     | '/api/notify-admins'
     | '/atividade/$activityId'
@@ -531,6 +543,7 @@ export interface RootRouteChildren {
   AdminDashboardRoute: typeof AdminDashboardRoute
   AdminDestinosRoute: typeof AdminDestinosRoute
   AdminMelhoriasRoute: typeof AdminMelhoriasRoute
+  AdminOpinioesRoute: typeof AdminOpinioesRoute
   AdminPublicarRoute: typeof AdminPublicarRoute
   ApiNotifyAdminsRoute: typeof ApiNotifyAdminsRoute
   AtividadeActivityIdRoute: typeof AtividadeActivityIdRoute
@@ -740,6 +753,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminPublicarRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/opinioes': {
+      id: '/admin/opinioes'
+      path: '/admin/opinioes'
+      fullPath: '/admin/opinioes'
+      preLoaderRoute: typeof AdminOpinioesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/melhorias': {
       id: '/admin/melhorias'
       path: '/admin/melhorias'
@@ -869,6 +889,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminDashboardRoute: AdminDashboardRoute,
   AdminDestinosRoute: AdminDestinosRoute,
   AdminMelhoriasRoute: AdminMelhoriasRoute,
+  AdminOpinioesRoute: AdminOpinioesRoute,
   AdminPublicarRoute: AdminPublicarRoute,
   ApiNotifyAdminsRoute: ApiNotifyAdminsRoute,
   AtividadeActivityIdRoute: AtividadeActivityIdRoute,

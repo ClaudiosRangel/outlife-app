@@ -2226,3 +2226,33 @@ export async function fetchAdminDashboardStats(): Promise<AdminDashboardStats> {
   if (error) throw error;
   return data as unknown as AdminDashboardStats;
 }
+
+// ============ "Dê sua opinião" (user_feedback) ============
+// Qualquer usuário envia uma opinião sobre o app (texto + nota opcional).
+// Admin lê tudo na Administração (RPC admin_fetch_feedback).
+export type UserFeedback = {
+  id: string;
+  author_id: string;
+  full_name: string | null;
+  avatar_url: string | null;
+  rating: number | null;
+  message: string;
+  created_at: string;
+};
+
+export async function submitUserFeedback(input: { message: string; rating?: number | null }): Promise<void> {
+  const { data: userData } = await supabase.auth.getUser();
+  if (!userData.user) throw new Error("Você precisa estar logado para enviar sua opinião.");
+  const { error } = await supabase.from("user_feedback" as never).insert({
+    author_id: userData.user.id,
+    message: input.message.trim(),
+    rating: input.rating ?? null,
+  } as never);
+  if (error) throw error;
+}
+
+export async function fetchAdminFeedback(limit = 100): Promise<UserFeedback[]> {
+  const { data, error } = await supabase.rpc("admin_fetch_feedback" as never, { _limit: limit } as never);
+  if (error) throw error;
+  return (data ?? []) as unknown as UserFeedback[];
+}

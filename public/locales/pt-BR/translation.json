@@ -382,9 +382,26 @@
     "contentDesc": "Editar o slogan e a chamada da tela inicial.",
     "publishTitle": "Publicar interação",
     "publishDesc": "Criar post com imagem ou vídeo em qualquer categoria.",
+    "feedbackTitle": "Opiniões dos usuários",
+    "feedbackDesc": "Ver o que os usuários acharam do app.",
     "pendingAlert_one": "{{count}} aprovação pendente",
     "pendingAlert_other": "{{count}} aprovações pendentes",
     "openCta": "Área administrativa"
+  },
+  "feedback": {
+    "cta": "Dê sua opinião",
+    "title": "Dê sua opinião",
+    "description": "Conte o que você achou do OutVitar. Sua opinião ajuda a melhorar o app.",
+    "ratingLabel": "Nota (opcional)",
+    "placeholder": "Escreva sua opinião ou sugestão...",
+    "send": "Enviar opinião",
+    "sent": "Obrigado pela sua opinião!",
+    "errorEmpty": "Escreva sua opinião antes de enviar."
+  },
+  "adminFeedback": {
+    "title": "Opiniões dos usuários",
+    "subtitle": "Feedback e sugestões enviados pelos usuários.",
+    "empty": "Nenhuma opinião enviada ainda."
   },
   "adminDash": {
     "title": "Dashboard",

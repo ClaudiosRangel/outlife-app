@@ -382,9 +382,26 @@
     "contentDesc": "Edit the home screen slogan and tagline.",
     "publishTitle": "Publish interaction",
     "publishDesc": "Create a post with image or video in any category.",
+    "feedbackTitle": "User feedback",
+    "feedbackDesc": "See what users think of the app.",
     "pendingAlert_one": "{{count}} pending approval",
     "pendingAlert_other": "{{count}} pending approvals",
     "openCta": "Admin area"
+  },
+  "feedback": {
+    "cta": "Give your feedback",
+    "title": "Give your feedback",
+    "description": "Tell us what you think of OutVitar. Your feedback helps improve the app.",
+    "ratingLabel": "Rating (optional)",
+    "placeholder": "Write your feedback or suggestion...",
+    "send": "Send feedback",
+    "sent": "Thanks for your feedback!",
+    "errorEmpty": "Write your feedback before sending."
+  },
+  "adminFeedback": {
+    "title": "User feedback",
+    "subtitle": "Feedback and suggestions sent by users.",
+    "empty": "No feedback yet."
   },
   "adminDash": {
     "title": "Dashboard",
