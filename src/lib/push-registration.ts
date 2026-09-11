@@ -41,7 +41,17 @@ export function registerPushNotificationTapNavigation(navigate: (url: string) =>
   });
 }
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "";
+// URL absoluta da API (endpoints server-side na Vercel). Dentro do
+// Outlife_Native_Shell (Capacitor), o WebView serve os arquivos de
+// `https://localhost`, então um fetch relativo (`/api/...`) iria para o
+// próprio WebView — onde os endpoints NÃO existem. Por isso, em plataforma
+// nativa usamos sempre a URL absoluta de produção. No navegador (web), a URL
+// relativa funciona (mesma origem do deploy). `VITE_API_BASE_URL` continua
+// tendo precedência quando definida (ex.: ambientes de staging).
+const PRODUCTION_API_URL = "https://outlife-app.vercel.app";
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL ??
+  (Capacitor.isNativePlatform() ? PRODUCTION_API_URL : "");
 const VAPID_PUBLIC_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY ?? "";
 const DEVICE_ID_STORAGE_KEY = "outlife_device_id";
 const PUSH_REGISTRATION_TIMEOUT_MS = 10_000;
@@ -178,22 +188,28 @@ export async function invalidatePushRegistration(): Promise<void> {
  */
 export async function registerPushForCurrentPlatform(): Promise<void> {
   if (Capacitor.isNativePlatform()) {
+    // Anexa os listeners ANTES de register() — o evento `registration` pode
+    // disparar imediatamente, e anexar depois arriscaria perder o token.
+    await PushNotifications.addListener("registration", async (token) => {
+      try {
+        await registerNativePushToken(token.value, Capacitor.getPlatform() as "android" | "ios");
+      } catch (err) {
+        if (import.meta.env?.DEV) console.warn("[push] falha ao gravar token nativo:", err);
+      }
+    });
+    // Requirement 11.8: se a permissão de notificações nativas for revogada
+    // pelo usuário posteriormente (fora do app, nas configurações do
+    // sistema), invalida o Native_Push_Token registrado assim que detectado.
+    await PushNotifications.addListener("registrationError", async () => {
+      await invalidatePushRegistration();
+    });
+
     const { receive } = await PushNotifications.checkPermissions();
     if (receive !== "granted") {
       const req = await PushNotifications.requestPermissions();
       if (req.receive !== "granted") return;
     }
     await PushNotifications.register();
-    PushNotifications.addListener("registration", async (token) => {
-      await registerNativePushToken(token.value, Capacitor.getPlatform() as "android" | "ios");
-    });
-    // Requirement 11.8: se a permissão de notificações nativas for
-    // revogada pelo usuário posteriormente (fora do app, nas
-    // configurações do sistema), invalida o Native_Push_Token registrado
-    // assim que essa mudança for detectada.
-    PushNotifications.addListener("registrationError", async () => {
-      await invalidatePushRegistration();
-    });
     return;
   }
 

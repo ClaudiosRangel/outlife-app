@@ -35,8 +35,11 @@ import { Route as ChecklistChecklistIdRouteImport } from './routes/checklist.$ch
 import { Route as AtividadeRastrearRouteImport } from './routes/atividade.rastrear'
 import { Route as AtividadeActivityIdRouteImport } from './routes/atividade.$activityId'
 import { Route as ApiNotifyAdminsRouteImport } from './routes/api.notify-admins'
+import { Route as AdminPublicarRouteImport } from './routes/admin.publicar'
 import { Route as AdminMelhoriasRouteImport } from './routes/admin.melhorias'
 import { Route as AdminDestinosRouteImport } from './routes/admin.destinos'
+import { Route as AdminDashboardRouteImport } from './routes/admin.dashboard'
+import { Route as AdminConteudoRouteImport } from './routes/admin.conteudo'
 import { Route as AdminComplianceRouteImport } from './routes/admin.compliance'
 import { Route as AActivityIdRouteImport } from './routes/a.$activityId'
 import { Route as ApiPushSendFcmRouteImport } from './routes/api.push.send-fcm'
@@ -177,6 +180,11 @@ const ApiNotifyAdminsRoute = ApiNotifyAdminsRouteImport.update({
   path: '/api/notify-admins',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminPublicarRoute = AdminPublicarRouteImport.update({
+  id: '/admin/publicar',
+  path: '/admin/publicar',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminMelhoriasRoute = AdminMelhoriasRouteImport.update({
   id: '/admin/melhorias',
   path: '/admin/melhorias',
@@ -185,6 +193,16 @@ const AdminMelhoriasRoute = AdminMelhoriasRouteImport.update({
 const AdminDestinosRoute = AdminDestinosRouteImport.update({
   id: '/admin/destinos',
   path: '/admin/destinos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminDashboardRoute = AdminDashboardRouteImport.update({
+  id: '/admin/dashboard',
+  path: '/admin/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminConteudoRoute = AdminConteudoRouteImport.update({
+  id: '/admin/conteudo',
+  path: '/admin/conteudo',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminComplianceRoute = AdminComplianceRouteImport.update({
@@ -253,8 +271,11 @@ export interface FileRoutesByFullPath {
   '/sugerir-destino': typeof SugerirDestinoRoute
   '/a/$activityId': typeof AActivityIdRoute
   '/admin/compliance': typeof AdminComplianceRoute
+  '/admin/conteudo': typeof AdminConteudoRoute
+  '/admin/dashboard': typeof AdminDashboardRoute
   '/admin/destinos': typeof AdminDestinosRoute
   '/admin/melhorias': typeof AdminMelhoriasRoute
+  '/admin/publicar': typeof AdminPublicarRoute
   '/api/notify-admins': typeof ApiNotifyAdminsRoute
   '/atividade/$activityId': typeof AtividadeActivityIdRoute
   '/atividade/rastrear': typeof AtividadeRastrearRoute
@@ -292,8 +313,11 @@ export interface FileRoutesByTo {
   '/sugerir-destino': typeof SugerirDestinoRoute
   '/a/$activityId': typeof AActivityIdRoute
   '/admin/compliance': typeof AdminComplianceRoute
+  '/admin/conteudo': typeof AdminConteudoRoute
+  '/admin/dashboard': typeof AdminDashboardRoute
   '/admin/destinos': typeof AdminDestinosRoute
   '/admin/melhorias': typeof AdminMelhoriasRoute
+  '/admin/publicar': typeof AdminPublicarRoute
   '/api/notify-admins': typeof ApiNotifyAdminsRoute
   '/atividade/$activityId': typeof AtividadeActivityIdRoute
   '/atividade/rastrear': typeof AtividadeRastrearRoute
@@ -332,8 +356,11 @@ export interface FileRoutesById {
   '/sugerir-destino': typeof SugerirDestinoRoute
   '/a/$activityId': typeof AActivityIdRoute
   '/admin/compliance': typeof AdminComplianceRoute
+  '/admin/conteudo': typeof AdminConteudoRoute
+  '/admin/dashboard': typeof AdminDashboardRoute
   '/admin/destinos': typeof AdminDestinosRoute
   '/admin/melhorias': typeof AdminMelhoriasRoute
+  '/admin/publicar': typeof AdminPublicarRoute
   '/api/notify-admins': typeof ApiNotifyAdminsRoute
   '/atividade/$activityId': typeof AtividadeActivityIdRoute
   '/atividade/rastrear': typeof AtividadeRastrearRoute
@@ -373,8 +400,11 @@ export interface FileRouteTypes {
     | '/sugerir-destino'
     | '/a/$activityId'
     | '/admin/compliance'
+    | '/admin/conteudo'
+    | '/admin/dashboard'
     | '/admin/destinos'
     | '/admin/melhorias'
+    | '/admin/publicar'
     | '/api/notify-admins'
     | '/atividade/$activityId'
     | '/atividade/rastrear'
@@ -412,8 +442,11 @@ export interface FileRouteTypes {
     | '/sugerir-destino'
     | '/a/$activityId'
     | '/admin/compliance'
+    | '/admin/conteudo'
+    | '/admin/dashboard'
     | '/admin/destinos'
     | '/admin/melhorias'
+    | '/admin/publicar'
     | '/api/notify-admins'
     | '/atividade/$activityId'
     | '/atividade/rastrear'
@@ -451,8 +484,11 @@ export interface FileRouteTypes {
     | '/sugerir-destino'
     | '/a/$activityId'
     | '/admin/compliance'
+    | '/admin/conteudo'
+    | '/admin/dashboard'
     | '/admin/destinos'
     | '/admin/melhorias'
+    | '/admin/publicar'
     | '/api/notify-admins'
     | '/atividade/$activityId'
     | '/atividade/rastrear'
@@ -491,8 +527,11 @@ export interface RootRouteChildren {
   SugerirDestinoRoute: typeof SugerirDestinoRoute
   AActivityIdRoute: typeof AActivityIdRoute
   AdminComplianceRoute: typeof AdminComplianceRoute
+  AdminConteudoRoute: typeof AdminConteudoRoute
+  AdminDashboardRoute: typeof AdminDashboardRoute
   AdminDestinosRoute: typeof AdminDestinosRoute
   AdminMelhoriasRoute: typeof AdminMelhoriasRoute
+  AdminPublicarRoute: typeof AdminPublicarRoute
   ApiNotifyAdminsRoute: typeof ApiNotifyAdminsRoute
   AtividadeActivityIdRoute: typeof AtividadeActivityIdRoute
   AtividadeRastrearRoute: typeof AtividadeRastrearRoute
@@ -694,6 +733,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiNotifyAdminsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/publicar': {
+      id: '/admin/publicar'
+      path: '/admin/publicar'
+      fullPath: '/admin/publicar'
+      preLoaderRoute: typeof AdminPublicarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/melhorias': {
       id: '/admin/melhorias'
       path: '/admin/melhorias'
@@ -706,6 +752,20 @@ declare module '@tanstack/react-router' {
       path: '/admin/destinos'
       fullPath: '/admin/destinos'
       preLoaderRoute: typeof AdminDestinosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/dashboard': {
+      id: '/admin/dashboard'
+      path: '/admin/dashboard'
+      fullPath: '/admin/dashboard'
+      preLoaderRoute: typeof AdminDashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/conteudo': {
+      id: '/admin/conteudo'
+      path: '/admin/conteudo'
+      fullPath: '/admin/conteudo'
+      preLoaderRoute: typeof AdminConteudoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/compliance': {
@@ -805,8 +865,11 @@ const rootRouteChildren: RootRouteChildren = {
   SugerirDestinoRoute: SugerirDestinoRoute,
   AActivityIdRoute: AActivityIdRoute,
   AdminComplianceRoute: AdminComplianceRoute,
+  AdminConteudoRoute: AdminConteudoRoute,
+  AdminDashboardRoute: AdminDashboardRoute,
   AdminDestinosRoute: AdminDestinosRoute,
   AdminMelhoriasRoute: AdminMelhoriasRoute,
+  AdminPublicarRoute: AdminPublicarRoute,
   ApiNotifyAdminsRoute: ApiNotifyAdminsRoute,
   AtividadeActivityIdRoute: AtividadeActivityIdRoute,
   AtividadeRastrearRoute: AtividadeRastrearRoute,

@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { ArrowLeft, ShieldAlert, ShieldCheck, MapPin, ChevronRight, Lightbulb } from "lucide-react";
+import { ArrowLeft, ShieldAlert, ShieldCheck, MapPin, ChevronRight, Lightbulb, LayoutDashboard, Type, Megaphone } from "lucide-react";
 import { StatusBar } from "@/components/StatusBar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/hooks/use-auth";
@@ -93,6 +93,27 @@ function AdminHub() {
       icon: MapPin,
       title: t("admin.destinationsTitle", "Aprovar destinos"),
       desc: t("admin.destinationsDesc", "Revisar destinos sugeridos."),
+      badge: 0,
+    },
+    {
+      to: "/admin/dashboard" as const,
+      icon: LayoutDashboard,
+      title: t("admin.dashboardTitle", "Dashboard"),
+      desc: t("admin.dashboardDesc", "Totais de usuários, publicações e interações."),
+      badge: 0,
+    },
+    {
+      to: "/admin/conteudo" as const,
+      icon: Type,
+      title: t("admin.contentTitle", "Textos da Home"),
+      desc: t("admin.contentDesc", "Editar o slogan e a chamada da tela inicial."),
+      badge: 0,
+    },
+    {
+      to: "/admin/publicar" as const,
+      icon: Megaphone,
+      title: t("admin.publishTitle", "Publicar interação"),
+      desc: t("admin.publishDesc", "Criar post com imagem ou vídeo em qualquer categoria."),
       badge: 0,
     },
     {

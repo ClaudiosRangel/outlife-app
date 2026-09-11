@@ -2147,3 +2147,61 @@ export async function deleteAdminSuggestion(id: string): Promise<void> {
     .eq("id", id);
   if (error) throw error;
 }
+
+// ============ Conteúdo editável da Home (app_content) ============
+// Chaves conhecidas hoje: 'home.slogan', 'home.ecosystem'. Leitura pública;
+// escrita só admin (RLS). A Home usa `fetchAppContent` e cai no default do
+// i18n quando a chave não existe.
+export type AppContentMap = Record<string, string>;
+
+export async function fetchAppContent(): Promise<AppContentMap> {
+  const { data, error } = await supabase
+    .from("app_content" as never)
+    .select("key, value");
+  if (error) throw error;
+  const map: AppContentMap = {};
+  for (const row of (data ?? []) as unknown as { key: string; value: string }[]) {
+    map[row.key] = row.value;
+  }
+  return map;
+}
+
+export async function upsertAppContent(key: string, value: string): Promise<void> {
+  const { data: userData } = await supabase.auth.getUser();
+  const { error } = await supabase.from("app_content" as never).upsert(
+    {
+      key,
+      value,
+      updated_at: new Date().toISOString(),
+      updated_by: userData.user?.id ?? null,
+    } as never,
+    { onConflict: "key" },
+  );
+  if (error) throw error;
+}
+
+// ============ Dashboard administrativo (métricas) ============
+export type AdminDashboardStats = {
+  usuarios_total: number;
+  usuarios_verificados: number;
+  ativos_7d: number;
+  ativos_30d: number;
+  novos_7d: number;
+  publicacoes_total: number;
+  publicacoes_7d: number;
+  curtidas_total: number;
+  comentarios_total: number;
+  avaliacoes_total: number;
+  interacoes_total: number;
+  atividades_total: number;
+  atividades_7d: number;
+  eventos_total: number;
+  destinos_total: number;
+  leads_total: number;
+};
+
+export async function fetchAdminDashboardStats(): Promise<AdminDashboardStats> {
+  const { data, error } = await supabase.rpc("admin_dashboard_stats" as never);
+  if (error) throw error;
+  return data as unknown as AdminDashboardStats;
+}

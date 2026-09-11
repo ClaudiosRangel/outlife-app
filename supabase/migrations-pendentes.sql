@@ -704,3 +704,65 @@ DROP POLICY IF EXISTS "Admins delete suggestions" ON public.admin_suggestions;
 CREATE POLICY "Admins delete suggestions"
   ON public.admin_suggestions FOR DELETE
   USING (public.is_admin(auth.uid()));
+
+
+-- ############################################################################
+-- 14) 20260910120000_fix-native-push-http.sql (CORREÇÃO CRÍTICA do push)
+--     fn_send_native_push usava extensions.http_post (inexistente) → trocado
+--     por net.http_post (pg_net), body JSONB. Sem isso NENHUM push saía.
+-- ############################################################################
+-- (o corpo definitivo de fn_send_native_push já está no item 12 acima,
+--  atualizado para net.http_post — reaplicar é idempotente)
+
+-- ############################################################################
+-- 15) 20260910140000_admin-content-and-dashboard.sql
+--     app_content (textos editáveis da Home) + admin_dashboard_stats() (RPC)
+-- ############################################################################
+
+CREATE TABLE IF NOT EXISTS public.app_content (
+  key TEXT PRIMARY KEY,
+  value TEXT NOT NULL DEFAULT '',
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_by UUID REFERENCES public.profiles(id) ON DELETE SET NULL
+);
+ALTER TABLE public.app_content ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Anyone reads app_content" ON public.app_content;
+CREATE POLICY "Anyone reads app_content" ON public.app_content FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Admins upsert app_content" ON public.app_content;
+CREATE POLICY "Admins upsert app_content" ON public.app_content FOR INSERT WITH CHECK (public.is_admin(auth.uid()));
+DROP POLICY IF EXISTS "Admins update app_content" ON public.app_content;
+CREATE POLICY "Admins update app_content" ON public.app_content FOR UPDATE USING (public.is_admin(auth.uid())) WITH CHECK (public.is_admin(auth.uid()));
+
+CREATE OR REPLACE FUNCTION public.admin_dashboard_stats()
+RETURNS JSONB LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+DECLARE _result JSONB;
+BEGIN
+  IF NOT public.is_admin(auth.uid()) THEN RAISE EXCEPTION 'not authorized'; END IF;
+  SELECT jsonb_build_object(
+    'usuarios_total',(SELECT count(*) FROM public.profiles),
+    'usuarios_verificados',(SELECT count(*) FROM public.profiles WHERE is_verified),
+    'ativos_7d',(SELECT count(*) FROM auth.users WHERE last_sign_in_at >= now() - interval '7 days'),
+    'ativos_30d',(SELECT count(*) FROM auth.users WHERE last_sign_in_at >= now() - interval '30 days'),
+    'novos_7d',(SELECT count(*) FROM public.profiles WHERE created_at >= now() - interval '7 days'),
+    'publicacoes_total',(SELECT count(*) FROM public.community_posts),
+    'publicacoes_7d',(SELECT count(*) FROM public.community_posts WHERE created_at >= now() - interval '7 days'),
+    'curtidas_total',(SELECT count(*) FROM public.post_likes),
+    'comentarios_total',(SELECT count(*) FROM public.post_comments),
+    'avaliacoes_total',(SELECT count(*) FROM public.reviews),
+    'interacoes_total',((SELECT count(*) FROM public.post_likes)+(SELECT count(*) FROM public.post_comments)+(SELECT count(*) FROM public.reviews)),
+    'atividades_total',(SELECT count(*) FROM public.user_activities),
+    'atividades_7d',(SELECT count(*) FROM public.user_activities WHERE start_time >= now() - interval '7 days'),
+    'eventos_total',(SELECT count(*) FROM public.events),
+    'destinos_total',(SELECT count(*) FROM public.destinations),
+    'leads_total',(SELECT count(*) FROM public.partner_leads)
+  ) INTO _result;
+  RETURN _result;
+END; $$;
+GRANT EXECUTE ON FUNCTION public.admin_dashboard_stats() TO authenticated;
+
+INSERT INTO public.app_content (key, value) VALUES
+  ('home.slogan', '“A vida não é só trilhar.
+Viver é diferente
+de estar vivo.”'),
+  ('home.ecosystem', 'OutVitar · ecossistema')
+ON CONFLICT (key) DO NOTHING;

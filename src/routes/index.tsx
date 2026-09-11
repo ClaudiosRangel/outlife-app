@@ -9,7 +9,7 @@ import seloCadastur from "@/assets/selo-cadastur.jpg";
 import avatarFallback from "@/assets/avatar-rafael.jpg";
 import { StatusBar } from "@/components/StatusBar";
 import { Stars } from "@/components/Stars";
-import { fetchDestinations, fetchMyProfile, fetchPartners, fetchUnreadNotificationCount, resolveAsset, type Destination } from "@/lib/api";
+import { fetchAppContent, fetchDestinations, fetchMyProfile, fetchPartners, fetchUnreadNotificationCount, resolveAsset, type Destination } from "@/lib/api";
 import { useAuth } from "@/hooks/use-auth";
 import { playNotificationSound } from "@/lib/notification-sound";
 import { supabase } from "@/integrations/supabase/client";
@@ -72,6 +72,9 @@ function Home() {
   const { user } = useAuth();
   const { data: destinations = [] } = useQuery({ queryKey: ["destinations"], queryFn: fetchDestinations });
   const { data: partners = [] } = useQuery({ queryKey: ["partners"], queryFn: fetchPartners });
+  // Conteúdo editável pelo admin (slogan/ecossistema da Home). Cai no texto
+  // default do i18n quando a chave não existe em app_content.
+  const { data: appContent = {} } = useQuery({ queryKey: ["app-content"], queryFn: fetchAppContent });
   // Requirement 9.4/9.5/9.6 — indicador visual do sino. A queryKey
   // ["notifications", "unread-count"] é reaproveitada por `/notificacoes`,
   // que a invalida ao marcar notificações como lidas (Requirement 9.8),
@@ -277,12 +280,15 @@ function Home() {
         <PartnersCarousel partners={partners} />
       </section>
 
-      {/* Slogan oficial da marca (Req 2.1) */}
+      {/* Slogan oficial da marca (Req 2.1) — editável pelo admin via
+          app_content ('home.slogan'/'home.ecosystem'); default no i18n. */}
       <section className="mt-8 mx-5 mb-6 rounded-3xl bg-gradient-forest p-6 text-white shadow-float">
-        <p className="font-display text-2xl leading-tight uppercase tracking-wide">
-          {t("brand.slogan")}
+        <p className="font-display text-2xl leading-tight uppercase tracking-wide whitespace-pre-line">
+          {appContent["home.slogan"] || t("home.slogan")}
         </p>
-        <p className="mt-3 text-xs uppercase tracking-widest text-white/70">{t("brand.ecosystem")}</p>
+        <p className="mt-3 text-xs uppercase tracking-widest text-white/70">
+          {appContent["home.ecosystem"] || t("brand.ecosystem")}
+        </p>
       </section>
     </div>
   );

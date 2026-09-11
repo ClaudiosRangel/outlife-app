@@ -65,6 +65,20 @@
 >    (registro do token no device) e se o fn_send_native_push→/api/push/send-fcm
 >    está funcionando em produção (FIREBASE_SERVICE_ACCOUNT na Vercel). Pode ser
 >    que push nunca tenha chegado no device de teste — validar a cadeia inteira.
+> 6. **Push — 2º round de correção (11/09/2026)**: além do registro/net.http_post,
+>    faltava a URL absoluta da API no app nativo. `push-registration.ts` usava
+>    `VITE_API_BASE_URL ?? ""` → no Capacitor o fetch relativo ia p/ localhost
+>    do WebView (endpoint inexistente). Corrigido: em plataforma nativa usa
+>    `https://outlife-app.vercel.app`. Listeners de registration anexados ANTES
+>    de register(). VALIDAR no aparelho: instalar APK, logar, aceitar permissão
+>    → conferir `native_push_tokens` populada.
+> 7. **Área admin ampliada (11/09/2026)**: 3 telas novas — Dashboard
+>    (`/admin/dashboard`, RPC admin_dashboard_stats: usuários/ativos/publicações/
+>    interações/atividades/eventos/destinos), Textos da Home (`/admin/conteudo`,
+>    tabela app_content editável, Home lê via fetchAppContent com fallback i18n),
+>    Publicar interação (`/admin/publicar`, cria community_post com imagem/vídeo
+>    em qualquer categoria). Migration 20260910140000 aplicada em produção.
+>
 > 4. **Dicas/Melhorias (checklist admin)** — ✓ FEITO (10/09/2026): novo menu
 >    na Área administrativa (`/admin/melhorias`). O admin registra uma dica/
 >    melhoria (título + descrição opcional) que vira item de checklist
