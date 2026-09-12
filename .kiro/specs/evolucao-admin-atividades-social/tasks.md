@@ -57,17 +57,17 @@ frentes são independentes. As "waves" abaixo agrupam as tarefas por frente.
 
 ## Frente B — Req 7: Bug do deep link `/a/:id` 404 no nativo
 
-- [ ] 5. Função pura de parsing de deep link + testes
+- [x] 5. Função pura de parsing de deep link + testes
   - Criar `src/lib/deep-link.ts` com `parseDeepLink(url)` (retorna destino de rota; distingue auth de atividade)
   - Criar `src/lib/deep-link.test.ts` cobrindo a Property 2
   - _Requirements: 7.1, 7.2, 7.4, 7.5_
 
-- [ ] 6. Corrigir roteamento nativo
+- [x] 6. Corrigir roteamento nativo
   - Ajustar `useDeepLinkNavigation` em `__root.tsx` para tratar `/a/:id` via `parseDeepLink`, com fallback no `catch` (intent scheme)
   - Garantir cold start (rota inicial `/a/:id` resolve no router, não cai no NotFound)
   - _Requirements: 7.1, 7.2, 7.3, 7.5_
 
-- [ ] 7. Verificação + entrega da Frente B
+- [x] 7. Verificação + entrega da Frente B
   - `tsc`, build, APK, commit+push, atualizar roadmap; teste no aparelho (abrir link real de atividade)
   - _Requirements: 7.1, 7.2, 7.4_
 

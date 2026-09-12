@@ -17,7 +17,11 @@
 >    `profiles.trial_started_at` (migration 20260911170000, aplicada em prod, fallback created_at)
 >    + `fetchPartnerTrialStatus` reescrita (por data) + painel exibe dias
 >    restantes/progresso por tempo (i18n partnerTrial.*). APK 14:11.
-> B) Req 7 bug deep link `/a/:id` 404 no nativo — só front (`deep-link.ts` + `__root.tsx`).
+> B) ✅ CONCLUÍDA (12/09/2026) — Req 7 bug deep link `/a/:id` 404 no nativo.
+>    `deep-link.ts` (parseDeepLink puro, 6 testes fast-check) + `useDeepLinkNavigation`
+>    em `__root.tsx` reescrito: `/a/:id` navega para a rota de preview `/a/$activityId`
+>    (não mais redireciona pra detalhe), com fallback e tratamento de cold start.
+>    Também dei 1 ano cheio de trial (trial_started_at=now) aos 9 parceiros atuais. APK 14:33.
 > C) Req 9 comentários: respostas (thread `parent_comment_id`) + curtir (`comment_likes`) + excluir (autor/admin).
 > D) Req 5 catálogo de tipos de atividade (`activity_types`: code/name/icon_key/metric_form) + admin `/admin/atividades`; rastreamento passa a ler o catálogo.
 > E) Req 8 banners OUTVITAR (foto/mapa/vídeo-poster): ícone da atividade, marca "OUTVITAR", descrição do usuário ou default, métricas por metric_form — estende `banner-generator.ts`.

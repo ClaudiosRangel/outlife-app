@@ -14,6 +14,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { registerPushNotificationTapNavigation } from "@/lib/push-registration";
 import { useLocalPushNotifications } from "@/hooks/use-local-push";
 import { useRegisterPush } from "@/hooks/use-register-push";
+import { parseDeepLink } from "@/lib/deep-link";
 import { BrandSplash } from "@/components/BrandSplash";
 import { useKeyboardScroll } from "@/hooks/use-keyboard-scroll";
 import "@/lib/i18n";
@@ -259,76 +260,65 @@ function useDeepLinkNavigation() {
   const router = useRouter();
   useEffect(() => {
     if (!Capacitor.isNativePlatform()) return;
-    App.addListener("appUrlOpen", async (event) => {
-      try {
-        const url = new URL(event.url);
 
-        // --- Auth callback: Supabase envia tokens via hash fragment ---
-        // Formato: https://outlife-app.vercel.app/redefinir-senha#access_token=...&type=recovery
-        // Ou:      https://outlife-app.vercel.app/#access_token=...&type=signup
-        const hash = url.hash?.startsWith("#") ? url.hash.slice(1) : "";
-        if (hash && hash.includes("access_token")) {
-          const params = new URLSearchParams(hash);
-          const accessToken = params.get("access_token");
-          const refreshToken = params.get("refresh_token");
-
-          if (accessToken && refreshToken) {
-            // Estabelece a sessão de auth no supabase-js com os tokens do link
-            await supabase.auth.setSession({
-              access_token: accessToken,
-              refresh_token: refreshToken,
-            });
-            // Navega para o path do link (ex: /redefinir-senha).
-            // O listener do AuthProvider (use-auth.tsx) já trata o evento
-            // PASSWORD_RECOVERY e redireciona se necessário, mas navegamos
-            // diretamente para garantir.
-            const targetPath = url.pathname && url.pathname !== "/" ? url.pathname : "/";
-            const type = params.get("type");
-            if (type === "recovery") {
-              router.navigate({ to: "/redefinir-senha" });
-            } else if (targetPath !== "/") {
-              router.navigate({ to: targetPath });
-            }
-            return;
-          }
-        }
-
-        // --- Links /a/:id → redireciona para /atividade/:id ---
-        const aMatch = url.pathname.match(/^\/a\/(.+)$/);
-        if (aMatch) {
-          router.navigate({ to: "/atividade/$activityId", params: { activityId: aMatch[1] } });
-          return;
-        }
-        // Qualquer outro path, navega direto
-        if (url.pathname && url.pathname !== "/") {
-          router.navigate({ to: url.pathname });
-        }
-      } catch {
-        // intent:// scheme ou custom scheme - parse manual
-        const schemeMatch = event.url.match(/outlife:\/\/atividade\/(.+)/);
-        if (schemeMatch) {
-          router.navigate({ to: "/atividade/$activityId", params: { activityId: schemeMatch[1] } });
-          return;
-        }
-        // Custom scheme auth: outlife://auth/#access_token=...&type=recovery
-        const authSchemeMatch = event.url.match(/outlife:\/\/auth\/(.*)/);
-        if (authSchemeMatch) {
-          const fragment = authSchemeMatch[1].startsWith("#") ? authSchemeMatch[1].slice(1) : authSchemeMatch[1];
-          if (fragment && fragment.includes("access_token")) {
-            const params = new URLSearchParams(fragment);
-            const accessToken = params.get("access_token");
-            const refreshToken = params.get("refresh_token");
-            if (accessToken && refreshToken) {
-              supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken }).then(() => {
-                const type = params.get("type");
-                if (type === "recovery") {
-                  router.navigate({ to: "/redefinir-senha" });
-                }
-              });
-            }
-          }
-        }
+    // Estabelece a sessão de auth a partir de um fragment com tokens
+    // (callback do Supabase) e navega para a tela apropriada.
+    const handleAuthFragment = async (fragment: string) => {
+      const params = new URLSearchParams(fragment);
+      const accessToken = params.get("access_token");
+      const refreshToken = params.get("refresh_token");
+      if (!accessToken || !refreshToken) return;
+      await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
+      if (params.get("type") === "recovery") {
+        router.navigate({ to: "/redefinir-senha" });
       }
+    };
+
+    // Navega para o destino resolvido por parseDeepLink (Frente B, Req 7).
+    // A rota de preview "/a/$activityId" serve tanto nativo quanto navegador
+    // (Req 7.4) e resolve a atividade pública por RLS — sem servidor externo
+    // (Req 7.3). Fallback: se a navegação interna lançar, tenta o detalhe
+    // "/atividade/$activityId" (Req 7.5).
+    const navigateToDeepLink = async (rawUrl: string) => {
+      const target = parseDeepLink(rawUrl);
+      switch (target.kind) {
+        case "auth":
+          await handleAuthFragment(target.fragment);
+          return;
+        case "activity-preview":
+          try {
+            router.navigate({ to: "/a/$activityId", params: { activityId: target.activityId } });
+          } catch {
+            router.navigate({ to: "/atividade/$activityId", params: { activityId: target.activityId } });
+          }
+          return;
+        case "activity-detail":
+          router.navigate({ to: "/atividade/$activityId", params: { activityId: target.activityId } });
+          return;
+        case "path":
+          router.navigate({ to: target.path });
+          return;
+        case "none":
+        default:
+          return;
+      }
+    };
+
+    // Cold start: o app pode ter sido aberto já em /a/:id ou /atividade/:id
+    // (App Link direto). Se o router montou na raiz/404, força a navegação
+    // para a rota correta a partir da URL atual do WebView.
+    try {
+      const initial = typeof window !== "undefined" ? window.location.href : "";
+      const initialTarget = parseDeepLink(initial);
+      if (initialTarget.kind === "activity-preview" || initialTarget.kind === "activity-detail") {
+        void navigateToDeepLink(initial);
+      }
+    } catch {
+      // cold start é best-effort; o appUrlOpen abaixo cobre o caso normal
+    }
+
+    App.addListener("appUrlOpen", (event) => {
+      void navigateToDeepLink(event.url);
     });
   }, [router]);
 }
