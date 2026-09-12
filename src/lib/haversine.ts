@@ -14,3 +14,24 @@ export function haversineMeters(
     Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) ** 2;
   return 2 * R * Math.asin(Math.min(1, Math.sqrt(h)));
 }
+
+// Frente G (Req 3): true quando `point` está a até `radiusMeters` de `dest`
+// (inclusive). Base para o registro de visita a Destino via GPS. Coordenadas
+// não-finitas ou raio inválido → false (nunca lança nem retorna NaN).
+export function isWithinRadius(
+  point: { lat: number; lng: number },
+  dest: { lat: number; lng: number },
+  radiusMeters: number,
+): boolean {
+  if (
+    !Number.isFinite(point.lat) ||
+    !Number.isFinite(point.lng) ||
+    !Number.isFinite(dest.lat) ||
+    !Number.isFinite(dest.lng) ||
+    !Number.isFinite(radiusMeters) ||
+    radiusMeters < 0
+  ) {
+    return false;
+  }
+  return haversineMeters(point, dest) <= radiusMeters;
+}

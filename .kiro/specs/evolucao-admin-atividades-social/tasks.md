@@ -153,20 +153,20 @@ frentes são independentes. As "waves" abaixo agrupam as tarefas por frente.
 
 ## Frente G — Req 3: Conquistas por Destino via GPS
 
-- [ ] 24. Função pura de proximidade + testes
-  - `isWithinRadius(...)` (reutiliza `haversine.ts`); testes (Property 7 — parte GPS)
+- [x] 24. Função pura de proximidade + testes
+  - `isWithinRadius(point, dest, radius)` em `haversine.ts` (reutiliza `haversineMeters`; entradas inválidas → false, nunca NaN); `haversine.test.ts` (Property 7 — 3 testes fast-check passando)
   - _Requirements: 3.1, 3.2_
 
-- [ ] 25. Migração visitas + RPCs de conquista
-  - Tabela `user_destination_visits` (UNIQUE user+destination) + RLS; RPCs `register_destination_visits`, `grant_destination_achievements` (keys destinos_1/5/10, idempotente); aplicar em produção (2×)
+- [x] 25. Migração visitas + RPCs de conquista
+  - Tabela `user_destination_visits` (UNIQUE user+destination, RLS leitura própria; escrita só via RPC) + RPCs `register_destination_visits` (cruza route_geojson × destinos aprovados via `ST_DWithin`, raio 500m) e `grant_destination_achievements` (keys destinos_1/5/10 em achievement_records, idempotente). Aplicada em prod 2× (`20260912130000_destination-visits-achievements.sql`)
   - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.6_
 
-- [ ] 26. Integração no finish + exibição no perfil
-  - Chamar `register_destination_visits` ao concluir atividade; adicionar keys/ícones das conquistas no `achievementIconMap`; i18n
+- [x] 26. Integração no finish + exibição no perfil
+  - `finishActivity` chama `registerDestinationVisits(id)` best-effort (não bloqueia o finish); labels `destinos_1/5/10` em `ACHIEVEMENT_RULE_LABELS`; ícones (MapPin/Award) em `achievementIconMap` do perfil
   - _Requirements: 3.1, 3.3, 3.5_
 
-- [ ] 27. Verificação + entrega da Frente G
-  - `tsc`, build, APK, commit+push, atualizar roadmap
+- [x] 27. Verificação + entrega da Frente G
+  - `tsc` limpo (só 6 erros pré-existentes); commit+push; roadmap. APK adiado para o fim do bloco.
   - _Requirements: 3.3, 3.5_
 
 ## Frente H — Req 1/2: Importação e curadoria de trilhas/destinos

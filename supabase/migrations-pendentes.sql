@@ -839,3 +839,12 @@ ALTER TABLE public.profiles
 --     (qualquer status/direcao); dedup por candidato; so campos publicos.
 --     (SQL completo no arquivo de migration; idempotente)
 -- ############################################################################
+
+-- ############################################################################
+-- 22) 20260912130000_destination-visits-achievements.sql
+--     Frente G: tabela user_destination_visits (UNIQUE user+destination, RLS
+--     leitura propria; escrita so via RPC) + RPCs register_destination_visits
+--     (cruza route_geojson x destinos aprovados via ST_DWithin, raio 500m) e
+--     grant_destination_achievements (keys destinos_1/5/10 em
+--     achievement_records, idempotente). (SQL completo no arquivo; idempotente)
+-- ############################################################################

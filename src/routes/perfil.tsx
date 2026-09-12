@@ -14,6 +14,7 @@ import {
   Camera,
   Globe,
   Droplets,
+  MapPin,
   Moon,
   Briefcase,
   LogOut,
@@ -84,6 +85,10 @@ const achievementIconMap: Record<string, typeof Mountain> = {
   photo: Camera,
   nomad: Globe,
   rain: Droplets,
+  // Frente G (Req 3): conquistas por Destino via GPS.
+  destinos_1: MapPin,
+  destinos_5: MapPin,
+  destinos_10: Award,
 };
 
 

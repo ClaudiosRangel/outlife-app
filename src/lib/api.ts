@@ -745,7 +745,27 @@ export async function finishActivity(
     _video_url: payload.video_url ?? null,
   } as never);
   if (error) throw error;
+
+  // Frente G (Req 3): registra visitas a Destino via GPS e concede as
+  // conquistas (destinos_1/5/10). Best-effort — nunca bloqueia o finish da
+  // atividade se a RPC falhar (a atividade em si já foi persistida).
+  try {
+    await registerDestinationVisits(id);
+  } catch (visitErr) {
+    console.warn("register_destination_visits falhou (ignorado):", visitErr);
+  }
+
   return data as unknown as UserActivity;
+}
+
+// Frente G (Req 3): cruza a rota da atividade com destinos aprovados e grava
+// as visitas + conquistas. Retorna quantos destinos novos foram registrados.
+export async function registerDestinationVisits(activityId: string): Promise<number> {
+  const { data, error } = await supabase.rpc("register_destination_visits" as never, {
+    _activity_id: activityId,
+  } as never);
+  if (error) throw error;
+  return (data as unknown as number) ?? 0;
 }
 
 const MAX_ACTIVITY_IMAGE_BYTES = 5 * 1024 * 1024;
@@ -1061,6 +1081,9 @@ export async function fetchFavoritePartners(_userId?: string): Promise<FavoriteP
 // quando a regra ainda não tiver um rótulo mapeado aqui.
 const ACHIEVEMENT_RULE_LABELS: Record<string, string> = {
   first_activity: "Primeira Aventura",
+  destinos_1: "Primeiro Destino",
+  destinos_5: "5 Destinos Visitados",
+  destinos_10: "10 Destinos Visitados",
   km_100: "100 km Percorridos",
   km_500: "500 km Percorridos",
   explorer: "Explorador",

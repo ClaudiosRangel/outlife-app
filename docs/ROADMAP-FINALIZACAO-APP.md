@@ -5,7 +5,7 @@
 > `.kiro/steering/roadmap-outvitar.md`). **Mantenha-o atualizado** ao
 > concluir qualquer tarefa/bloco: marque status, data e resumo.
 
-**Última atualização:** 12/09/2026 (spec evolucao-admin-atividades-social — Frentes A/B/C/D/E/F concluídas)
+**Última atualização:** 12/09/2026 (spec evolucao-admin-atividades-social — Frentes A/B/C/D/E/F/G concluídas)
 **App:** OutVitar — slogan "VIVER É DIFERENTE DE ESTAR VIVO"
 
 > **🟦 BLOCO EM ANDAMENTO — spec `evolucao-admin-atividades-social`**
@@ -57,7 +57,14 @@
 >    `fetchFriendSuggestions` + type FriendSuggestion. Seção "Sugestões para
 >    você" no topo de `/amigos` (Adicionar remove otimista, rótulo por reason,
 >    placeholder). i18n friends.suggestions*/reason*. tsc limpo. SEM APK.
-> G) Req 3 conquistas por Destino via GPS — `user_destination_visits` + RPCs; keys `destinos_1/5/10`.
+> G) ✅ CONCLUÍDA (12/09/2026) — Req 3 conquistas por Destino via GPS.
+>    `isWithinRadius` puro em `haversine.ts` (3 testes fast-check). Migration
+>    20260912130000 aplicada em prod: tabela `user_destination_visits`
+>    (UNIQUE user+destination, RLS) + RPCs `register_destination_visits`
+>    (route_geojson × destinos aprovados via ST_DWithin 500m) e
+>    `grant_destination_achievements` (keys destinos_1/5/10). `finishActivity`
+>    chama a RPC best-effort no finish; perfil exibe as conquistas
+>    (achievementIconMap MapPin/Award + labels). tsc limpo. SEM APK.
 > H) Req 1/2 importação/curadoria trilhas-destinos (OSM/ICMBio) — `imported_trails` + `scripts/import-trails.mjs` + `/admin/trilhas` (toggle visível; atribuição OSM obrigatória).
 >
 > ⚙️ DECISÃO (12/09/2026): a partir da Frente C, o **APK é gerado só no FINAL
