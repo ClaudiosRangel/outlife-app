@@ -812,3 +812,12 @@ GRANT EXECUTE ON FUNCTION public.admin_fetch_feedback(INTEGER) TO authenticated;
 -- ############################################################################
 ALTER TABLE public.profiles
   ADD COLUMN IF NOT EXISTS trial_started_at TIMESTAMPTZ;
+
+
+-- ############################################################################
+-- 19) 20260912100000_comment-threads-likes.sql
+--     Frente C: post_comments.parent_comment_id (threads) + likes_count +
+--     tabela comment_likes (RLS) + RLS delete own/admin + RPCs
+--     create_post_comment(_parent), toggle_comment_like, delete_post_comment.
+--     (SQL completo no arquivo de migration; idempotente)
+-- ############################################################################

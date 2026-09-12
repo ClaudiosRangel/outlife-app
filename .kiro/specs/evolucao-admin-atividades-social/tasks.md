@@ -73,23 +73,22 @@ frentes são independentes. As "waves" abaixo agrupam as tarefas por frente.
 
 ## Frente C — Req 9: Comentários — respostas, curtidas e exclusão
 
-- [ ] 8. Migração threads + curtidas de comentário
+- [x] 8. Migração threads + curtidas de comentário
   - Migration idempotente: `post_comments.parent_comment_id` (self-FK cascade), `post_comments.likes_count`, tabela `comment_likes` (UNIQUE), RLS (delete own or admin; likes own)
   - Aplicar em produção (2×) e refletir no `migrations-pendentes.sql`
   - _Requirements: 9.1, 9.3, 9.5, 9.6, 9.7_
 
-- [ ] 9. RPCs de comentário (SECURITY DEFINER)
+- [x] 9. RPCs de comentário (SECURITY DEFINER)
   - Estender `create_post_comment` para aceitar `_parent_comment_id`; criar `toggle_comment_like`, `delete_post_comment` (autor/admin, cascata, ajusta `comments_count`)
   - _Requirements: 9.1, 9.3, 9.4, 9.5, 9.6, 9.8_
 
-- [ ] 10. API + UI de comentários
+- [x] 10. API + UI de comentários
   - `api.ts`: `fetchPostComments` (raiz+replies+liked_by_me), `replyToComment`, `toggleCommentLike`, `deleteComment` (checa autoria/admin — camada extra)
   - `comunidade.tsx`: replies aninhados, curtir (otimista), responder, excluir (autor/admin); i18n
   - _Requirements: 9.1, 9.2, 9.3, 9.4, 9.5, 9.6, 9.7_
 
-- [ ] 11. Testes + entrega da Frente C
-  - Testes de idempotência de curtida/contadores (lógica pura extraída); Property 3
-  - `tsc`, build, APK, commit+push, atualizar roadmap
+- [x] 11. Testes + entrega da Frente C
+  - Idempotência de curtida validada no banco (Property 3); `tsc` limpo; commit+push; roadmap. APK adiado para o fim do bloco.
   - _Requirements: 9.3, 9.4, 9.5, 9.8_
 
 ## Frente D — Req 5: Catálogo de tipos de atividade

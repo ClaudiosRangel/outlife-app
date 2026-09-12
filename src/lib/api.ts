@@ -1748,21 +1748,85 @@ export type PostComment = {
   post_id: string;
   text: string;
   created_at: string;
+  author_id: string | null;
+  parent_comment_id: string | null;
+  likes_count: number;
+  liked_by_me: boolean;
   author: { full_name: string | null; avatar_url: string | null } | null;
+  /** respostas aninhadas (só presente em comentários raiz). */
+  replies?: PostComment[];
 };
 
-// Busca os Post_Comment reais de um Community_Post (Requirement 8.2),
-// ordenados do mais antigo para o mais novo, com o autor embutido via
-// join implícito do supabase-js sobre a FK `post_comments.author_id ->
-// profiles.id` (mesmo padrão usado por `fetchReviewsByDestination`).
+// Busca os Post_Comment de um Community_Post com autor, contagem de curtidas
+// e se o usuário logado curtiu, agrupando as respostas (Comment_Reply) sob o
+// comentário-pai (Frente C — Req 9.2). Ordenado do mais antigo para o mais
+// novo. O join de autor qualifica a FK (post_comments tem só author_id → sem
+// ambiguidade, mas mantemos explícito).
 export async function fetchPostComments(postId: string): Promise<PostComment[]> {
+  const { data: userData } = await supabase.auth.getUser();
+  const uid = userData.user?.id ?? null;
+
   const { data, error } = await supabase
     .from("post_comments" as never)
-    .select("id, post_id, text, created_at, author:profiles(full_name, avatar_url)")
+    .select(
+      "id, post_id, text, created_at, author_id, parent_comment_id, likes_count, author:profiles!post_comments_author_id_fkey(full_name, avatar_url)",
+    )
     .eq("post_id", postId)
     .order("created_at", { ascending: true });
   if (error) throw error;
-  return (data ?? []) as unknown as PostComment[];
+
+  const rows = (data ?? []) as unknown as Array<Omit<PostComment, "liked_by_me" | "replies">>;
+
+  // Quais desses comentários o usuário logado curtiu.
+  let likedSet = new Set<string>();
+  if (uid && rows.length > 0) {
+    const { data: likes } = await supabase
+      .from("comment_likes" as never)
+      .select("comment_id")
+      .eq("user_id", uid)
+      .in("comment_id", rows.map((r) => r.id));
+    likedSet = new Set(((likes ?? []) as unknown as Array<{ comment_id: string }>).map((l) => l.comment_id));
+  }
+
+  const withLiked: PostComment[] = rows.map((r) => ({
+    ...r,
+    likes_count: Number(r.likes_count ?? 0),
+    liked_by_me: likedSet.has(r.id),
+  }));
+
+  // Agrupa: comentários raiz (parent null) recebem suas respostas.
+  const roots = withLiked.filter((c) => !c.parent_comment_id);
+  const repliesByParent = new Map<string, PostComment[]>();
+  for (const c of withLiked) {
+    if (c.parent_comment_id) {
+      const list = repliesByParent.get(c.parent_comment_id) ?? [];
+      list.push(c);
+      repliesByParent.set(c.parent_comment_id, list);
+    }
+  }
+  for (const root of roots) {
+    root.replies = repliesByParent.get(root.id) ?? [];
+  }
+  return roots;
+}
+
+// Curte/descurte um comentário ou resposta (idempotente via RPC).
+export async function toggleCommentLike(commentId: string): Promise<{ liked: boolean; likes_count: number }> {
+  const { data, error } = await supabase.rpc("toggle_comment_like" as never, {
+    _comment_id: commentId,
+  } as never);
+  if (error) throw error;
+  const row = (Array.isArray(data) ? data[0] : data) as { liked: boolean; likes_count: number } | null;
+  return { liked: Boolean(row?.liked), likes_count: Number(row?.likes_count ?? 0) };
+}
+
+// Exclui um comentário/resposta do próprio autor (ou qualquer um, se admin).
+// A RPC valida autoria/admin (camada extra além da RLS — Req 9.7).
+export async function deleteComment(commentId: string): Promise<void> {
+  const { error } = await supabase.rpc("delete_post_comment" as never, {
+    _comment_id: commentId,
+  } as never);
+  if (error) throw error;
 }
 
 // Persiste um Post_Comment através da RPC `create_post_comment`
@@ -1771,13 +1835,18 @@ export async function fetchPostComments(postId: string): Promise<PostComment[]> 
 // (Requirement 8.3, 8.4). A RPC não retorna o autor embutido, então
 // buscamos o perfil do usuário autenticado para preencher o campo `author`
 // e manter o formato consistente com `fetchPostComments`.
-export async function createPostComment(postId: string, text: string): Promise<PostComment> {
+export async function createPostComment(
+  postId: string,
+  text: string,
+  parentCommentId?: string | null,
+): Promise<PostComment> {
   const { data: userData } = await supabase.auth.getUser();
   if (!userData.user) throw new Error("Não autenticado");
 
   const { data, error } = await supabase.rpc("create_post_comment" as never, {
     _post_id: postId,
     _text: text,
+    _parent_comment_id: parentCommentId ?? null,
   } as never);
   if (error) throw error;
   const row = (Array.isArray(data) ? data[0] : data) as {
@@ -1785,6 +1854,8 @@ export async function createPostComment(postId: string, text: string): Promise<P
     post_id: string;
     text: string;
     created_at: string;
+    author_id?: string | null;
+    parent_comment_id?: string | null;
   } | null;
   if (!row) throw new Error("Falha ao criar comentário.");
 
@@ -1799,8 +1870,18 @@ export async function createPostComment(postId: string, text: string): Promise<P
     post_id: row.post_id,
     text: row.text,
     created_at: row.created_at,
+    author_id: userData.user.id,
+    parent_comment_id: row.parent_comment_id ?? parentCommentId ?? null,
+    likes_count: 0,
+    liked_by_me: false,
     author: profile ? { full_name: profile.full_name, avatar_url: profile.avatar_url } : null,
+    replies: [],
   };
+}
+
+// Atalho semântico para responder a um comentário (thread).
+export async function replyToComment(postId: string, parentCommentId: string, text: string): Promise<PostComment> {
+  return createPostComment(postId, text, parentCommentId);
 }
 
 // ============ Notificações (Requirement 9) ============

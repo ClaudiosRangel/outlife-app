@@ -52,6 +52,9 @@ import {
   fetchMyFollowedAuthorIds,
   fetchPostComments,
   createPostComment,
+  toggleCommentLike,
+  deleteComment,
+  isCurrentUserAdmin,
   type PostComment,
   type CommunityPostCategory,
 } from "@/lib/api";
@@ -187,6 +190,13 @@ function Community() {
   const { data: likedPostIds = [] } = useQuery({
     queryKey: ["my-liked-post-ids"],
     queryFn: fetchMyLikedPostIds,
+    enabled: !!user,
+  });
+
+  // Admin pode excluir qualquer comentário/resposta (Req 9.6).
+  const { data: isAdmin = false } = useQuery({
+    queryKey: ["is-current-user-admin", user?.id],
+    queryFn: isCurrentUserAdmin,
     enabled: !!user,
   });
 
@@ -634,7 +644,7 @@ function Community() {
 
 
                   {showComments[p.id] && (
-                    <PostComments postId={p.id} currentUserId={user?.id} />
+                    <PostComments postId={p.id} currentUserId={user?.id} isAdmin={isAdmin} />
                   )}
                 </div>
               </article>
@@ -820,14 +830,99 @@ function Community() {
   );
 }
 
-function PostComments({ postId, currentUserId }: { postId: string; currentUserId: string | undefined }) {
+// Uma linha de comentário ou resposta: autor, texto, curtir (coração +
+// contagem), responder (só em comentário raiz) e excluir (autor/admin).
+function CommentRow({
+  comment,
+  postId,
+  currentUserId,
+  isAdmin,
+  isReply = false,
+  onReply,
+}: {
+  comment: PostComment;
+  postId: string;
+  currentUserId: string | undefined;
+  isAdmin: boolean;
+  isReply?: boolean;
+  onReply?: (parentId: string) => void;
+}) {
+  const { t } = useTranslation();
+  const queryClient = useQueryClient();
+  const name = comment.author?.full_name || "Aventureiro";
+  const initials = name.split(" ").map((n: string) => n[0]).join("").slice(0, 2).toUpperCase();
+  const canDelete = isAdmin || (!!currentUserId && comment.author_id === currentUserId);
+
+  const invalidate = () => {
+    queryClient.invalidateQueries({ queryKey: ["post-comments", postId] });
+    queryClient.invalidateQueries({ queryKey: ["community-posts"] });
+  };
+
+  const likeMutation = useMutation({
+    mutationFn: () => toggleCommentLike(comment.id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["post-comments", postId] }),
+    onError: () => toast.error(t("community.commentError")),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: () => deleteComment(comment.id),
+    onSuccess: () => {
+      toast.success(t("community.commentDeleted"));
+      invalidate();
+    },
+    onError: () => toast.error(t("community.commentError")),
+  });
+
+  return (
+    <div className={`flex items-start gap-2 ${isReply ? "ml-8" : ""}`}>
+      <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-secondary text-[11px] font-semibold text-secondary-foreground">
+        {initials}
+      </span>
+      <div className="min-w-0 flex-1">
+        <div className="rounded-2xl bg-secondary/60 px-3 py-2">
+          <div className="text-[12px] font-semibold">{name}</div>
+          <div className="text-[12px] text-foreground/80 break-words">{comment.text}</div>
+        </div>
+        <div className="mt-1 flex items-center gap-4 pl-1 text-[11px] text-muted-foreground">
+          <button
+            onClick={() => {
+              if (!currentUserId) return toast.error(t("community.loginRequired"));
+              likeMutation.mutate();
+            }}
+            className="flex items-center gap-1"
+          >
+            <Heart size={13} className={comment.liked_by_me ? "fill-red-500 text-red-500" : ""} />
+            {comment.likes_count > 0 && <span>{comment.likes_count}</span>}
+          </button>
+          {!isReply && onReply && (
+            <button onClick={() => onReply(comment.id)}>{t("community.reply")}</button>
+          )}
+          {canDelete && (
+            <button onClick={() => deleteMutation.mutate()} className="text-destructive">
+              {t("community.deleteComment")}
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PostComments({
+  postId,
+  currentUserId,
+  isAdmin,
+}: {
+  postId: string;
+  currentUserId: string | undefined;
+  isAdmin: boolean;
+}) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [commentText, setCommentText] = useState("");
+  // Quando != null, o campo está no modo "responder" ao comentário desse id.
+  const [replyingTo, setReplyingTo] = useState<string | null>(null);
 
-  // Mesmo requisito de atualização periódica, aplicado aos comentários de
-  // cada post aberto: novos comentários de outros usuários aparecem sem
-  // precisar fechar/reabrir a seção.
   const { data: comments = [], isLoading } = useQuery({
     queryKey: ["post-comments", postId],
     queryFn: () => fetchPostComments(postId),
@@ -835,11 +930,13 @@ function PostComments({ postId, currentUserId }: { postId: string; currentUserId
   });
 
   const commentMutation = useMutation({
-    mutationFn: (text: string) => createPostComment(postId, text),
+    mutationFn: (vars: { text: string; parentId: string | null }) =>
+      createPostComment(postId, vars.text, vars.parentId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["post-comments", postId] });
       queryClient.invalidateQueries({ queryKey: ["community-posts"] });
       setCommentText("");
+      setReplyingTo(null);
     },
     onError: () => {
       toast.error(t("community.commentError"));
@@ -853,7 +950,7 @@ function PostComments({ postId, currentUserId }: { postId: string; currentUserId
     }
     const trimmed = commentText.trim();
     if (trimmed.length === 0) return;
-    commentMutation.mutate(trimmed);
+    commentMutation.mutate({ text: trimmed, parentId: replyingTo });
   };
 
   return (
@@ -866,34 +963,47 @@ function PostComments({ postId, currentUserId }: { postId: string; currentUserId
       ) : comments.length === 0 ? (
         <p className="text-xs text-muted-foreground">{t("community.noComments")}</p>
       ) : (
-        comments.map((c: PostComment) => {
-          const name = c.author?.full_name || "Aventureiro";
-          const initials = name.split(" ").map((n: string) => n[0]).join("").slice(0, 2).toUpperCase();
-          return (
-            <div key={c.id} className="flex items-start gap-2">
-              <span className="grid h-7 w-7 place-items-center rounded-full bg-secondary text-[11px] font-semibold text-secondary-foreground">
-                {initials}
-              </span>
-              <div className="flex-1 rounded-2xl bg-secondary/60 px-3 py-2">
-                <div className="text-[12px] font-semibold">{name}</div>
-                <div className="text-[12px] text-foreground/80">{c.text}</div>
-              </div>
-            </div>
-          );
-        })
+        comments.map((c: PostComment) => (
+          <div key={c.id} className="space-y-2">
+            <CommentRow
+              comment={c}
+              postId={postId}
+              currentUserId={currentUserId}
+              isAdmin={isAdmin}
+              onReply={(id) => setReplyingTo(id)}
+            />
+            {(c.replies ?? []).map((r) => (
+              <CommentRow
+                key={r.id}
+                comment={r}
+                postId={postId}
+                currentUserId={currentUserId}
+                isAdmin={isAdmin}
+                isReply
+              />
+            ))}
+          </div>
+        ))
       )}
+
+      {replyingTo && (
+        <div className="flex items-center justify-between rounded-lg bg-secondary/40 px-3 py-1.5 text-[11px] text-muted-foreground">
+          <span>{t("community.replyingTo")}</span>
+          <button onClick={() => setReplyingTo(null)} className="font-semibold text-primary">
+            {t("common.cancel")}
+          </button>
+        </div>
+      )}
+
       <div className="flex items-center gap-2">
         {/* Bug corrigido: `text-xs` (12px) fica abaixo do limite de 16px que
             Safari/Chrome no iOS respeitam sem forçar um zoom automático da
-            página ao focar um campo de texto. Esse zoom empurrava o botão
-            de enviar para fora da área visível (parecia "sumir" atrás do
-            scroll). `text-base` no mobile (16px) evita o zoom; `md:text-sm`
-            mantém o visual compacto original em telas maiores, mesmo padrão
-            já usado pelo componente <Input> em outras telas. */}
+            página ao focar um campo de texto. `text-base` no mobile (16px)
+            evita o zoom; `md:text-xs` mantém o visual compacto em telas maiores. */}
         <input
           value={commentText}
           onChange={(e) => setCommentText(e.target.value)}
-          placeholder={t("community.commentPlaceholder")}
+          placeholder={replyingTo ? t("community.replyPlaceholder") : t("community.commentPlaceholder")}
           className="flex-1 rounded-full border border-border bg-card px-3 py-2 text-base outline-none md:text-xs"
         />
         <button

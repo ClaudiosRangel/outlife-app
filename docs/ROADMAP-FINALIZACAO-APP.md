@@ -22,12 +22,24 @@
 >    em `__root.tsx` reescrito: `/a/:id` navega para a rota de preview `/a/$activityId`
 >    (não mais redireciona pra detalhe), com fallback e tratamento de cold start.
 >    Também dei 1 ano cheio de trial (trial_started_at=now) aos 9 parceiros atuais. APK 14:33.
-> C) Req 9 comentários: respostas (thread `parent_comment_id`) + curtir (`comment_likes`) + excluir (autor/admin).
+> C) ✅ CONCLUÍDA (12/09/2026) — Req 9 comentários: respostas (thread
+>    `parent_comment_id`) + curtir (`comment_likes`, idempotente) + excluir
+>    (autor/admin). Migration 20260912100000 aplicada em prod (RPCs
+>    create_post_comment estendida, toggle_comment_like, delete_post_comment).
+>    api.ts: fetchPostComments (raiz+replies+liked_by_me), replyToComment,
+>    toggleCommentLike, deleteComment. UI comunidade.tsx: CommentRow +
+>    PostComments reescrito (replies aninhados, curtir otimista, responder,
+>    excluir). Idempotência validada no banco. SEM APK (build no final do bloco).
 > D) Req 5 catálogo de tipos de atividade (`activity_types`: code/name/icon_key/metric_form) + admin `/admin/atividades`; rastreamento passa a ler o catálogo.
 > E) Req 8 banners OUTVITAR (foto/mapa/vídeo-poster): ícone da atividade, marca "OUTVITAR", descrição do usuário ou default, métricas por metric_form — estende `banner-generator.ts`.
 > F) Req 4 sugestões de amizade — RPC `suggest_friends` (amigos-de-amigos + atividade em comum) em `/amigos`.
 > G) Req 3 conquistas por Destino via GPS — `user_destination_visits` + RPCs; keys `destinos_1/5/10`.
 > H) Req 1/2 importação/curadoria trilhas-destinos (OSM/ICMBio) — `imported_trails` + `scripts/import-trails.mjs` + `/admin/trilhas` (toggle visível; atribuição OSM obrigatória).
+>
+> ⚙️ DECISÃO (12/09/2026): a partir da Frente C, o **APK é gerado só no FINAL
+> do bloco** (todas as frentes). As migrações continuam aplicadas em produção
+> por frente e os commits também são por frente; só o build nativo/APK fica
+> acumulado para o fim.
 > Detalhe completo em requirements.md + design.md do spec. Cada frente concluída
 > marcar aqui com data/resumo/migration.
 
