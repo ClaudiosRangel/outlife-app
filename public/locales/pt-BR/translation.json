@@ -596,7 +596,11 @@
     "shareBanner": "Compartilhar atividade",
     "generatingBanner": "Gerando imagem…",
     "shareBannerTitle": "Minha atividade OutVitar",
+    "shareBannerText": "Confira minha atividade no OutVitar!",
     "shareBannerError": "Não foi possível gerar a imagem para compartilhar. Tente novamente.",
+    "bannerDefaultDescription": "Mais uma aventura no OutVitar 🌿",
+    "bannerVariantPhoto": "Foto",
+    "bannerVariantMap": "Mapa",
     "toasts": {
       "started": "Atividade iniciada. Boa trilha!",
       "saved": "Atividade salva com sucesso.",

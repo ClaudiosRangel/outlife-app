@@ -5,7 +5,7 @@
 > `.kiro/steering/roadmap-outvitar.md`). **Mantenha-o atualizado** ao
 > concluir qualquer tarefa/bloco: marque status, data e resumo.
 
-**Última atualização:** 12/09/2026 (spec evolucao-admin-atividades-social — Frentes A/B/C/D concluídas)
+**Última atualização:** 12/09/2026 (spec evolucao-admin-atividades-social — Frentes A/B/C/D/E concluídas)
 **App:** OutVitar — slogan "VIVER É DIFERENTE DE ESTAR VIVO"
 
 > **🟦 BLOCO EM ANDAMENTO — spec `evolucao-admin-atividades-social`**
@@ -42,7 +42,14 @@
 >    `atividade.rastrear.tsx` lê o catálogo (fallback ao enum). routeTree
 >    regenerado manualmente (o build:native não gerou a rota nova — inserida à
 >    mão seguindo o padrão de admin.compliance). tsc limpo. SEM APK (fim do bloco).
-> E) Req 8 banners OUTVITAR (foto/mapa/vídeo-poster): ícone da atividade, marca "OUTVITAR", descrição do usuário ou default, métricas por metric_form — estende `banner-generator.ts`.
+> E) ✅ CONCLUÍDA (12/09/2026) — Req 8 banners OUTVITAR. `banner-generator.ts`
+>    estendido (retrocompatível): marca "OUTVITAR", ícone+nome da atividade,
+>    descrição do usuário ou Default_Description, métricas por metric_form,
+>    variantes foto/mapa/poster. PNGs dos 8 ícones em `public/activity-icons/`
+>    gerados por `scripts/gen-activity-icons.mjs`. `atividade.$activityId.tsx`
+>    integrado (busca catálogo, computeByMetricForm, seletor Foto/Mapa).
+>    Testes fast-check (resolveBannerDescription/truncateForBanner). i18n
+>    bannerDefaultDescription/shareBannerText/bannerVariant*. tsc limpo. SEM APK.
 > F) Req 4 sugestões de amizade — RPC `suggest_friends` (amigos-de-amigos + atividade em comum) em `/amigos`.
 > G) Req 3 conquistas por Destino via GPS — `user_destination_visits` + RPCs; keys `destinos_1/5/10`.
 > H) Req 1/2 importação/curadoria trilhas-destinos (OSM/ICMBio) — `imported_trails` + `scripts/import-trails.mjs` + `/admin/trilhas` (toggle visível; atribuição OSM obrigatória).

@@ -38,12 +38,34 @@
 // ambos os casos, o comportamento seja "erro + permitir tentar novamente,
 // nunca compartilhar algo incompleto").
 
+export type ActivityBannerVariant = "photo" | "map" | "video_poster";
+
+export type ActivityBannerMetric = { label: string; value: string };
+
 export type ActivityBannerInput = {
   mapSnapshotUrl?: string | null;
   distanceMeters: number;
   durationSeconds: number;
   averagePaceLabel?: string | null; // já formatado "mm:ss/km" ou null
   averageSpeedLabel: string; // já formatado "xx.x km/h"
+
+  // --- Frente E (Req 8) — camadas OUTVITAR, todas opcionais para
+  // retrocompatibilidade com o chamador legado. Quando presentes, o banner
+  // desenha marca/ícone/descrição e usa `metrics[]` (já resolvidas por
+  // metric_form pelo chamador) em vez das métricas fixas legadas. ---
+  /** Foto do usuário, snapshot do mapa, ou poster do vídeo. Sobrepõe `mapSnapshotUrl` quando informado. */
+  variant?: ActivityBannerVariant;
+  backgroundUrl?: string | null;
+  /** Chave do ícone da atividade (ex.: "run"). Resolve `public/activity-icons/<iconKey>.png`. */
+  iconKey?: string | null;
+  /** Nome do tipo de atividade (ex.: "Corrida"). */
+  activityName?: string | null;
+  /** Descrição do usuário; vazio/whitespace → Default_Description (passada em `defaultDescription`). */
+  description?: string | null;
+  /** Texto default i18n usado quando `description` é vazio. */
+  defaultDescription?: string | null;
+  /** Métricas já formatadas e rotuladas pelo chamador (distância + as do metric_form). */
+  metrics?: ActivityBannerMetric[];
 };
 
 export type PostBannerInput = {
@@ -292,25 +314,165 @@ function drawPostText(ctx: CanvasRenderingContext2D, input: PostBannerInput): vo
   }
 }
 
+/** Y do topo das camadas de marca/ícone (Frente E). */
+const BRAND_TOP_Y = 96;
+
+/**
+ * Desenha a marca "OUTVITAR" no canto superior direito — onde o Strava põe a
+ * sua marca (Requirement 8.2). Sempre presente no banner aprimorado (P1).
+ */
+function drawBrand(ctx: CanvasRenderingContext2D): void {
+  ctx.save();
+  ctx.textBaseline = "alphabetic";
+  ctx.textAlign = "right";
+  ctx.font = "800 44px sans-serif";
+  ctx.fillStyle = TEXT_COLOR;
+  ctx.shadowColor = "rgba(0,0,0,0.4)";
+  ctx.shadowBlur = 8;
+  ctx.fillText("OUTVITAR", BANNER_WIDTH - PADDING_X, BRAND_TOP_Y);
+  ctx.restore();
+}
+
+/**
+ * Desenha o ícone da atividade (PNG branco em `public/activity-icons/<iconKey>.png`)
+ * no canto superior esquerdo (Requirement 8.1). Se o PNG não existir/carregar,
+ * desenha nada — nunca lança (P1). Também escreve o nome do tipo ao lado.
+ */
+async function drawActivityIconAndName(
+  ctx: CanvasRenderingContext2D,
+  iconKey?: string | null,
+  activityName?: string | null,
+): Promise<void> {
+  const iconSize = 72;
+  const iconX = PADDING_X;
+  const iconY = BRAND_TOP_Y - iconSize + 12;
+
+  if (iconKey) {
+    try {
+      const iconImage = await loadImageElement(`/activity-icons/${iconKey}.png`);
+      ctx.save();
+      ctx.shadowColor = "rgba(0,0,0,0.4)";
+      ctx.shadowBlur = 8;
+      ctx.drawImage(iconImage, iconX, iconY, iconSize, iconSize);
+      ctx.restore();
+    } catch {
+      // Ícone ausente/corrompido: segue sem ícone (Requirement 8.1 fallback).
+    }
+  }
+
+  if (activityName) {
+    ctx.save();
+    ctx.textBaseline = "alphabetic";
+    ctx.textAlign = "left";
+    ctx.font = "700 44px sans-serif";
+    ctx.fillStyle = TEXT_COLOR;
+    ctx.shadowColor = "rgba(0,0,0,0.4)";
+    ctx.shadowBlur = 8;
+    ctx.fillText(activityName, iconX + iconSize + 20, BRAND_TOP_Y);
+    ctx.restore();
+  }
+}
+
+/**
+ * Escolhe a descrição a exibir: a do usuário quando tem conteúdo real, senão
+ * o Default_Description (Requirement 8.3, Property P2). Função pura/testável.
+ */
+export function resolveBannerDescription(
+  description?: string | null,
+  defaultDescription?: string | null,
+): string {
+  const trimmed = (description ?? "").trim();
+  if (trimmed.length > 0) return trimmed;
+  return (defaultDescription ?? "").trim();
+}
+
+/**
+ * Desenha as camadas de texto do banner aprimorado (Frente E): descrição
+ * (usuário ou default) e a lista de `metrics` já resolvida pelo chamador
+ * (Requirements 8.3–8.7). `metrics` vazio não quebra (P3): desenha só a
+ * descrição.
+ */
+function drawEnhancedActivityText(ctx: CanvasRenderingContext2D, input: ActivityBannerInput): void {
+  const maxTextWidth = BANNER_WIDTH - PADDING_X * 2;
+  const metrics = input.metrics ?? [];
+
+  // Métricas na base, em destaque.
+  let y = BANNER_HEIGHT - 120 - Math.max(0, metrics.length - 1) * 96;
+
+  // Descrição acima das métricas.
+  const desc = resolveBannerDescription(input.description, input.defaultDescription);
+  if (desc) {
+    ctx.save();
+    ctx.textBaseline = "alphabetic";
+    ctx.textAlign = "left";
+    ctx.font = "500 44px sans-serif";
+    ctx.fillStyle = TEXT_COLOR;
+    ctx.shadowColor = "rgba(0,0,0,0.4)";
+    ctx.shadowBlur = 6;
+    const lines = wrapText(ctx, desc, maxTextWidth).slice(0, 3);
+    let dy = y - lines.length * 56 - 40;
+    for (const line of lines) {
+      ctx.fillText(line, PADDING_X, dy);
+      dy += 56;
+    }
+    ctx.restore();
+  }
+
+  ctx.textBaseline = "alphabetic";
+  ctx.textAlign = "left";
+  for (const metric of metrics) {
+    ctx.fillStyle = TEXT_COLOR;
+    ctx.font = "800 88px sans-serif";
+    ctx.fillText(metric.value, PADDING_X, y);
+    ctx.fillStyle = ACCENT_COLOR;
+    ctx.font = "600 34px sans-serif";
+    ctx.fillText(metric.label.toUpperCase(), PADDING_X, y + 40);
+    y += 96;
+  }
+}
+
+/**
+ * True quando o chamador forneceu os campos da Frente E (marca/ícone/
+ * descrição/métricas). Nesse caso, usa o layout aprimorado; senão, mantém
+ * exatamente o comportamento legado (retrocompatível).
+ */
+function isEnhancedInput(input: ActivityBannerInput): boolean {
+  return (
+    input.variant !== undefined ||
+    input.iconKey != null ||
+    input.metrics !== undefined ||
+    input.description != null ||
+    input.activityName != null
+  );
+}
+
 /**
  * Composição efetiva do banner de atividade (sem o timeout, aplicado por
- * `generateActivityBanner`): carrega o Activity_Map_Snapshot como fundo
- * quando presente (Requirement 7.2), ou usa o fundo padrão quando ausente
- * (Requirement 7.3 — nunca lança erro por essa ausência), desenha a camada
- * de métricas por cima, e exporta o resultado.
+ * `generateActivityBanner`): carrega o fundo (foto/mapa/poster conforme
+ * `variant`/`backgroundUrl`, com fallback ao `mapSnapshotUrl` legado e ao
+ * fundo padrão), desenha as camadas por cima, e exporta o resultado.
+ * Requirement 7.3/8: a ausência de fundo nunca lança erro.
  */
 async function renderActivityBanner(input: ActivityBannerInput): Promise<Blob> {
   const { canvas, ctx } = createBannerCanvas();
 
-  if (input.mapSnapshotUrl) {
-    const mapImage = await loadImageElement(input.mapSnapshotUrl);
-    drawBackgroundImageCover(ctx, mapImage);
+  const backgroundUrl = input.backgroundUrl ?? input.mapSnapshotUrl ?? null;
+  if (backgroundUrl) {
+    const bgImage = await loadImageElement(backgroundUrl);
+    drawBackgroundImageCover(ctx, bgImage);
   } else {
     drawFallbackBackground(ctx);
   }
 
   drawOverlay(ctx);
-  drawActivityMetricsText(ctx, input);
+
+  if (isEnhancedInput(input)) {
+    drawBrand(ctx);
+    await drawActivityIconAndName(ctx, input.iconKey, input.activityName);
+    drawEnhancedActivityText(ctx, input);
+  } else {
+    drawActivityMetricsText(ctx, input);
+  }
 
   return canvasToBlobOrThrow(canvas);
 }

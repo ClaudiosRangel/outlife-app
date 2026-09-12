@@ -119,21 +119,21 @@ frentes são independentes. As "waves" abaixo agrupam as tarefas por frente.
 
 ## Frente E — Req 8: Banners de compartilhamento OUTVITAR
 
-- [ ] 17. PNGs dos ícones de atividade
-  - Gerar/adicionar `public/activity-icons/<icon_key>.png` (branco com sombra) para os 7 tipos
+- [x] 17. PNGs dos ícones de atividade
+  - `public/activity-icons/<icon_key>.png` (branco, stroke lucide) para os 8 tipos, gerados por `scripts/gen-activity-icons.mjs` (extrai path do lucide-react + sharp)
   - _Requirements: 8.1_
 
-- [ ] 18. Estender `banner-generator.ts`
-  - Ampliar `ActivityBannerInput` (variant, backgroundUrl, iconKey, activityName, description, metrics[]); desenhar marca "OUTVITAR", ícone, descrição (ou Default_Description), métricas; variantes photo/map/video_poster; manter timeout/erro tipado
-  - Testes (Property 5)
+- [x] 18. Estender `banner-generator.ts`
+  - `ActivityBannerInput` ampliado (variant, backgroundUrl, iconKey, activityName, description, defaultDescription, metrics[]) de forma retrocompatível; desenha marca "OUTVITAR" (canto sup. dir.), ícone+nome (canto sup. esq.), descrição (ou Default_Description) e `metrics[]`; variantes photo/map/video_poster via backgroundUrl; timeout/erro tipado preservado
+  - Testes (Property 5): `resolveBannerDescription` + `truncateForBanner` (fast-check, 4 passando)
   - _Requirements: 8.1, 8.2, 8.3, 8.4, 8.5, 8.6, 8.7, 8.8, 8.9_
 
-- [ ] 19. Integrar na tela de atividade
-  - `atividade.$activityId.tsx`: resolver métricas via `computeByMetricForm`, seletor de variante (Foto/Mapa), Default_Description i18n
+- [x] 19. Integrar na tela de atividade
+  - `atividade.$activityId.tsx`: busca `fetchActivityTypes`, resolve icon_key/metric_form/nome, monta `metrics[]` via `computeByMetricForm`; seletor de variante (Foto/Mapa) quando há ambos; Default_Description i18n
   - _Requirements: 8.3, 8.4, 8.5, 8.6, 8.7_
 
-- [ ] 20. Verificação + entrega da Frente E
-  - `tsc`, build, APK, commit+push, atualizar roadmap
+- [x] 20. Verificação + entrega da Frente E
+  - `tsc` limpo (só 6 erros pré-existentes); commit+push; roadmap. APK adiado para o fim do bloco.
   - _Requirements: 8.1, 8.2, 8.9_
 
 ## Frente F — Req 4: Sugestões de amizade

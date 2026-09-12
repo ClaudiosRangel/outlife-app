@@ -4,12 +4,13 @@ import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Clock, Route as RouteIcon, Calendar, Share2, Loader2, Mountain } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
-import { fetchActivityById } from "@/lib/api";
+import { fetchActivityById, fetchActivityTypes } from "@/lib/api";
 import { StatusBar } from "@/components/StatusBar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { computeActivityMetrics } from "@/lib/activity-metrics";
-import { generateActivityBanner } from "@/lib/banner-generator";
+import { computeByMetricForm, type MetricForm } from "@/lib/metric-forms";
+import { generateActivityBanner, type ActivityBannerMetric, type ActivityBannerVariant } from "@/lib/banner-generator";
 import { shareContent } from "@/lib/share";
 
 const ActivityMap = lazy(() => import("@/components/ActivityMap"));
@@ -48,6 +49,14 @@ function ActivityDetailPage() {
     queryFn: () => fetchActivityById(activityId),
   });
 
+  // Catálogo de tipos (Frente D) — usado para resolver icon_key/metric_form/
+  // nome do tipo desta atividade ao montar o banner OUTVITAR (Frente E).
+  const { data: activityTypes } = useQuery({
+    queryKey: ["activity-types"],
+    queryFn: fetchActivityTypes,
+    staleTime: 5 * 60 * 1000,
+  });
+
   const coords =
     activity?.route_geojson?.coordinates?.map((c) => ({ lat: c[1], lng: c[0] })) ?? [];
 
@@ -79,17 +88,66 @@ function ActivityDetailPage() {
       : "—";
 
   const [generatingBanner, setGeneratingBanner] = useState(false);
+  // Frente E (Req 8): variante do banner — "photo" quando há foto do usuário,
+  // senão "map". O usuário pode alternar quando ambos existirem.
+  const [bannerVariant, setBannerVariant] = useState<ActivityBannerVariant | null>(null);
 
   // Requirement 7.1/7.2/7.4/7.5/7.7: gera o Share_Banner_Image (mapa +
   // métricas) e aciona o compartilhamento já existente; exibe indicador de
   // progresso durante a geração; em falha (incluindo timeout), exibe toast
   // de erro reexecutável, sem abrir o compartilhamento com resultado
   // incompleto.
+  // Resolve o tipo desta atividade no catálogo (Frente D) para obter
+  // icon_key / metric_form / nome. Fallback seguro quando não há catálogo
+  // carregado ou o tipo não está cadastrado.
+  const catalogType = (activityTypes ?? []).find((tp) => tp.code === activity?.activity_type);
+  const metricForm: MetricForm = (catalogType?.metric_form as MetricForm) ?? "speed_elevation";
+  const iconKey = catalogType?.icon_key ?? "activity";
+  const activityName = catalogType?.name ?? activity?.activity_type ?? "";
+
   const handleShareBanner = async () => {
     if (!activity) return;
     setGeneratingBanner(true);
     try {
+      // Métricas resolvidas pelo metric_form do tipo (Frente D/E): distância
+      // sempre + principal (ritmo/velocidade) + secundária (elevação) quando houver.
+      const mf = computeByMetricForm(metricForm, {
+        distanceMeters: activity.distance_meters ?? 0,
+        durationSeconds: activity.duration_seconds ?? 0,
+        elevationGain: activity.elevation_gain ?? null,
+      });
+      const metrics: ActivityBannerMetric[] = [
+        {
+          label: t("activity.metrics.distance"),
+          value: `${((activity.distance_meters ?? 0) / 1000).toFixed(2)} km`,
+        },
+        {
+          label: t("activity.metrics.duration"),
+          value: formatDuration(activity.duration_seconds ?? null),
+        },
+      ];
+      if (mf.primary) metrics.push({ label: mf.primary.label, value: mf.primary.value });
+      if (mf.secondary && metricForm === "speed_elevation") {
+        metrics.push({ label: mf.secondary.label, value: mf.secondary.value });
+      }
+
+      // Variante: preferência do usuário; senão foto (se houver) ou mapa.
+      const hasPhoto = !!activity.image_url;
+      const hasMap = !!activity.map_snapshot_url;
+      const variant: ActivityBannerVariant =
+        bannerVariant ?? (hasPhoto ? "photo" : "map");
+      const backgroundUrl =
+        variant === "photo" ? activity.image_url : activity.map_snapshot_url;
+
       const blob = await generateActivityBanner({
+        variant,
+        backgroundUrl: backgroundUrl ?? (hasMap ? activity.map_snapshot_url : activity.image_url),
+        iconKey,
+        activityName,
+        description: activity.description,
+        defaultDescription: t("activity.bannerDefaultDescription"),
+        metrics,
+        // Campos legados mantidos para retrocompat/fallback interno:
         mapSnapshotUrl: activity.map_snapshot_url,
         distanceMeters: activity.distance_meters ?? 0,
         durationSeconds: activity.duration_seconds ?? 0,
@@ -100,9 +158,9 @@ function ActivityDetailPage() {
       const deepLink = `${window.location.origin}/a/${activityId}`;
       await shareContent({
         file: blob,
-        fileName: "outlife-atividade.webp",
+        fileName: "outvitar-atividade.webp",
         title: t("activity.shareBannerTitle"),
-        text: `Confira minha atividade no OutVitar! ${deepLink}`,
+        text: `${t("activity.shareBannerText")} ${deepLink}`,
       });
     } catch {
       toast.error(t("activity.shareBannerError"));
@@ -218,6 +276,28 @@ function ActivityDetailPage() {
           da atividade, com indicador de progresso durante a geração. */}
       {!isLoading && activity && (
         <div className="mx-5 mt-4">
+          {/* Frente E (Req 8): seletor de variante do banner (Foto/Mapa),
+              exibido só quando ambos os fundos existem. */}
+          {activity.image_url && activity.map_snapshot_url && (
+            <div className="mb-2 flex gap-2">
+              <Button
+                type="button"
+                variant={(bannerVariant ?? "photo") === "photo" ? "default" : "outline"}
+                className="h-10 flex-1 rounded-2xl text-xs"
+                onClick={() => setBannerVariant("photo")}
+              >
+                {t("activity.bannerVariantPhoto")}
+              </Button>
+              <Button
+                type="button"
+                variant={bannerVariant === "map" ? "default" : "outline"}
+                className="h-10 flex-1 rounded-2xl text-xs"
+                onClick={() => setBannerVariant("map")}
+              >
+                {t("activity.bannerVariantMap")}
+              </Button>
+            </div>
+          )}
           <Button
             variant="outline"
             className="w-full h-12 rounded-2xl"
