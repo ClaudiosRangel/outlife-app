@@ -5,6 +5,7 @@ import { ptBR } from "date-fns/locale";
 import { resizeImageForUpload } from "@/lib/image-resize";
 import { validateVideoFileMeta, videoRejectionMessage } from "@/lib/video-validation";
 import { isValidCPF, isValidCNPJ } from "@/lib/document-validation";
+import { computeTrialStatus } from "@/lib/partner-trial";
 import type { LevelStats } from "@/lib/user-level";
 import {
   sortRanking,
@@ -1117,11 +1118,21 @@ export async function fetchNextAdventure(_userId?: string): Promise<NextAdventur
 
 export type PartnerTrialStatus = {
   trialActive: boolean;
+  /** dias restantes do trial de 1 ano (Frente A). */
+  remainingDays: number;
+  /** fração [0,1] do ano de trial já decorrido (barra de progresso). */
+  elapsedFraction: number;
+  /** ISO do fim do trial. */
+  endsAt: string;
+  /** métrica informativa, mantida para exibição (não é mais o gatilho do trial). */
   contactClicks: number;
-  remainingClicks: number;
-  threshold: number;
 };
 
+/**
+ * @deprecated O trial do parceiro deixou de ser por cliques e passou a ser por
+ * DATA (1 ano — Frente A). Mantido apenas como referência histórica; não é
+ * mais o gatilho de expiração.
+ */
 export const PARTNER_TRIAL_CLICK_THRESHOLD = 15;
 
 export async function fetchPartnerMetrics(partnerId: string): Promise<PartnerMetric[]> {
@@ -1141,19 +1152,31 @@ export async function fetchPartnerMetrics(partnerId: string): Promise<PartnerMet
 }
 
 export async function fetchPartnerTrialStatus(partnerId: string): Promise<PartnerTrialStatus> {
+  // Frente A: trial de 1 ANO por DATA. Fonte da data de início: trial_started_at
+  // quando presente; senão created_at do parceiro (fallback — nenhum parceiro
+  // existente fica sem trial). O cálculo é feito pela função pura testada
+  // computeTrialStatus.
   const { data, error } = await supabase
     .from("profiles")
-    .select("contact_clicks, trial_active")
+    .select("contact_clicks, trial_started_at, created_at" as never)
     .eq("id", partnerId)
     .maybeSingle();
   if (error) throw error;
-  const clicks = Number(data?.contact_clicks ?? 0);
-  const trialActive = Boolean(data?.trial_active ?? true);
+
+  const row = (data ?? {}) as {
+    contact_clicks?: number | null;
+    trial_started_at?: string | null;
+    created_at?: string | null;
+  };
+  const startedAt = row.trial_started_at ?? row.created_at ?? null;
+
+  const status = computeTrialStatus(startedAt, Date.now());
   return {
-    trialActive,
-    contactClicks: clicks,
-    threshold: PARTNER_TRIAL_CLICK_THRESHOLD,
-    remainingClicks: Math.max(PARTNER_TRIAL_CLICK_THRESHOLD - clicks, 0),
+    trialActive: status.trialActive,
+    remainingDays: status.remainingDays,
+    elapsedFraction: status.elapsedFraction,
+    endsAt: status.endsAt,
+    contactClicks: Number(row.contact_clicks ?? 0),
   };
 }
 

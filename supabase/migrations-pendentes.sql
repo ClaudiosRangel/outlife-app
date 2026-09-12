@@ -803,3 +803,12 @@ LANGUAGE sql SECURITY DEFINER SET search_path = public AS $$
   ORDER BY f.created_at DESC LIMIT GREATEST(1, LEAST(COALESCE(_limit, 100), 500));
 $$;
 GRANT EXECUTE ON FUNCTION public.admin_fetch_feedback(INTEGER) TO authenticated;
+
+
+-- ############################################################################
+-- 18) 20260911170000_partner-trial-started-at.sql
+--     Frente A: trial de parceiro por data (1 ano). Coluna nullable; fallback
+--     para created_at na aplicação.
+-- ############################################################################
+ALTER TABLE public.profiles
+  ADD COLUMN IF NOT EXISTS trial_started_at TIMESTAMPTZ;

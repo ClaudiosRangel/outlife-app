@@ -398,6 +398,14 @@
     "sent": "Obrigado pela sua opinião!",
     "errorEmpty": "Escreva sua opinião antes de enviar."
   },
+  "partnerTrial": {
+    "activeTitle": "Teste gratuito ativo",
+    "remaining_one": "Falta {{count}} dia de teste gratuito.",
+    "remaining_other": "Faltam {{count}} dias de teste gratuito.",
+    "endsAt": "Seu teste termina em {{date}}.",
+    "endedTitle": "Teste encerrado",
+    "endedDesc": "Seu período de teste de 1 ano terminou. Ative seu plano para continuar recebendo leads sem interrupção."
+  },
   "adminFeedback": {
     "title": "Opiniões dos usuários",
     "subtitle": "Feedback e sugestões enviados pelos usuários.",

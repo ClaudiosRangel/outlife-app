@@ -5,8 +5,28 @@
 > `.kiro/steering/roadmap-outvitar.md`). **Mantenha-o atualizado** ao
 > concluir qualquer tarefa/bloco: marque status, data e resumo.
 
-**Última atualização:** 09/09/2026 (rodada de ajustes pós-teste + APK)
+**Última atualização:** 11/09/2026 (spec evolucao-admin-atividades-social — design pronto)
 **App:** OutVitar — slogan "VIVER É DIFERENTE DE ESTAR VIVO"
+
+> **🟦 BLOCO EM ANDAMENTO — spec `evolucao-admin-atividades-social`**
+> (`.kiro/specs/evolucao-admin-atividades-social/`) — requirements ✅ | design ✅
+> | tasks ⬜ | implementação ⬜. 8 frentes solicitadas pelo usuário, a
+> implementar UMA A UMA (build+commit por frente). Ordem (menor→maior risco):
+> A) ✅ CONCLUÍDA (12/09/2026) — Req 6 trial parceiro 1 ano. `partner-trial.ts`
+>    (computeTrialStatus, 365d, 5 testes fast-check) + coluna
+>    `profiles.trial_started_at` (migration 20260911170000, aplicada em prod, fallback created_at)
+>    + `fetchPartnerTrialStatus` reescrita (por data) + painel exibe dias
+>    restantes/progresso por tempo (i18n partnerTrial.*). APK 14:11.
+> B) Req 7 bug deep link `/a/:id` 404 no nativo — só front (`deep-link.ts` + `__root.tsx`).
+> C) Req 9 comentários: respostas (thread `parent_comment_id`) + curtir (`comment_likes`) + excluir (autor/admin).
+> D) Req 5 catálogo de tipos de atividade (`activity_types`: code/name/icon_key/metric_form) + admin `/admin/atividades`; rastreamento passa a ler o catálogo.
+> E) Req 8 banners OUTVITAR (foto/mapa/vídeo-poster): ícone da atividade, marca "OUTVITAR", descrição do usuário ou default, métricas por metric_form — estende `banner-generator.ts`.
+> F) Req 4 sugestões de amizade — RPC `suggest_friends` (amigos-de-amigos + atividade em comum) em `/amigos`.
+> G) Req 3 conquistas por Destino via GPS — `user_destination_visits` + RPCs; keys `destinos_1/5/10`.
+> H) Req 1/2 importação/curadoria trilhas-destinos (OSM/ICMBio) — `imported_trails` + `scripts/import-trails.mjs` + `/admin/trilhas` (toggle visível; atribuição OSM obrigatória).
+> Detalhe completo em requirements.md + design.md do spec. Cada frente concluída
+> marcar aqui com data/resumo/migration.
+
 
 > **⚠️ ESTADO ATUAL (ler primeiro numa nova sessão) — 09/09/2026**
 >

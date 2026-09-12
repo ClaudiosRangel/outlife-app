@@ -398,6 +398,14 @@
     "sent": "Thanks for your feedback!",
     "errorEmpty": "Write your feedback before sending."
   },
+  "partnerTrial": {
+    "activeTitle": "Free trial active",
+    "remaining_one": "{{count}} day left in your free trial.",
+    "remaining_other": "{{count}} days left in your free trial.",
+    "endsAt": "Your trial ends on {{date}}.",
+    "endedTitle": "Trial ended",
+    "endedDesc": "Your 1-year trial has ended. Activate your plan to keep receiving leads without interruption."
+  },
   "adminFeedback": {
     "title": "User feedback",
     "subtitle": "Feedback and suggestions sent by users.",

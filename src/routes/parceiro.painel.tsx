@@ -373,28 +373,25 @@ function PartnerPanel() {
           {trial.trialActive ? (
             <Alert className="border-primary/30 bg-primary/5">
               <Sparkles className="h-4 w-4 text-primary" />
-              <AlertTitle className="font-semibold">Teste gratuito ativo</AlertTitle>
+              <AlertTitle className="font-semibold">{t("partnerTrial.activeTitle")}</AlertTitle>
               <AlertDescription className="mt-1 space-y-2">
                 <p className="text-xs text-muted-foreground">
-                  Faltam <span className="font-semibold text-foreground">{trial.remainingClicks}</span>{" "}
-                  cliques de clientes para finalizar seu trial.
+                  {t("partnerTrial.remaining", { count: trial.remainingDays })}
                 </p>
-                <Progress
-                  value={Math.min((trial.contactClicks / trial.threshold) * 100, 100)}
-                  className="h-2"
-                />
+                <Progress value={Math.min(trial.elapsedFraction * 100, 100)} className="h-2" />
                 <p className="text-[11px] text-muted-foreground">
-                  {trial.contactClicks} / {trial.threshold} cliques em contato
+                  {t("partnerTrial.endsAt", {
+                    date: new Date(trial.endsAt).toLocaleDateString(i18n.language),
+                  })}
                 </p>
               </AlertDescription>
             </Alert>
           ) : (
             <Alert className="border-[var(--sun)]/40 bg-[var(--sun)]/10">
               <Sparkles className="h-4 w-4 text-[var(--sun)]" />
-              <AlertTitle className="font-semibold">Trial encerrado</AlertTitle>
+              <AlertTitle className="font-semibold">{t("partnerTrial.endedTitle")}</AlertTitle>
               <AlertDescription className="text-xs text-muted-foreground">
-                Você atingiu {trial.threshold} cliques em contato. Ative seu plano para continuar
-                recebendo leads sem interrupção.
+                {t("partnerTrial.endedDesc")}
               </AlertDescription>
             </Alert>
           )}
