@@ -821,3 +821,12 @@ ALTER TABLE public.profiles
 --     create_post_comment(_parent), toggle_comment_like, delete_post_comment.
 --     (SQL completo no arquivo de migration; idempotente)
 -- ############################################################################
+
+
+-- ############################################################################
+-- 20) 20260912110000_activity-types-catalog.sql
+--     Frente D: tabela activity_types (code/name/icon_key/metric_form/active/
+--     position) + RLS (leitura pública, escrita admin); relaxa o CHECK de
+--     user_activities.activity_type; seed idempotente dos 8 tipos padrão.
+--     (SQL completo no arquivo de migration; idempotente)
+-- ############################################################################

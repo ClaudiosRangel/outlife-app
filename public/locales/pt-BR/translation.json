@@ -389,6 +389,8 @@
     "publishDesc": "Criar post com imagem ou vídeo em qualquer categoria.",
     "feedbackTitle": "Opiniões dos usuários",
     "feedbackDesc": "Ver o que os usuários acharam do app.",
+    "activitiesTitle": "Tipos de atividade",
+    "activitiesDesc": "Cadastrar tipos, ícones e forma de métrica.",
     "pendingAlert_one": "{{count}} aprovação pendente",
     "pendingAlert_other": "{{count}} aprovações pendentes",
     "openCta": "Área administrativa"
@@ -415,6 +417,28 @@
     "title": "Opiniões dos usuários",
     "subtitle": "Feedback e sugestões enviados pelos usuários.",
     "empty": "Nenhuma opinião enviada ainda."
+  },
+  "adminActivities": {
+    "title": "Tipos de atividade",
+    "subtitle": "Defina os tipos disponíveis no rastreamento, com ícone e forma de métrica.",
+    "newTitle": "Novo tipo",
+    "code": "Código",
+    "name": "Nome",
+    "icon": "Ícone",
+    "metricForm": "Forma de métrica",
+    "add": "Adicionar tipo",
+    "created": "Tipo criado.",
+    "deleted": "Tipo removido.",
+    "errorFields": "Informe código e nome.",
+    "toggleActive": "Ativar/desativar",
+    "delete": "Excluir",
+    "confirmDelete": "Excluir este tipo?",
+    "confirmDeleteDesc": "Atividades já registradas com este tipo não são afetadas.",
+    "metric": {
+      "paceKm": "Ritmo (min/km)",
+      "speedElevation": "Velocidade + elevação",
+      "pace100m": "Ritmo (min/100m)"
+    }
   },
   "adminDash": {
     "title": "Dashboard",
@@ -549,6 +573,10 @@
       "caminhada": "Caminhada",
       "pedalada": "Pedalada",
       "trilha": "Trilha",
+      "corrida": "Corrida",
+      "natacao": "Natação",
+      "remo": "Remo",
+      "escalada": "Escalada",
       "outro": "Outro"
     },
     "metrics": {

@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { ArrowLeft, ShieldAlert, ShieldCheck, MapPin, ChevronRight, Lightbulb, LayoutDashboard, Type, Megaphone, MessageSquare } from "lucide-react";
+import { ArrowLeft, ShieldAlert, ShieldCheck, MapPin, ChevronRight, Lightbulb, LayoutDashboard, Type, Megaphone, MessageSquare, Dumbbell } from "lucide-react";
 import { StatusBar } from "@/components/StatusBar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/hooks/use-auth";
@@ -116,6 +116,13 @@ function AdminHub() {
       icon: Megaphone,
       title: t("admin.publishTitle", "Publicar interação"),
       desc: t("admin.publishDesc", "Criar post com imagem ou vídeo em qualquer categoria."),
+      badge: 0,
+    },
+    {
+      to: "/admin/atividades" as const,
+      icon: Dumbbell,
+      title: t("admin.activitiesTitle", "Tipos de atividade"),
+      desc: t("admin.activitiesDesc", "Cadastrar tipos, ícones e forma de métrica."),
       badge: 0,
     },
     {

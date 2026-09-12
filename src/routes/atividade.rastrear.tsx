@@ -17,6 +17,7 @@ import {
   uploadActivityMapSnapshot,
   uploadCommunityPostVideo,
   fetchMyProfile,
+  fetchActivityTypes,
   type ActivityType,
   type LocationSharingMode,
 } from "@/lib/api";
@@ -98,6 +99,18 @@ function TrackActivityPage() {
     enabled: !!user,
   });
   const sharingMode = (myProfile?.location_sharing_mode as LocationSharingMode | undefined) ?? undefined;
+
+  // Tipos de atividade vêm do catálogo administrável (Frente D). Fallback para
+  // o enum fixo enquanto a query não carrega ou se o catálogo estiver vazio.
+  const { data: catalogTypes = [] } = useQuery({
+    queryKey: ["activity-types-catalog"],
+    queryFn: fetchActivityTypes,
+    enabled: !!user,
+  });
+  const typeOptions: { code: string; name: string }[] =
+    catalogTypes.length > 0
+      ? catalogTypes.map((c) => ({ code: c.code, name: c.name }))
+      : ACTIVITY_TYPES.map((v) => ({ code: v, name: v }));
 
   // Conecta o rastreador ao canal de compartilhamento ao vivo. Reaproveita a
   // posição já capturada pelo tracker (não abre um segundo watchPosition) e só
@@ -542,9 +555,10 @@ function TrackActivityPage() {
               <SelectValue placeholder={t("activity.selectActivityType")} />
             </SelectTrigger>
             <SelectContent>
-              {ACTIVITY_TYPES.map((v) => (
-                <SelectItem key={v} value={v}>
-                  {t(`activity.activityTypes.${v}`)}
+              {typeOptions.map((opt) => (
+                <SelectItem key={opt.code} value={opt.code}>
+                  {/* usa a tradução se for um dos tipos base; senão o nome do catálogo */}
+                  {t(`activity.activityTypes.${opt.code}`, { defaultValue: opt.name })}
                 </SelectItem>
               ))}
             </SelectContent>

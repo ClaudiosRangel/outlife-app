@@ -1884,6 +1884,83 @@ export async function replyToComment(postId: string, parentCommentId: string, te
   return createPostComment(postId, text, parentCommentId);
 }
 
+// ============ Catálogo de tipos de atividade (Frente D — Req 5) ============
+
+export type MetricFormCode = "pace_km" | "speed_elevation" | "pace_100m";
+
+export type ActivityTypeCatalogItem = {
+  id: string;
+  code: string;
+  name: string;
+  icon_key: string;
+  metric_form: MetricFormCode;
+  active: boolean;
+  position: number;
+};
+
+/** Lista os tipos de atividade ATIVOS (para o rastreamento), ordenados. */
+export async function fetchActivityTypes(): Promise<ActivityTypeCatalogItem[]> {
+  const { data, error } = await supabase
+    .from("activity_types" as never)
+    .select("id, code, name, icon_key, metric_form, active, position")
+    .eq("active", true)
+    .order("position", { ascending: true });
+  if (error) throw error;
+  return (data ?? []) as unknown as ActivityTypeCatalogItem[];
+}
+
+/** Lista TODOS os tipos (ativos e inativos) — para a tela de admin. */
+export async function fetchAllActivityTypes(): Promise<ActivityTypeCatalogItem[]> {
+  const { data, error } = await supabase
+    .from("activity_types" as never)
+    .select("id, code, name, icon_key, metric_form, active, position")
+    .order("position", { ascending: true });
+  if (error) throw error;
+  return (data ?? []) as unknown as ActivityTypeCatalogItem[];
+}
+
+export async function createActivityType(input: {
+  code: string;
+  name: string;
+  icon_key: string;
+  metric_form: MetricFormCode;
+  position?: number;
+}): Promise<void> {
+  const { error } = await supabase.from("activity_types" as never).insert({
+    code: input.code.trim().toLowerCase(),
+    name: input.name.trim(),
+    icon_key: input.icon_key,
+    metric_form: input.metric_form,
+    position: input.position ?? 999,
+  } as never);
+  if (error) throw error;
+}
+
+export async function updateActivityType(
+  id: string,
+  patch: Partial<Pick<ActivityTypeCatalogItem, "name" | "icon_key" | "metric_form" | "active" | "position">>,
+): Promise<void> {
+  const { error } = await supabase
+    .from("activity_types" as never)
+    .update(patch as never)
+    .eq("id", id);
+  if (error) throw error;
+}
+
+export async function deleteActivityType(id: string): Promise<void> {
+  const { error } = await supabase.from("activity_types" as never).delete().eq("id", id);
+  if (error) throw error;
+}
+
+/** Reordena em lote (define position 1..N na ordem recebida). */
+export async function reorderActivityTypes(orderedIds: string[]): Promise<void> {
+  await Promise.all(
+    orderedIds.map((id, idx) =>
+      supabase.from("activity_types" as never).update({ position: idx + 1 } as never).eq("id", id),
+    ),
+  );
+}
+
 // ============ Notificações (Requirement 9) ============
 
 export type Notification = {

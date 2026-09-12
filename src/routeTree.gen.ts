@@ -42,6 +42,7 @@ import { Route as AdminDestinosRouteImport } from './routes/admin.destinos'
 import { Route as AdminDashboardRouteImport } from './routes/admin.dashboard'
 import { Route as AdminConteudoRouteImport } from './routes/admin.conteudo'
 import { Route as AdminComplianceRouteImport } from './routes/admin.compliance'
+import { Route as AdminAtividadesRouteImport } from './routes/admin.atividades'
 import { Route as AActivityIdRouteImport } from './routes/a.$activityId'
 import { Route as ApiPushSendFcmRouteImport } from './routes/api.push.send-fcm'
 import { Route as ApiPushRegisterWebRouteImport } from './routes/api.push.register-web'
@@ -216,6 +217,11 @@ const AdminComplianceRoute = AdminComplianceRouteImport.update({
   path: '/admin/compliance',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminAtividadesRoute = AdminAtividadesRouteImport.update({
+  id: '/admin/atividades',
+  path: '/admin/atividades',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AActivityIdRoute = AActivityIdRouteImport.update({
   id: '/a/$activityId',
   path: '/a/$activityId',
@@ -276,6 +282,7 @@ export interface FileRoutesByFullPath {
   '/redefinir-senha': typeof RedefinirSenhaRoute
   '/sugerir-destino': typeof SugerirDestinoRoute
   '/a/$activityId': typeof AActivityIdRoute
+  '/admin/atividades': typeof AdminAtividadesRoute
   '/admin/compliance': typeof AdminComplianceRoute
   '/admin/conteudo': typeof AdminConteudoRoute
   '/admin/dashboard': typeof AdminDashboardRoute
@@ -319,6 +326,7 @@ export interface FileRoutesByTo {
   '/redefinir-senha': typeof RedefinirSenhaRoute
   '/sugerir-destino': typeof SugerirDestinoRoute
   '/a/$activityId': typeof AActivityIdRoute
+  '/admin/atividades': typeof AdminAtividadesRoute
   '/admin/compliance': typeof AdminComplianceRoute
   '/admin/conteudo': typeof AdminConteudoRoute
   '/admin/dashboard': typeof AdminDashboardRoute
@@ -363,6 +371,7 @@ export interface FileRoutesById {
   '/redefinir-senha': typeof RedefinirSenhaRoute
   '/sugerir-destino': typeof SugerirDestinoRoute
   '/a/$activityId': typeof AActivityIdRoute
+  '/admin/atividades': typeof AdminAtividadesRoute
   '/admin/compliance': typeof AdminComplianceRoute
   '/admin/conteudo': typeof AdminConteudoRoute
   '/admin/dashboard': typeof AdminDashboardRoute
@@ -408,6 +417,7 @@ export interface FileRouteTypes {
     | '/redefinir-senha'
     | '/sugerir-destino'
     | '/a/$activityId'
+    | '/admin/atividades'
     | '/admin/compliance'
     | '/admin/conteudo'
     | '/admin/dashboard'
@@ -451,6 +461,7 @@ export interface FileRouteTypes {
     | '/redefinir-senha'
     | '/sugerir-destino'
     | '/a/$activityId'
+    | '/admin/atividades'
     | '/admin/compliance'
     | '/admin/conteudo'
     | '/admin/dashboard'
@@ -494,6 +505,7 @@ export interface FileRouteTypes {
     | '/redefinir-senha'
     | '/sugerir-destino'
     | '/a/$activityId'
+    | '/admin/atividades'
     | '/admin/compliance'
     | '/admin/conteudo'
     | '/admin/dashboard'
@@ -538,6 +550,7 @@ export interface RootRouteChildren {
   RedefinirSenhaRoute: typeof RedefinirSenhaRoute
   SugerirDestinoRoute: typeof SugerirDestinoRoute
   AActivityIdRoute: typeof AActivityIdRoute
+  AdminAtividadesRoute: typeof AdminAtividadesRoute
   AdminComplianceRoute: typeof AdminComplianceRoute
   AdminConteudoRoute: typeof AdminConteudoRoute
   AdminDashboardRoute: typeof AdminDashboardRoute
@@ -795,6 +808,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminComplianceRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/atividades': {
+      id: '/admin/atividades'
+      path: '/admin/atividades'
+      fullPath: '/admin/atividades'
+      preLoaderRoute: typeof AdminAtividadesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/a/$activityId': {
       id: '/a/$activityId'
       path: '/a/$activityId'
@@ -884,6 +904,7 @@ const rootRouteChildren: RootRouteChildren = {
   RedefinirSenhaRoute: RedefinirSenhaRoute,
   SugerirDestinoRoute: SugerirDestinoRoute,
   AActivityIdRoute: AActivityIdRoute,
+  AdminAtividadesRoute: AdminAtividadesRoute,
   AdminComplianceRoute: AdminComplianceRoute,
   AdminConteudoRoute: AdminConteudoRoute,
   AdminDashboardRoute: AdminDashboardRoute,

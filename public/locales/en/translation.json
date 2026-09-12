@@ -389,6 +389,8 @@
     "publishDesc": "Create a post with image or video in any category.",
     "feedbackTitle": "User feedback",
     "feedbackDesc": "See what users think of the app.",
+    "activitiesTitle": "Activity types",
+    "activitiesDesc": "Manage types, icons and metric form.",
     "pendingAlert_one": "{{count}} pending approval",
     "pendingAlert_other": "{{count}} pending approvals",
     "openCta": "Admin area"
@@ -415,6 +417,28 @@
     "title": "User feedback",
     "subtitle": "Feedback and suggestions sent by users.",
     "empty": "No feedback yet."
+  },
+  "adminActivities": {
+    "title": "Activity types",
+    "subtitle": "Define the types available in tracking, with icon and metric form.",
+    "newTitle": "New type",
+    "code": "Code",
+    "name": "Name",
+    "icon": "Icon",
+    "metricForm": "Metric form",
+    "add": "Add type",
+    "created": "Type created.",
+    "deleted": "Type removed.",
+    "errorFields": "Enter code and name.",
+    "toggleActive": "Enable/disable",
+    "delete": "Delete",
+    "confirmDelete": "Delete this type?",
+    "confirmDeleteDesc": "Activities already recorded with this type are not affected.",
+    "metric": {
+      "paceKm": "Pace (min/km)",
+      "speedElevation": "Speed + elevation",
+      "pace100m": "Pace (min/100m)"
+    }
   },
   "adminDash": {
     "title": "Dashboard",
@@ -549,6 +573,10 @@
       "caminhada": "Walking",
       "pedalada": "Biking",
       "trilha": "Trail",
+      "corrida": "Running",
+      "natacao": "Swimming",
+      "remo": "Rowing",
+      "escalada": "Climbing",
       "outro": "Other"
     },
     "metrics": {

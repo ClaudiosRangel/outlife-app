@@ -93,28 +93,28 @@ frentes são independentes. As "waves" abaixo agrupam as tarefas por frente.
 
 ## Frente D — Req 5: Catálogo de tipos de atividade
 
-- [ ] 12. Módulo puro `metric-forms.ts` + testes
+- [x] 12. Módulo puro `metric-forms.ts` + testes
   - `computeByMetricForm(form, input)` (pace_km, speed_elevation, pace_100m); `activity-metrics.ts` delega/preserva retrocompat
-  - Testes (Property 4)
+  - Testes (Property 4) — fast-check achou bug real de distância subnormal (Infinity); corrigido com MIN_SIGNIFICANT_METERS/finiteOrNull
   - _Requirements: 5.4, 5.6_
 
-- [ ] 13. Migração `activity_types` + relax do CHECK
-  - Tabela `activity_types` (code/name/icon_key/metric_form/active/position) + RLS; relaxar CHECK de `user_activities.activity_type`; seed idempotente dos 7 tipos
-  - Aplicar em produção (2×) e refletir no `migrations-pendentes.sql`
+- [x] 13. Migração `activity_types` + relax do CHECK
+  - Tabela `activity_types` (code/name/icon_key/metric_form/active/position) + RLS; relaxar CHECK de `user_activities.activity_type`; seed idempotente dos 8 tipos
+  - Aplicada em produção 2× (`20260912110000_activity-types-catalog.sql`) e refletida no `migrations-pendentes.sql`
   - _Requirements: 5.2, 5.3, 5.4, 5.8_
 
-- [ ] 14. Icon_Model_Set + API
-  - `src/lib/activity-icons.ts` (`getActivityIcon(iconKey)` via lucide) para os 7 tipos
-  - `api.ts`: `fetchActivityTypes`, `adminCreate/Update/Delete/ReorderActivityType`
+- [x] 14. Icon_Model_Set + API
+  - `src/lib/activity-icons.ts` (`getActivityIcon(iconKey)` via lucide) para os 8 tipos
+  - `api.ts`: `fetchActivityTypes`, `fetchAllActivityTypes`, `createActivityType`, `updateActivityType`, `deleteActivityType`, `reorderActivityTypes`
   - _Requirements: 5.3, 5.5, 5.8_
 
-- [ ] 15. Tela admin + integração no rastreamento
-  - Rota `/admin/atividades` (CRUD + seletor de ícone + metric_form + reorder + toggle active); card no hub; regenerar routeTree
+- [x] 15. Tela admin + integração no rastreamento
+  - Rota `/admin/atividades` (CRUD + seletor de ícone + metric_form + reorder + toggle active); card no hub; routeTree regenerado
   - `atividade.rastrear.tsx`: seletor de tipo lê `fetchActivityTypes` (fallback ao enum); i18n
   - _Requirements: 5.1, 5.2, 5.5, 5.6, 5.7, 5.8_
 
-- [ ] 16. Verificação + entrega da Frente D
-  - `tsc`, build, APK, commit+push, atualizar roadmap
+- [x] 16. Verificação + entrega da Frente D
+  - `tsc` limpo (só 6 erros pré-existentes de use-local-push.ts); commit+push; roadmap atualizado. APK adiado para o fim do bloco.
   - _Requirements: 5.1, 5.5, 5.6_
 
 ## Frente E — Req 8: Banners de compartilhamento OUTVITAR
