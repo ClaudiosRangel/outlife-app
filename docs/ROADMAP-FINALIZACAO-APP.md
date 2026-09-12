@@ -5,7 +5,7 @@
 > `.kiro/steering/roadmap-outvitar.md`). **Mantenha-o atualizado** ao
 > concluir qualquer tarefa/bloco: marque status, data e resumo.
 
-**Última atualização:** 12/09/2026 (spec evolucao-admin-atividades-social — Frentes A/B/C/D/E/F/G concluídas)
+**Última atualização:** 12/09/2026 (spec evolucao-admin-atividades-social — BLOCO CONCLUÍDO, Frentes A–H)
 **App:** OutVitar — slogan "VIVER É DIFERENTE DE ESTAR VIVO"
 
 > **🟦 BLOCO EM ANDAMENTO — spec `evolucao-admin-atividades-social`**
@@ -65,7 +65,17 @@
 >    `grant_destination_achievements` (keys destinos_1/5/10). `finishActivity`
 >    chama a RPC best-effort no finish; perfil exibe as conquistas
 >    (achievementIconMap MapPin/Award + labels). tsc limpo. SEM APK.
-> H) Req 1/2 importação/curadoria trilhas-destinos (OSM/ICMBio) — `imported_trails` + `scripts/import-trails.mjs` + `/admin/trilhas` (toggle visível; atribuição OSM obrigatória).
+> H) ✅ CONCLUÍDA (12/09/2026) — Req 1/2 importação/curadoria trilhas-destinos.
+>    Migration 20260912140000 aplicada em prod: tabela `imported_trails`
+>    (UNIQUE source+external_id, visible default false, RLS visible-OR-admin).
+>    `scripts/import-trails.mjs` (Overpass route=hiking + mirrors, upsert
+>    idempotente, atribuição © OSM contributors/ODbL, visible=false) — testado
+>    em Serra dos Órgãos. Tela admin `/admin/trilhas` (toggle visível + busca +
+>    atribuição), card no hub. Explorar exibe visible=true com atribuição OSM.
+>    routeTree regenerado manualmente. tsc limpo.
+>
+> 🏁 BLOCO CONCLUÍDO — todas as 8 frentes (A–H) prontas. APK único gerado no
+>    final conforme decisão (ver seção de build abaixo).
 >
 > ⚙️ DECISÃO (12/09/2026): a partir da Frente C, o **APK é gerado só no FINAL
 > do bloco** (todas as frentes). As migrações continuam aplicadas em produção

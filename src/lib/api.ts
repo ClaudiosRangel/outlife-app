@@ -2002,6 +2002,53 @@ export async function reorderActivityTypes(orderedIds: string[]): Promise<void> 
   );
 }
 
+// ============ Trilhas importadas (Frente H — Req 1/2) ============
+
+export type ImportedTrail = {
+  id: string;
+  external_source: "osm" | "icmbio";
+  external_id: string;
+  name: string;
+  description: string | null;
+  region: string | null;
+  lat: number | null;
+  lng: number | null;
+  license: string | null;
+  attribution: string | null;
+  visible: boolean;
+};
+
+// Admin: lista TODAS as trilhas importadas (visíveis e ocultas) para curadoria.
+export async function fetchAllImportedTrails(): Promise<ImportedTrail[]> {
+  const { data, error } = await supabase
+    .from("imported_trails" as never)
+    .select("id, external_source, external_id, name, description, region, lat, lng, license, attribution, visible")
+    .order("visible", { ascending: false })
+    .order("name", { ascending: true });
+  if (error) throw error;
+  return (data ?? []) as unknown as ImportedTrail[];
+}
+
+// Usuário: lista só as trilhas visíveis (RLS já garante, o filtro deixa claro).
+export async function fetchVisibleImportedTrails(): Promise<ImportedTrail[]> {
+  const { data, error } = await supabase
+    .from("imported_trails" as never)
+    .select("id, external_source, external_id, name, description, region, lat, lng, license, attribution, visible")
+    .eq("visible", true)
+    .order("name", { ascending: true });
+  if (error) throw error;
+  return (data ?? []) as unknown as ImportedTrail[];
+}
+
+// Admin: alterna a visibilidade de uma trilha (curadoria — liberar/ocultar).
+export async function setImportedTrailVisible(id: string, visible: boolean): Promise<void> {
+  const { error } = await supabase
+    .from("imported_trails" as never)
+    .update({ visible, updated_at: new Date().toISOString() } as never)
+    .eq("id", id);
+  if (error) throw error;
+}
+
 // ============ Notificações (Requirement 9) ============
 
 export type Notification = {

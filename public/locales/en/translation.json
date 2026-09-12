@@ -139,6 +139,8 @@
     "title": "Explore destinations",
     "headline": "Where to\non this adventure?",
     "placeholder": "Trails, waterfalls, regions…",
+    "trailsTitle": "Trails",
+    "trailsSource": "Imported trail",
     "tabs": {
       "destinos": "Destinations",
       "parceiros": "Partners"
@@ -391,6 +393,8 @@
     "feedbackDesc": "See what users think of the app.",
     "activitiesTitle": "Activity types",
     "activitiesDesc": "Manage types, icons and metric form.",
+    "trailsTitle": "Trails and destinations",
+    "trailsDesc": "Show or hide imported trails (OSM/ICMBio).",
     "pendingAlert_one": "{{count}} pending approval",
     "pendingAlert_other": "{{count}} pending approvals",
     "openCta": "Admin area"

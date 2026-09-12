@@ -171,22 +171,22 @@ frentes são independentes. As "waves" abaixo agrupam as tarefas por frente.
 
 ## Frente H — Req 1/2: Importação e curadoria de trilhas/destinos
 
-- [ ] 28. Migração `imported_trails`
-  - Tabela `imported_trails` (UNIQUE source+external_id, visible default false, license, attribution) + RLS (visible OR admin; escrita admin); aplicar em produção (2×)
+- [x] 28. Migração `imported_trails`
+  - Tabela `imported_trails` (UNIQUE source+external_id, visible default false, license, attribution) + RLS (visible OR admin; escrita admin). Aplicada em prod 2× (`20260912140000_imported-trails.sql`)
   - _Requirements: 1.6, 2.2, 2.3, 2.4, 2.7_
 
-- [ ] 29. Script de importação
-  - `scripts/import-trails.mjs` (Overpass QL para osm route=hiking; ICMBio/CNUC para parques) com upsert idempotente por (source, external_id); atribuição/licença para osm
-  - Testar importação de uma região (ex.: Serra dos Órgãos/Itatiaia)
+- [x] 29. Script de importação
+  - `scripts/import-trails.mjs` (Overpass QL osm route=hiking, com fallback de mirrors + headers Accept/User-Agent) com upsert idempotente por (source, external_id); atribuição © OpenStreetMap contributors + licença ODbL para osm; visible=false
+  - Testado com Serra dos Órgãos (1 trilha importada; 2ª execução atualizou sem duplicar — idempotente)
   - _Requirements: 2.1, 2.2, 2.3, 2.7_
 
-- [ ] 30. Tela admin de curadoria + exibição ao usuário
-  - Rota `/admin/trilhas` (lista nome/fonte/atribuição + toggle visível/oculto); card no hub; regenerar routeTree
-  - Exibir trilhas `visible=true` em Explorar com atribuição OSM; i18n
+- [x] 30. Tela admin de curadoria + exibição ao usuário
+  - Rota `/admin/trilhas` (lista nome/fonte/atribuição + busca + toggle visível/oculto, contador de visíveis); card no hub (ícone Mountain); routeTree regenerado manualmente
+  - Explorar exibe trilhas `visible=true` (seção "Trilhas") com atribuição OSM no rodapé; i18n explore.trails*/admin.trails*
   - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 1.7_
 
-- [ ] 31. Verificação + entrega da Frente H
-  - `tsc`, build, APK, commit+push, atualizar roadmap; marcar o bloco como concluído
+- [x] 31. Verificação + entrega da Frente H
+  - `tsc` limpo (só 6 erros pré-existentes); commit+push; roadmap. **Bloco concluído — APK gerado ao final.**
   - _Requirements: 1.1, 1.3, 1.5_
 
 ## Notes

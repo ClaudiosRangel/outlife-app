@@ -11,6 +11,7 @@ import {
   fetchLiveActivityFriends,
   fetchMyProfile,
   fetchPartners,
+  fetchVisibleImportedTrails,
   type Destination,
   type Difficulty,
 } from "@/lib/api";
@@ -79,6 +80,13 @@ function Explore() {
   const { data: destinations = [], isLoading } = useQuery({
     queryKey: ["destinations"],
     queryFn: fetchDestinations,
+  });
+
+  // Frente H (Req 1): trilhas importadas liberadas pela curadoria (visible=true).
+  const { data: importedTrails = [] } = useQuery({
+    queryKey: ["imported-trails-visible"],
+    queryFn: fetchVisibleImportedTrails,
+    enabled: exploreTab === "destinos",
   });
 
   // Parceiros para a aba Parceiros (item 8). Só busca quando a aba está ativa.
@@ -317,6 +325,34 @@ function Explore() {
               </div>
             </Link>
           ))}
+        </div>
+      )}
+
+      {/* Frente H (Req 1): trilhas importadas liberadas pela curadoria.
+          Atribuição OSM exibida no rodapé quando houver item de origem osm. */}
+      {exploreTab === "destinos" && importedTrails.length > 0 && (
+        <div className="px-5 pb-2">
+          <h2 className="font-display text-sm font-semibold text-muted-foreground">
+            {t("explore.trailsTitle", "Trilhas")}
+          </h2>
+          <div className="mt-2 space-y-2">
+            {importedTrails.map((trail) => (
+              <div key={trail.id} className="rounded-2xl bg-card p-3 shadow-card">
+                <div className="text-[13px] font-semibold leading-tight">{trail.name}</div>
+                <div className="mt-1 flex items-center gap-1 text-[10px] text-muted-foreground">
+                  <MapPin size={10} /> {trail.region ?? t("explore.trailsSource", "Trilha importada")}
+                </div>
+                {trail.description && (
+                  <p className="mt-1 text-xs text-muted-foreground line-clamp-2">{trail.description}</p>
+                )}
+              </div>
+            ))}
+          </div>
+          {importedTrails.some((tr) => tr.external_source === "osm") && (
+            <p className="mt-2 text-[10px] text-muted-foreground/80">
+              © OpenStreetMap contributors · ODbL
+            </p>
+          )}
         </div>
       )}
 

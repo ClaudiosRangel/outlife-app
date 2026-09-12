@@ -43,6 +43,7 @@ import { Route as AdminDashboardRouteImport } from './routes/admin.dashboard'
 import { Route as AdminConteudoRouteImport } from './routes/admin.conteudo'
 import { Route as AdminComplianceRouteImport } from './routes/admin.compliance'
 import { Route as AdminAtividadesRouteImport } from './routes/admin.atividades'
+import { Route as AdminTrilhasRouteImport } from './routes/admin.trilhas'
 import { Route as AActivityIdRouteImport } from './routes/a.$activityId'
 import { Route as ApiPushSendFcmRouteImport } from './routes/api.push.send-fcm'
 import { Route as ApiPushRegisterWebRouteImport } from './routes/api.push.register-web'
@@ -222,6 +223,11 @@ const AdminAtividadesRoute = AdminAtividadesRouteImport.update({
   path: '/admin/atividades',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminTrilhasRoute = AdminTrilhasRouteImport.update({
+  id: '/admin/trilhas',
+  path: '/admin/trilhas',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AActivityIdRoute = AActivityIdRouteImport.update({
   id: '/a/$activityId',
   path: '/a/$activityId',
@@ -306,6 +312,7 @@ export interface FileRoutesByFullPath {
   '/api/push/register-native': typeof ApiPushRegisterNativeRoute
   '/api/push/register-web': typeof ApiPushRegisterWebRoute
   '/api/push/send-fcm': typeof ApiPushSendFcmRoute
+  '/admin/trilhas': typeof AdminTrilhasRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -350,6 +357,7 @@ export interface FileRoutesByTo {
   '/api/push/register-native': typeof ApiPushRegisterNativeRoute
   '/api/push/register-web': typeof ApiPushRegisterWebRoute
   '/api/push/send-fcm': typeof ApiPushSendFcmRoute
+  '/admin/trilhas': typeof AdminTrilhasRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -395,6 +403,7 @@ export interface FileRoutesById {
   '/api/push/register-native': typeof ApiPushRegisterNativeRoute
   '/api/push/register-web': typeof ApiPushRegisterWebRoute
   '/api/push/send-fcm': typeof ApiPushSendFcmRoute
+  '/admin/trilhas': typeof AdminTrilhasRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -441,6 +450,7 @@ export interface FileRouteTypes {
     | '/api/push/register-native'
     | '/api/push/register-web'
     | '/api/push/send-fcm'
+    | '/admin/trilhas'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -485,6 +495,7 @@ export interface FileRouteTypes {
     | '/api/push/register-native'
     | '/api/push/register-web'
     | '/api/push/send-fcm'
+    | '/admin/trilhas'
   id:
     | '__root__'
     | '/'
@@ -529,6 +540,7 @@ export interface FileRouteTypes {
     | '/api/push/register-native'
     | '/api/push/register-web'
     | '/api/push/send-fcm'
+    | '/admin/trilhas'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -551,6 +563,7 @@ export interface RootRouteChildren {
   SugerirDestinoRoute: typeof SugerirDestinoRoute
   AActivityIdRoute: typeof AActivityIdRoute
   AdminAtividadesRoute: typeof AdminAtividadesRoute
+  AdminTrilhasRoute: typeof AdminTrilhasRoute
   AdminComplianceRoute: typeof AdminComplianceRoute
   AdminConteudoRoute: typeof AdminConteudoRoute
   AdminDashboardRoute: typeof AdminDashboardRoute
@@ -815,6 +828,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAtividadesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/trilhas': {
+      id: '/admin/trilhas'
+      path: '/admin/trilhas'
+      fullPath: '/admin/trilhas'
+      preLoaderRoute: typeof AdminTrilhasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/a/$activityId': {
       id: '/a/$activityId'
       path: '/a/$activityId'
@@ -905,6 +925,7 @@ const rootRouteChildren: RootRouteChildren = {
   SugerirDestinoRoute: SugerirDestinoRoute,
   AActivityIdRoute: AActivityIdRoute,
   AdminAtividadesRoute: AdminAtividadesRoute,
+  AdminTrilhasRoute: AdminTrilhasRoute,
   AdminComplianceRoute: AdminComplianceRoute,
   AdminConteudoRoute: AdminConteudoRoute,
   AdminDashboardRoute: AdminDashboardRoute,

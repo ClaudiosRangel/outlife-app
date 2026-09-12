@@ -139,6 +139,8 @@
     "title": "Explorar destinos",
     "headline": "Onde vamos\nnessa aventura?",
     "placeholder": "Trilhas, cachoeiras, regiões…",
+    "trailsTitle": "Trilhas",
+    "trailsSource": "Trilha importada",
     "tabs": {
       "destinos": "Destinos",
       "parceiros": "Parceiros"
@@ -391,6 +393,8 @@
     "feedbackDesc": "Ver o que os usuários acharam do app.",
     "activitiesTitle": "Tipos de atividade",
     "activitiesDesc": "Cadastrar tipos, ícones e forma de métrica.",
+    "trailsTitle": "Trilhas e destinos",
+    "trailsDesc": "Liberar ou ocultar trilhas importadas (OSM/ICMBio).",
     "pendingAlert_one": "{{count}} aprovação pendente",
     "pendingAlert_other": "{{count}} aprovações pendentes",
     "openCta": "Área administrativa"

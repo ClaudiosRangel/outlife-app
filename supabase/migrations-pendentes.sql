@@ -848,3 +848,11 @@ ALTER TABLE public.profiles
 --     grant_destination_achievements (keys destinos_1/5/10 em
 --     achievement_records, idempotente). (SQL completo no arquivo; idempotente)
 -- ############################################################################
+
+-- ############################################################################
+-- 23) 20260912140000_imported-trails.sql
+--     Frente H: tabela imported_trails (external_source osm/icmbio,
+--     UNIQUE source+external_id, visible default false, license, attribution)
+--     + RLS (leitura: visible OR admin; escrita: admin). Importação via
+--     scripts/import-trails.mjs. (SQL completo no arquivo; idempotente)
+-- ############################################################################
