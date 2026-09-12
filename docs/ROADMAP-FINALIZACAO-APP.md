@@ -74,8 +74,13 @@
 >    atribuição), card no hub. Explorar exibe visible=true com atribuição OSM.
 >    routeTree regenerado manualmente. tsc limpo.
 >
-> 🏁 BLOCO CONCLUÍDO — todas as 8 frentes (A–H) prontas. APK único gerado no
->    final conforme decisão (ver seção de build abaixo).
+> 🏁 BLOCO CONCLUÍDO (12/09/2026) — todas as 8 frentes (A–H) prontas. APK único
+>    do bloco gerado com sucesso ao final (BUILD SUCCESSFUL, ~9,9 MB) em
+>    `android/app/build/outputs/apk/debug/app-debug.apk`. Fluxo: build:native →
+>    cap sync android → gradlew assembleDebug. tsc limpo (6 erros pré-existentes
+>    de use-local-push.ts). 6 migrations aplicadas em produção nesta rodada
+>    (trial, comment-threads, activity-types, suggest-friends,
+>    destination-visits, imported-trails), todas idempotentes (2×).
 >
 > ⚙️ DECISÃO (12/09/2026): a partir da Frente C, o **APK é gerado só no FINAL
 > do bloco** (todas as frentes). As migrações continuam aplicadas em produção
