@@ -17,6 +17,9 @@ const KEY_TO_LUCIDE = {
   swim: "waves",
   row: "sailboat",
   climb: "mountain-snow",
+  flight: "plane",
+  surf: "waves",
+  skate: "wind",
   activity: "activity",
 };
 

@@ -5,7 +5,29 @@
 > `.kiro/steering/roadmap-outvitar.md`). **Mantenha-o atualizado** ao
 > concluir qualquer tarefa/bloco: marque status, data e resumo.
 
-**Última atualização:** 12/09/2026 (spec evolucao-admin-atividades-social — BLOCO CONCLUÍDO, Frentes A–H)
+**Última atualização:** 12/09/2026 (spec evolucao-admin-atividades-social — BLOCO CONCLUÍDO A–H + rodada de correções pós-teste)
+
+> **🔧 CORREÇÕES PÓS-TESTE (12/09/2026)** — 6 pontos reportados pelo usuário no APK:
+> 1. Ícone da atividade ao lado da descrição no feed da comunidade
+>    (`CATEGORY_TO_ICON_KEY` + `getActivityIcon` em comunidade.tsx).
+> 2. Compartilhar post de atividade agora usa `generateActivityBanner`
+>    (banner OUTVITAR: marca+ícone+descrição+métricas), não mais o
+>    `generatePostBanner` antigo. Post manual continua no banner de publicação.
+> 3. **Bug real**: `create_post_comment` tinha 2 versões (2 e 3 args) →
+>    ambiguidade PGRST203 fazia comentar/curtir falhar ("Não foi possível
+>    comentar"). Migration 20260912150000 dropou a versão de 2 args.
+> 4. Trilhas: script `import-trails.mjs` ampliado (relations route=hiking/foot
+>    + ways highway=path/footway nomeados) — importadas ~142 trilhas
+>    (Serra dos Órgãos 84 + Itatiaia 58) para curadoria em /admin/trilhas.
+> 5. Novos tipos de atividade: **Voo livre** (Plane), **Surf** (Waves),
+>    **Skate** (Wind) — migration 20260912150000, PNGs regenerados, i18n.
+>    Voo livre usa metric_form speed_elevation (GPS já rastreia velocidade+
+>    elevação, serve para voo/aéreo).
+> 6. **Bug real**: `/a/:id` mostrava "Atividade não encontrada" — o embed
+>    `profile:user_id(...)` retornava PGRST200 (sem FK no schema cache) e
+>    derrubava a query inteira. Corrigido buscando atividade e perfil em
+>    duas queries separadas.
+> APK novo a gerar com essas correções.
 **App:** OutVitar — slogan "VIVER É DIFERENTE DE ESTAR VIVO"
 
 > **🟦 BLOCO EM ANDAMENTO — spec `evolucao-admin-atividades-social`**

@@ -55,20 +55,34 @@ async function overpassRequest(query) {
 
 async function fetchOsmHiking(bbox) {
   const [s, w, n, e] = bbox;
-  // route=hiking (relations) — trilhas nomeadas.
-  const query = `[out:json][timeout:60];
-    (relation["route"="hiking"](${s},${w},${n},${e}););
+  // Trilhas nomeadas: relations route=hiking/foot E ways highway=path/footway
+  // com nome (muitas trilhas no Brasil são mapeadas como way nomeado, não
+  // relation) — amplia bastante a quantidade de resultados.
+  const query = `[out:json][timeout:90];
+    (
+      relation["route"~"hiking|foot"](${s},${w},${n},${e});
+      way["highway"~"path|footway"]["name"](${s},${w},${n},${e});
+      way["route"="hiking"]["name"](${s},${w},${n},${e});
+    );
     out center tags;`;
   const json = await overpassRequest(query);
-  return (json.elements ?? [])
-    .filter((el) => el.tags && el.tags.name)
-    .map((el) => ({
-      external_id: String(el.id),
+  const seen = new Set();
+  const out = [];
+  for (const el of json.elements ?? []) {
+    if (!el.tags || !el.tags.name) continue;
+    // dedup por tipo+id (way e relation podem colidir de id)
+    const extId = `${el.type}/${el.id}`;
+    if (seen.has(extId)) continue;
+    seen.add(extId);
+    out.push({
+      external_id: extId,
       name: el.tags.name,
       description: el.tags.description ?? el.tags["description:pt"] ?? null,
       lat: el.center?.lat ?? el.lat ?? null,
       lng: el.center?.lon ?? el.lon ?? null,
-    }));
+    });
+  }
+  return out;
 }
 
 async function upsertTrails(client, source, region, items) {

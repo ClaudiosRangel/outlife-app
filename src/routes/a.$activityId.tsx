@@ -52,13 +52,29 @@ function ActivityDeepLinkPage() {
   const { data: activity, isLoading } = useQuery({
     queryKey: ["activity-public", activityId],
     queryFn: async () => {
-      const { data } = await supabase
+      // NÃO usar embed `profile:user_id(...)`: não há FK declarada entre
+      // user_activities.user_id e profiles.id no schema cache do PostgREST,
+      // então o embed retorna PGRST200 e a query inteira falha (a página
+      // mostrava "Atividade não encontrada" mesmo com a atividade existindo).
+      // Buscamos a atividade e o perfil do autor em duas queries separadas.
+      const { data: act } = await supabase
         .from("user_activities" as never)
-        .select("*, profile:user_id(full_name, avatar_url)")
+        .select("*")
         .eq("id", activityId)
         .eq("status", "completed")
         .maybeSingle();
-      return data as any;
+      if (!act) return null;
+      const userId = (act as any).user_id as string | undefined;
+      let profile: { full_name: string | null; avatar_url: string | null } | null = null;
+      if (userId) {
+        const { data: prof } = await supabase
+          .from("profiles")
+          .select("full_name, avatar_url")
+          .eq("id", userId)
+          .maybeSingle();
+        profile = (prof as any) ?? null;
+      }
+      return { ...(act as any), profile } as any;
     },
   });
 

@@ -856,3 +856,11 @@ ALTER TABLE public.profiles
 --     + RLS (leitura: visible OR admin; escrita: admin). Importação via
 --     scripts/import-trails.mjs. (SQL completo no arquivo; idempotente)
 -- ############################################################################
+
+-- ############################################################################
+-- 24) 20260912150000_fix-comment-fn-and-new-activity-types.sql
+--     Correcoes pos-teste: DROP da versao antiga de create_post_comment (2
+--     args) que causava ambiguidade PGRST203 (comentar/curtir falhava);
+--     novos tipos de atividade voo_livre/surf/skate (metric_form
+--     speed_elevation). (SQL completo no arquivo; idempotente)
+-- ############################################################################

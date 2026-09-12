@@ -581,6 +581,9 @@
       "natacao": "Swimming",
       "remo": "Rowing",
       "escalada": "Climbing",
+      "voo_livre": "Paragliding",
+      "surf": "Surf",
+      "skate": "Skate",
       "outro": "Other"
     },
     "metrics": {

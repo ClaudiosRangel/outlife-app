@@ -581,6 +581,9 @@
       "natacao": "Natação",
       "remo": "Remo",
       "escalada": "Escalada",
+      "voo_livre": "Voo livre",
+      "surf": "Surf",
+      "skate": "Skate",
       "outro": "Outro"
     },
     "metrics": {

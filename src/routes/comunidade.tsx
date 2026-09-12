@@ -55,12 +55,27 @@ import {
   toggleCommentLike,
   deleteComment,
   isCurrentUserAdmin,
+  fetchActivityById,
+  fetchActivityTypes,
   type PostComment,
   type CommunityPostCategory,
 } from "@/lib/api";
 import { useAuth } from "@/hooks/use-auth";
 import { shareContent } from "@/lib/share";
-import { generatePostBanner } from "@/lib/banner-generator";
+import { generatePostBanner, generateActivityBanner, type ActivityBannerMetric } from "@/lib/banner-generator";
+import { computeByMetricForm, type MetricForm } from "@/lib/metric-forms";
+import { getActivityIcon } from "@/lib/activity-icons";
+
+// Mapeia a categoria do post para uma icon_key do Icon_Model_Set (Frente D/E),
+// para exibir o ícone da atividade ao lado da descrição no feed (ponto 1).
+const CATEGORY_TO_ICON_KEY: Record<string, string> = {
+  trilha: "trail",
+  caminhada: "walk",
+  pedalada: "bike",
+  camping: "activity",
+  relato: "activity",
+  outro: "activity",
+};
 import { communityCategoryTranslationKey } from "@/lib/community-category-label";
 import { createObjectUrlManager } from "@/lib/object-url-preview";
 import { SafeImage } from "@/components/SafeImage";
@@ -457,14 +472,62 @@ function Community() {
   // via Banner_Generator em vez de compartilhar apenas um link de texto.
   const handleShare = async (p: UIPost) => {
     try {
-      const blob = await generatePostBanner({
-        // Usa a imagem REAL do post (nunca o fallback genérico). Sem foto real
-        // (ex.: post só com vídeo), o banner usa o fundo padrão — não uma foto
-        // que não é do post.
-        photoUrl: p.realImg,
-        categoryLabel: t(communityCategoryTranslationKey(p.category)),
-        text: p.text,
-      });
+      let blob: Blob;
+
+      if (p.activityId) {
+        // Post gerado a partir de uma atividade → banner OUTVITAR completo
+        // (marca, ícone da atividade, descrição e métricas por metric_form),
+        // igual ao da tela de detalhe da atividade.
+        const [activity, types] = await Promise.all([
+          fetchActivityById(p.activityId),
+          fetchActivityTypes().catch(() => []),
+        ]);
+        const catalog = (types ?? []).find((tp) => tp.code === activity?.activity_type);
+        const metricForm: MetricForm = (catalog?.metric_form as MetricForm) ?? "speed_elevation";
+        const iconKey = catalog?.icon_key ?? "activity";
+        const activityName = catalog?.name ?? activity?.activity_type ?? "";
+        const mf = computeByMetricForm(metricForm, {
+          distanceMeters: activity?.distance_meters ?? 0,
+          durationSeconds: activity?.duration_seconds ?? 0,
+          elevationGain: activity?.elevation_gain ?? null,
+        });
+        const fmtDur = (s: number) => {
+          const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = Math.round(s % 60);
+          const pad = (n: number) => String(n).padStart(2, "0");
+          return h > 0 ? `${h}:${pad(m)}:${pad(sec)}` : `${m}:${pad(sec)}`;
+        };
+        const metrics: ActivityBannerMetric[] = [
+          { label: t("activity.metrics.distance"), value: `${((activity?.distance_meters ?? 0) / 1000).toFixed(2)} km` },
+          { label: t("activity.metrics.duration"), value: fmtDur(activity?.duration_seconds ?? 0) },
+        ];
+        if (mf.primary) metrics.push({ label: mf.primary.label, value: mf.primary.value });
+        if (mf.secondary && metricForm === "speed_elevation") {
+          metrics.push({ label: mf.secondary.label, value: mf.secondary.value });
+        }
+        const hasPhoto = !!p.realImg;
+        blob = await generateActivityBanner({
+          variant: hasPhoto ? "photo" : "map",
+          backgroundUrl: p.realImg ?? activity?.map_snapshot_url ?? null,
+          iconKey,
+          activityName,
+          description: p.text || activity?.description || null,
+          defaultDescription: t("activity.bannerDefaultDescription"),
+          metrics,
+          mapSnapshotUrl: activity?.map_snapshot_url ?? null,
+          distanceMeters: activity?.distance_meters ?? 0,
+          durationSeconds: activity?.duration_seconds ?? 0,
+          averagePaceLabel: mf.primary?.value ?? null,
+          averageSpeedLabel: mf.speedKmh ? `${mf.speedKmh} km/h` : "—",
+        });
+      } else {
+        // Post manual (sem atividade) → banner de publicação (foto+categoria+texto).
+        blob = await generatePostBanner({
+          photoUrl: p.realImg,
+          categoryLabel: t(communityCategoryTranslationKey(p.category)),
+          text: p.text,
+        });
+      }
+
       // Quando o post veio de uma atividade, inclui o deep link /a/:id no
       // texto do compartilhamento (mesmo padrão da tela de detalhe da
       // atividade): abrir o link leva ao app (se instalado) ou à página de
@@ -475,7 +538,7 @@ function Community() {
       await shareContent({
         title: p.user,
         file: blob,
-        fileName: "outlife-comunidade.webp",
+        fileName: "outvitar-comunidade.webp",
         text: shareText,
       });
     } catch {
@@ -633,8 +696,15 @@ function Community() {
                       <Share2 size={20} />
                     </button>
                   </div>
-                  <p className="mt-3 text-sm leading-relaxed">
-                    <span className="font-semibold">{p.handle}</span> {p.text}
+                  <p className="mt-3 flex items-start gap-1.5 text-sm leading-relaxed">
+                    {(() => {
+                      // Ponto 1: ícone da atividade ao lado da descrição, conforme a categoria do post.
+                      const { Icon } = getActivityIcon(CATEGORY_TO_ICON_KEY[p.category] ?? "activity");
+                      return <Icon size={16} className="mt-0.5 shrink-0 text-primary" aria-hidden />;
+                    })()}
+                    <span>
+                      <span className="font-semibold">{p.handle}</span> {p.text}
+                    </span>
                   </p>
                   {p.comments > 0 && (
                     <button onClick={() => toggleComments(p.id)} className="mt-2 text-xs text-muted-foreground">

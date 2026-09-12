@@ -10,6 +10,8 @@ import {
   Sailboat,
   MountainSnow,
   Activity,
+  Plane,
+  Wind,
   type LucideIcon,
 } from "lucide-react";
 
@@ -29,6 +31,9 @@ export const ICON_MODEL_SET: ActivityIconModel[] = [
   { key: "swim", Icon: Waves, color: "var(--mountain)" },
   { key: "row", Icon: Sailboat, color: "var(--mountain)" },
   { key: "climb", Icon: MountainSnow, color: "var(--primary)" },
+  { key: "flight", Icon: Plane, color: "var(--sun)" },
+  { key: "surf", Icon: Waves, color: "var(--mountain)" },
+  { key: "skate", Icon: Wind, color: "var(--sun)" },
   { key: "activity", Icon: Activity, color: "var(--muted-foreground)" },
 ];
 
