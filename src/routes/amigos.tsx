@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
-import { ArrowLeft, Search, UserCheck, UserMinus, UserPlus } from "lucide-react";
+import { ArrowLeft, Search, Sparkles, UserCheck, UserMinus, UserPlus } from "lucide-react";
 import { StatusBar } from "@/components/StatusBar";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -12,11 +12,13 @@ import { useAuth } from "@/hooks/use-auth";
 import {
   acceptFriendRequest,
   fetchFriends,
+  fetchFriendSuggestions,
   removeFriend,
   resolveAsset,
   searchUsers,
   sendFriendRequest,
   type FriendRow,
+  type FriendSuggestion,
   type UserSearchResult,
 } from "@/lib/api";
 import { supabase } from "@/integrations/supabase/client";
@@ -115,6 +117,30 @@ function FriendsScreen() {
     enabled: !!user && debouncedSearchText.length > 0,
   });
 
+  // Frente F (Req 4): sugestões de amizade (amigos-de-amigos + atividade em
+  // comum). Removidas otimisticamente da lista ao enviar solicitação.
+  const { data: suggestions = [], isLoading: suggestionsLoading } = useQuery({
+    queryKey: ["friend-suggestions", user?.id],
+    queryFn: () => fetchFriendSuggestions(12),
+    enabled: !!user,
+  });
+  const [dismissedSuggestions, setDismissedSuggestions] = useState<string[]>([]);
+  const visibleSuggestions = useMemo(
+    () => suggestions.filter((s) => !dismissedSuggestions.includes(s.id)),
+    [suggestions, dismissedSuggestions],
+  );
+
+  const suggestionReasonLabel = (reason: FriendSuggestion["reason"]): string =>
+    reason === "friend_of_friend"
+      ? t("friends.reasonFriendOfFriend")
+      : t("friends.reasonCommonActivity");
+
+  const handleAddSuggestion = (s: FriendSuggestion) => {
+    if (!user || s.id === user.id) return;
+    setDismissedSuggestions((prev) => [...prev, s.id]);
+    sendRequestMutation.mutate(s.id);
+  };
+
   const sendRequestMutation = useMutation({
     mutationFn: (addresseeId: string) => sendFriendRequest(addresseeId),
     onSuccess: () => {
@@ -198,6 +224,54 @@ function FriendsScreen() {
           />
         </div>
       </section>
+
+      {debouncedSearchText.length === 0 && (visibleSuggestions.length > 0 || suggestionsLoading) && (
+        <section className="px-5 mt-4">
+          <h2 className="flex items-center gap-1.5 font-display text-sm font-semibold text-muted-foreground">
+            <Sparkles size={14} className="text-primary" />
+            {t("friends.suggestionsTitle")}
+          </h2>
+          <div className="mt-2 space-y-2">
+            {suggestionsLoading ? (
+              [0, 1].map((i) => <Skeleton key={i} className="h-16 w-full rounded-2xl" />)
+            ) : (
+              visibleSuggestions.map((s) => (
+                <div
+                  key={s.id}
+                  className="flex items-center justify-between gap-3 rounded-2xl bg-card p-3 shadow-card"
+                >
+                  <div className="flex min-w-0 items-center gap-3">
+                    <img
+                      src={resolveAsset(s.avatar_url, avatarFallback)}
+                      alt={s.full_name || ""}
+                      className="h-10 w-10 rounded-full object-cover"
+                      width={80}
+                      height={80}
+                    />
+                    <div className="min-w-0">
+                      <div className="truncate text-sm font-semibold">
+                        {s.full_name || t("friends.placeholderName")}
+                      </div>
+                      <div className="truncate text-xs text-muted-foreground">
+                        {suggestionReasonLabel(s.reason)}
+                      </div>
+                    </div>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    onClick={() => handleAddSuggestion(s)}
+                    disabled={sendRequestMutation.isPending}
+                    className="shrink-0"
+                  >
+                    <UserPlus size={14} className="mr-1" /> {t("friends.sendRequest")}
+                  </Button>
+                </div>
+              ))
+            )}
+          </div>
+        </section>
+      )}
 
       {debouncedSearchText.length > 0 && (
         <section className="px-5 mt-4">

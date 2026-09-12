@@ -138,17 +138,17 @@ frentes são independentes. As "waves" abaixo agrupam as tarefas por frente.
 
 ## Frente F — Req 4: Sugestões de amizade
 
-- [ ] 21. RPC `suggest_friends` (SECURITY DEFINER)
-  - Amigos-de-amigos + atividade de tipo em comum; exclui self e friendship existente; só campos públicos; `reason`
-  - Aplicar em produção (2×) e refletir no `migrations-pendentes.sql`
+- [x] 21. RPC `suggest_friends` (SECURITY DEFINER)
+  - `suggest_friends(_limit)`: amigos-de-amigos (accepted) + atividade de tipo em comum (completed); exclui self e qualquer relação existente em user_friends; dedup por candidato (prioriza amigo-de-amigo); só campos públicos; `reason`
+  - Aplicada em produção 2× (`20260912120000_suggest-friends.sql`, executa sem erro) e refletida no `migrations-pendentes.sql`
   - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.6_
 
-- [ ] 22. API + UI em /amigos
-  - `fetchFriendSuggestions(limit)`; seção "Sugestões para você" com Adicionar/Seguir (remove otimista); placeholder para nome/avatar ausentes; i18n
+- [x] 22. API + UI em /amigos
+  - `fetchFriendSuggestions(limit)` + type `FriendSuggestion`; seção "Sugestões para você" no topo de `/amigos` com Adicionar (remove otimista via `dismissedSuggestions`); placeholder de nome ("Aventureiro") + avatar fallback; rótulo por `reason`; i18n
   - _Requirements: 4.1, 4.5, 4.7_
 
-- [ ] 23. Verificação + entrega da Frente F
-  - `tsc`, build, APK, commit+push, atualizar roadmap
+- [x] 23. Verificação + entrega da Frente F
+  - `tsc` limpo (só 6 erros pré-existentes); commit+push; roadmap. APK adiado para o fim do bloco.
   - _Requirements: 4.1, 4.5_
 
 ## Frente G — Req 3: Conquistas por Destino via GPS

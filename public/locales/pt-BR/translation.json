@@ -747,7 +747,11 @@
     "errorSelf": "Não é possível enviar uma solicitação para você mesmo.",
     "errorAlreadyFriends": "Vocês já são amigos.",
     "errorAlreadyPending": "Já existe uma solicitação pendente com esse usuário.",
-    "genericError": "Não foi possível concluir a ação. Tente novamente."
+    "genericError": "Não foi possível concluir a ação. Tente novamente.",
+    "suggestionsTitle": "Sugestões para você",
+    "reasonFriendOfFriend": "Amigo em comum",
+    "reasonCommonActivity": "Faz a mesma atividade",
+    "placeholderName": "Aventureiro"
   },
   "notifications": {
     "title": "Notificações",

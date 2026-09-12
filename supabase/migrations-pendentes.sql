@@ -830,3 +830,12 @@ ALTER TABLE public.profiles
 --     user_activities.activity_type; seed idempotente dos 8 tipos padrão.
 --     (SQL completo no arquivo de migration; idempotente)
 -- ############################################################################
+
+-- ############################################################################
+-- 21) 20260912120000_suggest-friends.sql
+--     Frente F: RPC suggest_friends(_limit) (SECURITY DEFINER) — sugere
+--     amigos-de-amigos + usuarios com atividade (completed) em comum,
+--     excluindo o proprio usuario e qualquer relacao existente em user_friends
+--     (qualquer status/direcao); dedup por candidato; so campos publicos.
+--     (SQL completo no arquivo de migration; idempotente)
+-- ############################################################################

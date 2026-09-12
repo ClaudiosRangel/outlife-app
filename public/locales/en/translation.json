@@ -747,7 +747,11 @@
     "errorSelf": "You can't send a request to yourself.",
     "errorAlreadyFriends": "You're already friends.",
     "errorAlreadyPending": "There's already a pending request with this user.",
-    "genericError": "Couldn't complete the action. Please try again."
+    "genericError": "Couldn't complete the action. Please try again.",
+    "suggestionsTitle": "Suggestions for you",
+    "reasonFriendOfFriend": "Mutual friend",
+    "reasonCommonActivity": "Does the same activity",
+    "placeholderName": "Adventurer"
   },
   "notifications": {
     "title": "Notifications",

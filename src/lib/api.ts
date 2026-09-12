@@ -1596,6 +1596,24 @@ export async function searchUsers(query: string): Promise<UserSearchResult[]> {
   return (data ?? []) as UserSearchResult[];
 }
 
+// Frente F (Req 4): sugestões de amizade. A RPC suggest_friends
+// (SECURITY DEFINER) resolve amigos-de-amigos + atividade em comum, excluindo
+// o próprio usuário e quem já tem relação em user_friends. `reason` alimenta o
+// rótulo exibido na UI ("Amigo em comum" / "Faz a mesma atividade").
+export type FriendSuggestion = {
+  id: string;
+  full_name: string | null;
+  username: string | null;
+  avatar_url: string | null;
+  reason: "friend_of_friend" | "common_activity" | string;
+};
+
+export async function fetchFriendSuggestions(limit = 20): Promise<FriendSuggestion[]> {
+  const { data, error } = await supabase.rpc("suggest_friends" as never, { _limit: limit } as never);
+  if (error) throw error;
+  return (data ?? []) as unknown as FriendSuggestion[];
+}
+
 // ============ Comunidade — curtidas e follow (Requirements 6, 7) ============
 
 // Alterna o Post_Like do usuário autenticado para `postId` através da RPC

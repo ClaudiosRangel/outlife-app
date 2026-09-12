@@ -5,7 +5,7 @@
 > `.kiro/steering/roadmap-outvitar.md`). **Mantenha-o atualizado** ao
 > concluir qualquer tarefa/bloco: marque status, data e resumo.
 
-**Última atualização:** 12/09/2026 (spec evolucao-admin-atividades-social — Frentes A/B/C/D/E concluídas)
+**Última atualização:** 12/09/2026 (spec evolucao-admin-atividades-social — Frentes A/B/C/D/E/F concluídas)
 **App:** OutVitar — slogan "VIVER É DIFERENTE DE ESTAR VIVO"
 
 > **🟦 BLOCO EM ANDAMENTO — spec `evolucao-admin-atividades-social`**
@@ -50,7 +50,13 @@
 >    integrado (busca catálogo, computeByMetricForm, seletor Foto/Mapa).
 >    Testes fast-check (resolveBannerDescription/truncateForBanner). i18n
 >    bannerDefaultDescription/shareBannerText/bannerVariant*. tsc limpo. SEM APK.
-> F) Req 4 sugestões de amizade — RPC `suggest_friends` (amigos-de-amigos + atividade em comum) em `/amigos`.
+> F) ✅ CONCLUÍDA (12/09/2026) — Req 4 sugestões de amizade. RPC
+>    `suggest_friends(_limit)` (SECURITY DEFINER, migration 20260912120000
+>    aplicada em prod): amigos-de-amigos + atividade (completed) em comum,
+>    exclui self e qualquer relação existente, dedup, só campos públicos.
+>    `fetchFriendSuggestions` + type FriendSuggestion. Seção "Sugestões para
+>    você" no topo de `/amigos` (Adicionar remove otimista, rótulo por reason,
+>    placeholder). i18n friends.suggestions*/reason*. tsc limpo. SEM APK.
 > G) Req 3 conquistas por Destino via GPS — `user_destination_visits` + RPCs; keys `destinos_1/5/10`.
 > H) Req 1/2 importação/curadoria trilhas-destinos (OSM/ICMBio) — `imported_trails` + `scripts/import-trails.mjs` + `/admin/trilhas` (toggle visível; atribuição OSM obrigatória).
 >
