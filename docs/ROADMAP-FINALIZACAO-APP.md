@@ -27,7 +27,24 @@
 >    `profile:user_id(...)` retornava PGRST200 (sem FK no schema cache) e
 >    derrubava a query inteira. Corrigido buscando atividade e perfil em
 >    duas queries separadas.
-> APK novo a gerar com essas correções.
+> APK gerado com essas correções.
+>
+> **🔧 2ª RODADA DE CORREÇÕES (12/09/2026):**
+> - Curtir/comentar: backend confirmado OK (RPCs toggle_comment_like/
+>   create_post_comment executam; sem PGRST203/404 — testado via REST anon).
+>   Forcei reload do schema cache (`NOTIFY pgrst`, script
+>   `scripts/reload-postgrest-schema.mjs`). O erro anterior era do APK antigo/
+>   cache do PostgREST. Novo APK com o código correto.
+> - Trilhas com imagem/infos: OSM (Overpass) NÃO hospeda fotos e raramente tem
+>   tag wikidata (das 184 importadas: 42 com dificuldade, 0 com imagem/wikidata).
+>   Solução: `imported_trails` ganhou colunas ricas (image_url, website,
+>   difficulty, distance_km, elevation_m, wikidata_id, wikipedia — migration
+>   20260912160000); `import-trails.mjs` captura tags OSM ricas E busca imagem/
+>   descrição no Wikidata (P18) quando há tag wikidata; exibição em
+>   /admin/trilhas e Explorar agora mostra foto (fallback dest-trail.jpg quando
+>   OSM não tem) + dificuldade/distância/elevação. Para fotos reais em massa,
+>   o caminho é curadoria manual (admin) ou fonte paga com licença de imagem.
+> APK 21:34.
 **App:** OutVitar — slogan "VIVER É DIFERENTE DE ESTAR VIVO"
 
 > **🟦 BLOCO EM ANDAMENTO — spec `evolucao-admin-atividades-social`**
