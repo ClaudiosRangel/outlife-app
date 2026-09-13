@@ -14,7 +14,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
-import { fetchAllImportedTrails, setImportedTrailVisible, type ImportedTrail } from "@/lib/api";
+import { fetchAllImportedTrails, setImportedTrailVisible, resolveAsset, type ImportedTrail } from "@/lib/api";
+import trailFallback from "@/assets/dest-trail.jpg";
 
 export const Route = createFileRoute("/admin/trilhas")({
   component: AdminTrilhasPage,
@@ -130,37 +131,50 @@ function AdminTrilhasPage() {
         )}
 
         {filtered.map((t: ImportedTrail) => (
-          <div key={t.id} className="rounded-2xl bg-card p-3 shadow-card">
-            <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0">
-                <h3 className="truncate font-display text-sm font-semibold">{t.name}</h3>
-                <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-muted-foreground">
-                  <span className="rounded-full bg-secondary px-2 py-0.5 uppercase text-[10px] tracking-wide">
-                    {t.external_source}
-                  </span>
-                  {t.region && <span className="flex items-center gap-1"><MapPin size={10} /> {t.region}</span>}
+          <div key={t.id} className="overflow-hidden rounded-2xl bg-card shadow-card">
+            <div className="relative h-28">
+              <img
+                src={resolveAsset(t.image_url, trailFallback)}
+                alt={t.name}
+                loading="lazy"
+                className="h-full w-full object-cover"
+              />
+              <span className="absolute left-2 top-2 rounded-full bg-black/50 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-white backdrop-blur-sm">
+                {t.external_source}
+              </span>
+            </div>
+            <div className="p-3">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <h3 className="truncate font-display text-sm font-semibold">{t.name}</h3>
+                  <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-muted-foreground">
+                    {t.region && <span className="flex items-center gap-1"><MapPin size={10} /> {t.region}</span>}
+                    {t.difficulty && <span>• {t.difficulty}</span>}
+                    {t.distance_km != null && <span>• {t.distance_km} km</span>}
+                    {t.elevation_m != null && <span>• {Math.round(t.elevation_m)} m</span>}
+                  </div>
+                  {t.description && <p className="mt-1 text-xs text-muted-foreground line-clamp-2">{t.description}</p>}
+                  {t.attribution && (
+                    <p className="mt-1 text-[10px] text-muted-foreground/80">{t.attribution}{t.license ? ` · ${t.license}` : ""}</p>
+                  )}
                 </div>
-                {t.description && <p className="mt-1 text-xs text-muted-foreground line-clamp-2">{t.description}</p>}
-                {t.attribution && (
-                  <p className="mt-1 text-[10px] text-muted-foreground/80">{t.attribution}{t.license ? ` · ${t.license}` : ""}</p>
-                )}
+                <Button
+                  size="sm"
+                  variant={t.visible ? "default" : "outline"}
+                  className="shrink-0 rounded-xl"
+                  onClick={() => toggleMut.mutate({ id: t.id, visible: !t.visible })}
+                  disabled={toggleMut.isPending}
+                >
+                  {toggleMut.isPending ? (
+                    <Loader2 size={14} className="animate-spin" />
+                  ) : t.visible ? (
+                    <Eye size={14} />
+                  ) : (
+                    <EyeOff size={14} />
+                  )}
+                  {t.visible ? "Visível" : "Oculta"}
+                </Button>
               </div>
-              <Button
-                size="sm"
-                variant={t.visible ? "default" : "outline"}
-                className="shrink-0 rounded-xl"
-                onClick={() => toggleMut.mutate({ id: t.id, visible: !t.visible })}
-                disabled={toggleMut.isPending}
-              >
-                {toggleMut.isPending ? (
-                  <Loader2 size={14} className="animate-spin" />
-                ) : t.visible ? (
-                  <Eye size={14} />
-                ) : (
-                  <EyeOff size={14} />
-                )}
-                {t.visible ? "Visível" : "Oculta"}
-              </Button>
             </div>
           </div>
         ))}

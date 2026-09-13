@@ -12,6 +12,7 @@ import {
   fetchMyProfile,
   fetchPartners,
   fetchVisibleImportedTrails,
+  resolveAsset,
   type Destination,
   type Difficulty,
 } from "@/lib/api";
@@ -19,6 +20,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { PartnerList } from "@/components/PartnerList";
 import { useAuth } from "@/hooks/use-auth";
 import { useLiveActivityPublisher } from "@/hooks/use-live-activity-publisher";
+import trailFallbackImg from "@/assets/dest-trail.jpg";
 
 const MapView = lazy(() => import("@/components/MapView"));
 
@@ -335,16 +337,33 @@ function Explore() {
           <h2 className="font-display text-sm font-semibold text-muted-foreground">
             {t("explore.trailsTitle", "Trilhas")}
           </h2>
-          <div className="mt-2 space-y-2">
+          <div className="mt-2 grid grid-cols-2 gap-3">
             {importedTrails.map((trail) => (
-              <div key={trail.id} className="rounded-2xl bg-card p-3 shadow-card">
-                <div className="text-[13px] font-semibold leading-tight">{trail.name}</div>
-                <div className="mt-1 flex items-center gap-1 text-[10px] text-muted-foreground">
-                  <MapPin size={10} /> {trail.region ?? t("explore.trailsSource", "Trilha importada")}
+              <div key={trail.id} className="overflow-hidden rounded-2xl bg-card shadow-card">
+                <div className="relative h-28">
+                  <img
+                    src={resolveAsset(trail.image_url, trailFallbackImg)}
+                    alt={trail.name}
+                    loading="lazy"
+                    className="h-full w-full object-cover"
+                  />
                 </div>
-                {trail.description && (
-                  <p className="mt-1 text-xs text-muted-foreground line-clamp-2">{trail.description}</p>
-                )}
+                <div className="p-3">
+                  <div className="text-[13px] font-semibold leading-tight line-clamp-1">{trail.name}</div>
+                  <div className="mt-1 flex items-center gap-1 text-[10px] text-muted-foreground">
+                    <MapPin size={10} /> {trail.region ?? t("explore.trailsSource", "Trilha importada")}
+                  </div>
+                  {(trail.difficulty || trail.distance_km != null) && (
+                    <div className="mt-1 flex flex-wrap gap-1">
+                      {trail.difficulty && (
+                        <span className="rounded-full bg-secondary px-1.5 py-0.5 text-[9px] font-medium text-secondary-foreground">{trail.difficulty}</span>
+                      )}
+                      {trail.distance_km != null && (
+                        <span className="rounded-full bg-secondary px-1.5 py-0.5 text-[9px] font-medium text-secondary-foreground">{trail.distance_km} km</span>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
             ))}
           </div>

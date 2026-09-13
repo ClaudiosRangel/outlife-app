@@ -2016,13 +2016,23 @@ export type ImportedTrail = {
   license: string | null;
   attribution: string | null;
   visible: boolean;
+  image_url: string | null;
+  website: string | null;
+  difficulty: string | null;
+  distance_km: number | null;
+  elevation_m: number | null;
+  wikidata_id: string | null;
+  wikipedia: string | null;
 };
+
+const IMPORTED_TRAIL_COLS =
+  "id, external_source, external_id, name, description, region, lat, lng, license, attribution, visible, image_url, website, difficulty, distance_km, elevation_m, wikidata_id, wikipedia";
 
 // Admin: lista TODAS as trilhas importadas (visíveis e ocultas) para curadoria.
 export async function fetchAllImportedTrails(): Promise<ImportedTrail[]> {
   const { data, error } = await supabase
     .from("imported_trails" as never)
-    .select("id, external_source, external_id, name, description, region, lat, lng, license, attribution, visible")
+    .select(IMPORTED_TRAIL_COLS)
     .order("visible", { ascending: false })
     .order("name", { ascending: true });
   if (error) throw error;
@@ -2033,7 +2043,7 @@ export async function fetchAllImportedTrails(): Promise<ImportedTrail[]> {
 export async function fetchVisibleImportedTrails(): Promise<ImportedTrail[]> {
   const { data, error } = await supabase
     .from("imported_trails" as never)
-    .select("id, external_source, external_id, name, description, region, lat, lng, license, attribution, visible")
+    .select(IMPORTED_TRAIL_COLS)
     .eq("visible", true)
     .order("name", { ascending: true });
   if (error) throw error;

@@ -69,20 +69,81 @@ async function fetchOsmHiking(bbox) {
   const seen = new Set();
   const out = [];
   for (const el of json.elements ?? []) {
-    if (!el.tags || !el.tags.name) continue;
+    const tg = el.tags;
+    if (!tg || !tg.name) continue;
     // dedup por tipo+id (way e relation podem colidir de id)
     const extId = `${el.type}/${el.id}`;
     if (seen.has(extId)) continue;
     seen.add(extId);
+
+    // Dificuldade: sac_scale (caminhada) ou mtb:scale; normaliza p/ rótulo.
+    const difficulty = tg.sac_scale ?? tg["mtb:scale"] ?? tg.difficulty ?? null;
+    // Distância: tag "distance" (às vezes "12 km" / "12"); extrai número em km.
+    let distanceKm = null;
+    if (tg.distance) {
+      const m = String(tg.distance).match(/([\d.,]+)/);
+      if (m) distanceKm = Number(m[1].replace(",", "."));
+    }
+    // Elevação: ascent (ganho) ou ele (altitude do ponto).
+    let elevationM = null;
+    const elevRaw = tg.ascent ?? tg.ele ?? null;
+    if (elevRaw != null) {
+      const m = String(elevRaw).match(/([\d.,]+)/);
+      if (m) elevationM = Number(m[1].replace(",", "."));
+    }
+    // Imagem direta na tag OSM (raro, mas quando existe é a melhor).
+    const osmImage = tg.image && /^https?:\/\//i.test(tg.image) ? tg.image : null;
+
     out.push({
       external_id: extId,
-      name: el.tags.name,
-      description: el.tags.description ?? el.tags["description:pt"] ?? null,
+      name: tg.name,
+      description: tg.description ?? tg["description:pt"] ?? null,
       lat: el.center?.lat ?? el.lat ?? null,
       lng: el.center?.lon ?? el.lon ?? null,
+      difficulty,
+      distance_km: Number.isFinite(distanceKm) ? distanceKm : null,
+      elevation_m: Number.isFinite(elevationM) ? elevationM : null,
+      website: tg.website ?? tg["contact:website"] ?? null,
+      wikidata_id: tg.wikidata ?? null,
+      wikipedia: tg.wikipedia ?? null,
+      image_url: osmImage,
     });
   }
   return out;
+}
+
+// Resolve a URL de imagem do Wikimedia Commons a partir do nome do arquivo
+// (tag P18 do Wikidata). Usa Special:FilePath (redireciona para a imagem).
+function commonsImageUrl(fileName, width = 1200) {
+  const clean = String(fileName).replace(/ /g, "_");
+  return `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(clean)}?width=${width}`;
+}
+
+// Enriquece um item com imagem (P18) e descrição a partir do Wikidata, quando
+// a trilha OSM tiver a tag `wikidata`. Gratuito, sem chave. Falha silenciosa
+// (mantém o item sem imagem). Wikidata/Commons: licenças variadas — atribuição
+// © OpenStreetMap mantida; imagens do Commons são de domínio público/CC.
+async function enrichFromWikidata(item) {
+  if (!item.wikidata_id || item.image_url) return item;
+  try {
+    const url = `https://www.wikidata.org/wiki/Special:EntityData/${encodeURIComponent(item.wikidata_id)}.json`;
+    const res = await fetch(url, { headers: { "User-Agent": "OutVitar-trail-importer/1.0" } });
+    if (!res.ok) return item;
+    const json = await res.json();
+    const entity = json.entities?.[item.wikidata_id];
+    const claims = entity?.claims ?? {};
+    // P18 = image
+    const p18 = claims.P18?.[0]?.mainsnak?.datavalue?.value;
+    if (p18) item.image_url = commonsImageUrl(p18);
+    // Descrição pt/en se ainda não tiver
+    if (!item.description) {
+      const desc = entity?.descriptions?.pt?.value ?? entity?.descriptions?.["pt-br"]?.value ?? entity?.descriptions?.en?.value;
+      if (desc) item.description = desc;
+    }
+  } catch {
+    // silencioso
+  }
+  return item;
 }
 
 async function upsertTrails(client, source, region, items) {
@@ -93,19 +154,29 @@ async function upsertTrails(client, source, region, items) {
     const license = source === "osm" ? "ODbL" : null;
     const r = await client.query(
       `INSERT INTO public.imported_trails
-         (external_source, external_id, name, description, region, lat, lng, license, attribution, visible, updated_at)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,false, now())
+         (external_source, external_id, name, description, region, lat, lng, license, attribution,
+          image_url, website, difficulty, distance_km, elevation_m, wikidata_id, wikipedia, visible, updated_at)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,false, now())
        ON CONFLICT (external_source, external_id) DO UPDATE SET
          name = EXCLUDED.name,
-         description = EXCLUDED.description,
+         description = COALESCE(EXCLUDED.description, public.imported_trails.description),
          region = EXCLUDED.region,
          lat = EXCLUDED.lat,
          lng = EXCLUDED.lng,
          license = EXCLUDED.license,
          attribution = EXCLUDED.attribution,
+         image_url = COALESCE(EXCLUDED.image_url, public.imported_trails.image_url),
+         website = COALESCE(EXCLUDED.website, public.imported_trails.website),
+         difficulty = COALESCE(EXCLUDED.difficulty, public.imported_trails.difficulty),
+         distance_km = COALESCE(EXCLUDED.distance_km, public.imported_trails.distance_km),
+         elevation_m = COALESCE(EXCLUDED.elevation_m, public.imported_trails.elevation_m),
+         wikidata_id = COALESCE(EXCLUDED.wikidata_id, public.imported_trails.wikidata_id),
+         wikipedia = COALESCE(EXCLUDED.wikipedia, public.imported_trails.wikipedia),
          updated_at = now()
        RETURNING (xmax = 0) AS is_insert`,
-      [source, it.external_id, it.name, it.description, region, it.lat, it.lng, license, attribution],
+      [source, it.external_id, it.name, it.description, region, it.lat, it.lng, license, attribution,
+       it.image_url ?? null, it.website ?? null, it.difficulty ?? null,
+       it.distance_km ?? null, it.elevation_m ?? null, it.wikidata_id ?? null, it.wikipedia ?? null],
     );
     if (r.rows[0]?.is_insert) inserted++;
     else updated++;
@@ -125,12 +196,23 @@ async function main() {
     process.exit(1);
   }
 
-  console.log(`Buscando trilhas OSM (route=hiking) em [${bbox.join(", ")}] — região "${region}"...`);
+  console.log(`Buscando trilhas OSM em [${bbox.join(", ")}] — região "${region}"...`);
   const items = await fetchOsmHiking(bbox);
   console.log(`Encontradas ${items.length} trilhas nomeadas.`);
   if (items.length === 0) {
     console.log("Nada a importar.");
     return;
+  }
+
+  // Enriquecimento: imagem + descrição via Wikidata (só quem tem tag wikidata).
+  const withWikidata = items.filter((i) => i.wikidata_id);
+  if (withWikidata.length > 0) {
+    console.log(`Enriquecendo ${withWikidata.length} trilhas com imagem/descrição do Wikidata...`);
+    for (const it of withWikidata) {
+      await enrichFromWikidata(it);
+    }
+    const comImagem = items.filter((i) => i.image_url).length;
+    console.log(`  → ${comImagem} trilhas com imagem.`);
   }
 
   const client = new pg.Client({ connectionString: readEnv(), ssl: { rejectUnauthorized: false } });

@@ -1,4 +1,4 @@
-# Diagnóstico — Push notifications e badge do ícone
+uste# Diagnóstico — Push notifications e badge do ícone
 
 > **✅ RESOLVIDO em 10/09/2026 (build 16:21).** Foram encontradas e corrigidas
 > DUAS causas raiz que impediam qualquer push de chegar:

@@ -864,3 +864,12 @@ ALTER TABLE public.profiles
 --     novos tipos de atividade voo_livre/surf/skate (metric_form
 --     speed_elevation). (SQL completo no arquivo; idempotente)
 -- ############################################################################
+
+-- ############################################################################
+-- 25) 20260912160000_imported-trails-rich-fields.sql
+--     Ponto 2: colunas ricas em imported_trails (image_url, website,
+--     difficulty, distance_km, elevation_m, wikidata_id, wikipedia) para
+--     exibir imagem + informacoes completas das trilhas. O import-trails.mjs
+--     popula via tags OSM + Wikidata (P18 imagem/descricao quando houver).
+--     (SQL completo no arquivo; idempotente)
+-- ############################################################################
