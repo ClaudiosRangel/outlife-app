@@ -5,16 +5,32 @@
  * A importação em lote roda server-side/local (não no device).
  */
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Eye, EyeOff, MapPin, Search, Loader2, Info } from "lucide-react";
+import { ArrowLeft, Eye, EyeOff, MapPin, Search, Loader2, Info, Pencil, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { StatusBar } from "@/components/StatusBar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
-import { fetchAllImportedTrails, setImportedTrailVisible, resolveAsset, type ImportedTrail } from "@/lib/api";
+import {
+  fetchAllImportedTrails,
+  setImportedTrailVisible,
+  updateImportedTrail,
+  uploadTrailImage,
+  resolveAsset,
+  type ImportedTrail,
+  type ImportedTrailPatch,
+} from "@/lib/api";
 import trailFallback from "@/assets/dest-trail.jpg";
 
 export const Route = createFileRoute("/admin/trilhas")({
@@ -60,6 +76,53 @@ function AdminTrilhasPage() {
     },
     onError: (e: Error) => toast.error(e.message),
   });
+
+  // Edição da trilha (imagem + dados). `editing` guarda a trilha aberta no modal.
+  const [editing, setEditing] = useState<ImportedTrail | null>(null);
+  const [form, setForm] = useState<ImportedTrailPatch>({});
+  const [uploading, setUploading] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const openEdit = (t: ImportedTrail) => {
+    setEditing(t);
+    setForm({
+      name: t.name,
+      description: t.description,
+      image_url: t.image_url,
+      difficulty: t.difficulty,
+      distance_km: t.distance_km,
+      elevation_m: t.elevation_m,
+      region: t.region,
+      website: t.website,
+    });
+  };
+
+  const saveMut = useMutation({
+    mutationFn: () => {
+      if (!editing) throw new Error("Nenhuma trilha selecionada");
+      return updateImportedTrail(editing.id, form);
+    },
+    onSuccess: () => {
+      toast.success("Trilha atualizada!");
+      qc.invalidateQueries({ queryKey: ["imported-trails-admin"] });
+      qc.invalidateQueries({ queryKey: ["imported-trails-visible"] });
+      setEditing(null);
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const handlePickImage = async (file: File) => {
+    setUploading(true);
+    try {
+      const url = await uploadTrailImage(file);
+      setForm((f) => ({ ...f, image_url: url }));
+      toast.success("Imagem enviada!");
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -158,27 +221,133 @@ function AdminTrilhasPage() {
                     <p className="mt-1 text-[10px] text-muted-foreground/80">{t.attribution}{t.license ? ` · ${t.license}` : ""}</p>
                   )}
                 </div>
-                <Button
-                  size="sm"
-                  variant={t.visible ? "default" : "outline"}
-                  className="shrink-0 rounded-xl"
-                  onClick={() => toggleMut.mutate({ id: t.id, visible: !t.visible })}
-                  disabled={toggleMut.isPending}
-                >
-                  {toggleMut.isPending ? (
-                    <Loader2 size={14} className="animate-spin" />
-                  ) : t.visible ? (
-                    <Eye size={14} />
-                  ) : (
-                    <EyeOff size={14} />
-                  )}
-                  {t.visible ? "Visível" : "Oculta"}
-                </Button>
+                <div className="flex shrink-0 flex-col gap-2">
+                  <Button
+                    size="sm"
+                    variant={t.visible ? "default" : "outline"}
+                    className="rounded-xl"
+                    onClick={() => toggleMut.mutate({ id: t.id, visible: !t.visible })}
+                    disabled={toggleMut.isPending}
+                  >
+                    {toggleMut.isPending ? (
+                      <Loader2 size={14} className="animate-spin" />
+                    ) : t.visible ? (
+                      <Eye size={14} />
+                    ) : (
+                      <EyeOff size={14} />
+                    )}
+                    {t.visible ? "Visível" : "Oculta"}
+                  </Button>
+                  <Button size="sm" variant="ghost" className="rounded-xl" onClick={() => openEdit(t)}>
+                    <Pencil size={14} /> Editar
+                  </Button>
+                </div>
               </div>
             </div>
           </div>
         ))}
       </section>
+
+      {/* Modal de edição: imagem + dados da trilha */}
+      <Dialog open={!!editing} onOpenChange={(open) => !open && setEditing(null)}>
+        <DialogContent className="max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Editar trilha</DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-3">
+            {/* Imagem */}
+            <div>
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">Imagem</label>
+              <div className="overflow-hidden rounded-xl">
+                <img
+                  src={resolveAsset(form.image_url ?? null, trailFallback)}
+                  alt=""
+                  className="h-36 w-full object-cover"
+                />
+              </div>
+              <input
+                ref={fileRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                className="hidden"
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) handlePickImage(f);
+                }}
+              />
+              <div className="mt-2 flex gap-2">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  className="flex-1 rounded-xl"
+                  onClick={() => fileRef.current?.click()}
+                  disabled={uploading}
+                >
+                  {uploading ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />}
+                  Enviar imagem
+                </Button>
+              </div>
+              <Input
+                className="mt-2"
+                placeholder="ou cole a URL da imagem"
+                value={form.image_url ?? ""}
+                onChange={(e) => setForm((f) => ({ ...f, image_url: e.target.value || null }))}
+              />
+            </div>
+
+            <div>
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">Nome</label>
+              <Input value={form.name ?? ""} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} />
+            </div>
+
+            <div>
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">Descrição</label>
+              <Textarea
+                rows={3}
+                value={form.description ?? ""}
+                onChange={(e) => setForm((f) => ({ ...f, description: e.target.value || null }))}
+              />
+            </div>
+
+            <div className="grid grid-cols-3 gap-2">
+              <div>
+                <label className="mb-1 block text-xs font-medium text-muted-foreground">Dificuldade</label>
+                <Input value={form.difficulty ?? ""} onChange={(e) => setForm((f) => ({ ...f, difficulty: e.target.value || null }))} />
+              </div>
+              <div>
+                <label className="mb-1 block text-xs font-medium text-muted-foreground">Distância (km)</label>
+                <Input
+                  type="number"
+                  value={form.distance_km ?? ""}
+                  onChange={(e) => setForm((f) => ({ ...f, distance_km: e.target.value === "" ? null : Number(e.target.value) }))}
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-xs font-medium text-muted-foreground">Elevação (m)</label>
+                <Input
+                  type="number"
+                  value={form.elevation_m ?? ""}
+                  onChange={(e) => setForm((f) => ({ ...f, elevation_m: e.target.value === "" ? null : Number(e.target.value) }))}
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">Região</label>
+              <Input value={form.region ?? ""} onChange={(e) => setForm((f) => ({ ...f, region: e.target.value || null }))} />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditing(null)}>Cancelar</Button>
+            <Button onClick={() => saveMut.mutate()} disabled={saveMut.isPending || uploading}>
+              {saveMut.isPending && <Loader2 size={14} className="animate-spin" />} Salvar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

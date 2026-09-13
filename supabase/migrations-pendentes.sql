@@ -873,3 +873,11 @@ ALTER TABLE public.profiles
 --     popula via tags OSM + Wikidata (P18 imagem/descricao quando houver).
 --     (SQL completo no arquivo; idempotente)
 -- ############################################################################
+
+-- ############################################################################
+-- 26) 20260912170000_fix-toggle-comment-like-ambiguous.sql
+--     BUG REAL (curtir comentario): toggle_comment_like tinha referencia
+--     ambigua a likes_count (coluna de saida da TABLE vs coluna post_comments)
+--     -> erro 42702. Reescrita qualificando pc.likes_count/cl.* + variavel
+--     local _lc, mantendo a assinatura de retorno. (idempotente)
+-- ############################################################################

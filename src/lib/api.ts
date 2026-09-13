@@ -2059,6 +2059,52 @@ export async function setImportedTrailVisible(id: string, visible: boolean): Pro
   if (error) throw error;
 }
 
+// Detalhe de UMA trilha por id (para a página de detalhe /trilha/:id). RLS já
+// garante que só visíveis (ou qualquer uma, se admin) sejam retornadas.
+export async function fetchImportedTrailById(id: string): Promise<ImportedTrail | null> {
+  const { data, error } = await supabase
+    .from("imported_trails" as never)
+    .select(IMPORTED_TRAIL_COLS)
+    .eq("id", id)
+    .maybeSingle();
+  if (error) throw error;
+  return (data as unknown as ImportedTrail) ?? null;
+}
+
+// Admin: edita os campos curáveis de uma trilha (imagem, descrição, dados).
+export type ImportedTrailPatch = Partial<
+  Pick<ImportedTrail, "name" | "description" | "image_url" | "website" | "difficulty" | "distance_km" | "elevation_m" | "region">
+>;
+export async function updateImportedTrail(id: string, patch: ImportedTrailPatch): Promise<void> {
+  const { error } = await supabase
+    .from("imported_trails" as never)
+    .update({ ...patch, updated_at: new Date().toISOString() } as never)
+    .eq("id", id);
+  if (error) throw error;
+}
+
+// Admin: envia uma imagem para uma trilha (reusa o bucket community-post-images,
+// mesmo padrão de resize/validação de uploadCommunityPostImage). Retorna a URL
+// pública para gravar em imported_trails.image_url.
+export async function uploadTrailImage(file: File): Promise<string> {
+  const { data: userData } = await supabase.auth.getUser();
+  if (!userData.user) throw new Error("Não autenticado");
+  const mime = file.type;
+  const ext = ALLOWED_IMAGE_TYPES[mime];
+  if (!ext) throw new Error("Formato inválido. Use JPG, PNG ou WEBP.");
+  const optimized = await resizeImageForUpload(file, MAX_COMMUNITY_POST_IMAGE_BYTES);
+  if (optimized.size > MAX_COMMUNITY_POST_IMAGE_BYTES) {
+    throw new Error("Imagem muito grande (máx. 5 MB).");
+  }
+  const path = `${userData.user.id}/trail-${Date.now()}.${ext}`;
+  const { error: upErr } = await supabase.storage
+    .from("community-post-images")
+    .upload(path, optimized, { upsert: false, contentType: mime });
+  if (upErr) throw upErr;
+  const { data: pub } = supabase.storage.from("community-post-images").getPublicUrl(path);
+  return pub.publicUrl;
+}
+
 // ============ Notificações (Requirement 9) ============
 
 export type Notification = {

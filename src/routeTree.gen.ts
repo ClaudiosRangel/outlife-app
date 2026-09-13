@@ -31,6 +31,7 @@ import { Route as ParceiroPainelRouteImport } from './routes/parceiro.painel'
 import { Route as ParceiroPartnerIdRouteImport } from './routes/parceiro.$partnerId'
 import { Route as EventosEventIdRouteImport } from './routes/eventos.$eventId'
 import { Route as DestinoDestinationIdRouteImport } from './routes/destino.$destinationId'
+import { Route as TrilhaTrailIdRouteImport } from './routes/trilha.$trailId'
 import { Route as ChecklistChecklistIdRouteImport } from './routes/checklist.$checklistId'
 import { Route as AtividadeRastrearRouteImport } from './routes/atividade.rastrear'
 import { Route as AtividadeActivityIdRouteImport } from './routes/atividade.$activityId'
@@ -157,6 +158,11 @@ const EventosEventIdRoute = EventosEventIdRouteImport.update({
   id: '/$eventId',
   path: '/$eventId',
   getParentRoute: () => EventosRoute,
+} as any)
+const TrilhaTrailIdRoute = TrilhaTrailIdRouteImport.update({
+  id: '/trilha/$trailId',
+  path: '/trilha/$trailId',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const DestinoDestinationIdRoute = DestinoDestinationIdRouteImport.update({
   id: '/destino/$destinationId',
@@ -313,6 +319,7 @@ export interface FileRoutesByFullPath {
   '/api/push/register-web': typeof ApiPushRegisterWebRoute
   '/api/push/send-fcm': typeof ApiPushSendFcmRoute
   '/admin/trilhas': typeof AdminTrilhasRoute
+  '/trilha/$trailId': typeof TrilhaTrailIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -358,6 +365,7 @@ export interface FileRoutesByTo {
   '/api/push/register-web': typeof ApiPushRegisterWebRoute
   '/api/push/send-fcm': typeof ApiPushSendFcmRoute
   '/admin/trilhas': typeof AdminTrilhasRoute
+  '/trilha/$trailId': typeof TrilhaTrailIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -404,6 +412,7 @@ export interface FileRoutesById {
   '/api/push/register-web': typeof ApiPushRegisterWebRoute
   '/api/push/send-fcm': typeof ApiPushSendFcmRoute
   '/admin/trilhas': typeof AdminTrilhasRoute
+  '/trilha/$trailId': typeof TrilhaTrailIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -451,6 +460,7 @@ export interface FileRouteTypes {
     | '/api/push/register-web'
     | '/api/push/send-fcm'
     | '/admin/trilhas'
+    | '/trilha/$trailId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -496,6 +506,7 @@ export interface FileRouteTypes {
     | '/api/push/register-web'
     | '/api/push/send-fcm'
     | '/admin/trilhas'
+    | '/trilha/$trailId'
   id:
     | '__root__'
     | '/'
@@ -541,6 +552,7 @@ export interface FileRouteTypes {
     | '/api/push/register-web'
     | '/api/push/send-fcm'
     | '/admin/trilhas'
+    | '/trilha/$trailId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -576,6 +588,7 @@ export interface RootRouteChildren {
   AtividadeRastrearRoute: typeof AtividadeRastrearRoute
   ChecklistChecklistIdRoute: typeof ChecklistChecklistIdRoute
   DestinoDestinationIdRoute: typeof DestinoDestinationIdRoute
+  TrilhaTrailIdRoute: typeof TrilhaTrailIdRoute
   ParceiroPartnerIdRoute: typeof ParceiroPartnerIdRoute
   ParceiroPainelRoute: typeof ParceiroPainelRoute
   AdminIndexRoute: typeof AdminIndexRoute
@@ -742,6 +755,13 @@ declare module '@tanstack/react-router' {
       path: '/destino/$destinationId'
       fullPath: '/destino/$destinationId'
       preLoaderRoute: typeof DestinoDestinationIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/trilha/$trailId': {
+      id: '/trilha/$trailId'
+      path: '/trilha/$trailId'
+      fullPath: '/trilha/$trailId'
+      preLoaderRoute: typeof TrilhaTrailIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/checklist/$checklistId': {
@@ -938,6 +958,7 @@ const rootRouteChildren: RootRouteChildren = {
   AtividadeRastrearRoute: AtividadeRastrearRoute,
   ChecklistChecklistIdRoute: ChecklistChecklistIdRoute,
   DestinoDestinationIdRoute: DestinoDestinationIdRoute,
+  TrilhaTrailIdRoute: TrilhaTrailIdRoute,
   ParceiroPartnerIdRoute: ParceiroPartnerIdRoute,
   ParceiroPainelRoute: ParceiroPainelRoute,
   AdminIndexRoute: AdminIndexRoute,

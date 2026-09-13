@@ -339,7 +339,12 @@ function Explore() {
           </h2>
           <div className="mt-2 grid grid-cols-2 gap-3">
             {importedTrails.map((trail) => (
-              <div key={trail.id} className="overflow-hidden rounded-2xl bg-card shadow-card">
+              <Link
+                to="/trilha/$trailId"
+                params={{ trailId: trail.id }}
+                key={trail.id}
+                className="overflow-hidden rounded-2xl bg-card shadow-card transition-base active:scale-[0.98]"
+              >
                 <div className="relative h-28">
                   <img
                     src={resolveAsset(trail.image_url, trailFallbackImg)}
@@ -364,7 +369,7 @@ function Explore() {
                     </div>
                   )}
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
           {importedTrails.some((tr) => tr.external_source === "osm") && (

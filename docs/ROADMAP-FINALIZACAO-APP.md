@@ -45,6 +45,22 @@
 >   OSM não tem) + dificuldade/distância/elevação. Para fotos reais em massa,
 >   o caminho é curadoria manual (admin) ou fonte paga com licença de imagem.
 > APK 21:34.
+>
+> **🔧 3ª RODADA (12/09/2026):**
+> - **Curtir comentário — BUG REAL ACHADO E CORRIGIDO**: `toggle_comment_like`
+>   tinha referência ambígua a `likes_count` (coluna de saída da TABLE vs coluna
+>   de post_comments) → erro 42702 "column reference likes_count is ambiguous".
+>   Só aparecia ao CURTIR (não ao comentar). Migration 20260912170000 reescreveu
+>   qualificando `pc.likes_count`/`cl.*` + variável local. Testado com usuário
+>   real: curtir retorna {liked, likes_count} OK. (As correções anteriores da
+>   função create_post_comment eram válidas, mas o toggle tinha esse 2º bug.)
+> - **Trilhas**: colunas ricas já existiam; agora o admin pode EDITAR (modal em
+>   /admin/trilhas: enviar/colar imagem, nome, descrição, dificuldade,
+>   distância, elevação, região — `updateImportedTrail`/`uploadTrailImage`).
+>   Trilhas viraram CLICÁVEIS (página `/trilha/$trailId`, mesmo padrão dos
+>   destinos: hero + cards de info + mapa + atribuição), tanto no Explorar
+>   quanto acessível por link. Sobre a API: OSM traz nome/coords/dificuldade
+>   (parcial), NÃO traz foto → por isso a edição manual do admin é o caminho.
 **App:** OutVitar — slogan "VIVER É DIFERENTE DE ESTAR VIVO"
 
 > **🟦 BLOCO EM ANDAMENTO — spec `evolucao-admin-atividades-social`**
