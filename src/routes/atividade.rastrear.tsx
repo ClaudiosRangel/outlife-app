@@ -52,6 +52,7 @@ import { ReviewPromptDialog } from "@/components/ReviewPromptDialog";
 import { computeActivityMetrics } from "@/lib/activity-metrics";
 import { mpsToKmh } from "@/lib/instant-speed";
 import { generateActivityMapSnapshot } from "@/lib/activity-map-snapshot";
+import { getActivityIcon } from "@/lib/activity-icons";
 
 const ACTIVITY_TYPES: readonly ActivityType[] = ["caminhada", "pedalada", "trilha", "outro"];
 
@@ -107,10 +108,25 @@ function TrackActivityPage() {
     queryFn: fetchActivityTypes,
     enabled: !!user,
   });
-  const typeOptions: { code: string; name: string }[] =
+  // icon_key por código base (usado no fallback do enum, quando o catálogo
+  // ainda não carregou). O catálogo já traz icon_key próprio.
+  const FALLBACK_ICON_KEY: Record<string, string> = {
+    corrida: "run",
+    caminhada: "walk",
+    trilha: "trail",
+    pedalada: "bike",
+    natacao: "swim",
+    remo: "row",
+    escalada: "climb",
+    voo_livre: "flight",
+    surf: "surf",
+    skate: "skate",
+    outro: "activity",
+  };
+  const typeOptions: { code: string; name: string; iconKey: string }[] =
     catalogTypes.length > 0
-      ? catalogTypes.map((c) => ({ code: c.code, name: c.name }))
-      : ACTIVITY_TYPES.map((v) => ({ code: v, name: v }));
+      ? catalogTypes.map((c) => ({ code: c.code, name: c.name, iconKey: c.icon_key }))
+      : ACTIVITY_TYPES.map((v) => ({ code: v, name: v, iconKey: FALLBACK_ICON_KEY[v] ?? "activity" }));
 
   // Conecta o rastreador ao canal de compartilhamento ao vivo. Reaproveita a
   // posição já capturada pelo tracker (não abre um segundo watchPosition) e só
@@ -555,12 +571,18 @@ function TrackActivityPage() {
               <SelectValue placeholder={t("activity.selectActivityType")} />
             </SelectTrigger>
             <SelectContent>
-              {typeOptions.map((opt) => (
-                <SelectItem key={opt.code} value={opt.code}>
-                  {/* usa a tradução se for um dos tipos base; senão o nome do catálogo */}
-                  {t(`activity.activityTypes.${opt.code}`, { defaultValue: opt.name })}
-                </SelectItem>
-              ))}
+              {typeOptions.map((opt) => {
+                const { Icon } = getActivityIcon(opt.iconKey);
+                return (
+                  <SelectItem key={opt.code} value={opt.code}>
+                    <span className="flex items-center gap-2">
+                      <Icon size={16} className="text-primary" aria-hidden />
+                      {/* usa a tradução se for um dos tipos base; senão o nome do catálogo */}
+                      {t(`activity.activityTypes.${opt.code}`, { defaultValue: opt.name })}
+                    </span>
+                  </SelectItem>
+                );
+              })}
             </SelectContent>
           </Select>
         </div>

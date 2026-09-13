@@ -318,6 +318,7 @@
     "loginRequired": "Sign in to publish.",
     "likeError": "Couldn't like the post. Please try again.",
     "shareBannerError": "Couldn't generate the image to share. Please try again.",
+    "watchOnApp": "Watch on OutVitar",
     "followError": "Couldn't follow. Please try again.",
     "commentError": "Couldn't comment. Please try again.",
     "noComments": "No comments yet. Be the first!",

@@ -65,6 +65,7 @@ import { shareContent } from "@/lib/share";
 import { generatePostBanner, generateActivityBanner, type ActivityBannerMetric } from "@/lib/banner-generator";
 import { computeByMetricForm, type MetricForm } from "@/lib/metric-forms";
 import { getActivityIcon } from "@/lib/activity-icons";
+import { captureVideoFrame } from "@/lib/video-frame";
 
 // Mapeia a categoria do post para uma icon_key do Icon_Model_Set (Frente D/E),
 // para exibir o ícone da atividade ao lado da descrição no feed (ponto 1).
@@ -474,6 +475,19 @@ function Community() {
     try {
       let blob: Blob;
 
+      // Ponto 2: quando o post é um vídeo, tira um "print" (frame) do vídeo no
+      // momento para usar como fundo do banner. Se já houver foto real, usa a
+      // foto; se a captura falhar, cai no fallback padrão do gerador.
+      let videoPoster: string | null = null;
+      if (p.videoUrl && !p.realImg) {
+        try {
+          videoPoster = await captureVideoFrame(p.videoUrl, 1);
+        } catch {
+          videoPoster = null;
+        }
+      }
+      const backgroundImg = p.realImg ?? videoPoster;
+
       if (p.activityId) {
         // Post gerado a partir de uma atividade → banner OUTVITAR completo
         // (marca, ícone da atividade, descrição e métricas por metric_form),
@@ -504,10 +518,10 @@ function Community() {
         if (mf.secondary && metricForm === "speed_elevation") {
           metrics.push({ label: mf.secondary.label, value: mf.secondary.value });
         }
-        const hasPhoto = !!p.realImg;
+        const bg = backgroundImg ?? activity?.map_snapshot_url ?? null;
         blob = await generateActivityBanner({
-          variant: hasPhoto ? "photo" : "map",
-          backgroundUrl: p.realImg ?? activity?.map_snapshot_url ?? null,
+          variant: backgroundImg ? "photo" : "map",
+          backgroundUrl: bg,
           iconKey,
           activityName,
           description: p.text || activity?.description || null,
@@ -520,21 +534,25 @@ function Community() {
           averageSpeedLabel: mf.speedKmh ? `${mf.speedKmh} km/h` : "—",
         });
       } else {
-        // Post manual (sem atividade) → banner de publicação (foto+categoria+texto).
+        // Post manual (sem atividade) → banner de publicação (foto/print do
+        // vídeo + categoria + texto).
         blob = await generatePostBanner({
-          photoUrl: p.realImg,
+          photoUrl: backgroundImg,
           categoryLabel: t(communityCategoryTranslationKey(p.category)),
           text: p.text,
         });
       }
 
-      // Quando o post veio de uma atividade, inclui o deep link /a/:id no
-      // texto do compartilhamento (mesmo padrão da tela de detalhe da
-      // atividade): abrir o link leva ao app (se instalado) ou à página de
-      // preview. Posts manuais compartilham só o banner, sem link.
-      const shareText = p.activityId
-        ? `${p.text ? p.text + " " : ""}${window.location.origin}/a/${p.activityId}`
-        : undefined;
+      // Link para trazer ao app: posts de atividade usam o deep link /a/:id
+      // (abre a atividade no app/preview). Posts de vídeo sem atividade
+      // recebem o link da Comunidade, para "assistir no app". Posts manuais
+      // só com imagem compartilham o banner sem link.
+      let shareText: string | undefined;
+      if (p.activityId) {
+        shareText = `${p.text ? p.text + " " : ""}${window.location.origin}/a/${p.activityId}`;
+      } else if (p.videoUrl) {
+        shareText = `${p.text ? p.text + " " : ""}${t("community.watchOnApp", { defaultValue: "Assista no OutVitar" })}: ${window.location.origin}/comunidade`;
+      }
       await shareContent({
         title: p.user,
         file: blob,

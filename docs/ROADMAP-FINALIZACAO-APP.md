@@ -61,6 +61,16 @@
 >   destinos: hero + cards de info + mapa + atribuição), tanto no Explorar
 >   quanto acessível por link. Sobre a API: OSM traz nome/coords/dificuldade
 >   (parcial), NÃO traz foto → por isso a edição manual do admin é o caminho.
+>
+> **🔧 4ª RODADA / ENCERRAMENTO (12/09/2026):**
+> - Ícone de cada atividade no combobox de seleção do rastreamento
+>   (atividade.rastrear.tsx): cada opção do Select mostra o ícone
+>   (getActivityIcon) + nome, com fallback de icon_key para o enum base.
+> - Compartilhar post de VÍDEO: captura um frame (print) do vídeo no momento
+>   (`src/lib/video-frame.ts` — captureVideoFrame via <video>+<canvas>) para
+>   usar como fundo do banner com as informações; e o texto do compartilhamento
+>   inclui link para trazer ao app/assistir (posts de atividade → /a/:id;
+>   posts de vídeo sem atividade → link da Comunidade). i18n community.watchOnApp.
 **App:** OutVitar — slogan "VIVER É DIFERENTE DE ESTAR VIVO"
 
 > **🟦 BLOCO EM ANDAMENTO — spec `evolucao-admin-atividades-social`**
