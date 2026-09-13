@@ -27,17 +27,18 @@ import { Route as BuscaRouteImport } from './routes/busca'
 import { Route as AmigosRouteImport } from './routes/amigos'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
+import { Route as UUserIdRouteImport } from './routes/u.$userId'
+import { Route as TrilhaTrailIdRouteImport } from './routes/trilha.$trailId'
 import { Route as ParceiroPainelRouteImport } from './routes/parceiro.painel'
 import { Route as ParceiroPartnerIdRouteImport } from './routes/parceiro.$partnerId'
 import { Route as EventosEventIdRouteImport } from './routes/eventos.$eventId'
 import { Route as DestinoDestinationIdRouteImport } from './routes/destino.$destinationId'
-import { Route as TrilhaTrailIdRouteImport } from './routes/trilha.$trailId'
-import { Route as UUserIdRouteImport } from './routes/u.$userId'
-import { Route as ChatUserIdRouteImport } from './routes/chat.$userId'
 import { Route as ChecklistChecklistIdRouteImport } from './routes/checklist.$checklistId'
+import { Route as ChatUserIdRouteImport } from './routes/chat.$userId'
 import { Route as AtividadeRastrearRouteImport } from './routes/atividade.rastrear'
 import { Route as AtividadeActivityIdRouteImport } from './routes/atividade.$activityId'
 import { Route as ApiNotifyAdminsRouteImport } from './routes/api.notify-admins'
+import { Route as AdminTrilhasRouteImport } from './routes/admin.trilhas'
 import { Route as AdminPublicarRouteImport } from './routes/admin.publicar'
 import { Route as AdminOpinioesRouteImport } from './routes/admin.opinioes'
 import { Route as AdminMelhoriasRouteImport } from './routes/admin.melhorias'
@@ -46,7 +47,6 @@ import { Route as AdminDashboardRouteImport } from './routes/admin.dashboard'
 import { Route as AdminConteudoRouteImport } from './routes/admin.conteudo'
 import { Route as AdminComplianceRouteImport } from './routes/admin.compliance'
 import { Route as AdminAtividadesRouteImport } from './routes/admin.atividades'
-import { Route as AdminTrilhasRouteImport } from './routes/admin.trilhas'
 import { Route as AActivityIdRouteImport } from './routes/a.$activityId'
 import { Route as ApiPushSendFcmRouteImport } from './routes/api.push.send-fcm'
 import { Route as ApiPushRegisterWebRouteImport } from './routes/api.push.register-web'
@@ -146,6 +146,16 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
   path: '/admin/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const UUserIdRoute = UUserIdRouteImport.update({
+  id: '/u/$userId',
+  path: '/u/$userId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TrilhaTrailIdRoute = TrilhaTrailIdRouteImport.update({
+  id: '/trilha/$trailId',
+  path: '/trilha/$trailId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ParceiroPainelRoute = ParceiroPainelRouteImport.update({
   id: '/parceiro/painel',
   path: '/parceiro/painel',
@@ -161,21 +171,6 @@ const EventosEventIdRoute = EventosEventIdRouteImport.update({
   path: '/$eventId',
   getParentRoute: () => EventosRoute,
 } as any)
-const TrilhaTrailIdRoute = TrilhaTrailIdRouteImport.update({
-  id: '/trilha/$trailId',
-  path: '/trilha/$trailId',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const UUserIdRoute = UUserIdRouteImport.update({
-  id: '/u/$userId',
-  path: '/u/$userId',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ChatUserIdRoute = ChatUserIdRouteImport.update({
-  id: '/chat/$userId',
-  path: '/chat/$userId',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const DestinoDestinationIdRoute = DestinoDestinationIdRouteImport.update({
   id: '/destino/$destinationId',
   path: '/destino/$destinationId',
@@ -184,6 +179,11 @@ const DestinoDestinationIdRoute = DestinoDestinationIdRouteImport.update({
 const ChecklistChecklistIdRoute = ChecklistChecklistIdRouteImport.update({
   id: '/checklist/$checklistId',
   path: '/checklist/$checklistId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ChatUserIdRoute = ChatUserIdRouteImport.update({
+  id: '/chat/$userId',
+  path: '/chat/$userId',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AtividadeRastrearRoute = AtividadeRastrearRouteImport.update({
@@ -199,6 +199,11 @@ const AtividadeActivityIdRoute = AtividadeActivityIdRouteImport.update({
 const ApiNotifyAdminsRoute = ApiNotifyAdminsRouteImport.update({
   id: '/api/notify-admins',
   path: '/api/notify-admins',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminTrilhasRoute = AdminTrilhasRouteImport.update({
+  id: '/admin/trilhas',
+  path: '/admin/trilhas',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminPublicarRoute = AdminPublicarRouteImport.update({
@@ -239,11 +244,6 @@ const AdminComplianceRoute = AdminComplianceRouteImport.update({
 const AdminAtividadesRoute = AdminAtividadesRouteImport.update({
   id: '/admin/atividades',
   path: '/admin/atividades',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AdminTrilhasRoute = AdminTrilhasRouteImport.update({
-  id: '/admin/trilhas',
-  path: '/admin/trilhas',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AActivityIdRoute = AActivityIdRouteImport.update({
@@ -314,14 +314,18 @@ export interface FileRoutesByFullPath {
   '/admin/melhorias': typeof AdminMelhoriasRoute
   '/admin/opinioes': typeof AdminOpinioesRoute
   '/admin/publicar': typeof AdminPublicarRoute
+  '/admin/trilhas': typeof AdminTrilhasRoute
   '/api/notify-admins': typeof ApiNotifyAdminsRoute
   '/atividade/$activityId': typeof AtividadeActivityIdRoute
   '/atividade/rastrear': typeof AtividadeRastrearRoute
+  '/chat/$userId': typeof ChatUserIdRoute
   '/checklist/$checklistId': typeof ChecklistChecklistIdRoute
   '/destino/$destinationId': typeof DestinoDestinationIdRoute
   '/eventos/$eventId': typeof EventosEventIdRoute
   '/parceiro/$partnerId': typeof ParceiroPartnerIdRoute
   '/parceiro/painel': typeof ParceiroPainelRoute
+  '/trilha/$trailId': typeof TrilhaTrailIdRoute
+  '/u/$userId': typeof UUserIdRoute
   '/admin/': typeof AdminIndexRoute
   '/api/places/photos': typeof ApiPlacesPhotosRoute
   '/api/places/search': typeof ApiPlacesSearchRoute
@@ -330,10 +334,6 @@ export interface FileRoutesByFullPath {
   '/api/push/register-native': typeof ApiPushRegisterNativeRoute
   '/api/push/register-web': typeof ApiPushRegisterWebRoute
   '/api/push/send-fcm': typeof ApiPushSendFcmRoute
-  '/admin/trilhas': typeof AdminTrilhasRoute
-  '/trilha/$trailId': typeof TrilhaTrailIdRoute
-  '/u/$userId': typeof UUserIdRoute
-  '/chat/$userId': typeof ChatUserIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -362,14 +362,18 @@ export interface FileRoutesByTo {
   '/admin/melhorias': typeof AdminMelhoriasRoute
   '/admin/opinioes': typeof AdminOpinioesRoute
   '/admin/publicar': typeof AdminPublicarRoute
+  '/admin/trilhas': typeof AdminTrilhasRoute
   '/api/notify-admins': typeof ApiNotifyAdminsRoute
   '/atividade/$activityId': typeof AtividadeActivityIdRoute
   '/atividade/rastrear': typeof AtividadeRastrearRoute
+  '/chat/$userId': typeof ChatUserIdRoute
   '/checklist/$checklistId': typeof ChecklistChecklistIdRoute
   '/destino/$destinationId': typeof DestinoDestinationIdRoute
   '/eventos/$eventId': typeof EventosEventIdRoute
   '/parceiro/$partnerId': typeof ParceiroPartnerIdRoute
   '/parceiro/painel': typeof ParceiroPainelRoute
+  '/trilha/$trailId': typeof TrilhaTrailIdRoute
+  '/u/$userId': typeof UUserIdRoute
   '/admin': typeof AdminIndexRoute
   '/api/places/photos': typeof ApiPlacesPhotosRoute
   '/api/places/search': typeof ApiPlacesSearchRoute
@@ -378,10 +382,6 @@ export interface FileRoutesByTo {
   '/api/push/register-native': typeof ApiPushRegisterNativeRoute
   '/api/push/register-web': typeof ApiPushRegisterWebRoute
   '/api/push/send-fcm': typeof ApiPushSendFcmRoute
-  '/admin/trilhas': typeof AdminTrilhasRoute
-  '/trilha/$trailId': typeof TrilhaTrailIdRoute
-  '/u/$userId': typeof UUserIdRoute
-  '/chat/$userId': typeof ChatUserIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -411,14 +411,18 @@ export interface FileRoutesById {
   '/admin/melhorias': typeof AdminMelhoriasRoute
   '/admin/opinioes': typeof AdminOpinioesRoute
   '/admin/publicar': typeof AdminPublicarRoute
+  '/admin/trilhas': typeof AdminTrilhasRoute
   '/api/notify-admins': typeof ApiNotifyAdminsRoute
   '/atividade/$activityId': typeof AtividadeActivityIdRoute
   '/atividade/rastrear': typeof AtividadeRastrearRoute
+  '/chat/$userId': typeof ChatUserIdRoute
   '/checklist/$checklistId': typeof ChecklistChecklistIdRoute
   '/destino/$destinationId': typeof DestinoDestinationIdRoute
   '/eventos/$eventId': typeof EventosEventIdRoute
   '/parceiro/$partnerId': typeof ParceiroPartnerIdRoute
   '/parceiro/painel': typeof ParceiroPainelRoute
+  '/trilha/$trailId': typeof TrilhaTrailIdRoute
+  '/u/$userId': typeof UUserIdRoute
   '/admin/': typeof AdminIndexRoute
   '/api/places/photos': typeof ApiPlacesPhotosRoute
   '/api/places/search': typeof ApiPlacesSearchRoute
@@ -427,10 +431,6 @@ export interface FileRoutesById {
   '/api/push/register-native': typeof ApiPushRegisterNativeRoute
   '/api/push/register-web': typeof ApiPushRegisterWebRoute
   '/api/push/send-fcm': typeof ApiPushSendFcmRoute
-  '/admin/trilhas': typeof AdminTrilhasRoute
-  '/trilha/$trailId': typeof TrilhaTrailIdRoute
-  '/u/$userId': typeof UUserIdRoute
-  '/chat/$userId': typeof ChatUserIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -461,14 +461,18 @@ export interface FileRouteTypes {
     | '/admin/melhorias'
     | '/admin/opinioes'
     | '/admin/publicar'
+    | '/admin/trilhas'
     | '/api/notify-admins'
     | '/atividade/$activityId'
     | '/atividade/rastrear'
+    | '/chat/$userId'
     | '/checklist/$checklistId'
     | '/destino/$destinationId'
     | '/eventos/$eventId'
     | '/parceiro/$partnerId'
     | '/parceiro/painel'
+    | '/trilha/$trailId'
+    | '/u/$userId'
     | '/admin/'
     | '/api/places/photos'
     | '/api/places/search'
@@ -477,10 +481,6 @@ export interface FileRouteTypes {
     | '/api/push/register-native'
     | '/api/push/register-web'
     | '/api/push/send-fcm'
-    | '/admin/trilhas'
-    | '/trilha/$trailId'
-    | '/u/$userId'
-    | '/chat/$userId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -509,14 +509,18 @@ export interface FileRouteTypes {
     | '/admin/melhorias'
     | '/admin/opinioes'
     | '/admin/publicar'
+    | '/admin/trilhas'
     | '/api/notify-admins'
     | '/atividade/$activityId'
     | '/atividade/rastrear'
+    | '/chat/$userId'
     | '/checklist/$checklistId'
     | '/destino/$destinationId'
     | '/eventos/$eventId'
     | '/parceiro/$partnerId'
     | '/parceiro/painel'
+    | '/trilha/$trailId'
+    | '/u/$userId'
     | '/admin'
     | '/api/places/photos'
     | '/api/places/search'
@@ -525,10 +529,6 @@ export interface FileRouteTypes {
     | '/api/push/register-native'
     | '/api/push/register-web'
     | '/api/push/send-fcm'
-    | '/admin/trilhas'
-    | '/trilha/$trailId'
-    | '/u/$userId'
-    | '/chat/$userId'
   id:
     | '__root__'
     | '/'
@@ -557,14 +557,18 @@ export interface FileRouteTypes {
     | '/admin/melhorias'
     | '/admin/opinioes'
     | '/admin/publicar'
+    | '/admin/trilhas'
     | '/api/notify-admins'
     | '/atividade/$activityId'
     | '/atividade/rastrear'
+    | '/chat/$userId'
     | '/checklist/$checklistId'
     | '/destino/$destinationId'
     | '/eventos/$eventId'
     | '/parceiro/$partnerId'
     | '/parceiro/painel'
+    | '/trilha/$trailId'
+    | '/u/$userId'
     | '/admin/'
     | '/api/places/photos'
     | '/api/places/search'
@@ -573,10 +577,6 @@ export interface FileRouteTypes {
     | '/api/push/register-native'
     | '/api/push/register-web'
     | '/api/push/send-fcm'
-    | '/admin/trilhas'
-    | '/trilha/$trailId'
-    | '/u/$userId'
-    | '/chat/$userId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -599,7 +599,6 @@ export interface RootRouteChildren {
   SugerirDestinoRoute: typeof SugerirDestinoRoute
   AActivityIdRoute: typeof AActivityIdRoute
   AdminAtividadesRoute: typeof AdminAtividadesRoute
-  AdminTrilhasRoute: typeof AdminTrilhasRoute
   AdminComplianceRoute: typeof AdminComplianceRoute
   AdminConteudoRoute: typeof AdminConteudoRoute
   AdminDashboardRoute: typeof AdminDashboardRoute
@@ -607,16 +606,17 @@ export interface RootRouteChildren {
   AdminMelhoriasRoute: typeof AdminMelhoriasRoute
   AdminOpinioesRoute: typeof AdminOpinioesRoute
   AdminPublicarRoute: typeof AdminPublicarRoute
+  AdminTrilhasRoute: typeof AdminTrilhasRoute
   ApiNotifyAdminsRoute: typeof ApiNotifyAdminsRoute
   AtividadeActivityIdRoute: typeof AtividadeActivityIdRoute
   AtividadeRastrearRoute: typeof AtividadeRastrearRoute
+  ChatUserIdRoute: typeof ChatUserIdRoute
   ChecklistChecklistIdRoute: typeof ChecklistChecklistIdRoute
   DestinoDestinationIdRoute: typeof DestinoDestinationIdRoute
-  TrilhaTrailIdRoute: typeof TrilhaTrailIdRoute
-  UUserIdRoute: typeof UUserIdRoute
-  ChatUserIdRoute: typeof ChatUserIdRoute
   ParceiroPartnerIdRoute: typeof ParceiroPartnerIdRoute
   ParceiroPainelRoute: typeof ParceiroPainelRoute
+  TrilhaTrailIdRoute: typeof TrilhaTrailIdRoute
+  UUserIdRoute: typeof UUserIdRoute
   AdminIndexRoute: typeof AdminIndexRoute
   ApiPlacesPhotosRoute: typeof ApiPlacesPhotosRoute
   ApiPlacesSearchRoute: typeof ApiPlacesSearchRoute
@@ -755,6 +755,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/u/$userId': {
+      id: '/u/$userId'
+      path: '/u/$userId'
+      fullPath: '/u/$userId'
+      preLoaderRoute: typeof UUserIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/trilha/$trailId': {
+      id: '/trilha/$trailId'
+      path: '/trilha/$trailId'
+      fullPath: '/trilha/$trailId'
+      preLoaderRoute: typeof TrilhaTrailIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/parceiro/painel': {
       id: '/parceiro/painel'
       path: '/parceiro/painel'
@@ -783,18 +797,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DestinoDestinationIdRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/trilha/$trailId': {
-      id: '/trilha/$trailId'
-      path: '/trilha/$trailId'
-      fullPath: '/trilha/$trailId'
-      preLoaderRoute: typeof TrilhaTrailIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/u/$userId': {
-      id: '/u/$userId'
-      path: '/u/$userId'
-      fullPath: '/u/$userId'
-      preLoaderRoute: typeof UUserIdRouteImport
+    '/checklist/$checklistId': {
+      id: '/checklist/$checklistId'
+      path: '/checklist/$checklistId'
+      fullPath: '/checklist/$checklistId'
+      preLoaderRoute: typeof ChecklistChecklistIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/chat/$userId': {
@@ -802,13 +809,6 @@ declare module '@tanstack/react-router' {
       path: '/chat/$userId'
       fullPath: '/chat/$userId'
       preLoaderRoute: typeof ChatUserIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/checklist/$checklistId': {
-      id: '/checklist/$checklistId'
-      path: '/checklist/$checklistId'
-      fullPath: '/checklist/$checklistId'
-      preLoaderRoute: typeof ChecklistChecklistIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/atividade/rastrear': {
@@ -830,6 +830,13 @@ declare module '@tanstack/react-router' {
       path: '/api/notify-admins'
       fullPath: '/api/notify-admins'
       preLoaderRoute: typeof ApiNotifyAdminsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/trilhas': {
+      id: '/admin/trilhas'
+      path: '/admin/trilhas'
+      fullPath: '/admin/trilhas'
+      preLoaderRoute: typeof AdminTrilhasRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/publicar': {
@@ -886,13 +893,6 @@ declare module '@tanstack/react-router' {
       path: '/admin/atividades'
       fullPath: '/admin/atividades'
       preLoaderRoute: typeof AdminAtividadesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/admin/trilhas': {
-      id: '/admin/trilhas'
-      path: '/admin/trilhas'
-      fullPath: '/admin/trilhas'
-      preLoaderRoute: typeof AdminTrilhasRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/a/$activityId': {
@@ -985,7 +985,6 @@ const rootRouteChildren: RootRouteChildren = {
   SugerirDestinoRoute: SugerirDestinoRoute,
   AActivityIdRoute: AActivityIdRoute,
   AdminAtividadesRoute: AdminAtividadesRoute,
-  AdminTrilhasRoute: AdminTrilhasRoute,
   AdminComplianceRoute: AdminComplianceRoute,
   AdminConteudoRoute: AdminConteudoRoute,
   AdminDashboardRoute: AdminDashboardRoute,
@@ -993,16 +992,17 @@ const rootRouteChildren: RootRouteChildren = {
   AdminMelhoriasRoute: AdminMelhoriasRoute,
   AdminOpinioesRoute: AdminOpinioesRoute,
   AdminPublicarRoute: AdminPublicarRoute,
+  AdminTrilhasRoute: AdminTrilhasRoute,
   ApiNotifyAdminsRoute: ApiNotifyAdminsRoute,
   AtividadeActivityIdRoute: AtividadeActivityIdRoute,
   AtividadeRastrearRoute: AtividadeRastrearRoute,
+  ChatUserIdRoute: ChatUserIdRoute,
   ChecklistChecklistIdRoute: ChecklistChecklistIdRoute,
   DestinoDestinationIdRoute: DestinoDestinationIdRoute,
-  TrilhaTrailIdRoute: TrilhaTrailIdRoute,
-  UUserIdRoute: UUserIdRoute,
-  ChatUserIdRoute: ChatUserIdRoute,
   ParceiroPartnerIdRoute: ParceiroPartnerIdRoute,
   ParceiroPainelRoute: ParceiroPainelRoute,
+  TrilhaTrailIdRoute: TrilhaTrailIdRoute,
+  UUserIdRoute: UUserIdRoute,
   AdminIndexRoute: AdminIndexRoute,
   ApiPlacesPhotosRoute: ApiPlacesPhotosRoute,
   ApiPlacesSearchRoute: ApiPlacesSearchRoute,

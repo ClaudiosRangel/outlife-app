@@ -5,7 +5,22 @@
 > `.kiro/steering/roadmap-outvitar.md`). **Mantenha-o atualizado** ao
 > concluir qualquer tarefa/bloco: marque status, data e resumo.
 
-**Última atualização:** 13/09/2026 (evolucao-admin-atividades-social — BLOCO A–H + correções + rodada UX/social)
+**Última atualização:** 13/09/2026 (spec perfil-publico-redesign — perfil unificado moderno + ícone parapente)
+
+> **🟦 SPEC perfil-publico-redesign (13/09/2026) — CONCLUÍDO:**
+> Perfil unificado (um só) estilo Instagram/Strava. Componente compartilhado
+> `src/routes/profile-view.tsx` (ProfileView) renderiza tanto `/perfil` (self)
+> quanto `/u/$userId` (outro): hero com anel "AO VIVO" (cruza
+> fetchLiveActivityFriends), stats inline (atividades/seguidores/seguindo),
+> faixa de conquistas, abas com ícones (Atividades com ícone por tipo / Posts
+> em grade / Conquistas). Botão "Enviar mensagem" só no perfil de outro.
+> `perfil.tsx` passou a usar o ProfileView no topo, mantendo as seções do dono
+> (amigos, admin, parceiro, rastrear, opinião, dark, nível, checklist).
+> Ícone do Voo livre trocado de avião para PARAPENTE (`ParagliderIcon` SVG +
+> PNG do banner regenerado). Testes fast-check (getActivityIcon/safeCount).
+> tsc limpo. Migrations: nenhuma. APK a gerar.
+
+**Anterior:** 13/09/2026 (evolucao-admin-atividades-social — BLOCO A–H + correções + rodada UX/social)
 
 > **🔧 RODADA UX/SOCIAL (13/09/2026):**
 > 1. Aviso de offline no Explorar (WifiOff): acompanhamento ao vivo depende de

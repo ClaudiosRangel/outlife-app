@@ -63,6 +63,7 @@ import { useTranslation } from "react-i18next";
 import i18n from "@/lib/i18n";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { loadActive, clearActive } from "@/lib/activity-storage";
+import { ProfileView } from "@/routes/profile-view";
 
 export const Route = createFileRoute("/perfil")({
   component: Profile,
@@ -281,69 +282,32 @@ function Profile() {
 
   return (
     <div className="animate-float-up pb-12">
-      <div className="relative bg-gradient-forest pb-16 text-white">
-        <StatusBar light />
-        <div className="flex items-center justify-between px-5 pt-2">
-          <span className="text-xs font-medium uppercase tracking-widest text-white/70">{t("profile.title")}</span>
-          <div className="flex gap-2">
-            <button
-              onClick={handleSignOut}
-              aria-label={t("profile.signOut")}
-              className="grid h-10 w-10 place-items-center rounded-full bg-white/15 backdrop-blur-md"
-            >
-              <LogOut size={16} />
-            </button>
-            <Link
-              to="/configuracoes"
-              aria-label={t("settings.title")}
-              className="grid h-10 w-10 place-items-center rounded-full bg-white/15 backdrop-blur-md"
-            >
-              <Settings size={16} />
-            </Link>
-          </div>
-        </div>
-        <div className="mt-4 flex flex-col items-center text-center">
-          <div className="relative">
-            <img src={avatarUrl} alt={displayName} className="h-24 w-24 rounded-full border-4 border-white/30 object-cover shadow-float" width={512} height={512} />
-            {profile?.is_verified && (
-              <span className="absolute -bottom-1 -right-1 grid h-7 w-7 place-items-center rounded-full bg-[var(--verified)] text-white border-2 border-[var(--forest-deep)]">
-                <CheckCircle2 size={14} strokeWidth={3} />
-              </span>
-            )}
-          </div>
-          <h1 className="mt-3 font-display text-2xl font-semibold">{displayName}</h1>
-          <p className="text-xs text-white/70">{handle}{location ? ` · ${location}` : ""}</p>
-          <div className="mt-2 flex items-center gap-2">
-            <Stars value={rating} size={14} />
-            <span className="text-sm font-semibold">{rating.toFixed(1)}</span>
-          </div>
+      {/* Barra superior mínima (logout/config) sobre o novo perfil unificado. */}
+      <div className="flex items-center justify-between bg-gradient-forest px-5 pb-1 pt-2 text-white">
+        <span className="text-xs font-medium uppercase tracking-widest text-white/70">{t("profile.title")}</span>
+        <div className="flex gap-2">
+          <button
+            onClick={handleSignOut}
+            aria-label={t("profile.signOut")}
+            className="grid h-10 w-10 place-items-center rounded-full bg-white/15 backdrop-blur-md"
+          >
+            <LogOut size={16} />
+          </button>
+          <Link
+            to="/configuracoes"
+            aria-label={t("settings.title")}
+            className="grid h-10 w-10 place-items-center rounded-full bg-white/15 backdrop-blur-md"
+          >
+            <Settings size={16} />
+          </Link>
         </div>
       </div>
 
-      <div className="mx-5 -mt-10 grid grid-cols-3 gap-2 rounded-2xl bg-card p-4 shadow-card relative z-10">
-        {profileLoading ? (
-          [0, 1, 2].map((i) => (
-            <div key={i} className="flex flex-col items-center gap-1.5">
-              <Skeleton className="h-6 w-10" />
-              <Skeleton className="h-3 w-16" />
-            </div>
-          ))
-        ) : (
-          [
-            { v: String(myTrails.length), l: t("profile.stats.trails") },
-            { v: String(savedDestinations.length), l: t("profile.stats.destinations") },
-            { v: String(profile?.reviews_count ?? 0), l: t("profile.stats.reviews") },
-          ].map((s) => (
-            <div key={s.l} className="text-center">
-              <div className="font-display text-xl font-semibold text-primary">{s.v}</div>
-              <div className="text-[11px] text-muted-foreground">{s.l}</div>
-            </div>
-          ))
-        )}
-      </div>
+      {/* Perfil unificado moderno (hero + selo ao vivo + stats + conquistas + abas). */}
+      {user && <ProfileView viewedUserId={user.id} />}
 
-
-      <div className="mx-5 mt-3 grid grid-cols-2 items-center rounded-2xl bg-card p-3 shadow-card relative">
+      {/* Botões de seguidores/seguindo com abertura de lista (exclusivo do dono). */}
+      <div className="mx-5 mt-1 grid grid-cols-2 items-center rounded-2xl bg-card p-3 shadow-card relative">
         <button onClick={() => setOpenFriendList("followers")} className="flex flex-col items-center">
           <span className="font-display text-base font-semibold">{profile?.followers_count ?? 0}</span>
           <span className="text-[11px] text-muted-foreground">{t("profile.followers")}</span>
@@ -627,24 +591,7 @@ function Profile() {
         </div>
       </section>
 
-      {achievements.length > 0 && (
-        <section className="px-5 mt-6">
-          <h2 className="font-display text-lg font-semibold">{t("profile.achievements")}</h2>
-          <div className="mt-3 grid grid-cols-4 gap-2">
-            {achievements.map((a) => {
-              const Icon = achievementIconMap[a.key] ?? Award;
-              return (
-                <div key={a.id} className="flex flex-col items-center gap-1 rounded-2xl bg-card p-3 shadow-card">
-                  <span className="grid h-10 w-10 place-items-center rounded-full bg-[var(--sun)]/15 text-[var(--earth)]">
-                    <Icon size={18} />
-                  </span>
-                  <span className="text-[10px] font-medium">{a.label}</span>
-                </div>
-              );
-            })}
-          </div>
-        </section>
-      )}
+      {/* Conquistas agora são exibidas pelo ProfileView (perfil unificado). */}
 
       {nextAdventure && shouldShowForecast(nextAdventure.forecast) && (
         <section className="px-5 mt-6">

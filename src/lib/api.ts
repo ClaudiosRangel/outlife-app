@@ -2163,6 +2163,37 @@ export async function fetchUserPublicActivities(userId: string, limit = 20): Pro
   return (data ?? []) as unknown as UserActivity[];
 }
 
+// Posts da comunidade de um autor (aba Posts do perfil unificado). RLS de
+// community_posts é leitura pública.
+export type UserPostSummary = {
+  id: string;
+  image_url: string | null;
+  video_url: string | null;
+  text: string | null;
+  category: string | null;
+  created_at: string;
+  activity_id: string | null;
+};
+
+export async function fetchUserPostsByAuthor(userId: string, limit = 30): Promise<UserPostSummary[]> {
+  const { data, error } = await supabase
+    .from("community_posts")
+    .select("id, image_url, video_url, text, category, created_at, activity_id")
+    .eq("author_id", userId)
+    .order("created_at", { ascending: false })
+    .limit(limit);
+  if (error) throw error;
+  return (data ?? []) as unknown as UserPostSummary[];
+}
+
+// Normaliza uma contagem para inteiro >= 0 (nunca NaN/negativo) — usado na
+// barra de estatísticas do perfil (Property 4). Função pura/testável.
+export function safeCount(n: number | null | undefined): number {
+  const v = Number(n);
+  if (!Number.isFinite(v) || v < 0) return 0;
+  return Math.floor(v);
+}
+
 // ============ Chat privado (ponto 4) ============
 
 export type DirectMessage = {

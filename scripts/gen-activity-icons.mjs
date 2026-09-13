@@ -26,6 +26,20 @@ const KEY_TO_LUCIDE = {
 const SIZE = 128; // px do PNG final
 const STROKE = 2; // lucide desenha em viewBox 24 com stroke-width 2
 
+// SVG customizado (não-lucide) por key. Mantido em sincronia com o componente
+// React correspondente. `flight` = parapente (src/components/icons/Paraglider.tsx).
+const CUSTOM_SVG_INNER = {
+  // Mantido idêntico ao componente src/components/icons/Paraglider.tsx.
+  flight:
+    '<path d="M2 8c3-2.5 6.5-4 10-4s7 1.5 10 4" />' +
+    '<path d="M8.5 5.2 7 8.5" />' +
+    '<path d="M15.5 5.2 17 8.5" />' +
+    '<path d="M12 4.2v4.3" />' +
+    '<path d="M4.5 7.2 11 15" />' +
+    '<path d="M19.5 7.2 13 15" />' +
+    '<circle cx="12" cy="18" r="2" />',
+};
+
 function nodeToSvgElement([tag, attrs]) {
   const a = Object.entries(attrs)
     .filter(([k]) => k !== "key")
@@ -35,9 +49,13 @@ function nodeToSvgElement([tag, attrs]) {
 }
 
 async function buildIcon(key, lucideName) {
-  const mod = await import(`lucide-react/dist/esm/icons/${lucideName}.js`);
-  const iconNode = mod.__iconNode;
-  const inner = iconNode.map(nodeToSvgElement).join("");
+  let inner;
+  if (CUSTOM_SVG_INNER[key]) {
+    inner = CUSTOM_SVG_INNER[key];
+  } else {
+    const mod = await import(`lucide-react/dist/esm/icons/${lucideName}.js`);
+    inner = mod.__iconNode.map(nodeToSvgElement).join("");
+  }
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="${SIZE}" height="${SIZE}" fill="none" stroke="#ffffff" stroke-width="${STROKE}" stroke-linecap="round" stroke-linejoin="round">${inner}</svg>`;
 
   const outDir = fileURLToPath(new URL("../public/activity-icons/", import.meta.url));

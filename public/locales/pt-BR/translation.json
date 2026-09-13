@@ -125,6 +125,18 @@
     "activeNow": "Amigos em atividade",
     "nearbyPartners": "Parceiros próximos"
   },
+  "profileView": {
+    "live": "AO VIVO",
+    "liveNow": "Em atividade agora",
+    "message": "Enviar mensagem",
+    "activities": "atividades",
+    "tabActivities": "Atividades",
+    "tabPosts": "Posts",
+    "tabAchievements": "Conquistas",
+    "emptyActivities": "Nenhuma atividade ainda.",
+    "emptyPosts": "Nenhuma publicação ainda.",
+    "emptyAchievements": "Nenhuma conquista ainda."
+  },
   "liveFriends": {
     "empty": "Nenhum amigo em atividade agora.",
     "unavailable": "A posição ao vivo desse amigo não está mais disponível.",

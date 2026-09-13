@@ -125,6 +125,18 @@
     "activeNow": "Friends active now",
     "nearbyPartners": "Nearby partners"
   },
+  "profileView": {
+    "live": "LIVE",
+    "liveNow": "Active now",
+    "message": "Send message",
+    "activities": "activities",
+    "tabActivities": "Activities",
+    "tabPosts": "Posts",
+    "tabAchievements": "Achievements",
+    "emptyActivities": "No activities yet.",
+    "emptyPosts": "No posts yet.",
+    "emptyAchievements": "No achievements yet."
+  },
   "liveFriends": {
     "empty": "No friends active right now.",
     "unavailable": "This friend's live location is no longer available.",
