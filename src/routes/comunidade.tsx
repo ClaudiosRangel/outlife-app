@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from "react";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Heart,
@@ -627,18 +627,25 @@ function Community() {
           : visiblePosts.map((p) => (
               <article key={p.id} className="overflow-hidden rounded-3xl bg-card shadow-card">
                 <header className="flex items-center gap-3 p-4">
-                  <img
-                    src={p.avatar}
-                    alt={p.user}
-                    loading="lazy"
-                    className="h-10 w-10 rounded-full object-cover"
-                  />
-                  <div className="min-w-0 flex-1">
-                    <div className="text-sm font-semibold leading-tight">{p.user}</div>
-                    <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
-                      <MapPin size={10} /> {p.place} · {p.time}
+                  {/* Ponto 3: clicar no autor (avatar/nome) abre o perfil público. */}
+                  <Link
+                    to="/u/$userId"
+                    params={{ userId: p.authorId }}
+                    className="flex min-w-0 flex-1 items-center gap-3"
+                  >
+                    <img
+                      src={p.avatar}
+                      alt={p.user}
+                      loading="lazy"
+                      className="h-10 w-10 rounded-full object-cover"
+                    />
+                    <div className="min-w-0 flex-1">
+                      <div className="text-sm font-semibold leading-tight">{p.user}</div>
+                      <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                        <MapPin size={10} /> {p.place} · {p.time}
+                      </div>
                     </div>
-                  </div>
+                  </Link>
                   {/* Requirement 7.2/7.3 — o botão de seguir não faz sentido no
                       próprio post; exibi-lo levava ao erro genérico "Não foi
                       possível seguir" (toggleAuthorFollow rejeita seguir a si

@@ -5,7 +5,23 @@
 > `.kiro/steering/roadmap-outvitar.md`). **Mantenha-o atualizado** ao
 > concluir qualquer tarefa/bloco: marque status, data e resumo.
 
-**Última atualização:** 12/09/2026 (spec evolucao-admin-atividades-social — BLOCO CONCLUÍDO A–H + rodada de correções pós-teste)
+**Última atualização:** 13/09/2026 (evolucao-admin-atividades-social — BLOCO A–H + correções + rodada UX/social)
+
+> **🔧 RODADA UX/SOCIAL (13/09/2026):**
+> 1. Aviso de offline no Explorar (WifiOff): acompanhamento ao vivo depende de
+>    internet (função inerentemente online — impossível ao vivo entre 2 celulares
+>    sem rede/hardware especial). Atividade continua gravando offline + sincroniza.
+> 2. Editar imagem da atividade (dono): `updateActivityImage` + botão na tela de
+>    detalhe (troca/adiciona foto; reflete no post da comunidade). Resolve o caso
+>    da atividade offline que salvou sem foto (caía na imagem padrão do feed).
+> 3. Clicar no autor (avatar/nome) na comunidade abre o perfil público
+>    `/u/$userId` (nova rota) com dados + atividades + botão de mensagem.
+> 4. Chat privado 1:1 mesmo sem amizade: migration 20260913100000
+>    (direct_messages + RLS + RPCs send_direct_message/list_conversations),
+>    api (fetchConversations/fetchMessagesWith/sendDirectMessage/markMessagesRead),
+>    página `/chat/$userId` (histórico + envio + polling 5s). Botão "Enviar
+>    mensagem" no perfil público.
+> APK novo a gerar.
 
 > **🔧 CORREÇÕES PÓS-TESTE (12/09/2026)** — 6 pontos reportados pelo usuário no APK:
 > 1. Ícone da atividade ao lado da descrição no feed da comunidade

@@ -128,6 +128,7 @@
   "liveFriends": {
     "empty": "Nenhum amigo em atividade agora.",
     "unavailable": "A posição ao vivo desse amigo não está mais disponível.",
+    "offlineNotice": "Sem internet — o acompanhamento ao vivo fica indisponível. Sua atividade continua sendo gravada normalmente e sincroniza quando a conexão voltar.",
     "activityType": {
       "caminhada": "Caminhada",
       "pedalada": "Pedalada",

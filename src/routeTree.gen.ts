@@ -32,6 +32,8 @@ import { Route as ParceiroPartnerIdRouteImport } from './routes/parceiro.$partne
 import { Route as EventosEventIdRouteImport } from './routes/eventos.$eventId'
 import { Route as DestinoDestinationIdRouteImport } from './routes/destino.$destinationId'
 import { Route as TrilhaTrailIdRouteImport } from './routes/trilha.$trailId'
+import { Route as UUserIdRouteImport } from './routes/u.$userId'
+import { Route as ChatUserIdRouteImport } from './routes/chat.$userId'
 import { Route as ChecklistChecklistIdRouteImport } from './routes/checklist.$checklistId'
 import { Route as AtividadeRastrearRouteImport } from './routes/atividade.rastrear'
 import { Route as AtividadeActivityIdRouteImport } from './routes/atividade.$activityId'
@@ -162,6 +164,16 @@ const EventosEventIdRoute = EventosEventIdRouteImport.update({
 const TrilhaTrailIdRoute = TrilhaTrailIdRouteImport.update({
   id: '/trilha/$trailId',
   path: '/trilha/$trailId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const UUserIdRoute = UUserIdRouteImport.update({
+  id: '/u/$userId',
+  path: '/u/$userId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ChatUserIdRoute = ChatUserIdRouteImport.update({
+  id: '/chat/$userId',
+  path: '/chat/$userId',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DestinoDestinationIdRoute = DestinoDestinationIdRouteImport.update({
@@ -320,6 +332,8 @@ export interface FileRoutesByFullPath {
   '/api/push/send-fcm': typeof ApiPushSendFcmRoute
   '/admin/trilhas': typeof AdminTrilhasRoute
   '/trilha/$trailId': typeof TrilhaTrailIdRoute
+  '/u/$userId': typeof UUserIdRoute
+  '/chat/$userId': typeof ChatUserIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -366,6 +380,8 @@ export interface FileRoutesByTo {
   '/api/push/send-fcm': typeof ApiPushSendFcmRoute
   '/admin/trilhas': typeof AdminTrilhasRoute
   '/trilha/$trailId': typeof TrilhaTrailIdRoute
+  '/u/$userId': typeof UUserIdRoute
+  '/chat/$userId': typeof ChatUserIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -413,6 +429,8 @@ export interface FileRoutesById {
   '/api/push/send-fcm': typeof ApiPushSendFcmRoute
   '/admin/trilhas': typeof AdminTrilhasRoute
   '/trilha/$trailId': typeof TrilhaTrailIdRoute
+  '/u/$userId': typeof UUserIdRoute
+  '/chat/$userId': typeof ChatUserIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -461,6 +479,8 @@ export interface FileRouteTypes {
     | '/api/push/send-fcm'
     | '/admin/trilhas'
     | '/trilha/$trailId'
+    | '/u/$userId'
+    | '/chat/$userId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -507,6 +527,8 @@ export interface FileRouteTypes {
     | '/api/push/send-fcm'
     | '/admin/trilhas'
     | '/trilha/$trailId'
+    | '/u/$userId'
+    | '/chat/$userId'
   id:
     | '__root__'
     | '/'
@@ -553,6 +575,8 @@ export interface FileRouteTypes {
     | '/api/push/send-fcm'
     | '/admin/trilhas'
     | '/trilha/$trailId'
+    | '/u/$userId'
+    | '/chat/$userId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -589,6 +613,8 @@ export interface RootRouteChildren {
   ChecklistChecklistIdRoute: typeof ChecklistChecklistIdRoute
   DestinoDestinationIdRoute: typeof DestinoDestinationIdRoute
   TrilhaTrailIdRoute: typeof TrilhaTrailIdRoute
+  UUserIdRoute: typeof UUserIdRoute
+  ChatUserIdRoute: typeof ChatUserIdRoute
   ParceiroPartnerIdRoute: typeof ParceiroPartnerIdRoute
   ParceiroPainelRoute: typeof ParceiroPainelRoute
   AdminIndexRoute: typeof AdminIndexRoute
@@ -762,6 +788,20 @@ declare module '@tanstack/react-router' {
       path: '/trilha/$trailId'
       fullPath: '/trilha/$trailId'
       preLoaderRoute: typeof TrilhaTrailIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/u/$userId': {
+      id: '/u/$userId'
+      path: '/u/$userId'
+      fullPath: '/u/$userId'
+      preLoaderRoute: typeof UUserIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/chat/$userId': {
+      id: '/chat/$userId'
+      path: '/chat/$userId'
+      fullPath: '/chat/$userId'
+      preLoaderRoute: typeof ChatUserIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/checklist/$checklistId': {
@@ -959,6 +999,8 @@ const rootRouteChildren: RootRouteChildren = {
   ChecklistChecklistIdRoute: ChecklistChecklistIdRoute,
   DestinoDestinationIdRoute: DestinoDestinationIdRoute,
   TrilhaTrailIdRoute: TrilhaTrailIdRoute,
+  UUserIdRoute: UUserIdRoute,
+  ChatUserIdRoute: ChatUserIdRoute,
   ParceiroPartnerIdRoute: ParceiroPartnerIdRoute,
   ParceiroPainelRoute: ParceiroPainelRoute,
   AdminIndexRoute: AdminIndexRoute,

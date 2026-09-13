@@ -1,10 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { lazy, Suspense, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Clock, Route as RouteIcon, Calendar, Share2, Loader2, Mountain } from "lucide-react";
+import { lazy, Suspense, useRef, useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { ArrowLeft, Clock, Route as RouteIcon, Calendar, Share2, Loader2, Mountain, ImagePlus } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
-import { fetchActivityById, fetchActivityTypes } from "@/lib/api";
+import { fetchActivityById, fetchActivityTypes, uploadActivityImage, updateActivityImage } from "@/lib/api";
 import { StatusBar } from "@/components/StatusBar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,7 @@ import { computeActivityMetrics } from "@/lib/activity-metrics";
 import { computeByMetricForm, type MetricForm } from "@/lib/metric-forms";
 import { generateActivityBanner, type ActivityBannerMetric, type ActivityBannerVariant } from "@/lib/banner-generator";
 import { shareContent } from "@/lib/share";
+import { useAuth } from "@/hooks/use-auth";
 
 const ActivityMap = lazy(() => import("@/components/ActivityMap"));
 
@@ -91,6 +92,27 @@ function ActivityDetailPage() {
   // Frente E (Req 8): variante do banner — "photo" quando há foto do usuário,
   // senão "map". O usuário pode alternar quando ambos existirem.
   const [bannerVariant, setBannerVariant] = useState<ActivityBannerVariant | null>(null);
+
+  // Ponto 2: o dono pode editar/definir a imagem da atividade (ex.: atividade
+  // salva offline sem foto). Sobe a nova imagem e grava em user_activities +
+  // no post da comunidade vinculado.
+  const { user } = useAuth();
+  const qc = useQueryClient();
+  const imageInputRef = useRef<HTMLInputElement>(null);
+  const isOwner = !!user && !!activity && activity.user_id === user.id;
+  const changeImageMut = useMutation({
+    mutationFn: async (file: File) => {
+      const url = await uploadActivityImage(file);
+      await updateActivityImage(activityId, url);
+      return url;
+    },
+    onSuccess: () => {
+      toast.success(t("activity.imageUpdated", { defaultValue: "Imagem atualizada!" }));
+      qc.invalidateQueries({ queryKey: ["activity", activityId] });
+      qc.invalidateQueries({ queryKey: ["community-posts"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
 
   // Requirement 7.1/7.2/7.4/7.5/7.7: gera o Share_Banner_Image (mapa +
   // métricas) e aciona o compartilhamento já existente; exibe indicador de
@@ -269,6 +291,34 @@ function ActivityDetailPage() {
             className="h-48 w-full rounded-2xl object-cover shadow-card"
             onError={() => setMapSnapshotLoadFailed(true)}
           />
+        </div>
+      )}
+
+      {/* Ponto 2: o dono pode trocar/definir a imagem da atividade. */}
+      {!isLoading && isOwner && (
+        <div className="mx-5 mt-4">
+          <input
+            ref={imageInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            className="hidden"
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              if (f) changeImageMut.mutate(f);
+              e.currentTarget.value = "";
+            }}
+          />
+          <Button
+            variant="outline"
+            className="h-11 w-full rounded-2xl"
+            onClick={() => imageInputRef.current?.click()}
+            disabled={changeImageMut.isPending}
+          >
+            {changeImageMut.isPending ? <Loader2 size={16} className="animate-spin" /> : <ImagePlus size={16} />}
+            {activity?.image_url
+              ? t("activity.changeImage", { defaultValue: "Trocar imagem" })
+              : t("activity.addImage", { defaultValue: "Adicionar imagem" })}
+          </Button>
         </div>
       )}
 

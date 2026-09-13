@@ -881,3 +881,10 @@ ALTER TABLE public.profiles
 --     -> erro 42702. Reescrita qualificando pc.likes_count/cl.* + variavel
 --     local _lc, mantendo a assinatura de retorno. (idempotente)
 -- ############################################################################
+
+-- ############################################################################
+-- 27) 20260913100000_direct-messages.sql
+--     Ponto 4: chat privado 1:1 (mesmo sem amizade). Tabela direct_messages
+--     (RLS: participante lê; envia como remetente; destinatário marca lida) +
+--     RPCs send_direct_message e list_conversations. (idempotente)
+-- ############################################################################

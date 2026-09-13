@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { lazy, Suspense, useEffect, useMemo, useState } from "react";
-import { ChevronLeft, MapPin, Search, SlidersHorizontal } from "lucide-react";
+import { ChevronLeft, MapPin, Search, SlidersHorizontal, WifiOff } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -69,6 +69,22 @@ function Explore() {
   const { t } = useTranslation();
   const { user } = useAuth();
   const [mounted, setMounted] = useState(false);
+  // Ponto 1: acompanhamento ao vivo depende de internet. Detecta o estado de
+  // conexão para avisar o usuário quando estiver offline (o "ao vivo" não
+  // funciona sem rede — é uma função inerentemente online).
+  const [isOnline, setIsOnline] = useState(
+    typeof navigator !== "undefined" ? navigator.onLine : true,
+  );
+  useEffect(() => {
+    const on = () => setIsOnline(true);
+    const off = () => setIsOnline(false);
+    window.addEventListener("online", on);
+    window.addEventListener("offline", off);
+    return () => {
+      window.removeEventListener("online", on);
+      window.removeEventListener("offline", off);
+    };
+  }, []);
   const [difficultyFilter, setDifficultyFilter] = useState<Difficulty | "all">("all");
   // Aba ativa: Destinos (comportamento atual) ou Parceiros (item 8 — concentra
   // a descoberta de parceiros na Explorar).
@@ -279,6 +295,13 @@ function Explore() {
       {/* Lista de amigos em atividade ao vivo, logo abaixo do mapa (Req 3.1).
           `is_live` já é filtrado aqui; a exclusão do próprio usuário vem de
           `fetchLiveActivityFriends`. */}
+      {!isOnline && (
+        <div className="mx-5 mb-2 flex items-start gap-2 rounded-2xl border border-amber-300/40 bg-amber-50 p-3 text-xs text-amber-900 dark:border-amber-500/30 dark:bg-amber-950/30 dark:text-amber-200">
+          <WifiOff size={16} className="mt-0.5 shrink-0" />
+          <span>{t("liveFriends.offlineNotice", "Sem internet — o acompanhamento ao vivo fica indisponível. Sua atividade continua sendo gravada normalmente e sincroniza quando a conexão voltar.")}</span>
+        </div>
+      )}
+
       <div className="pb-6">
         <LiveFriendsList
           friends={liveFriends.filter((f) => f.is_live)}

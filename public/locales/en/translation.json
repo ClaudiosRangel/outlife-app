@@ -128,6 +128,7 @@
   "liveFriends": {
     "empty": "No friends active right now.",
     "unavailable": "This friend's live location is no longer available.",
+    "offlineNotice": "No internet — live tracking is unavailable. Your activity keeps recording normally and syncs when you're back online.",
     "activityType": {
       "caminhada": "Hiking",
       "pedalada": "Cycling",

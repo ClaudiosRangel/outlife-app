@@ -715,6 +715,28 @@ export async function updateActivityProgress(
   if (error) throw error;
 }
 
+// Atualiza a imagem de uma atividade concluída (o dono pode trocar/definir a
+// foto — ex.: atividade salva offline sem foto, que caiu na imagem padrão do
+// feed). RLS de user_activities só permite UPDATE do próprio dono. Propaga a
+// imagem também para o post da comunidade gerado por essa atividade, para o
+// feed refletir a troca imediatamente.
+export async function updateActivityImage(activityId: string, imageUrl: string | null): Promise<void> {
+  const { data: userData } = await supabase.auth.getUser();
+  if (!userData.user) throw new Error("Não autenticado");
+  const { error } = await supabase
+    .from("user_activities" as never)
+    .update({ image_url: imageUrl } as never)
+    .eq("id", activityId)
+    .eq("user_id", userData.user.id);
+  if (error) throw error;
+  // Reflete no post da comunidade vinculado (best-effort).
+  await supabase
+    .from("community_posts")
+    .update({ image_url: imageUrl } as never)
+    .eq("activity_id" as never, activityId as never)
+    .eq("author_id", userData.user.id);
+}
+
 export async function finishActivity(
   id: string,
   payload: {
@@ -2103,6 +2125,109 @@ export async function uploadTrailImage(file: File): Promise<string> {
   if (upErr) throw upErr;
   const { data: pub } = supabase.storage.from("community-post-images").getPublicUrl(path);
   return pub.publicUrl;
+}
+
+// ============ Perfil público de outro usuário (pontos 3/4) ============
+
+export type PublicUserProfile = {
+  id: string;
+  full_name: string | null;
+  username: string | null;
+  avatar_url: string | null;
+  description: string | null;
+  followers_count: number | null;
+  following_count: number | null;
+};
+
+// Perfil público de qualquer usuário (RLS de profiles é leitura pública).
+export async function fetchPublicProfile(userId: string): Promise<PublicUserProfile | null> {
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("id, full_name, username, avatar_url, description, followers_count, following_count")
+    .eq("id", userId)
+    .maybeSingle();
+  if (error) throw error;
+  return (data as unknown as PublicUserProfile) ?? null;
+}
+
+// Atividades concluídas públicas de um usuário (para o perfil dele).
+export async function fetchUserPublicActivities(userId: string, limit = 20): Promise<UserActivity[]> {
+  const { data, error } = await supabase
+    .from("user_activities" as never)
+    .select("*")
+    .eq("user_id", userId)
+    .eq("status", "completed")
+    .order("start_time", { ascending: false })
+    .limit(limit);
+  if (error) throw error;
+  return (data ?? []) as unknown as UserActivity[];
+}
+
+// ============ Chat privado (ponto 4) ============
+
+export type DirectMessage = {
+  id: string;
+  sender_id: string;
+  recipient_id: string;
+  text: string;
+  read_at: string | null;
+  created_at: string;
+};
+
+export type Conversation = {
+  other_id: string;
+  full_name: string | null;
+  username: string | null;
+  avatar_url: string | null;
+  last_text: string;
+  last_at: string;
+  unread: number;
+};
+
+// Lista as conversas do usuário (última msg + não-lidas por interlocutor).
+export async function fetchConversations(): Promise<Conversation[]> {
+  const { data, error } = await supabase.rpc("list_conversations" as never, {} as never);
+  if (error) throw error;
+  return (data ?? []) as unknown as Conversation[];
+}
+
+// Histórico da conversa 1:1 com `otherId` (ordem cronológica).
+export async function fetchMessagesWith(otherId: string): Promise<DirectMessage[]> {
+  const { data: userData } = await supabase.auth.getUser();
+  if (!userData.user) return [];
+  const uid = userData.user.id;
+  const { data, error } = await supabase
+    .from("direct_messages" as never)
+    .select("id, sender_id, recipient_id, text, read_at, created_at")
+    .or(
+      `and(sender_id.eq.${uid},recipient_id.eq.${otherId}),and(sender_id.eq.${otherId},recipient_id.eq.${uid})`,
+    )
+    .order("created_at", { ascending: true });
+  if (error) throw error;
+  return (data ?? []) as unknown as DirectMessage[];
+}
+
+// Envia mensagem (via RPC — permite qualquer usuário, sem exigir amizade).
+export async function sendDirectMessage(recipientId: string, text: string): Promise<DirectMessage> {
+  const { data, error } = await supabase.rpc("send_direct_message" as never, {
+    _recipient_id: recipientId,
+    _text: text,
+  } as never);
+  if (error) throw error;
+  const row = (Array.isArray(data) ? data[0] : data) as unknown as DirectMessage;
+  return row;
+}
+
+// Marca como lidas as mensagens recebidas de `otherId`.
+export async function markMessagesRead(otherId: string): Promise<void> {
+  const { data: userData } = await supabase.auth.getUser();
+  if (!userData.user) return;
+  await supabase
+    .from("direct_messages" as never)
+    .update({ read_at: new Date().toISOString() } as never)
+    .eq("recipient_id", userData.user.id)
+    .eq("sender_id", otherId)
+    .is("read_at", null);
 }
 
 // ============ Notificações (Requirement 9) ============
