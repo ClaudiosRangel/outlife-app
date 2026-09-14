@@ -240,7 +240,11 @@ function FriendsScreen() {
                   key={s.id}
                   className="flex items-center justify-between gap-3 rounded-2xl bg-card p-3 shadow-card"
                 >
-                  <div className="flex min-w-0 items-center gap-3">
+                  <Link
+                    to="/u/$userId"
+                    params={{ userId: s.id }}
+                    className="flex min-w-0 flex-1 items-center gap-3"
+                  >
                     <img
                       src={resolveAsset(s.avatar_url, avatarFallback)}
                       alt={s.full_name || ""}
@@ -256,7 +260,7 @@ function FriendsScreen() {
                         {suggestionReasonLabel(s.reason)}
                       </div>
                     </div>
-                  </div>
+                  </Link>
                   <Button
                     size="sm"
                     variant="secondary"
@@ -293,7 +297,11 @@ function FriendsScreen() {
                     key={result.id}
                     className="flex items-center justify-between gap-3 rounded-2xl bg-card p-3 shadow-card"
                   >
-                    <div className="flex min-w-0 items-center gap-3">
+                    <Link
+                      to="/u/$userId"
+                      params={{ userId: result.id }}
+                      className="flex min-w-0 flex-1 items-center gap-3"
+                    >
                       <img
                         src={resolveAsset(result.avatar_url, avatarFallback)}
                         alt={result.full_name || ""}
@@ -309,7 +317,7 @@ function FriendsScreen() {
                           <div className="truncate text-xs text-muted-foreground">@{result.username}</div>
                         )}
                       </div>
-                    </div>
+                    </Link>
                     {relationship === "self" ? (
                       <span className="shrink-0 text-xs text-muted-foreground">{t("friends.thisIsYou")}</span>
                     ) : relationship === "accepted" ? (
@@ -353,12 +361,17 @@ function FriendsScreen() {
           ) : (
             pendingReceivedRows.map((row) => {
               const other = profilesById[otherUserId(row, user!.id)];
+              const otherId = otherUserId(row, user!.id);
               return (
                 <div
                   key={row.id}
                   className="flex items-center justify-between gap-3 rounded-2xl bg-card p-3 shadow-card"
                 >
-                  <div className="flex min-w-0 items-center gap-3">
+                  <Link
+                    to="/u/$userId"
+                    params={{ userId: otherId }}
+                    className="flex min-w-0 flex-1 items-center gap-3"
+                  >
                     <img
                       src={resolveAsset(other?.avatar_url, avatarFallback)}
                       alt={other?.full_name || ""}
@@ -374,7 +387,7 @@ function FriendsScreen() {
                         <div className="truncate text-xs text-muted-foreground">@{other.username}</div>
                       )}
                     </div>
-                  </div>
+                  </Link>
                   <Button
                     size="sm"
                     onClick={() => acceptMutation.mutate(row.id)}
@@ -404,12 +417,17 @@ function FriendsScreen() {
           ) : (
             acceptedRows.map((row) => {
               const other = profilesById[otherUserId(row, user!.id)];
+              const otherId = otherUserId(row, user!.id);
               return (
                 <div
                   key={row.id}
                   className="flex items-center justify-between gap-3 rounded-2xl bg-card p-3 shadow-card"
                 >
-                  <div className="flex min-w-0 items-center gap-3">
+                  <Link
+                    to="/u/$userId"
+                    params={{ userId: otherId }}
+                    className="flex min-w-0 flex-1 items-center gap-3"
+                  >
                     <img
                       src={resolveAsset(other?.avatar_url, avatarFallback)}
                       alt={other?.full_name || ""}
@@ -425,7 +443,7 @@ function FriendsScreen() {
                         <div className="truncate text-xs text-muted-foreground">@{other.username}</div>
                       )}
                     </div>
-                  </div>
+                  </Link>
                   <Button
                     size="sm"
                     variant="ghost"
