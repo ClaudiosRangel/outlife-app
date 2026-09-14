@@ -52,7 +52,11 @@ function ChatPage() {
 
   // Marca as recebidas como lidas ao abrir/atualizar.
   useEffect(() => {
-    if (user) void markMessagesRead(userId).then(() => qc.invalidateQueries({ queryKey: ["conversations"] }));
+    if (user)
+      void markMessagesRead(userId).then(() => {
+        qc.invalidateQueries({ queryKey: ["conversations"] });
+        qc.invalidateQueries({ queryKey: ["unread-messages-count"] });
+      });
   }, [userId, user, messages.length, qc]);
 
   useEffect(() => {

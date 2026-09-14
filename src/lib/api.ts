@@ -2215,6 +2215,21 @@ export type Conversation = {
   unread: number;
 };
 
+// Total de mensagens recebidas ainda não lidas (para o badge vermelho do
+// card "Mensagens"). Conta direto em direct_messages (recipient = eu, sem
+// read_at) — mais leve que carregar todas as conversas.
+export async function fetchUnreadMessagesCount(): Promise<number> {
+  const { data: userData } = await supabase.auth.getUser();
+  if (!userData.user) return 0;
+  const { count, error } = await supabase
+    .from("direct_messages" as never)
+    .select("*", { count: "exact", head: true })
+    .eq("recipient_id", userData.user.id)
+    .is("read_at", null);
+  if (error) throw error;
+  return count ?? 0;
+}
+
 // Lista as conversas do usuário (última msg + não-lidas por interlocutor).
 export async function fetchConversations(): Promise<Conversation[]> {
   const { data, error } = await supabase.rpc("list_conversations" as never, {} as never);

@@ -130,7 +130,9 @@
     "searchPlaceholder": "Buscar usuário para conversar…",
     "startNew": "Iniciar conversa",
     "conversations": "Conversas",
-    "empty": "Nenhuma conversa ainda. Busque um usuário acima para começar."
+    "empty": "Nenhuma conversa ainda. Busque um usuário acima para começar.",
+    "unreadCount_one": "{{count}} não lida",
+    "unreadCount_other": "{{count}} não lidas"
   },
   "profileView": {
     "live": "AO VIVO",

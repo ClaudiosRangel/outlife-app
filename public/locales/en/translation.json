@@ -130,7 +130,9 @@
     "searchPlaceholder": "Search a user to chat…",
     "startNew": "Start a conversation",
     "conversations": "Conversations",
-    "empty": "No conversations yet. Search a user above to get started."
+    "empty": "No conversations yet. Search a user above to get started.",
+    "unreadCount_one": "{{count}} unread",
+    "unreadCount_other": "{{count}} unread"
   },
   "profileView": {
     "live": "LIVE",

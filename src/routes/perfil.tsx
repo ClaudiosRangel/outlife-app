@@ -51,6 +51,7 @@ import {
   isCurrentUserAdmin,
   countPendingApprovals,
   submitUserFeedback,
+  fetchUnreadMessagesCount,
 } from "@/lib/api";
 import { classifyLevel, levelProgress, type UserLevel } from "@/lib/user-level";
 import type { ActivityType } from "@/lib/activity-metrics";
@@ -176,6 +177,14 @@ function Profile() {
     queryKey: ["is-current-user-admin", user?.id],
     queryFn: isCurrentUserAdmin,
     enabled: !!user,
+  });
+
+  // Mensagens não lidas — badge vermelho no card "Mensagens".
+  const { data: unreadMessages = 0 } = useQuery({
+    queryKey: ["unread-messages-count", user?.id],
+    queryFn: fetchUnreadMessagesCount,
+    enabled: !!user,
+    refetchInterval: 30_000,
   });
 
   // Pendências de aprovação para exibir o alerta/badge no atalho admin.
@@ -323,12 +332,23 @@ function Profile() {
       <div className="mx-5 mt-3">
         <Link to="/mensagens" className="flex items-center justify-between rounded-2xl bg-card p-3 shadow-card">
           <div className="flex items-center gap-3">
-            <span className="grid h-9 w-9 place-items-center rounded-xl bg-primary/10 text-primary">
+            <span className="relative grid h-9 w-9 place-items-center rounded-xl bg-primary/10 text-primary">
               <MessageSquarePlus size={16} />
+              {unreadMessages > 0 && (
+                <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">
+                  {unreadMessages > 9 ? "9+" : unreadMessages}
+                </span>
+              )}
             </span>
             <span className="text-sm font-semibold">{t("messages.title", "Mensagens")}</span>
           </div>
-          <span className="text-xs text-primary font-medium">{t("common.open")}</span>
+          {unreadMessages > 0 ? (
+            <span className="text-xs font-semibold text-red-500">
+              {t("messages.unreadCount", { count: unreadMessages, defaultValue: "{{count}} não lida" })}
+            </span>
+          ) : (
+            <span className="text-xs text-primary font-medium">{t("common.open")}</span>
+          )}
         </Link>
       </div>
 
