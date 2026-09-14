@@ -369,6 +369,8 @@
     },
     "level": "Explorer Level {{level}}",
     "levelHint": "{{remaining}}% to next level.",
+    "levelUndefined": "Level not defined yet",
+    "levelUndefinedHint": "You haven't recorded any activity yet. Start recording to level up.",
     "levels": {
       "iniciante": "Beginner",
       "intermediario": "Intermediate",
@@ -778,6 +780,7 @@
     "title": "Notifications",
     "empty": "You don't have any notifications.",
     "friendRequestText": "sent you a friend request.",
+    "directMessageText": "sent you a message",
     "postLikeText": "liked your story.",
     "activityCompletedText": "completed an activity.",
     "reviewReceivedText": "You received a new review.",

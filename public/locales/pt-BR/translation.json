@@ -369,6 +369,8 @@
     },
     "level": "Explorador Nível {{level}}",
     "levelHint": "Faltam {{remaining}}% para o próximo nível.",
+    "levelUndefined": "Nível ainda não definido",
+    "levelUndefinedHint": "Você ainda não registrou nenhuma atividade. Comece a gravar para evoluir seu nível.",
     "levels": {
       "iniciante": "Iniciante",
       "intermediario": "Intermediário",
@@ -778,6 +780,7 @@
     "title": "Notificações",
     "empty": "Você não tem notificações.",
     "friendRequestText": "enviou uma solicitação de amizade.",
+    "directMessageText": "enviou uma mensagem",
     "postLikeText": "curtiu seu relato.",
     "activityCompletedText": "concluiu uma atividade.",
     "reviewReceivedText": "Você recebeu uma nova avaliação.",

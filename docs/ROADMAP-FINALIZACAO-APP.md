@@ -18,7 +18,19 @@
 > (amigos, admin, parceiro, rastrear, opinião, dark, nível, checklist).
 > Ícone do Voo livre trocado de avião para PARAPENTE (`ParagliderIcon` SVG +
 > PNG do banner regenerado). Testes fast-check (getActivityIcon/safeCount).
-> tsc limpo. Migrations: nenhuma. APK a gerar.
+> tsc limpo. Migrations: nenhuma.
+>
+> **Ajustes pós-teste (13/09/2026):**
+> - Chat: `send_direct_message` agora cria notification tipo `direct_message`
+>   (migration 20260913110000) → aparece no SININHO com nome+preview e leva ao
+>   `/chat/$userId`; badge de não-lidas conta automaticamente. É assim que a
+>   pessoa fica sabendo que recebeu mensagem para responder.
+> - Perfil próprio: removida a aba Atividades duplicada de baixo e a aba
+>   Trilhas (ficaram só Salvos/Favoritos); card "Rastrear nova atividade" só
+>   aparece quando há atividade em andamento (senão usa o "Gravar" da barra).
+> - Nível: passa a considerar só as atividades REALMENTE praticadas
+>   (levelStats.byType com atividade > 0); sem nenhuma atividade mostra
+>   "Nível ainda não definido". APK a gerar.
 
 **Anterior:** 13/09/2026 (evolucao-admin-atividades-social — BLOCO A–H + correções + rodada UX/social)
 

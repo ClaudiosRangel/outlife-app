@@ -373,24 +373,25 @@ function Profile() {
         </div>
       )}
 
-      <div className="mx-5 mt-3">
-        <Link
-          to="/atividade/rastrear"
-          className={`flex items-center justify-between rounded-2xl p-3 text-white shadow-card ${
-            hasActiveTracking ? "bg-green-600" : "bg-gradient-forest"
-          }`}
-        >
-          <div className="flex items-center gap-3">
-            <span className="grid h-9 w-9 place-items-center rounded-xl bg-white/15 backdrop-blur-md">
-              <ActivityIcon size={16} />
-            </span>
-            <span className="text-sm font-semibold">
-              {hasActiveTracking ? t("profile.trackActive") : t("profile.trackCta")}
-            </span>
-          </div>
-          <span className="text-xs font-medium text-white/80">{t("common.open")}</span>
-        </Link>
-      </div>
+      {/* "Rastrear nova atividade" removido do perfil: já há o botão "Gravar"
+          bem visível na barra inferior. Mantido AQUI apenas quando há uma
+          atividade em andamento, para o usuário retomá-la rapidamente. */}
+      {hasActiveTracking && (
+        <div className="mx-5 mt-3">
+          <Link
+            to="/atividade/rastrear"
+            className="flex items-center justify-between rounded-2xl bg-green-600 p-3 text-white shadow-card"
+          >
+            <div className="flex items-center gap-3">
+              <span className="grid h-9 w-9 place-items-center rounded-xl bg-white/15 backdrop-blur-md">
+                <ActivityIcon size={16} />
+              </span>
+              <span className="text-sm font-semibold">{t("profile.trackActive")}</span>
+            </div>
+            <span className="text-xs font-medium text-white/80">{t("common.open")}</span>
+          </Link>
+        </div>
+      )}
 
       {/* Dê sua opinião — visível para todos os usuários */}
       <div className="mx-5 mt-3">
@@ -408,79 +409,15 @@ function Profile() {
         </button>
       </div>
 
+      {/* Coleções do dono: Salvos e Favoritos (Trilhas/Atividades saíram —
+          Atividades já aparece no perfil unificado acima; Trilhas era
+          redundante com Atividades). */}
       <section className="px-5 mt-6">
-        <Tabs defaultValue="trilhas">
-          <TabsList className="grid grid-cols-4 w-full">
-            <TabsTrigger value="trilhas">{t("profile.tabs.trails")}</TabsTrigger>
-            <TabsTrigger value="atividades">{t("profile.tabs.activities")}</TabsTrigger>
+        <Tabs defaultValue="salvos">
+          <TabsList className="grid grid-cols-2 w-full">
             <TabsTrigger value="salvos">{t("profile.tabs.saved")}</TabsTrigger>
             <TabsTrigger value="favoritos">{t("profile.tabs.favorites")}</TabsTrigger>
           </TabsList>
-          <TabsContent value="trilhas" className="mt-3 space-y-2">
-            {trailsLoading ? (
-              [0, 1, 2].map((i) => <Skeleton key={i} className="h-14 w-full rounded-2xl" />)
-            ) : myTrails.length === 0 ? (
-              <div className="rounded-2xl bg-card p-6 text-center text-xs text-muted-foreground shadow-card">
-                {t("common.empty", "Nada por aqui ainda.")}
-              </div>
-            ) : myTrails.map((tr) => (
-              <div key={tr.id ?? tr.name} className="flex items-center justify-between rounded-2xl bg-card p-3 shadow-card">
-                <div className="flex items-center gap-3">
-                  <Mountain size={16} className="text-primary" />
-                  <span className="text-sm font-medium">{tr.name}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-muted-foreground">{tr.distance}</span>
-                  {(tr as any).id && (
-                    <button
-                      onClick={() => { if (confirm("Excluir esta trilha?")) deleteActivityMut.mutate((tr as any).id); }}
-                      className="text-xs text-destructive font-medium"
-                    >✕</button>
-                  )}
-                </div>
-              </div>
-            ))}
-          </TabsContent>
-          <TabsContent value="atividades" className="mt-3 space-y-2">
-            {activitiesLoading ? (
-              [0, 1, 2].map((i) => <Skeleton key={i} className="h-16 w-full rounded-2xl" />)
-            ) : activities.length === 0 ? (
-              <div className="rounded-2xl bg-card p-6 text-center text-xs text-muted-foreground shadow-card">
-                {t("activity.emptyList")}
-              </div>
-            ) : activities.map((a) => {
-              const km = a.distance_meters != null ? (a.distance_meters / 1000).toFixed(2) : "—";
-              const mins = a.duration_seconds != null ? Math.round(a.duration_seconds / 60) : 0;
-              return (
-                <div
-                  key={a.id}
-                  className="flex items-center justify-between rounded-2xl bg-card p-3 shadow-card"
-                >
-                  <Link
-                    to="/atividade/$activityId"
-                    params={{ activityId: a.id }}
-                    className="flex items-center gap-3 flex-1 min-w-0"
-                  >
-                    <span className="grid h-9 w-9 place-items-center rounded-xl bg-primary/10 text-primary">
-                      <RouteIcon size={16} />
-                    </span>
-                    <div>
-                      <div className="text-sm font-medium">
-                        {new Date(a.start_time).toLocaleDateString(i18n.language)}
-                      </div>
-                      <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
-                        <Clock size={11} /> {mins} min · {km} km
-                      </div>
-                    </div>
-                  </Link>
-                  <button
-                    onClick={() => { if (confirm("Excluir esta atividade?")) deleteActivityMut.mutate(a.id); }}
-                    className="text-xs text-destructive font-medium ml-2"
-                  >✕</button>
-                </div>
-              );
-            })}
-          </TabsContent>
           <TabsContent value="salvos" className="mt-3 space-y-2">
             {savedLoading ? (
               [0, 1, 2].map((i) => <Skeleton key={i} className="h-14 w-full rounded-2xl" />)
@@ -524,9 +461,35 @@ function Profile() {
           };
           const level = classifyLevel(overall);
           const progress = levelProgress(overall);
-          const perType: Array<{ type: ActivityType; level: UserLevel }> = (
-            ["caminhada", "pedalada", "trilha"] as ActivityType[]
-          ).map((type) => ({ type, level: classifyLevel(levelStats?.byType?.[type]) }));
+          const hasAnyActivity = overall.completedActivities > 0;
+          // Nível só das atividades REALMENTE praticadas (byType com atividade
+          // concluída > 0), em vez de uma lista fixa. Sem prática → "não definido".
+          const byType = levelStats?.byType ?? {};
+          const practiced: Array<{ type: string; level: UserLevel }> = Object.entries(byType)
+            .filter(([, s]) => (s?.completedActivities ?? 0) > 0)
+            .map(([type, s]) => ({ type, level: classifyLevel(s) }));
+
+          if (!hasAnyActivity) {
+            return (
+              <div className="rounded-2xl bg-card p-4 shadow-card">
+                <div className="text-sm font-semibold text-muted-foreground">
+                  {t("profile.levelUndefined", "Nível ainda não definido")}
+                </div>
+                <p className="mt-1 text-[11px] text-muted-foreground">
+                  {t("profile.levelUndefinedHint", "Você ainda não registrou nenhuma atividade. Comece a gravar para evoluir seu nível.")}
+                </p>
+                <Link
+                  to="/ranking"
+                  className="mt-3 flex items-center justify-between rounded-xl bg-secondary/60 px-3 py-2 text-xs font-semibold text-foreground transition-base active:scale-[0.99]"
+                >
+                  <span className="flex items-center gap-2">
+                    <Award size={14} className="text-primary" /> {t("ranking.title")}
+                  </span>
+                  <span className="text-primary">{t("common.open")}</span>
+                </Link>
+              </div>
+            );
+          }
 
           return (
             <div className="rounded-2xl bg-card p-4 shadow-card">
@@ -543,17 +506,19 @@ function Profile() {
                 </p>
               )}
 
-              {/* Nível por tipo de atividade (item 10 — detalhe por modalidade). */}
-              <div className="mt-3 flex flex-wrap gap-2">
-                {perType.map(({ type, level: lvl }) => (
-                  <span
-                    key={type}
-                    className="rounded-full bg-secondary px-2.5 py-0.5 text-[11px] font-medium text-secondary-foreground"
-                  >
-                    {t(`activity.activityTypes.${type}`)}: {t(`profile.levels.${lvl}`)}
-                  </span>
-                ))}
-              </div>
+              {/* Nível por tipo — só das modalidades praticadas. */}
+              {practiced.length > 0 && (
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {practiced.map(({ type, level: lvl }) => (
+                    <span
+                      key={type}
+                      className="rounded-full bg-secondary px-2.5 py-0.5 text-[11px] font-medium text-secondary-foreground"
+                    >
+                      {t(`activity.activityTypes.${type}`, { defaultValue: type })}: {t(`profile.levels.${lvl}`)}
+                    </span>
+                  ))}
+                </div>
+              )}
 
               {/* Atalho para os rankings (item 12). */}
               <Link

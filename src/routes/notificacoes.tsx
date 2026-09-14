@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { ArrowLeft, Bell } from "lucide-react";
+import { ArrowLeft, Bell, MessageCircle } from "lucide-react";
 import { StatusBar } from "@/components/StatusBar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/hooks/use-auth";
@@ -301,6 +301,39 @@ function NotificationsScreen() {
           {!n.is_read && <span className="h-2 w-2 shrink-0 rounded-full bg-primary" />}
         </Link>
       );
+    }
+
+    // Mensagem privada recebida (chat). Leva direto à conversa com o remetente.
+    if (n.type === "direct_message") {
+      const payload = n.payload as { sender_id?: string; sender_name?: string; preview?: string };
+      const card = (
+        <>
+          <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary/15 text-primary">
+            <MessageCircle size={16} />
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="text-sm">
+              <span className="font-semibold">{payload.sender_name || t("profile.title")}</span>{" "}
+              {t("notifications.directMessageText", "enviou uma mensagem")}
+            </div>
+            {payload.preview && (
+              <div className="truncate text-xs text-muted-foreground">{payload.preview}</div>
+            )}
+            <div className="mt-0.5 text-[11px] text-muted-foreground">
+              {new Date(n.created_at).toLocaleString("pt-BR")}
+            </div>
+          </div>
+          {!n.is_read && <span className="h-2 w-2 shrink-0 rounded-full bg-primary" />}
+        </>
+      );
+      if (payload.sender_id) {
+        return (
+          <Link key={n.id} to="/chat/$userId" params={{ userId: payload.sender_id }} className={cardClassName}>
+            {card}
+          </Link>
+        );
+      }
+      return <div key={n.id} className={cardClassName}>{card}</div>;
     }
 
     // Fallback genérico para tipos de notificação futuros/desconhecidos.
