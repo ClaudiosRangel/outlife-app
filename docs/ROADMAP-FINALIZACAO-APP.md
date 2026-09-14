@@ -5,7 +5,27 @@
 > `.kiro/steering/roadmap-outvitar.md`). **Mantenha-o atualizado** ao
 > concluir qualquer tarefa/bloco: marque status, data e resumo.
 
-**Última atualização:** 13/09/2026 (spec perfil-publico-redesign — perfil unificado moderno + ícone parapente)
+**Última atualização:** 14/09/2026 (amigos clicáveis → perfil + badge vermelho de mensagens não-lidas no card Mensagens)
+
+> **🔧 RODADA SOCIAL/MENSAGENS (14/09/2026) — CONCLUÍDO (APK 15:02):**
+> 1. **Amigos clicáveis** (`amigos.tsx`): avatar+nome de todas as 4 listas
+>    (sugestões, resultados de busca, pendentes recebidas, amigos aceitos)
+>    viraram `Link` para `/u/$userId` (abre o perfil), preservando os botões de
+>    ação (Adicionar/Aceitar/Remover) separados. Commit `7d8ab68`.
+> 2. **Badge de mensagens não-lidas** (`perfil.tsx`): o card "Mensagens" agora
+>    mostra a contagem de não-lidas em vermelho — badge no ícone
+>    (`unreadMessages > 9 ? "9+"`) e texto "N não lida(s)" no lugar de "Abrir".
+>    Conta via `fetchUnreadMessagesCount()` (direct_messages com read_at NULL),
+>    refetch a cada 30s + invalidação ao abrir a conversa (chat marca lidas →
+>    invalida `unread-messages-count`, badge some na hora). i18n
+>    `messages.unreadCount_one/_other`. Commit `11f1e9c`. tsc limpo. Migrations:
+>    nenhuma.
+>
+> _Nota sobre Favoritos (dúvida do usuário): a aba "Favoritos" do perfil lista
+> os parceiros do marketplace favoritados (tabela `favorite_partners`, botão de
+> favoritar no perfil do parceiro). "Salvos" lista destinos salvos._
+
+
 
 > **🟦 SPEC perfil-publico-redesign (13/09/2026) — CONCLUÍDO:**
 > Perfil unificado (um só) estilo Instagram/Strava. Componente compartilhado
@@ -37,7 +57,7 @@
 > não-lidas destacadas (nome negrito + prévia colorida + ponto verde pulsante +
 > badge), e busca de usuários no topo para iniciar conversa nova. Card
 > "Mensagens" no perfil; botão "voltar" do chat leva à inbox. i18n messages.*.
-> APK a gerar.
+> APK gerado.
 
 **Anterior:** 13/09/2026 (evolucao-admin-atividades-social — BLOCO A–H + correções + rodada UX/social)
 
