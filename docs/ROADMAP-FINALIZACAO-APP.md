@@ -30,7 +30,14 @@
 >   aparece quando há atividade em andamento (senão usa o "Gravar" da barra).
 > - Nível: passa a considerar só as atividades REALMENTE praticadas
 >   (levelStats.byType com atividade > 0); sem nenhuma atividade mostra
->   "Nível ainda não definido". APK a gerar.
+>   "Nível ainda não definido".
+>
+> **Inbox de mensagens (13/09/2026):** nova tela `/mensagens` (estilo Instagram
+> Direct) — lista de conversas de quem já falou (via RPC list_conversations),
+> não-lidas destacadas (nome negrito + prévia colorida + ponto verde pulsante +
+> badge), e busca de usuários no topo para iniciar conversa nova. Card
+> "Mensagens" no perfil; botão "voltar" do chat leva à inbox. i18n messages.*.
+> APK a gerar.
 
 **Anterior:** 13/09/2026 (evolucao-admin-atividades-social — BLOCO A–H + correções + rodada UX/social)
 

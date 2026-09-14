@@ -321,6 +321,18 @@ function Profile() {
 
 
       <div className="mx-5 mt-3">
+        <Link to="/mensagens" className="flex items-center justify-between rounded-2xl bg-card p-3 shadow-card">
+          <div className="flex items-center gap-3">
+            <span className="grid h-9 w-9 place-items-center rounded-xl bg-primary/10 text-primary">
+              <MessageSquarePlus size={16} />
+            </span>
+            <span className="text-sm font-semibold">{t("messages.title", "Mensagens")}</span>
+          </div>
+          <span className="text-xs text-primary font-medium">{t("common.open")}</span>
+        </Link>
+      </div>
+
+      <div className="mx-5 mt-3">
         <Link to="/amigos" className="flex items-center justify-between rounded-2xl bg-card p-3 shadow-card">
           <div className="flex items-center gap-3">
             <span className="grid h-9 w-9 place-items-center rounded-xl bg-primary/10 text-primary">

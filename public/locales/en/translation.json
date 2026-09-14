@@ -125,6 +125,13 @@
     "activeNow": "Friends active now",
     "nearbyPartners": "Nearby partners"
   },
+  "messages": {
+    "title": "Messages",
+    "searchPlaceholder": "Search a user to chat…",
+    "startNew": "Start a conversation",
+    "conversations": "Conversations",
+    "empty": "No conversations yet. Search a user above to get started."
+  },
   "profileView": {
     "live": "LIVE",
     "liveNow": "Active now",

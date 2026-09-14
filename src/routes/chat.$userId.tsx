@@ -80,7 +80,7 @@ function ChatPage() {
       <div className="bg-gradient-forest px-5 pb-3 text-white">
         <StatusBar light />
         <div className="flex items-center gap-3 pt-2">
-          <Link to="/u/$userId" params={{ userId }} className="grid h-9 w-9 place-items-center rounded-full bg-white/15 backdrop-blur-md">
+          <Link to="/mensagens" className="grid h-9 w-9 place-items-center rounded-full bg-white/15 backdrop-blur-md">
             <ArrowLeft size={16} />
           </Link>
           <img src={resolveAsset(other?.avatar_url, avatarFallback)} alt="" className="h-9 w-9 rounded-full object-cover" />
