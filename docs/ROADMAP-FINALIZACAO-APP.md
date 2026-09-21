@@ -5,7 +5,27 @@
 > `.kiro/steering/roadmap-outvitar.md`). **Mantenha-o atualizado** ao
 > concluir qualquer tarefa/bloco: marque status, data e resumo.
 
-**Última atualização:** 14/09/2026 (amigos clicáveis → perfil + badge vermelho de mensagens não-lidas no card Mensagens)
+**Última atualização:** 15/09/2026 (registro da conta Apple Developer + backlog das 9 grandes funcionalidades pré-lançamento)
+
+> **📌 RODADA PRÉ-LANÇAMENTO (15/09/2026) — PLANEJAMENTO REGISTRADO:**
+> O usuário definiu 9 grandes funcionalidades a implementar antes de gerar as
+> versões finais (APK Android + IPA App Store). Cada uma vira spec próprio,
+> implementada uma frente por vez. Índice completo em
+> `docs/BACKLOG-GRANDES-FUNCIONALIDADES.md`. Ordem por risco:
+> 1. Termos de uso + exclusão de conta + privacidade (`conta-privacidade-termos`) — BLOQUEADOR de loja
+> 2. Frase/bio de perfil (`perfil-bio`)
+> 3. Card da comunidade repaginado estilo Strava + likes com avatares (`comunidade-card-strava`)
+> 4. Segmentos com ranking top 10 por tempo médio + importar do Strava (`segmentos`)
+> 5. Conectar dispositivos Garmin/outros (`integracoes-dispositivos`)
+> 6. Explorar repaginado (mapa 3D Mapbox + "o que acontece agora") (`explorar-redesign`)
+> 7. Tela de Iniciar atividade repaginada estilo Strava (`iniciar-atividade-redesign`)
+> 8. Loja virtual dos parceiros + propaganda no Iniciar + posts na comunidade (`loja-virtual-parceiros`)
+>
+> **Conta Apple Developer adquirida** (US$99/ano): Enrollment ID `J3CXAHA4Y4`,
+> membro Rafael Vieira, e-mail `outvitar@gmail.com`. Build iOS via Codemagic
+> (sem Mac). Detalhes/checklist de publicação em `docs/PUBLICACAO-LOJAS.md`.
+
+**Anterior:** 14/09/2026 (amigos clicáveis → perfil + badge vermelho de mensagens não-lidas no card Mensagens)
 
 > **🔧 RODADA SOCIAL/MENSAGENS (14/09/2026) — CONCLUÍDO (APK 15:02):**
 > 1. **Amigos clicáveis** (`amigos.tsx`): avatar+nome de todas as 4 listas
