@@ -9,12 +9,15 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TermosRouteImport } from './routes/termos'
 import { Route as SugerirDestinoRouteImport } from './routes/sugerir-destino'
 import { Route as RedefinirSenhaRouteImport } from './routes/redefinir-senha'
 import { Route as RankingRouteImport } from './routes/ranking'
+import { Route as PrivacidadeRouteImport } from './routes/privacidade'
 import { Route as PerfilRouteImport } from './routes/perfil'
 import { Route as NotificacoesRouteImport } from './routes/notificacoes'
 import { Route as MercadoRouteImport } from './routes/mercado'
+import { Route as MensagensRouteImport } from './routes/mensagens'
 import { Route as MarketplaceRouteImport } from './routes/marketplace'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ExplorarRouteImport } from './routes/explorar'
@@ -28,7 +31,6 @@ import { Route as AmigosRouteImport } from './routes/amigos'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as UUserIdRouteImport } from './routes/u.$userId'
-import { Route as MensagensRouteImport } from './routes/mensagens'
 import { Route as TrilhaTrailIdRouteImport } from './routes/trilha.$trailId'
 import { Route as ParceiroPainelRouteImport } from './routes/parceiro.painel'
 import { Route as ParceiroPartnerIdRouteImport } from './routes/parceiro.$partnerId'
@@ -57,6 +59,11 @@ import { Route as ApiPushInvalidateNativeRouteImport } from './routes/api.push.i
 import { Route as ApiPlacesSearchRouteImport } from './routes/api.places.search'
 import { Route as ApiPlacesPhotosRouteImport } from './routes/api.places.photos'
 
+const TermosRoute = TermosRouteImport.update({
+  id: '/termos',
+  path: '/termos',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SugerirDestinoRoute = SugerirDestinoRouteImport.update({
   id: '/sugerir-destino',
   path: '/sugerir-destino',
@@ -72,6 +79,11 @@ const RankingRoute = RankingRouteImport.update({
   path: '/ranking',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PrivacidadeRoute = PrivacidadeRouteImport.update({
+  id: '/privacidade',
+  path: '/privacidade',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PerfilRoute = PerfilRouteImport.update({
   id: '/perfil',
   path: '/perfil',
@@ -85,6 +97,11 @@ const NotificacoesRoute = NotificacoesRouteImport.update({
 const MercadoRoute = MercadoRouteImport.update({
   id: '/mercado',
   path: '/mercado',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MensagensRoute = MensagensRouteImport.update({
+  id: '/mensagens',
+  path: '/mensagens',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MarketplaceRoute = MarketplaceRouteImport.update({
@@ -150,11 +167,6 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
 const UUserIdRoute = UUserIdRouteImport.update({
   id: '/u/$userId',
   path: '/u/$userId',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const MensagensRoute = MensagensRouteImport.update({
-  id: '/mensagens',
-  path: '/mensagens',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TrilhaTrailIdRoute = TrilhaTrailIdRouteImport.update({
@@ -305,12 +317,15 @@ export interface FileRoutesByFullPath {
   '/explorar': typeof ExplorarRoute
   '/login': typeof LoginRoute
   '/marketplace': typeof MarketplaceRoute
+  '/mensagens': typeof MensagensRoute
   '/mercado': typeof MercadoRoute
   '/notificacoes': typeof NotificacoesRoute
   '/perfil': typeof PerfilRoute
+  '/privacidade': typeof PrivacidadeRoute
   '/ranking': typeof RankingRoute
   '/redefinir-senha': typeof RedefinirSenhaRoute
   '/sugerir-destino': typeof SugerirDestinoRoute
+  '/termos': typeof TermosRoute
   '/a/$activityId': typeof AActivityIdRoute
   '/admin/atividades': typeof AdminAtividadesRoute
   '/admin/compliance': typeof AdminComplianceRoute
@@ -340,7 +355,6 @@ export interface FileRoutesByFullPath {
   '/api/push/register-native': typeof ApiPushRegisterNativeRoute
   '/api/push/register-web': typeof ApiPushRegisterWebRoute
   '/api/push/send-fcm': typeof ApiPushSendFcmRoute
-  '/mensagens': typeof MensagensRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -354,12 +368,15 @@ export interface FileRoutesByTo {
   '/explorar': typeof ExplorarRoute
   '/login': typeof LoginRoute
   '/marketplace': typeof MarketplaceRoute
+  '/mensagens': typeof MensagensRoute
   '/mercado': typeof MercadoRoute
   '/notificacoes': typeof NotificacoesRoute
   '/perfil': typeof PerfilRoute
+  '/privacidade': typeof PrivacidadeRoute
   '/ranking': typeof RankingRoute
   '/redefinir-senha': typeof RedefinirSenhaRoute
   '/sugerir-destino': typeof SugerirDestinoRoute
+  '/termos': typeof TermosRoute
   '/a/$activityId': typeof AActivityIdRoute
   '/admin/atividades': typeof AdminAtividadesRoute
   '/admin/compliance': typeof AdminComplianceRoute
@@ -389,7 +406,6 @@ export interface FileRoutesByTo {
   '/api/push/register-native': typeof ApiPushRegisterNativeRoute
   '/api/push/register-web': typeof ApiPushRegisterWebRoute
   '/api/push/send-fcm': typeof ApiPushSendFcmRoute
-  '/mensagens': typeof MensagensRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -404,12 +420,15 @@ export interface FileRoutesById {
   '/explorar': typeof ExplorarRoute
   '/login': typeof LoginRoute
   '/marketplace': typeof MarketplaceRoute
+  '/mensagens': typeof MensagensRoute
   '/mercado': typeof MercadoRoute
   '/notificacoes': typeof NotificacoesRoute
   '/perfil': typeof PerfilRoute
+  '/privacidade': typeof PrivacidadeRoute
   '/ranking': typeof RankingRoute
   '/redefinir-senha': typeof RedefinirSenhaRoute
   '/sugerir-destino': typeof SugerirDestinoRoute
+  '/termos': typeof TermosRoute
   '/a/$activityId': typeof AActivityIdRoute
   '/admin/atividades': typeof AdminAtividadesRoute
   '/admin/compliance': typeof AdminComplianceRoute
@@ -439,7 +458,6 @@ export interface FileRoutesById {
   '/api/push/register-native': typeof ApiPushRegisterNativeRoute
   '/api/push/register-web': typeof ApiPushRegisterWebRoute
   '/api/push/send-fcm': typeof ApiPushSendFcmRoute
-  '/mensagens': typeof MensagensRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -455,12 +473,15 @@ export interface FileRouteTypes {
     | '/explorar'
     | '/login'
     | '/marketplace'
+    | '/mensagens'
     | '/mercado'
     | '/notificacoes'
     | '/perfil'
+    | '/privacidade'
     | '/ranking'
     | '/redefinir-senha'
     | '/sugerir-destino'
+    | '/termos'
     | '/a/$activityId'
     | '/admin/atividades'
     | '/admin/compliance'
@@ -490,7 +511,6 @@ export interface FileRouteTypes {
     | '/api/push/register-native'
     | '/api/push/register-web'
     | '/api/push/send-fcm'
-    | '/mensagens'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -504,12 +524,15 @@ export interface FileRouteTypes {
     | '/explorar'
     | '/login'
     | '/marketplace'
+    | '/mensagens'
     | '/mercado'
     | '/notificacoes'
     | '/perfil'
+    | '/privacidade'
     | '/ranking'
     | '/redefinir-senha'
     | '/sugerir-destino'
+    | '/termos'
     | '/a/$activityId'
     | '/admin/atividades'
     | '/admin/compliance'
@@ -539,7 +562,6 @@ export interface FileRouteTypes {
     | '/api/push/register-native'
     | '/api/push/register-web'
     | '/api/push/send-fcm'
-    | '/mensagens'
   id:
     | '__root__'
     | '/'
@@ -553,12 +575,15 @@ export interface FileRouteTypes {
     | '/explorar'
     | '/login'
     | '/marketplace'
+    | '/mensagens'
     | '/mercado'
     | '/notificacoes'
     | '/perfil'
+    | '/privacidade'
     | '/ranking'
     | '/redefinir-senha'
     | '/sugerir-destino'
+    | '/termos'
     | '/a/$activityId'
     | '/admin/atividades'
     | '/admin/compliance'
@@ -588,7 +613,6 @@ export interface FileRouteTypes {
     | '/api/push/register-native'
     | '/api/push/register-web'
     | '/api/push/send-fcm'
-    | '/mensagens'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -607,9 +631,11 @@ export interface RootRouteChildren {
   MercadoRoute: typeof MercadoRoute
   NotificacoesRoute: typeof NotificacoesRoute
   PerfilRoute: typeof PerfilRoute
+  PrivacidadeRoute: typeof PrivacidadeRoute
   RankingRoute: typeof RankingRoute
   RedefinirSenhaRoute: typeof RedefinirSenhaRoute
   SugerirDestinoRoute: typeof SugerirDestinoRoute
+  TermosRoute: typeof TermosRoute
   AActivityIdRoute: typeof AActivityIdRoute
   AdminAtividadesRoute: typeof AdminAtividadesRoute
   AdminComplianceRoute: typeof AdminComplianceRoute
@@ -642,6 +668,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/termos': {
+      id: '/termos'
+      path: '/termos'
+      fullPath: '/termos'
+      preLoaderRoute: typeof TermosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/sugerir-destino': {
       id: '/sugerir-destino'
       path: '/sugerir-destino'
@@ -661,6 +694,13 @@ declare module '@tanstack/react-router' {
       path: '/ranking'
       fullPath: '/ranking'
       preLoaderRoute: typeof RankingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacidade': {
+      id: '/privacidade'
+      path: '/privacidade'
+      fullPath: '/privacidade'
+      preLoaderRoute: typeof PrivacidadeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/perfil': {
@@ -684,18 +724,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MercadoRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/marketplace': {
-      id: '/marketplace'
-      path: '/marketplace'
-      fullPath: '/marketplace'
-      preLoaderRoute: typeof MarketplaceRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/mensagens': {
       id: '/mensagens'
       path: '/mensagens'
       fullPath: '/mensagens'
       preLoaderRoute: typeof MensagensRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/marketplace': {
+      id: '/marketplace'
+      path: '/marketplace'
+      fullPath: '/marketplace'
+      preLoaderRoute: typeof MarketplaceRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -1001,9 +1041,11 @@ const rootRouteChildren: RootRouteChildren = {
   MercadoRoute: MercadoRoute,
   NotificacoesRoute: NotificacoesRoute,
   PerfilRoute: PerfilRoute,
+  PrivacidadeRoute: PrivacidadeRoute,
   RankingRoute: RankingRoute,
   RedefinirSenhaRoute: RedefinirSenhaRoute,
   SugerirDestinoRoute: SugerirDestinoRoute,
+  TermosRoute: TermosRoute,
   AActivityIdRoute: AActivityIdRoute,
   AdminAtividadesRoute: AdminAtividadesRoute,
   AdminComplianceRoute: AdminComplianceRoute,

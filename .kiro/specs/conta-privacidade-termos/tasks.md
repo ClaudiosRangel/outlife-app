@@ -25,15 +25,15 @@ aplicadas em produção 2×.
 
 ## Tasks
 
-- [ ] 1. Conteúdo legal + rotas públicas (Frente A)
-  - [ ] 1.1 Criar `src/lib/legal-content.ts` com `TERMS_VERSION`,
+- [x] 1. Conteúdo legal + rotas públicas (Frente A)
+  - [x] 1.1 Criar `src/lib/legal-content.ts` com `TERMS_VERSION`,
     `PRIVACY_VERSION`, `LEGAL_DOC_VERSION` e o conteúdo (seções PT + EN) dos
     Termos de Uso e da Política de Privacidade, cobrindo marketplace, UGC,
     localização, LGPD, retenção e isenções (Requisitos 1.1, 1.2, 1.3, 1.4).
-  - [ ] 1.2 Criar rotas públicas `/termos` e `/privacidade` (fora do gate),
+  - [x] 1.2 Criar rotas públicas `/termos` e `/privacidade` (fora do gate),
     renderizando o conteúdo do idioma ativo (Requisitos 5.5, 6.1). Registrar
     no `routeTree.gen.ts`.
-  - [ ] 1.3 Teste `legal-content.test.ts`: versões ISO válidas, paridade de
+  - [x] 1.3 Teste `legal-content.test.ts`: versões ISO válidas, paridade de
     seções PT/EN, headings/bodies não-vazios (Requisito 1.4).
 
 - [ ] 2. Aceite obrigatório (Frente B)
