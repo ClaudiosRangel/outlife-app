@@ -113,6 +113,23 @@ que reduzem risco de reprovação nas lojas (termos/exclusão de conta são
 
 ---
 
+## Decisões do usuário (15/09/2026)
+
+1. **Segmentos**: fazer **nativos nossos** (controlados 100% dentro do
+   OutVitar). A importação do Strava / conexão Garmin fica como fase futura
+   dependente de aprovação nos programas de parceiro deles (a API pública do
+   Strava não permite mais importar segmentos de terceiros; Garmin exige
+   aprovação). Não bloquear o lançamento por isso.
+2. **Mapa**: o usuário **vai criar conta no Mapbox** (para 3D moderno). Ainda
+   assim, manter um **fallback gratuito moderno** (MapLibre) para não depender
+   só do Mapbox e não estourar custo. Arquitetar a camada de mapa com provider
+   plugável (Mapbox quando houver token; MapLibre como default gratuito).
+3. **Termos de uso / Política de Privacidade**: redigir o **mais próximo do
+   padrão de mercado** (incluir o que é regra comum a todos: LGPD/GDPR, direito
+   de exclusão, retenção, isenções de marketplace e conteúdo de usuário).
+   Depois será enviado a um **advogado para validação** — deixar claro no
+   documento que é minuta sujeita a revisão jurídica.
+
 ## Regras herdadas (não esquecer)
 - Toda conversa/specs em **português**.
 - Migrations **idempotentes**, aplicadas pelo agente em produção (2×),
