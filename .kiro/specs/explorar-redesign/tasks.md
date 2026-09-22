@@ -31,12 +31,12 @@ APK. Uma frente por vez, sem quebrar o rastreamento/publisher.
   - [x] 1.2 `src/lib/nearby.ts`: `filterNearby` (bbox/raio + limite + amigos
     primeiro) + testes fast-check (4) (Requisitos 2.1, 4.2).
 
-- [ ] 2. Componentes de mapa (Frente B)
-  - [ ] 2.1 `MapboxExploreMap.tsx` (lazy, mapbox-gl): estilo outdoors, toggle
-    2D/3D, recentrar, marcadores (amigo/parceiro/evento), `onError`
-    (Requisitos 1.1, 1.3, 1.4, 2.1, 2.2, 4.1, 4.3).
-  - [ ] 2.2 `ExploreMap.tsx`: escolhe Mapbox (se token) ou fallback `MapView`;
-    trata `onError` caindo para o fallback (Requisitos 1.2, 4.3).
+- [x] 2. Componentes de mapa (Frente B)
+  - [x] 2.1 `MapboxExploreMap.tsx` (lazy, mapbox-gl): estilo outdoors, toggle
+    2D/3D (terreno DEM + pitch), recentrar, marcadores (amigo/parceiro/evento),
+    `onError` (Requisitos 1.1, 1.3, 1.4, 2.1, 2.2, 4.1, 4.3).
+  - [x] 2.2 `ExploreMap.tsx`: escolhe Mapbox (se token) ou fallback `MapView`;
+    `onError` cai no fallback (Requisitos 1.2, 4.3).
 
 - [ ] 3. Integração + fechamento (Frente C)
   - [ ] 3.1 Trocar o `MapView` inline do `explorar.tsx` pelo `ExploreMap`,
