@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Search, MapPin, Users, Store, CalendarDays, Loader2 } from "lucide-react";
+import { Search, MapPin, Users, Store, CalendarDays, Loader2, Mountain, Footprints } from "lucide-react";
 import { searchUsers, resolveAsset, type Partner } from "@/lib/api";
 import type { NearbyEvent } from "@/lib/api";
 import { geocodePlace } from "@/lib/geocode";
@@ -10,7 +10,12 @@ export type ExploreSearchResult =
   | { kind: "region"; label: string; lat: number; lng: number }
   | { kind: "friend"; label: string; userId: string; avatarUrl: string | null }
   | { kind: "partner"; label: string; partnerId: string }
-  | { kind: "event"; label: string; eventId: string };
+  | { kind: "event"; label: string; eventId: string }
+  | { kind: "destination"; label: string; destinationId: string }
+  | { kind: "trail"; label: string; trailId: string };
+
+/** Item leve de destino/trilha para a busca (id + nome + região). */
+export type SearchPlace = { id: string; name: string; region?: string | null };
 
 /**
  * Busca unificada do Explorar (spec 3.2): cidades (geocode Mapbox) + amigos
@@ -21,11 +26,15 @@ export type ExploreSearchResult =
 export function ExploreSearch({
   partners,
   events,
+  destinations = [],
+  trails = [],
   onPick,
   placeholder,
 }: {
   partners: Partner[];
   events: NearbyEvent[];
+  destinations?: SearchPlace[];
+  trails?: SearchPlace[];
   onPick: (r: ExploreSearchResult) => void;
   placeholder?: string;
 }) {
@@ -97,8 +106,28 @@ export function ExploreSearch({
           .slice(0, 4)
           .map((e) => ({ kind: "event", label: e.title, eventId: e.id }))
       : [];
+  const destinationMatches: ExploreSearchResult[] =
+    term.length >= 2
+      ? destinations
+          .filter((d) => d.name.toLowerCase().includes(term) || (d.region ?? "").toLowerCase().includes(term))
+          .slice(0, 5)
+          .map((d) => ({ kind: "destination", label: d.name, destinationId: d.id }))
+      : [];
+  const trailMatches: ExploreSearchResult[] =
+    term.length >= 2
+      ? trails
+          .filter((tr) => tr.name.toLowerCase().includes(term) || (tr.region ?? "").toLowerCase().includes(term))
+          .slice(0, 5)
+          .map((tr) => ({ kind: "trail", label: tr.name, trailId: tr.id }))
+      : [];
 
-  const hasResults = region || friends.length || partnerMatches.length || eventMatches.length;
+  const hasResults =
+    region ||
+    friends.length ||
+    partnerMatches.length ||
+    eventMatches.length ||
+    destinationMatches.length ||
+    trailMatches.length;
 
   const pick = (r: ExploreSearchResult) => {
     setOpen(false);
@@ -165,6 +194,24 @@ export function ExploreSearch({
               {eventMatches.map((e) =>
                 e.kind === "event" ? (
                   <Row key={e.eventId} icon={<CalendarDays size={14} className="text-primary" />} label={e.label} onClick={() => pick(e)} />
+                ) : null,
+              )}
+            </Group>
+          )}
+          {destinationMatches.length > 0 && (
+            <Group label={t("explore.search.destinations", "Destinos")}>
+              {destinationMatches.map((d) =>
+                d.kind === "destination" ? (
+                  <Row key={d.destinationId} icon={<Mountain size={14} className="text-primary" />} label={d.label} onClick={() => pick(d)} />
+                ) : null,
+              )}
+            </Group>
+          )}
+          {trailMatches.length > 0 && (
+            <Group label={t("explore.search.trails", "Trilhas")}>
+              {trailMatches.map((tr) =>
+                tr.kind === "trail" ? (
+                  <Row key={tr.trailId} icon={<Footprints size={14} className="text-primary" />} label={tr.label} onClick={() => pick(tr)} />
                 ) : null,
               )}
             </Group>

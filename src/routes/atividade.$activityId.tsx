@@ -348,6 +348,14 @@ function ActivityDetailPage() {
             {createSegmentMut.isPending ? <Loader2 size={16} className="animate-spin" /> : <Flag size={16} />}
             {t("segments.createFromActivity", { defaultValue: "Criar segmento deste trajeto" })}
           </Button>
+          {/* Criar segmento marcando início/fim no mapa (spec segmentos) */}
+          <Button
+            variant="outline"
+            className="mt-2 h-11 w-full rounded-2xl"
+            onClick={() => navigate({ to: "/segmento/criar" })}
+          >
+            <Flag size={16} /> {t("segments.createOnMap", { defaultValue: "Criar segmento no mapa" })}
+          </Button>
         </div>
       )}
 

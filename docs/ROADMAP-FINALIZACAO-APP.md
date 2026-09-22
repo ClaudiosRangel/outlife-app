@@ -58,6 +58,17 @@
 > 3. **Cards de destino repaginados**: card imersivo (imagem cobrindo, gradiente,
 >    nome+região+badges sobre a foto, rating/dificuldade destacados).
 > tsc limpo; migration aplicada 2× + reload. APK 17:15.
+> **🔧 AJUSTES (18:02): busca acha destinos/trilhas + criar segmento no mapa:**
+> 1. **Busca unificada** agora inclui **Destinos** e **Trilhas** (além de
+>    cidades/pessoas/parceiros/eventos) — "Morro do Açu" etc. aparecem. As
+>    trilhas passam a carregar sempre (não só na aba Destinos).
+> 2. **Criar segmento pelo mapa**: nova rota `/segmento/criar` +
+>    `SegmentDrawMap` (Leaflet+tiles Mapbox): toca no mapa p/ marcar início e
+>    depois fim, nomeia, escolhe tipo e cria via `createSegment` (polilinha
+>    início→fim). Atalho na tela de detalhe da atividade ("Criar segmento no
+>    mapa"). Rota registrada no routeTree.
+> tsc limpo. Sem migration. APK 18:02.
+
 **Próxima frente:** #8 Loja virtual dos parceiros.
 
 > **🟩 FRENTE #7 iniciar-atividade-redesign (15/09/2026) — CONCLUÍDA (APK 17:35):**

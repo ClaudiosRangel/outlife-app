@@ -236,7 +236,9 @@
       "cities": "Cidades",
       "friends": "Pessoas",
       "partners": "Parceiros",
-      "events": "Eventos"
+      "events": "Eventos",
+      "destinations": "Destinos",
+      "trails": "Trilhas"
     }
   },
   "marketplace": {
@@ -908,6 +910,18 @@
     "leaderboardTitle": "Ranking — 10 melhores tempos",
     "empty": "Ninguém percorreu este segmento ainda. Seja o primeiro!",
     "createFromActivity": "Criar segmento deste trajeto",
+    "createOnMap": "Criar segmento no mapa",
+    "createTitle": "Criar segmento",
+    "mapHint": "Toque no mapa para marcar o início e depois o fim.",
+    "startSet": "Início marcado",
+    "startPending": "Marque o início",
+    "endSet": "Fim marcado",
+    "endPending": "Marque o fim",
+    "clearPoints": "Limpar pontos",
+    "namePlaceholder": "Nome do segmento (ex.: Subida do Cristo)",
+    "create": "Criar segmento",
+    "markBoth": "Marque o início e o fim no mapa.",
+    "nameRequired": "Dê um nome ao segmento.",
     "namePrompt": "Nome do segmento:",
     "created": "Segmento criado!",
     "tooShort": "Trajeto muito curto para um segmento."

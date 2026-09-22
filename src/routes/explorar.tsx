@@ -113,7 +113,8 @@ function Explore() {
   const { data: importedTrails = [] } = useQuery({
     queryKey: ["imported-trails-visible"],
     queryFn: fetchVisibleImportedTrails,
-    enabled: exploreTab === "destinos",
+    // Carrega sempre: alimenta a busca unificada (destinos/trilhas) e o painel,
+    // não só a lista da aba Destinos.
   });
 
   // Parceiros: usados tanto na aba Parceiros quanto na camada "agora" do mapa
@@ -394,12 +395,22 @@ function Explore() {
               <ExploreSearch
                 partners={partners}
                 events={nearbyEvents}
+                destinations={destinations.map((d) => {
+                  const dd = d as unknown as { id: string; name: string; region?: string | null };
+                  return { id: dd.id, name: dd.name, region: dd.region };
+                })}
+                trails={importedTrails.map((tr) => {
+                  const tt = tr as unknown as { id: string; name: string; region?: string | null };
+                  return { id: tt.id, name: tt.name, region: tt.region };
+                })}
                 placeholder={t("explore.placeholder")}
                 onPick={(r) => {
                   if (r.kind === "region") setSearchedRegion({ name: r.label, lat: r.lat, lng: r.lng });
                   else if (r.kind === "friend") navigate({ to: "/u/$userId", params: { userId: r.userId } });
                   else if (r.kind === "partner") navigate({ to: "/parceiro/$partnerId", params: { partnerId: r.partnerId } });
                   else if (r.kind === "event") navigate({ to: "/eventos" });
+                  else if (r.kind === "destination") navigate({ to: "/destino/$destinationId", params: { destinationId: r.destinationId } });
+                  else if (r.kind === "trail") navigate({ to: "/trilha/$trailId", params: { trailId: r.trailId } });
                 }}
               />
             </div>

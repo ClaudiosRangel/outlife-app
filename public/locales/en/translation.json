@@ -236,7 +236,9 @@
       "cities": "Cities",
       "friends": "People",
       "partners": "Partners",
-      "events": "Events"
+      "events": "Events",
+      "destinations": "Destinations",
+      "trails": "Trails"
     }
   },
   "marketplace": {
@@ -908,6 +910,18 @@
     "leaderboardTitle": "Leaderboard — top 10 times",
     "empty": "No one has ridden this segment yet. Be the first!",
     "createFromActivity": "Create segment from this route",
+    "createOnMap": "Create segment on the map",
+    "createTitle": "Create segment",
+    "mapHint": "Tap the map to mark the start, then the finish.",
+    "startSet": "Start marked",
+    "startPending": "Mark the start",
+    "endSet": "Finish marked",
+    "endPending": "Mark the finish",
+    "clearPoints": "Clear points",
+    "namePlaceholder": "Segment name (e.g., Cristo climb)",
+    "create": "Create segment",
+    "markBoth": "Mark the start and finish on the map.",
+    "nameRequired": "Name the segment.",
     "namePrompt": "Segment name:",
     "created": "Segment created!",
     "tooShort": "Route too short for a segment."
