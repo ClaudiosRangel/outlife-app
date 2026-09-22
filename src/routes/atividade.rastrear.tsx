@@ -574,27 +574,34 @@ function TrackActivityPage() {
           <div className="mb-2 text-center text-xs font-medium uppercase tracking-widest text-muted-foreground">
             {t("activity.activityTypeLabel")}
           </div>
-          <div className="flex justify-center gap-2 overflow-x-auto scrollbar-hide pb-1">
-            {typeOptions.map((opt) => {
-              const { Icon } = getActivityIcon(opt.iconKey);
-              const active = activityType === opt.code;
-              return (
-                <button
-                  key={opt.code}
-                  type="button"
-                  onClick={() => { setActivityType(opt.code as ActivityType); tracker.setActivityType(opt.code); }}
-                  aria-label={t(`activity.activityTypes.${opt.code}`, { defaultValue: opt.name })}
-                  className={`flex shrink-0 flex-col items-center gap-1 rounded-2xl px-3 py-2 transition-base ${
-                    active ? "bg-primary text-primary-foreground shadow-card" : "bg-secondary text-secondary-foreground"
-                  }`}
-                >
-                  <Icon size={22} aria-hidden />
-                  <span className="text-[10px] font-medium">
-                    {t(`activity.activityTypes.${opt.code}`, { defaultValue: opt.name })}
-                  </span>
-                </button>
-              );
-            })}
+          {/* overflow-x-auto SEM justify-center: com justify-center o primeiro
+              item ficava cortado na borda esquerda quando a faixa transborda
+              (não dava para rolar até ele). O inner `w-max mx-auto` centraliza
+              quando cabe e, ao transbordar, começa da esquerda sem cortar.
+              `px-1` garante folga nas bordas. */}
+          <div className="overflow-x-auto scrollbar-hide pb-1">
+            <div className="flex w-max mx-auto gap-2 px-1">
+              {typeOptions.map((opt) => {
+                const { Icon } = getActivityIcon(opt.iconKey);
+                const active = activityType === opt.code;
+                return (
+                  <button
+                    key={opt.code}
+                    type="button"
+                    onClick={() => { setActivityType(opt.code as ActivityType); tracker.setActivityType(opt.code); }}
+                    aria-label={t(`activity.activityTypes.${opt.code}`, { defaultValue: opt.name })}
+                    className={`flex shrink-0 flex-col items-center gap-1 rounded-2xl px-3 py-2 transition-base ${
+                      active ? "bg-primary text-primary-foreground shadow-card" : "bg-secondary text-secondary-foreground"
+                    }`}
+                  >
+                    <Icon size={22} aria-hidden />
+                    <span className="text-[10px] font-medium">
+                      {t(`activity.activityTypes.${opt.code}`, { defaultValue: opt.name })}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
       )}

@@ -3153,6 +3153,27 @@ function mapNearbyEvents(rows: unknown): NearbyEvent[] {
 export type AdminUserPost = { id: string; text: string | null; imageUrl: string | null; createdAt: string };
 export type AdminUserEvent = { id: string; title: string; eventDate: string; status: string | null };
 
+/**
+ * Lista/busca usuários para a moderação admin. Com termo vazio, retorna todos
+ * os usuários (ordenados por nome, limitado), permitindo a listagem inicial +
+ * busca incremental enquanto digita. Com termo, filtra por nome/@username.
+ */
+export async function adminListUsers(query = "", limit = 200): Promise<UserSearchResult[]> {
+  const trimmed = query.trim();
+  let q = supabase
+    .from("profiles")
+    .select("id, full_name, username, avatar_url");
+  if (trimmed) {
+    const pattern = `%${escapeForOrFilter(trimmed)}%`;
+    q = q.or(`full_name.ilike."${pattern}",username.ilike."${pattern}"`);
+  }
+  const { data, error } = await q
+    .order("full_name", { ascending: true, nullsFirst: false })
+    .limit(limit);
+  if (error) throw error;
+  return (data ?? []) as UserSearchResult[];
+}
+
 /** Busca usuários por nome/@username (reaproveita searchUsers). */
 export async function adminSearchUsers(query: string): Promise<UserSearchResult[]> {
   return searchUsers(query);

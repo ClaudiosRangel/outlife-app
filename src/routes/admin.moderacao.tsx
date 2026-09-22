@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import {
   isCurrentUserAdmin,
-  adminSearchUsers,
+  adminListUsers,
   adminUserPosts,
   adminUserEvents,
   adminDeletePost,
@@ -37,9 +37,15 @@ function AdminModeration() {
   const qc = useQueryClient();
   const { user, loading } = useAuth();
   const [query, setQuery] = useState("");
-  const [results, setResults] = useState<UserSearchResult[]>([]);
+  const [debouncedQuery, setDebouncedQuery] = useState("");
   const [selected, setSelected] = useState<UserSearchResult | null>(null);
   const [warning, setWarning] = useState("");
+
+  // Debounce da busca incremental (300ms) para não consultar a cada tecla.
+  useEffect(() => {
+    const id = setTimeout(() => setDebouncedQuery(query.trim()), 300);
+    return () => clearTimeout(id);
+  }, [query]);
 
   useEffect(() => {
     if (!loading && !user) navigate({ to: "/login" });
@@ -49,6 +55,14 @@ function AdminModeration() {
     queryKey: ["is-current-user-admin", user?.id],
     queryFn: isCurrentUserAdmin,
     enabled: !!user,
+  });
+
+  // Lista/busca de usuários: carrega todos ao entrar e filtra enquanto digita
+  // (busca incremental com debounce). Só ativa quando não há usuário selecionado.
+  const { data: users = [], isLoading: usersLoading } = useQuery({
+    queryKey: ["admin-list-users", debouncedQuery],
+    queryFn: () => adminListUsers(debouncedQuery),
+    enabled: !!user && isAdmin === true && !selected,
   });
 
   const { data: posts = [] } = useQuery({
@@ -61,16 +75,6 @@ function AdminModeration() {
     queryFn: () => adminUserEvents(selected!.id),
     enabled: !!selected,
   });
-
-  const doSearch = async () => {
-    const q = query.trim();
-    if (q.length < 2) return;
-    try {
-      setResults(await adminSearchUsers(q));
-    } catch (e) {
-      toast.error((e as Error).message);
-    }
-  };
 
   const delPost = useMutation({
     mutationFn: (id: string) => adminDeletePost(id),
@@ -122,25 +126,37 @@ function AdminModeration() {
         <p className="mt-1 text-sm text-white/80">Buscar usuário, moderar publicações/eventos, avisar ou banir.</p>
       </div>
 
-      {/* Busca de usuário */}
-      <div className="mx-5 mt-4">
-        <div className="flex items-center gap-2 rounded-2xl border border-border bg-card p-3">
-          <Search size={18} className="text-muted-foreground" />
-          <input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && doSearch()}
-            placeholder="Buscar por nome ou @usuário"
-            className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
-          />
-          <button onClick={doSearch} className="text-xs font-semibold text-primary">Buscar</button>
-        </div>
-        {!selected && results.length > 0 && (
+      {/* Busca de usuário — lista já carregada + filtro incremental ao digitar */}
+      {!selected && (
+        <div className="mx-5 mt-4">
+          <div className="flex items-center gap-2 rounded-2xl border border-border bg-card p-3">
+            <Search size={18} className="text-muted-foreground" />
+            <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Buscar por nome ou @usuário"
+              className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+            />
+            {usersLoading && <Loader2 size={16} className="animate-spin text-muted-foreground" />}
+          </div>
+
+          <div className="mt-1.5 flex items-center justify-between px-1">
+            <span className="text-[11px] text-muted-foreground">
+              {debouncedQuery ? `Resultados para "${debouncedQuery}"` : "Todos os usuários"}
+            </span>
+            <span className="text-[11px] text-muted-foreground">{users.length}</span>
+          </div>
+
           <div className="mt-2 space-y-1.5">
-            {results.map((u) => (
+            {!usersLoading && users.length === 0 && (
+              <p className="rounded-2xl bg-card p-4 text-center text-xs text-muted-foreground shadow-card">
+                Nenhum usuário encontrado.
+              </p>
+            )}
+            {users.map((u) => (
               <button
                 key={u.id}
-                onClick={() => { setSelected(u); setResults([]); }}
+                onClick={() => setSelected(u)}
                 className="flex w-full items-center gap-3 rounded-2xl bg-card p-3 text-left shadow-card"
               >
                 <img src={resolveAsset(u.avatar_url, avatarFallback)} alt="" className="h-9 w-9 rounded-full object-cover" />
@@ -151,8 +167,8 @@ function AdminModeration() {
               </button>
             ))}
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       {selected && (
         <div className="mx-5 mt-4 space-y-4">

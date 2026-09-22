@@ -34,6 +34,19 @@
 > Migration aplicada 2× + reload PostgREST. tsc/diagnostics limpos; build:native
 > + cap sync + APK OK (9,94 MB).
 
+> **🔧 AJUSTES pós-teste (22/09 19:38) — CONCLUÍDA:**
+> 1. **Faixa de tipos de atividade cortada** na tela Rastrear: o primeiro ícone
+>    aparecia cortado na borda esquerda ao abrir. Causa: `justify-center` +
+>    `overflow-x-auto` empurra o conteúdo para fora das duas bordas quando
+>    transborda e não deixa rolar até o início. Corrigido com inner
+>    `flex w-max mx-auto` (centraliza quando cabe; ao transbordar começa da
+>    esquerda sem cortar) + `px-1` de folga (`atividade.rastrear.tsx`).
+> 2. **Moderação por usuário**: antes só listava ao clicar em "Buscar". Agora a
+>    tela `/admin/moderacao` já carrega TODOS os usuários ao entrar e filtra
+>    incrementalmente enquanto digita (debounce 300ms), com contador e spinner.
+>    Nova API `adminListUsers(query, limit)` (query vazia = todos, ordenados por
+>    nome). Sem migration. build+sync+APK OK.
+
 **Anterior:** 15/09/2026 (Explorar fase 3 — painel diferencial: clima+UV+ar+sol+lua, resumo em texto, busca por região, contadores clicáveis, camadas)
 
 > **🟩 EXPLORAR FASE 3 (15/09/2026) — CONCLUÍDA (APK 15:37):**
