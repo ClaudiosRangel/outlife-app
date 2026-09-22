@@ -32,15 +32,13 @@ Segmentos nativos em 3 frentes: (A) dados + lógica pura de matching + testes;
     `segment_efforts` (+bbox, RLS) + RPC `segment_leaderboard`. Aplicada 2× +
     NOTIFY pgrst (Requisitos 1, 3, 4).
 
-- [ ] 2. API + detecção (Frente B)
-  - [ ] 2.1 API: `createSegment`, `fetchSegments`, `fetchSegmentById`,
-    `fetchSegmentLeaderboard`, `recordSegmentEffort` + tipos
-    (Requisitos 1, 3).
-  - [ ] 2.2 `detectAndRecordEfforts(activityId, points)`: busca segmentos
-    candidatos (bbox), roda matchSegmentEffort, grava esforços; best-effort
-    (Requisitos 2.1, 2.4, 2.5).
-  - [ ] 2.3 Integrar a detecção no fluxo de salvar atividade (após persistir a
-    atividade, com os points em mãos) sem bloquear o salvamento (Requisito 2.5).
+- [x] 2. API + detecção (Frente B)
+  - [x] 2.1 API: `createSegment`, `fetchSegments`, `fetchSegmentById`,
+    `fetchSegmentLeaderboard`, `recordSegmentEffort` + tipos (Requisitos 1, 3).
+  - [x] 2.2 `detectAndRecordEfforts(activityId, points)`: bbox + matcher +
+    grava esforços; best-effort (Requisitos 2.1, 2.4, 2.5).
+  - [x] 2.3 Integrada a detecção na finalização da atividade
+    (`atividade.rastrear.tsx`), sem bloquear o salvamento (Requisito 2.5).
 
 - [ ] 3. UI + fechamento (Frente C)
   - [ ] 3.1 Rota `/segmento/$segmentId`: dados do segmento + ranking top 10

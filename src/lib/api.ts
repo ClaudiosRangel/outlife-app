@@ -2825,3 +2825,200 @@ export async function deleteMyAccount(): Promise<void> {
   const { error } = await supabase.rpc("delete_my_account" as never, {} as never);
   if (error) throw error;
 }
+
+// ============ Segmentos nativos (spec segmentos) ============
+import { matchSegmentEffort, type MatchPoint } from "@/lib/segment-match";
+import { haversineMeters } from "@/lib/haversine";
+
+export type Segment = {
+  id: string;
+  created_by: string | null;
+  name: string;
+  activity_type: string | null;
+  distance_meters: number;
+  polyline: [number, number][]; // [lng, lat]
+  start_lat: number | null;
+  start_lng: number | null;
+  end_lat: number | null;
+  end_lng: number | null;
+  min_lat: number | null;
+  max_lat: number | null;
+  min_lng: number | null;
+  max_lng: number | null;
+  created_at: string;
+};
+
+export type SegmentLeaderboardRow = {
+  userId: string;
+  fullName: string | null;
+  avatarUrl: string | null;
+  bestSeconds: number;
+  achievedAt: string;
+};
+
+// Calcula distância total + bbox + início/fim de uma polilinha [lng,lat].
+function summarizePolyline(polyline: [number, number][]) {
+  let distance = 0;
+  let minLat = Infinity, maxLat = -Infinity, minLng = Infinity, maxLng = -Infinity;
+  for (let i = 0; i < polyline.length; i++) {
+    const [lng, lat] = polyline[i];
+    minLat = Math.min(minLat, lat); maxLat = Math.max(maxLat, lat);
+    minLng = Math.min(minLng, lng); maxLng = Math.max(maxLng, lng);
+    if (i > 0) {
+      const [plng, plat] = polyline[i - 1];
+      distance += haversineMeters({ lat: plat, lng: plng }, { lat, lng });
+    }
+  }
+  const start = polyline[0];
+  const end = polyline[polyline.length - 1];
+  return {
+    distance,
+    minLat, maxLat, minLng, maxLng,
+    startLat: start[1], startLng: start[0],
+    endLat: end[1], endLng: end[0],
+  };
+}
+
+export async function createSegment(input: {
+  name: string;
+  activityType?: string | null;
+  polyline: [number, number][];
+}): Promise<Segment> {
+  const { data: userData } = await supabase.auth.getUser();
+  if (!userData.user) throw new Error("Não autenticado");
+  if (input.polyline.length < 2) throw new Error("Trecho muito curto para um segmento.");
+  const s = summarizePolyline(input.polyline);
+  const { data, error } = await supabase
+    .from("segments" as never)
+    .insert({
+      created_by: userData.user.id,
+      name: input.name.trim(),
+      activity_type: input.activityType ?? null,
+      distance_meters: Math.round(s.distance),
+      polyline: input.polyline,
+      start_lat: s.startLat, start_lng: s.startLng,
+      end_lat: s.endLat, end_lng: s.endLng,
+      min_lat: s.minLat, max_lat: s.maxLat, min_lng: s.minLng, max_lng: s.maxLng,
+    } as never)
+    .select()
+    .single();
+  if (error) throw error;
+  return data as unknown as Segment;
+}
+
+export async function fetchSegments(): Promise<Segment[]> {
+  const { data, error } = await supabase
+    .from("segments" as never)
+    .select("*")
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return (data ?? []) as unknown as Segment[];
+}
+
+export async function fetchSegmentById(id: string): Promise<Segment | null> {
+  const { data, error } = await supabase
+    .from("segments" as never)
+    .select("*")
+    .eq("id", id)
+    .maybeSingle();
+  if (error) throw error;
+  return (data as unknown as Segment) ?? null;
+}
+
+export async function fetchSegmentLeaderboard(
+  segmentId: string,
+  limit = 10,
+): Promise<SegmentLeaderboardRow[]> {
+  const { data, error } = await supabase.rpc("segment_leaderboard" as never, {
+    _segment_id: segmentId,
+    _limit: limit,
+  } as never);
+  if (error) throw error;
+  return ((data ?? []) as unknown as {
+    user_id: string;
+    full_name: string | null;
+    avatar_url: string | null;
+    best_seconds: number;
+    achieved_at: string;
+  }[]).map((r) => ({
+    userId: r.user_id,
+    fullName: r.full_name,
+    avatarUrl: r.avatar_url,
+    bestSeconds: r.best_seconds,
+    achievedAt: r.achieved_at,
+  }));
+}
+
+async function recordSegmentEffort(input: {
+  segmentId: string;
+  activityId: string | null;
+  elapsedSeconds: number;
+}): Promise<void> {
+  const { data: userData } = await supabase.auth.getUser();
+  if (!userData.user) return;
+  const { error } = await supabase.from("segment_efforts" as never).insert({
+    segment_id: input.segmentId,
+    user_id: userData.user.id,
+    activity_id: input.activityId,
+    elapsed_seconds: input.elapsedSeconds,
+  } as never);
+  if (error) throw error;
+}
+
+/**
+ * Detecta e grava esforços de segmento para uma atividade recém-concluída.
+ * Best-effort (Req 2.5): qualquer erro é engolido para não travar o salvamento.
+ * Busca segmentos candidatos por bounding box (interseção com a bbox do
+ * trajeto) e roda o matcher puro.
+ */
+export async function detectAndRecordEfforts(
+  activityId: string | null,
+  points: MatchPoint[],
+): Promise<number> {
+  try {
+    if (!points || points.length < 2) return 0;
+    let minLat = Infinity, maxLat = -Infinity, minLng = Infinity, maxLng = -Infinity;
+    for (const p of points) {
+      if (!Number.isFinite(p.lat) || !Number.isFinite(p.lng)) continue;
+      minLat = Math.min(minLat, p.lat); maxLat = Math.max(maxLat, p.lat);
+      minLng = Math.min(minLng, p.lng); maxLng = Math.max(maxLng, p.lng);
+    }
+    if (!Number.isFinite(minLat)) return 0;
+    // Margem de ~300m em graus (~0.003) para pegar segmentos nas bordas.
+    const m = 0.003;
+    const { data, error } = await supabase
+      .from("segments" as never)
+      .select("id, start_lat, start_lng, end_lat, end_lng, distance_meters")
+      .gte("min_lat", minLat - m)
+      .lte("max_lat", maxLat + m)
+      .gte("min_lng", minLng - m)
+      .lte("max_lng", maxLng + m);
+    if (error) throw error;
+    const candidates = (data ?? []) as unknown as {
+      id: string;
+      start_lat: number; start_lng: number;
+      end_lat: number; end_lng: number;
+      distance_meters: number;
+    }[];
+    let recorded = 0;
+    for (const c of candidates) {
+      const r = matchSegmentEffort(points, {
+        startLat: c.start_lat, startLng: c.start_lng,
+        endLat: c.end_lat, endLng: c.end_lng,
+        distanceMeters: c.distance_meters,
+      });
+      if (r.matched && r.elapsedSeconds != null) {
+        await recordSegmentEffort({
+          segmentId: c.id,
+          activityId,
+          elapsedSeconds: r.elapsedSeconds,
+        });
+        recorded++;
+      }
+    }
+    return recorded;
+  } catch (e) {
+    console.error("[segmentos] detecção de esforço falhou (best-effort):", e);
+    return 0;
+  }
+}

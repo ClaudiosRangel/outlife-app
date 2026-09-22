@@ -13,6 +13,7 @@ import {
   updateActivityProgress,
   finishActivity,
   discardActivity,
+  detectAndRecordEfforts,
   uploadActivityImage,
   uploadActivityMapSnapshot,
   uploadCommunityPostVideo,
@@ -334,7 +335,7 @@ function TrackActivityPage() {
           // impede o salvamento da atividade.
         }
 
-        return await finishActivity(activityId, {
+        const finished = await finishActivity(activityId, {
           distance_meters: result.distance,
           duration_seconds: result.duration,
           route_geojson: result.route,
@@ -346,6 +347,14 @@ function TrackActivityPage() {
           elevation_gain: result.elevationGain,
           video_url,
         });
+
+        // Segmentos (spec segmentos, Req 2.5): detecta e grava esforços de
+        // segmento a partir dos pontos gravados (com timestamp). Best-effort —
+        // já é try/catch interno em detectAndRecordEfforts; nunca bloqueia o
+        // salvamento. Usa o id remoto da atividade quando disponível.
+        void detectAndRecordEfforts(activityId, result.points);
+
+        return finished;
       } catch (err) {
         const rateLimitMessage = mapRateLimitErrorToMessage(err);
         if (rateLimitMessage) {
