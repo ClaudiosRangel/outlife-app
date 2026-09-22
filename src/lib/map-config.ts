@@ -7,14 +7,10 @@ export function getMapboxToken(): string | null {
   return token.length > 0 ? token : null;
 }
 
-/** true quando há token Mapbox válido configurado (usar Mapbox GL). */
+/** true quando há token Mapbox válido configurado (usar tiles Mapbox). */
 export function hasMapbox(): boolean {
   return getMapboxToken() !== null;
 }
 
-/** Estilo padrão do mapa (outdoor, combina com o app). */
-export const MAPBOX_STYLE = "mapbox://styles/mapbox/outdoors-v12";
-
-/** Centro/zoom padrão (Brasil). */
-export const BRAZIL_CENTER: [number, number] = [-47.9292, -15.7801]; // [lng, lat]
-export const BRAZIL_ZOOM = 3.5;
+/** Estilo de tiles raster do Mapbox usado no Leaflet (visual outdoor). */
+export const MAPBOX_TILES_STYLE = "outdoors-v12";

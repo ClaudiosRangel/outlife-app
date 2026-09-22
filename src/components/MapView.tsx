@@ -17,6 +17,7 @@ import { deriveIsLive } from "@/lib/live-activity";
 import { Locate, User } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/use-auth";
+import { getMapboxToken, MAPBOX_TILES_STYLE } from "@/lib/map-config";
 
 const BRAZIL_CENTER: [number, number] = [-15.7801, -47.9292];
 const BRAZIL_ZOOM = 4;
@@ -96,11 +97,31 @@ export interface MapViewProps {
    * (Requirement 4.4). Opcional.
    */
   onSelectedFriendUnavailable?: (friendId: string) => void;
+  /**
+   * Marcadores extras da camada "agora" do Explorar (ex.: parceiros próximos).
+   * Opcional — sem eles o MapView funciona como antes.
+   */
+  extraMarkers?: ExtraMarker[];
+  /** Clique num marcador extra. */
+  onExtraMarkerClick?: (m: ExtraMarker) => void;
 }
+
+export type ExtraMarker = {
+  id: string;
+  kind: "friend" | "partner" | "event";
+  lat: number;
+  lng: number;
+  title: string;
+  subtitle?: string;
+  avatarUrl?: string | null;
+  href?: string;
+};
 
 export default function MapView({
   selectedFriendId,
   onSelectedFriendUnavailable,
+  extraMarkers = [],
+  onExtraMarkerClick,
 }: MapViewProps = {}) {
   const { t } = useTranslation();
   const { user } = useAuth();
@@ -192,10 +213,29 @@ export default function MapView({
             mapRef.current = m;
           }}
         >
-          <TileLayer
-            attribution="&copy; OpenStreetMap"
-            url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
-          />
+          {(() => {
+            // Tiles do Mapbox (estilo outdoors moderno) quando há token — dá o
+            // visual Mapbox mantendo o Leaflet, que é confiável no WebView
+            // Android (mapbox-gl/WebGL falha "context lost" no WebView). Sem
+            // token, cai nos tiles gratuitos do OpenStreetMap.
+            const token = getMapboxToken();
+            if (token) {
+              return (
+                <TileLayer
+                  attribution='&copy; <a href="https://www.mapbox.com/">Mapbox</a> &copy; OpenStreetMap'
+                  tileSize={512}
+                  zoomOffset={-1}
+                  url={`https://api.mapbox.com/styles/v1/mapbox/${MAPBOX_TILES_STYLE}/tiles/{z}/{x}/{y}?access_token=${token}`}
+                />
+              );
+            }
+            return (
+              <TileLayer
+                attribution="&copy; OpenStreetMap"
+                url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+              />
+            );
+          })()}
           {markers.map((d) => (
             <Marker
               key={d.id}
@@ -240,6 +280,27 @@ export default function MapView({
               </Marker>
             );
           })}
+          {/* Marcadores extras da camada "agora" (ex.: parceiros próximos).
+              Amigos já vêm de `shared`; aqui plotamos os de tipo != friend
+              para não duplicar. */}
+          {extraMarkers
+            .filter((m) => m.kind !== "friend" && Number.isFinite(m.lat) && Number.isFinite(m.lng))
+            .map((m) => (
+              <Marker key={m.id} position={[m.lat, m.lng]} icon={defaultIcon}>
+                <Popup>
+                  <div className="text-xs">
+                    <div className="font-semibold">{m.title}</div>
+                    {m.subtitle && <div className="text-muted-foreground">{m.subtitle}</div>}
+                    <button
+                      onClick={() => onExtraMarkerClick?.(m)}
+                      className="mt-1 inline-block font-semibold text-primary"
+                    >
+                      Ver →
+                    </button>
+                  </div>
+                </Popup>
+              </Marker>
+            ))}
         </MapContainer>
       </div>
       <div className="mx-5 mb-5 flex justify-end">

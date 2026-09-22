@@ -22,7 +22,19 @@
 >   parceiros) mantidas. `mapbox-gl@3.31` instalado; APK +0,6MB (10,53MB).
 > **Nota:** eventos no mapa ficam como evolução (não há fetchEvents com coords).
 > Token Mapbox: **restringir por URL no dashboard antes de publicar** (doc em
-> PUBLICACAO-LOJAS). **Próxima frente:** #7 tela de Iniciar atividade (Strava).
+> PUBLICACAO-LOJAS).
+>
+> **⚠️ CORREÇÃO (teste no APK build 24):** o `mapbox-gl` (WebGL) NÃO renderiza
+> de forma confiável no WebView Android — cai em "WebGL context lost"/tela em
+> branco e derrubava para o fallback (o print do usuário mostrava o Leaflet/OSM
+> antigo). **Decisão final:** usar **Leaflet + tiles RASTER do Mapbox**
+> (estilo `outdoors-v12` via `api.mapbox.com/styles/.../tiles`) — dá o visual
+> Mapbox moderno mantendo o Leaflet, que É confiável no WebView. `mapbox-gl`
+> foi REMOVIDO (APK voltou a 9,92MB). O `MapView` agora usa tiles Mapbox quando
+> há token (senão OSM), com altura h-72, marcadores de amigos ao vivo +
+> parceiros (`extraMarkers`). O 3D real (WebGL) fica como evolução para o
+> ambiente de navegador (onde o WebGL é estável). APK 12:54.
+> **Próxima frente:** #7 tela de Iniciar atividade (Strava).
 
 **Anterior:** 15/09/2026 (frente #5 segmentos nativos CONCLUÍDA — criar segmento + detecção de esforço + ranking top 10)
 

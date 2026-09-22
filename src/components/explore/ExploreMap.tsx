@@ -1,18 +1,25 @@
-import { lazy, Suspense, useState } from "react";
-import { hasMapbox } from "@/lib/map-config";
+import { lazy, Suspense } from "react";
 import type { NowMarker } from "@/lib/nearby";
 
-const MapboxExploreMap = lazy(() => import("@/components/explore/MapboxExploreMap"));
 const MapView = lazy(() => import("@/components/MapView"));
 
 /**
- * Seletor de provider de mapa do Explorar (spec explorar-redesign). Usa Mapbox
- * GL quando há token e não houve erro; caso contrário cai no MapView
- * (Leaflet/OSM) — o fallback gratuito já existente. Property 1: fallback seguro.
+ * Mapa do Explorar (spec explorar-redesign).
+ *
+ * DECISÃO (após teste no APK): o `mapbox-gl` (WebGL) é instável no WebView
+ * Android — cai em "WebGL context lost"/tela em branco e derrubava para um
+ * fallback. Em vez de arriscar isso no app nativo (alvo das lojas), usamos o
+ * **Leaflet com tiles raster do Mapbox** (estilo outdoors moderno) via
+ * `MapView`, que é confiável no WebView e ainda entrega o visual Mapbox quando
+ * há `VITE_MAPBOX_TOKEN`. Sem token, o `MapView` usa tiles do OpenStreetMap.
+ *
+ * A camada "agora" (amigos ao vivo + parceiros) é plotada pelo próprio
+ * `MapView` (amigos/destinos) — os marcadores extras de parceiros entram via
+ * a prop `extraMarkers`. O 3D real (WebGL) fica como evolução para o ambiente
+ * de navegador, onde o WebGL é estável.
  */
 export function ExploreMap({
   markers,
-  center,
   selectedFriendId,
   onSelectedFriendUnavailable,
   onMarkerClick,
@@ -23,30 +30,14 @@ export function ExploreMap({
   onSelectedFriendUnavailable?: (friendId: string) => void;
   onMarkerClick?: (m: NowMarker) => void;
 }) {
-  const [mapboxFailed, setMapboxFailed] = useState(false);
-  const useMapbox = hasMapbox() && !mapboxFailed;
-
   const fallback = <div className="mx-5 mb-3 h-72 rounded-3xl bg-gradient-sky shadow-card" />;
-
-  if (useMapbox) {
-    return (
-      <Suspense fallback={fallback}>
-        <MapboxExploreMap
-          markers={markers}
-          center={center}
-          onError={() => setMapboxFailed(true)}
-          onMarkerClick={onMarkerClick}
-        />
-      </Suspense>
-    );
-  }
-
-  // Fallback Leaflet/OSM (comportamento atual preservado).
   return (
     <Suspense fallback={fallback}>
       <MapView
         selectedFriendId={selectedFriendId}
         onSelectedFriendUnavailable={onSelectedFriendUnavailable}
+        extraMarkers={markers}
+        onExtraMarkerClick={onMarkerClick}
       />
     </Suspense>
   );
