@@ -5,7 +5,19 @@
 > `.kiro/steering/roadmap-outvitar.md`). **Mantenha-o atualizado** ao
 > concluir qualquer tarefa/bloco: marque status, data e resumo.
 
-**Última atualização:** 15/09/2026 (spec conta-privacidade-termos CONCLUÍDO — termos+privacidade+aceite+exclusão de conta)
+**Última atualização:** 15/09/2026 (frente #2 perfil-bio CONCLUÍDA — frase de perfil)
+
+> **🟩 FRENTE #2 perfil-bio (15/09/2026) — CONCLUÍDA (APK 21:57):**
+> Frase/bio de perfil. Coluna nova `profiles.bio` (migration
+> `20260915120000_profile-bio.sql`, aplicada em prod, idempotente), distinta de
+> `description` (que segue sendo a descrição comercial do parceiro). Editável em
+> Configurações (Textarea, máx 160 chars, contador) e exibida no `ProfileView`
+> em destaque (itálico) acima da description. `bio` entrou na allowlist
+> `PROFILE_EDITABLE_FIELDS` e no `fetchPublicProfile`/`PublicUserProfile`. i18n
+> `settings.bioLabel/bioPlaceholder` (PT+EN). tsc limpo.
+> **Próxima frente:** #3/#4 card da comunidade estilo Strava + likes com avatares (`comunidade-card-strava`).
+
+**Anterior:** 15/09/2026 (spec conta-privacidade-termos CONCLUÍDO — termos+privacidade+aceite+exclusão de conta)
 
 > **🟦 SPEC conta-privacidade-termos (15/09/2026) — CONCLUÍDO (APK 21:06):**
 > Frente #1 do backlog pré-lançamento (BLOQUEADOR de loja). Três entregas:

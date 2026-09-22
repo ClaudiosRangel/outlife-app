@@ -157,8 +157,13 @@ export function ProfileView({ viewedUserId }: { viewedUserId: string }) {
           </div>
         </div>
 
+        {profile?.bio && (
+          <p className="mt-3 text-sm font-medium italic leading-relaxed text-white">
+            {profile.bio}
+          </p>
+        )}
         {profile?.description && (
-          <p className="mt-3 text-sm leading-relaxed text-white/90">{profile.description}</p>
+          <p className="mt-2 text-sm leading-relaxed text-white/90">{profile.description}</p>
         )}
 
         {/* Selo textual ao vivo (toque leva ao mapa/Explorar) */}

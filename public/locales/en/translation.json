@@ -804,6 +804,8 @@
     "fullNameLabel": "Full name",
     "usernameLabel": "Username",
     "locationLabel": "Location",
+    "bioLabel": "Profile bio",
+    "bioPlaceholder": "A phrase that represents you…",
     "save": "Save changes",
     "saved": "Profile updated!",
     "avatarUpdated": "Profile photo updated!",

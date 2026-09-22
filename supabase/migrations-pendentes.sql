@@ -908,3 +908,10 @@ ALTER TABLE public.profiles
 --     por user_id sem cascade, deleta profiles (dispara cascades) e auth.users
 --     (invalida login). Grant so a authenticated. (idempotente)
 -- ############################################################################
+
+-- ############################################################################
+-- ############################################################################
+-- 31) 20260915120000_profile-bio.sql
+--     Frase/bio de perfil: coluna profiles.bio (text). Campo pessoal curto,
+--     distinto de description (descricao comercial do parceiro). (idempotente)
+-- ############################################################################

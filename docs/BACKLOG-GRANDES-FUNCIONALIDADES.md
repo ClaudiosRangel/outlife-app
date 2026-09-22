@@ -20,8 +20,8 @@ que reduzem risco de reprovação nas lojas (termos/exclusão de conta são
 
 | # | Frente | Spec | Risco | Depende de |
 |---|--------|------|-------|-----------|
-| 1 | Termos de uso + exclusão de conta + privacidade | `conta-privacidade-termos` | Médio (legal) | — (BLOQUEADOR de loja) |
-| 2 | Frase/bio de perfil | `perfil-bio` | Baixo | — |
+| 1 | Termos de uso + exclusão de conta + privacidade | `conta-privacidade-termos` ✅ CONCLUÍDA (15/09) | Médio (legal) | — (BLOQUEADOR de loja) |
+| 2 | Frase/bio de perfil | `perfil-bio` ✅ CONCLUÍDA (15/09) | Baixo | — |
 | 3 | Card da comunidade repaginado (estilo Strava) | `comunidade-card-strava` | Baixo | — |
 | 4 | Likes com avatares + total no card | (junto do #3) | Baixo | #3 |
 | 5 | Segmentos (ranking top 10 por tempo médio) | `segmentos` | Alto | motor de trajeto existente |

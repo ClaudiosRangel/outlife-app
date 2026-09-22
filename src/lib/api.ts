@@ -277,6 +277,7 @@ const PROFILE_EDITABLE_FIELDS = [
   "full_name",
   "username",
   "avatar_url",
+  "bio",
   "description",
   "category",
   "location",
@@ -2134,6 +2135,7 @@ export type PublicUserProfile = {
   full_name: string | null;
   username: string | null;
   avatar_url: string | null;
+  bio: string | null;
   description: string | null;
   followers_count: number | null;
   following_count: number | null;
@@ -2143,7 +2145,7 @@ export type PublicUserProfile = {
 export async function fetchPublicProfile(userId: string): Promise<PublicUserProfile | null> {
   const { data, error } = await supabase
     .from("profiles")
-    .select("id, full_name, username, avatar_url, description, followers_count, following_count")
+    .select("id, full_name, username, avatar_url, bio, description, followers_count, following_count" as never)
     .eq("id", userId)
     .maybeSingle();
   if (error) throw error;

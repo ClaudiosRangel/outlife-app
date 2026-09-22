@@ -7,6 +7,7 @@ import { ArrowLeft, Camera, Loader2, Trash2, ShieldAlert, FileText } from "lucid
 import { StatusBar } from "@/components/StatusBar";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/hooks/use-auth";
@@ -57,6 +58,7 @@ function SettingsScreen() {
   const [fullName, setFullName] = useState("");
   const [username, setUsername] = useState("");
   const [location, setLocation] = useState("");
+  const [bio, setBio] = useState("");
 
   // Cadastro completo (item 13). Dados owner-only vêm de fetchMyContacts.
   const { data: contacts } = useQuery({
@@ -82,6 +84,7 @@ function SettingsScreen() {
       setFullName(profile.full_name ?? "");
       setUsername(profile.username ?? "");
       setLocation(profile.location ?? "");
+      setBio(((profile as Record<string, unknown>).bio as string) ?? "");
       const p = profile as Record<string, unknown>;
       setPersonType(((p.person_type as PersonType) ?? "pf"));
       setZip((p.address_zip as string) ?? "");
@@ -149,6 +152,7 @@ function SettingsScreen() {
         full_name: fullName.trim(),
         username: trimmedUsername,
         location: location.trim(),
+        bio: bio.trim() || null,
         person_type: personType,
         address_zip: zip.trim() || null,
         address_street: street.trim() || null,
@@ -285,6 +289,18 @@ function SettingsScreen() {
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
               />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="bio">{t("settings.bioLabel", "Frase de perfil")}</Label>
+              <Textarea
+                id="bio"
+                value={bio}
+                onChange={(e) => setBio(e.target.value.slice(0, 160))}
+                placeholder={t("settings.bioPlaceholder", "Uma frase que te representa…")}
+                rows={2}
+                maxLength={160}
+              />
+              <div className="text-right text-[10px] text-muted-foreground">{bio.length}/160</div>
             </div>
             {/* Cadastro completo (item 13) — na mesma sessão/formulário, um
                 único "Salvar alterações" no fim. Opcional para todos;
