@@ -36,38 +36,33 @@ aplicadas em produção 2×.
   - [x] 1.3 Teste `legal-content.test.ts`: versões ISO válidas, paridade de
     seções PT/EN, headings/bodies não-vazios (Requisito 1.4).
 
-- [ ] 2. Aceite obrigatório (Frente B)
-  - [ ] 2.1 Migration `20260915100000_legal-acceptance.sql`: tabela
+- [x] 2. Aceite obrigatório (Frente B)
+  - [x] 2.1 Migration `20260915100000_legal-acceptance.sql`: tabela
     `legal_acceptances` (+RLS dono), coluna `profiles.accepted_legal_version`,
-    RPC `accept_legal_terms`. Aplicar em produção 2× + `NOTIFY pgrst`. Refletir
-    no consolidado (Requisitos 2.2, 2.4).
-  - [ ] 2.2 API `acceptLegalTerms()` + expor `accepted_legal_version` no
-    `fetchMyProfile` (Requisito 2.2).
-  - [ ] 2.3 `src/lib/legal-gate.ts` com `shouldShowLegalGate(...)` puro +
-    testes (rota pública não mostra; versão divergente mostra; deslogado não
-    mostra) (Requisitos 2.1, 2.4).
-  - [ ] 2.4 Componente `<LegalGate>` (modal bloqueante) montado no `__root.tsx`:
-    resumo + links `/termos` e `/privacidade` + Aceitar/Sair (Requisitos 2.1,
-    2.3, 2.5).
-  - [ ] 2.5 i18n bloco `legal.*` (PT + EN).
+    RPC `accept_legal_terms`. Aplicada em produção 2× + `NOTIFY pgrst`.
+    Refletida no consolidado (Requisitos 2.2, 2.4).
+  - [x] 2.2 API `acceptLegalTerms()` + `fetchMyLegalStatus()`
+    (`accepted_legal_version`) (Requisito 2.2).
+  - [x] 2.3 `src/lib/legal-gate.ts` com `shouldShowLegalGate(...)` puro +
+    testes (5 passando) (Requisitos 2.1, 2.4).
+  - [x] 2.4 Componente `<LegalGate>` (modal bloqueante) montado no `__root.tsx`
+    (Requisitos 2.1, 2.3, 2.5).
+  - [x] 2.5 i18n bloco `legal.*` (PT + EN).
 
-- [ ] 3. Exclusão de conta (Frente C)
-  - [ ] 3.1 Migration `20260915110000_delete-account.sql`: RPC
-    `delete_my_account()` SECURITY DEFINER (SET NULL em answered_by; delete das
-    tabelas por user_id sem cascade; delete profiles → cascade; delete
-    auth.users). Grants só a `authenticated`. Aplicar 2× + `NOTIFY pgrst` +
+- [x] 3. Exclusão de conta (Frente C)
+  - [x] 3.1 Migration `20260915110000_delete-account.sql`: RPC
+    `delete_my_account()` SECURITY DEFINER. Aplicada 2× + `NOTIFY pgrst` +
     consolidado (Requisitos 3.3, 3.4, 3.5, 4.1, 4.2, 4.3).
-  - [ ] 3.2 API `deleteMyAccount()` (Requisito 3.3).
-  - [ ] 3.3 UI em `configuracoes.tsx`: seção "Zona de perigo" + modal de
-    confirmação (digitar EXCLUIR) → deleteMyAccount → signOut → /login
-    (Requisitos 3.1, 3.2, 3.3, 3.5).
-  - [ ] 3.4 i18n `settings.deleteAccount.*` (PT + EN).
+  - [x] 3.2 API `deleteMyAccount()` (Requisito 3.3).
+  - [x] 3.3 UI em `configuracoes.tsx`: seção "Zona de perigo" + confirmação
+    (digitar EXCLUIR) → deleteMyAccount → signOut → /login (Requisitos 3.1,
+    3.2, 3.3, 3.5).
+  - [x] 3.4 i18n `settings.deleteAccount.*` (PT + EN).
 
-- [ ] 4. Verificação e fechamento
-  - [ ] 4.1 `tsc` limpo (só 6 erros de use-local-push); rodar testes novos.
-  - [ ] 4.2 Build APK (build:native → cap sync → assembleDebug) e confirmar.
-  - [ ] 4.3 Commit+push na main; atualizar ROADMAP + PUBLICACAO-LOJAS (marcar
-    itens de termos/exclusão/URLs como atendidos).
+- [x] 4. Verificação e fechamento
+  - [x] 4.1 `tsc` limpo (só 6 erros de use-local-push); 11 testes novos passando.
+  - [x] 4.2 Build APK (build:native → cap sync → assembleDebug) — APK 21:06.
+  - [x] 4.3 Commit+push na main; ROADMAP + PUBLICACAO-LOJAS atualizados.
 
 ## Notes
 

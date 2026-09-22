@@ -2752,3 +2752,40 @@ export async function fetchAdminFeedback(limit = 100): Promise<UserFeedback[]> {
   if (error) throw error;
   return (data ?? []) as unknown as UserFeedback[];
 }
+
+// ============ Legal: aceite de termos + exclusão de conta ============
+// Spec conta-privacidade-termos. O aceite grava histórico em
+// `legal_acceptances` e denormaliza `profiles.accepted_legal_version` (gate
+// rápido). A exclusão chama a RPC transacional `delete_my_account`.
+
+/** Versão dos termos que o usuário logado já aceitou (ou null). */
+export async function fetchMyLegalStatus(): Promise<{ acceptedVersion: string | null }> {
+  const { data: userData } = await supabase.auth.getUser();
+  if (!userData.user) return { acceptedVersion: null };
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("accepted_legal_version" as never)
+    .eq("id", userData.user.id)
+    .maybeSingle();
+  if (error) throw error;
+  const v = (data as { accepted_legal_version?: string | null } | null)?.accepted_legal_version;
+  return { acceptedVersion: v ?? null };
+}
+
+/** Registra o aceite da versão vigente dos termos para o usuário logado. */
+export async function acceptLegalTerms(docVersion: string, platform: string): Promise<void> {
+  const userAgent =
+    typeof navigator !== "undefined" ? navigator.userAgent.slice(0, 400) : null;
+  const { error } = await supabase.rpc("accept_legal_terms" as never, {
+    _doc_version: docVersion,
+    _platform: platform,
+    _user_agent: userAgent,
+  } as never);
+  if (error) throw error;
+}
+
+/** Exclui a conta do usuário logado (dados + login), de forma transacional. */
+export async function deleteMyAccount(): Promise<void> {
+  const { error } = await supabase.rpc("delete_my_account" as never, {} as never);
+  if (error) throw error;
+}

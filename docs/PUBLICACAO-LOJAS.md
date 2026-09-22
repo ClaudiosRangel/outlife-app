@@ -61,9 +61,17 @@ runners macOS). Pré-requisitos a configurar quando formos gerar o IPA:
 
 Ambas as lojas EXIGEM, para apps que coletam dados (localização, conta):
 
-- [ ] **Política de Privacidade** hospedada em URL pública.
-- [ ] **Termos de Uso** com aceite obrigatório no primeiro acesso.
-- [ ] Mecanismo de **exclusão de conta** dentro do app (exigência da Apple
-      desde 2022 e da Google) — ver spec `conta-privacidade-termos`.
+- [x] **Política de Privacidade** — implementada, rota pública `/privacidade`
+      (spec `conta-privacidade-termos`, 15/09/2026). Falta hospedar a URL
+      pública definitiva para a ficha das lojas (a rota existe no app web).
+- [x] **Termos de Uso** com aceite obrigatório no primeiro acesso — rota
+      pública `/termos` + gate `<LegalGate>` bloqueante + registro em
+      `legal_acceptances`.
+- [x] Mecanismo de **exclusão de conta** dentro do app — Configurações → Zona
+      de perigo → "Excluir minha conta" (RPC `delete_my_account`).
+- [ ] Preencher [RAZÃO SOCIAL]/[CNPJ]/[ENDEREÇO] em `src/lib/legal-content.ts`
+      quando houver empresa constituída (hoje placeholders; contato usa
+      outvitar@gmail.com, idade mínima 13).
+- [ ] Enviar a minuta legal para validação de um advogado antes de publicar.
 - [ ] Declaração de uso de localização em background (Android + iOS têm
       telas de permissão específicas; iOS exige justificativa no Info.plist).

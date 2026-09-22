@@ -825,7 +825,24 @@
     "complement": "Complement",
     "neighborhood": "Neighborhood",
     "city": "City",
-    "state": "State"
+    "state": "State",
+    "legalTitle": "Legal",
+    "dangerZone": "Danger zone",
+    "deleteAccount": {
+      "cta": "Delete my account",
+      "confirmWord": "DELETE",
+      "warning": "This action is permanent. Your personal data and content will be removed per our Privacy Policy. Type {{word}} to confirm.",
+      "confirm": "Delete",
+      "done": "Account deleted."
+    }
+  },
+  "legal": {
+    "gateTitle": "Terms of Use and Privacy",
+    "gateBody": "To keep using OutVitar, please read and accept our Terms of Use and Privacy Policy.",
+    "termsLink": "Terms of Use",
+    "privacyLink": "Privacy Policy",
+    "accept": "I have read and accept",
+    "decline": "I don't accept — sign out"
   },
   "adminCompliance": {
     "title": "Cadastur Moderation",

@@ -888,3 +888,23 @@ ALTER TABLE public.profiles
 --     (RLS: participante lê; envia como remetente; destinatário marca lida) +
 --     RPCs send_direct_message e list_conversations. (idempotente)
 -- ############################################################################
+
+-- ############################################################################
+-- ############################################################################
+-- 28) 20260913110000_dm-notification.sql
+--     send_direct_message passou a criar notification tipo 'direct_message'
+--     (sino) para o destinatario. (idempotente)
+-- ############################################################################
+-- ############################################################################
+-- 29) 20260915100000_legal-acceptance.sql
+--     Aceite obrigatorio de Termos/Privacidade. Tabela legal_acceptances
+--     (RLS dono le/insere) + coluna profiles.accepted_legal_version +
+--     RPC accept_legal_terms(_doc_version,_platform,_user_agent). (idempotente)
+-- ############################################################################
+-- ############################################################################
+-- 30) 20260915110000_delete-account.sql
+--     Exclusao de conta in-app (LGPD + lojas). RPC delete_my_account()
+--     SECURITY DEFINER: anonimiza event_questions.answered_by, deleta tabelas
+--     por user_id sem cascade, deleta profiles (dispara cascades) e auth.users
+--     (invalida login). Grant so a authenticated. (idempotente)
+-- ############################################################################

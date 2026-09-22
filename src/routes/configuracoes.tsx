@@ -3,13 +3,14 @@ import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
-import { ArrowLeft, Camera, Loader2 } from "lucide-react";
+import { ArrowLeft, Camera, Loader2, Trash2, ShieldAlert, FileText } from "lucide-react";
 import { StatusBar } from "@/components/StatusBar";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/hooks/use-auth";
+import { supabase } from "@/integrations/supabase/client";
 import {
   fetchMyProfile,
   fetchMyContacts,
@@ -18,6 +19,7 @@ import {
   updateMyProfile,
   updateMyContacts,
   uploadAvatarImage,
+  deleteMyAccount,
   type PersonType,
 } from "@/lib/api";
 import { maskCPF, maskCNPJ, maskCEP, isValidCPF, isValidCNPJ } from "@/lib/document-validation";
@@ -174,6 +176,23 @@ function SettingsScreen() {
     e.preventDefault();
     saveAllMutation.mutate();
   };
+
+  // Exclusão de conta (spec conta-privacidade-termos, Req 3). Exige digitar
+  // a palavra de confirmação antes de habilitar o botão.
+  const [showDelete, setShowDelete] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState("");
+  const CONFIRM_WORD = t("settings.deleteAccount.confirmWord", "EXCLUIR");
+  const deleteAccountMutation = useMutation({
+    mutationFn: deleteMyAccount,
+    onSuccess: async () => {
+      await supabase.auth.signOut();
+      qc.clear();
+      toast.success(t("settings.deleteAccount.done", "Conta excluída."));
+      navigate({ to: "/login" });
+    },
+    onError: (err: Error) =>
+      toast.error(err.message || t("settings.genericError")),
+  });
 
   return (
     <div className="pb-12">
@@ -369,6 +388,90 @@ function SettingsScreen() {
             </Button>
           </form>
         )}
+      </section>
+
+      {/* Documentos legais */}
+      <section className="px-5 mt-8">
+        <h2 className="mb-2 text-sm font-semibold text-muted-foreground">
+          {t("settings.legalTitle", "Legal")}
+        </h2>
+        <div className="divide-y divide-border overflow-hidden rounded-2xl border border-border bg-card">
+          <Link to="/termos" className="flex items-center gap-3 p-3.5 text-sm">
+            <FileText size={16} className="text-muted-foreground" />
+            {t("legal.termsLink", "Termos de Uso")}
+          </Link>
+          <Link to="/privacidade" className="flex items-center gap-3 p-3.5 text-sm">
+            <FileText size={16} className="text-muted-foreground" />
+            {t("legal.privacyLink", "Política de Privacidade")}
+          </Link>
+        </div>
+      </section>
+
+      {/* Zona de perigo — exclusão de conta */}
+      <section className="px-5 mt-8">
+        <h2 className="mb-2 flex items-center gap-2 text-sm font-semibold text-destructive">
+          <ShieldAlert size={16} />
+          {t("settings.dangerZone", "Zona de perigo")}
+        </h2>
+        <div className="rounded-2xl border border-destructive/30 bg-destructive/5 p-4">
+          {!showDelete ? (
+            <button
+              type="button"
+              onClick={() => setShowDelete(true)}
+              className="flex w-full items-center justify-center gap-2 rounded-full border border-destructive/40 px-4 py-2.5 text-sm font-semibold text-destructive"
+            >
+              <Trash2 size={16} />
+              {t("settings.deleteAccount.cta", "Excluir minha conta")}
+            </button>
+          ) : (
+            <div className="space-y-3">
+              <p className="text-xs leading-relaxed text-muted-foreground">
+                {t(
+                  "settings.deleteAccount.warning",
+                  "Esta ação é permanente. Seus dados pessoais e conteúdo serão removidos conforme nossa Política de Privacidade. Digite {{word}} para confirmar.",
+                  { word: CONFIRM_WORD },
+                )}
+              </p>
+              <Input
+                value={deleteConfirm}
+                onChange={(e) => setDeleteConfirm(e.target.value)}
+                placeholder={CONFIRM_WORD}
+                autoCapitalize="characters"
+              />
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => {
+                    setShowDelete(false);
+                    setDeleteConfirm("");
+                  }}
+                  disabled={deleteAccountMutation.isPending}
+                >
+                  {t("common.cancel", "Cancelar")}
+                </Button>
+                <Button
+                  type="button"
+                  variant="destructive"
+                  className="flex-1"
+                  disabled={
+                    deleteConfirm.trim().toUpperCase() !== CONFIRM_WORD.toUpperCase() ||
+                    deleteAccountMutation.isPending
+                  }
+                  onClick={() => deleteAccountMutation.mutate()}
+                >
+                  {deleteAccountMutation.isPending ? (
+                    <Loader2 size={16} className="mr-2 animate-spin" />
+                  ) : (
+                    <Trash2 size={16} className="mr-2" />
+                  )}
+                  {t("settings.deleteAccount.confirm", "Excluir")}
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
       </section>
     </div>
   );

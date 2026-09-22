@@ -5,7 +5,32 @@
 > `.kiro/steering/roadmap-outvitar.md`). **Mantenha-o atualizado** ao
 > concluir qualquer tarefa/bloco: marque status, data e resumo.
 
-**Última atualização:** 15/09/2026 (registro da conta Apple Developer + backlog das 9 grandes funcionalidades pré-lançamento)
+**Última atualização:** 15/09/2026 (spec conta-privacidade-termos CONCLUÍDO — termos+privacidade+aceite+exclusão de conta)
+
+> **🟦 SPEC conta-privacidade-termos (15/09/2026) — CONCLUÍDO (APK 21:06):**
+> Frente #1 do backlog pré-lançamento (BLOQUEADOR de loja). Três entregas:
+> 1. **Documentos legais** — `src/lib/legal-content.ts` (Termos de Uso +
+>    Política de Privacidade, PT e EN, versionados por data), cobrindo
+>    marketplace, conteúdo de usuário, localização/GPS, LGPD, retenção e
+>    isenções. Rotas públicas `/termos` e `/privacidade` (componente
+>    `LegalDocView`). Idade mínima 13; contato outvitar@gmail.com;
+>    RAZÃO SOCIAL/CNPJ/ENDEREÇO como placeholders a preencher. É MINUTA — vai
+>    para validação de advogado antes de publicar.
+> 2. **Aceite obrigatório** — migration `20260915100000_legal-acceptance.sql`
+>    (tabela `legal_acceptances` + coluna `profiles.accepted_legal_version` +
+>    RPC `accept_legal_terms`). Componente `<LegalGate>` no `__root.tsx`
+>    bloqueia o app até aceitar a versão vigente (isento em rotas públicas).
+>    Lógica pura `src/lib/legal-gate.ts`.
+> 3. **Exclusão de conta** — migration `20260915110000_delete-account.sql`
+>    (RPC `delete_my_account()` SECURITY DEFINER: anonimiza answered_by, deleta
+>    tabelas por user_id sem cascade, deleta profiles→cascade, deleta
+>    auth.users). UI em Configurações → "Zona de perigo" (digitar EXCLUIR).
+> tsc limpo; 11 testes novos (legal-content 6 + legal-gate 5). Migrations
+> aplicadas em prod 2× + NOTIFY pgrst + consolidado. Detalhes de publicação em
+> `docs/PUBLICACAO-LOJAS.md`; backlog em `docs/BACKLOG-GRANDES-FUNCIONALIDADES.md`.
+> **Próxima frente:** #2 frase/bio de perfil (`perfil-bio`).
+
+**Anterior:** 15/09/2026 (registro da conta Apple Developer + backlog das 9 grandes funcionalidades pré-lançamento)
 
 > **📌 RODADA PRÉ-LANÇAMENTO (15/09/2026) — PLANEJAMENTO REGISTRADO:**
 > O usuário definiu 9 grandes funcionalidades a implementar antes de gerar as

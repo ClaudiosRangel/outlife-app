@@ -825,7 +825,24 @@
     "complement": "Complemento",
     "neighborhood": "Bairro",
     "city": "Cidade",
-    "state": "UF"
+    "state": "UF",
+    "legalTitle": "Legal",
+    "dangerZone": "Zona de perigo",
+    "deleteAccount": {
+      "cta": "Excluir minha conta",
+      "confirmWord": "EXCLUIR",
+      "warning": "Esta ação é permanente. Seus dados pessoais e conteúdo serão removidos conforme nossa Política de Privacidade. Digite {{word}} para confirmar.",
+      "confirm": "Excluir",
+      "done": "Conta excluída."
+    }
+  },
+  "legal": {
+    "gateTitle": "Termos de Uso e Privacidade",
+    "gateBody": "Para continuar usando o OutVitar, leia e aceite nossos Termos de Uso e nossa Política de Privacidade.",
+    "termsLink": "Termos de Uso",
+    "privacyLink": "Política de Privacidade",
+    "accept": "Li e aceito",
+    "decline": "Não aceito — sair"
   },
   "adminCompliance": {
     "title": "Moderação Cadastur",

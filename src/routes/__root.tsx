@@ -16,6 +16,7 @@ import { useLocalPushNotifications } from "@/hooks/use-local-push";
 import { useRegisterPush } from "@/hooks/use-register-push";
 import { parseDeepLink } from "@/lib/deep-link";
 import { BrandSplash } from "@/components/BrandSplash";
+import { LegalGate } from "@/components/LegalGate";
 import { useKeyboardScroll } from "@/hooks/use-keyboard-scroll";
 import "@/lib/i18n";
 
@@ -378,6 +379,10 @@ function RootComponent() {
             </div>
           )}
         </PhoneFrame>
+        {/* Gate de aceite obrigatório dos Termos/Privacidade (spec
+            conta-privacidade-termos). Bloqueia o app até o aceite da versão
+            vigente; isento em rotas públicas (/termos, /privacidade, login). */}
+        <LegalGate />
         <Toaster position="top-center" richColors />
         {/**
          * Vercel Analytics (Requirement 9.2). O componente <Analytics />
