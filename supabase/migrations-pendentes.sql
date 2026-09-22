@@ -941,3 +941,12 @@ ALTER TABLE public.profiles
 --     achar o evento pela cidade que o criou, sem depender de destino vinculado.
 --     (idempotente)
 -- ############################################################################
+
+-- ############################################################################
+-- ############################################################################
+-- 35) 20260915160000_admin-moderation.sql
+--     Moderação admin por usuário: colunas profiles.is_banned/banned_reason/
+--     banned_at + RPCs SECURITY DEFINER (is_admin): admin_delete_post,
+--     admin_delete_event, admin_send_warning (notification tipo admin_warning),
+--     admin_set_ban, admin_user_posts, admin_user_events. (idempotente)
+-- ############################################################################

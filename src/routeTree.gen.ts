@@ -46,6 +46,7 @@ import { Route as ApiNotifyAdminsRouteImport } from './routes/api.notify-admins'
 import { Route as AdminTrilhasRouteImport } from './routes/admin.trilhas'
 import { Route as AdminPublicarRouteImport } from './routes/admin.publicar'
 import { Route as AdminOpinioesRouteImport } from './routes/admin.opinioes'
+import { Route as AdminModeracaoRouteImport } from './routes/admin.moderacao'
 import { Route as AdminMelhoriasRouteImport } from './routes/admin.melhorias'
 import { Route as AdminDestinosRouteImport } from './routes/admin.destinos'
 import { Route as AdminDashboardRouteImport } from './routes/admin.dashboard'
@@ -241,6 +242,11 @@ const AdminPublicarRoute = AdminPublicarRouteImport.update({
   path: '/admin/publicar',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminModeracaoRoute = AdminModeracaoRouteImport.update({
+  id: '/admin/moderacao',
+  path: '/admin/moderacao',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminOpinioesRoute = AdminOpinioesRouteImport.update({
   id: '/admin/opinioes',
   path: '/admin/opinioes',
@@ -345,6 +351,7 @@ export interface FileRoutesByFullPath {
   '/admin/dashboard': typeof AdminDashboardRoute
   '/admin/destinos': typeof AdminDestinosRoute
   '/admin/melhorias': typeof AdminMelhoriasRoute
+  '/admin/moderacao': typeof AdminModeracaoRoute
   '/admin/opinioes': typeof AdminOpinioesRoute
   '/admin/publicar': typeof AdminPublicarRoute
   '/admin/trilhas': typeof AdminTrilhasRoute
@@ -398,6 +405,7 @@ export interface FileRoutesByTo {
   '/admin/dashboard': typeof AdminDashboardRoute
   '/admin/destinos': typeof AdminDestinosRoute
   '/admin/melhorias': typeof AdminMelhoriasRoute
+  '/admin/moderacao': typeof AdminModeracaoRoute
   '/admin/opinioes': typeof AdminOpinioesRoute
   '/admin/publicar': typeof AdminPublicarRoute
   '/admin/trilhas': typeof AdminTrilhasRoute
@@ -452,6 +460,7 @@ export interface FileRoutesById {
   '/admin/dashboard': typeof AdminDashboardRoute
   '/admin/destinos': typeof AdminDestinosRoute
   '/admin/melhorias': typeof AdminMelhoriasRoute
+  '/admin/moderacao': typeof AdminModeracaoRoute
   '/admin/opinioes': typeof AdminOpinioesRoute
   '/admin/publicar': typeof AdminPublicarRoute
   '/admin/trilhas': typeof AdminTrilhasRoute
@@ -507,6 +516,7 @@ export interface FileRouteTypes {
     | '/admin/dashboard'
     | '/admin/destinos'
     | '/admin/melhorias'
+    | '/admin/moderacao'
     | '/admin/opinioes'
     | '/admin/publicar'
     | '/admin/trilhas'
@@ -560,6 +570,7 @@ export interface FileRouteTypes {
     | '/admin/dashboard'
     | '/admin/destinos'
     | '/admin/melhorias'
+    | '/admin/moderacao'
     | '/admin/opinioes'
     | '/admin/publicar'
     | '/admin/trilhas'
@@ -613,6 +624,7 @@ export interface FileRouteTypes {
     | '/admin/dashboard'
     | '/admin/destinos'
     | '/admin/melhorias'
+    | '/admin/moderacao'
     | '/admin/opinioes'
     | '/admin/publicar'
     | '/admin/trilhas'
@@ -667,6 +679,7 @@ export interface RootRouteChildren {
   AdminDashboardRoute: typeof AdminDashboardRoute
   AdminDestinosRoute: typeof AdminDestinosRoute
   AdminMelhoriasRoute: typeof AdminMelhoriasRoute
+  AdminModeracaoRoute: typeof AdminModeracaoRoute
   AdminOpinioesRoute: typeof AdminOpinioesRoute
   AdminPublicarRoute: typeof AdminPublicarRoute
   AdminTrilhasRoute: typeof AdminTrilhasRoute
@@ -946,6 +959,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminPublicarRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/moderacao': {
+      id: '/admin/moderacao'
+      path: '/admin/moderacao'
+      fullPath: '/admin/moderacao'
+      preLoaderRoute: typeof AdminModeracaoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/opinioes': {
       id: '/admin/opinioes'
       path: '/admin/opinioes'
@@ -1093,6 +1113,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminDashboardRoute: AdminDashboardRoute,
   AdminDestinosRoute: AdminDestinosRoute,
   AdminMelhoriasRoute: AdminMelhoriasRoute,
+  AdminModeracaoRoute: AdminModeracaoRoute,
   AdminOpinioesRoute: AdminOpinioesRoute,
   AdminPublicarRoute: AdminPublicarRoute,
   AdminTrilhasRoute: AdminTrilhasRoute,

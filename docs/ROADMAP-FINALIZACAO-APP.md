@@ -69,6 +69,23 @@
 >    mapa"). Rota registrada no routeTree.
 > tsc limpo. Sem migration. APK 18:02.
 
+> **🔧 RODADA DE AJUSTES (7 itens, 22/09 18:58) — CONCLUÍDA:**
+> 1/4. **Mapa da atividade com tiles Mapbox + camadas** (relevo/satélite/ruas),
+>    igual ao Explorar (`ActivityMap` agora usa Mapbox quando há token).
+> 2. **Botão "Gravar" desabilitado** quando já se está na tela de rastrear
+>    (`BottomNav`, `onRecordScreen`).
+> 3. **Texto do botão Iniciar** reduzido: ícone Play grande + "Iniciar"
+>    (`activity.startShort`), não estoura mais o círculo.
+> 5. **Excluir evento pelo criador**: botão no `EditEventSheet` (RLS
+>    "Creators can delete their events" já existia).
+> 6/7. **Moderação admin por usuário** (nova tela `/admin/moderacao` + card no
+>    hub): buscar usuário → excluir publicações/eventos dele, **enviar aviso**
+>    (notification `admin_warning`) e **banir/desbanir**. Backend: migration
+>    `20260915160000` (colunas is_banned + RPCs SECURITY DEFINER protegidas por
+>    is_admin). API `adminUserPosts/Events`, `adminDelete*`, `adminSendWarning`,
+>    `adminSetBan`.
+> tsc limpo; migration aplicada 2× + reload. APK 18:58.
+
 **Próxima frente:** #8 Loja virtual dos parceiros.
 
 > **🟩 FRENTE #7 iniciar-atividade-redesign (15/09/2026) — CONCLUÍDA (APK 17:35):**

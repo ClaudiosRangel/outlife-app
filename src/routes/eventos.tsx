@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Calendar, MapPin, Users, Plus, MessageCircle, Loader2, Image as ImageIcon, CalendarPlus, Pencil } from "lucide-react";
+import { ArrowLeft, Calendar, MapPin, Users, Plus, MessageCircle, Loader2, Image as ImageIcon, CalendarPlus, Pencil, Trash2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { StatusBar } from "@/components/StatusBar";
@@ -730,6 +730,24 @@ function EditEventSheet({ event, open, onClose }: { event: EventItem | null; ope
     onError: (e: Error) => toast.error(e.message),
   });
 
+  // Exclusão do evento pelo criador (item 5). RLS de events já restringe o
+  // delete ao created_by = auth.uid().
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const deleteMut = useMutation({
+    mutationFn: async () => {
+      if (!event) throw new Error("Erro");
+      const { error } = await supabase.from("events" as never).delete().eq("id", event.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Evento excluído.");
+      qc.invalidateQueries({ queryKey: ["events"] });
+      setConfirmDelete(false);
+      onClose();
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   if (!event) return null;
 
   return (
@@ -764,6 +782,31 @@ function EditEventSheet({ event, open, onClose }: { event: EventItem | null; ope
             {updateMut.isPending ? <Loader2 size={16} className="animate-spin mr-2" /> : <Pencil size={16} className="mr-2" />}
             Salvar alterações
           </Button>
+
+          {/* Excluir evento (só criador; RLS reforça no banco) */}
+          {!confirmDelete ? (
+            <Button
+              variant="outline"
+              className="w-full h-11 rounded-xl border-destructive/40 text-destructive"
+              onClick={() => setConfirmDelete(true)}
+            >
+              <Trash2 size={16} className="mr-2" /> Excluir evento
+            </Button>
+          ) : (
+            <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-3">
+              <p className="mb-2 text-xs text-muted-foreground">
+                Tem certeza? Esta ação não pode ser desfeita.
+              </p>
+              <div className="flex gap-2">
+                <Button variant="outline" className="flex-1 h-10 rounded-xl" onClick={() => setConfirmDelete(false)} disabled={deleteMut.isPending}>
+                  Cancelar
+                </Button>
+                <Button variant="destructive" className="flex-1 h-10 rounded-xl" onClick={() => deleteMut.mutate()} disabled={deleteMut.isPending}>
+                  {deleteMut.isPending ? <Loader2 size={16} className="animate-spin" /> : "Excluir"}
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
       </SheetContent>
     </Sheet>

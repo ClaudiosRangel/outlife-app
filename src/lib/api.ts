@@ -3088,3 +3088,58 @@ function mapNearbyEvents(rows: unknown): NearbyEvent[] {
     };
   });
 }
+
+// ============ Moderação administrativa (admin — itens 6/7) ============
+export type AdminUserPost = { id: string; text: string | null; imageUrl: string | null; createdAt: string };
+export type AdminUserEvent = { id: string; title: string; eventDate: string; status: string | null };
+
+/** Busca usuários por nome/@username (reaproveita searchUsers). */
+export async function adminSearchUsers(query: string): Promise<UserSearchResult[]> {
+  return searchUsers(query);
+}
+
+export async function adminUserPosts(userId: string): Promise<AdminUserPost[]> {
+  const { data, error } = await supabase.rpc("admin_user_posts" as never, { _user_id: userId, _limit: 100 } as never);
+  if (error) throw error;
+  return ((data ?? []) as unknown as { id: string; text: string | null; image_url: string | null; created_at: string }[]).map((r) => ({
+    id: r.id,
+    text: r.text,
+    imageUrl: r.image_url,
+    createdAt: r.created_at,
+  }));
+}
+
+export async function adminUserEvents(userId: string): Promise<AdminUserEvent[]> {
+  const { data, error } = await supabase.rpc("admin_user_events" as never, { _user_id: userId, _limit: 100 } as never);
+  if (error) throw error;
+  return ((data ?? []) as unknown as { id: string; title: string; event_date: string; status: string | null }[]).map((r) => ({
+    id: r.id,
+    title: r.title,
+    eventDate: r.event_date,
+    status: r.status,
+  }));
+}
+
+export async function adminDeletePost(postId: string): Promise<void> {
+  const { error } = await supabase.rpc("admin_delete_post" as never, { _post_id: postId } as never);
+  if (error) throw error;
+}
+
+export async function adminDeleteEvent(eventId: string): Promise<void> {
+  const { error } = await supabase.rpc("admin_delete_event" as never, { _event_id: eventId } as never);
+  if (error) throw error;
+}
+
+export async function adminSendWarning(userId: string, message: string): Promise<void> {
+  const { error } = await supabase.rpc("admin_send_warning" as never, { _user_id: userId, _message: message } as never);
+  if (error) throw error;
+}
+
+export async function adminSetBan(userId: string, banned: boolean, reason?: string): Promise<void> {
+  const { error } = await supabase.rpc("admin_set_ban" as never, {
+    _user_id: userId,
+    _banned: banned,
+    _reason: reason ?? null,
+  } as never);
+  if (error) throw error;
+}

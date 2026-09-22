@@ -637,6 +637,7 @@
     "trackTitle": "Rastrear atividade",
     "detailTitle": "Detalhes da atividade",
     "start": "Iniciar atividade",
+    "startShort": "Iniciar",
     "pause": "Pausar",
     "resume": "Retomar",
     "finish": "Finalizar",

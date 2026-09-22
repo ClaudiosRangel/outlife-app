@@ -606,11 +606,12 @@ function TrackActivityPage() {
               type="button"
               onClick={handleStart}
               disabled={isSaving || !activityType}
-              className="grid h-24 w-24 place-items-center rounded-full bg-[var(--sun,#f97316)] text-white shadow-xl transition-transform active:scale-95 disabled:opacity-50"
+              className="flex h-28 w-28 flex-col items-center justify-center gap-1 rounded-full text-white shadow-xl transition-transform active:scale-95 disabled:opacity-50"
               style={{ backgroundColor: "#f97316" }}
               aria-label={t("activity.start")}
             >
-              <span className="text-base font-bold uppercase tracking-wide">{t("activity.start")}</span>
+              <Play size={28} fill="currentColor" />
+              <span className="text-xs font-bold uppercase tracking-wide">{t("activity.startShort", "Iniciar")}</span>
             </button>
             {!activityType && (
               <span className="mt-2 text-[11px] text-muted-foreground">

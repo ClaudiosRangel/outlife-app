@@ -70,6 +70,9 @@ export function BottomNav() {
 
   const activeKey = getActiveNavKey(pathname);
   const recordTo = user ? "/atividade/rastrear" : "/login";
+  // Já estou na tela de gravar? Então o botão "Gravar" fica desabilitado
+  // (não re-navega para a mesma tela). Item 2 do ajuste do usuário.
+  const onRecordScreen = pathname === "/atividade/rastrear";
 
   // Abas laterais (2 à esquerda, 2 à direita). O botão central Gravar é
   // renderizado separadamente, com destaque.
@@ -141,19 +144,35 @@ export function BottomNav() {
           {/* Botão Gravar assentado DENTRO da concavidade (sobe metade para fora
               do vão). Anel da cor do card para fundir com o recorte. */}
           <li className="flex-1">
-            <Link
-              to={recordTo}
-              aria-label={t("nav.record", "Gravar")}
-              className="flex flex-col items-center gap-1 transition-base active:scale-90"
-            >
-              <span className="relative -mt-8 grid h-14 w-14 place-items-center rounded-full bg-[var(--sun,#E8821E)] text-white shadow-float ring-4 ring-card transition-base">
-                <CircleDot size={26} strokeWidth={2.2} />
-                {hasActiveTracking && (
-                  <span className="absolute -top-0.5 -right-0.5 h-3.5 w-3.5 rounded-full bg-green-500 ring-2 ring-card animate-pulse" />
-                )}
-              </span>
-              <span className="text-[10px] font-semibold text-foreground">{t("nav.record", "Gravar")}</span>
-            </Link>
+            {onRecordScreen ? (
+              // Já está na tela de gravar: botão desabilitado (sem navegação).
+              <div
+                aria-disabled="true"
+                className="flex flex-col items-center gap-1 opacity-60"
+              >
+                <span className="relative -mt-8 grid h-14 w-14 place-items-center rounded-full bg-[var(--sun,#E8821E)] text-white shadow-float ring-4 ring-card">
+                  <CircleDot size={26} strokeWidth={2.2} />
+                  {hasActiveTracking && (
+                    <span className="absolute -top-0.5 -right-0.5 h-3.5 w-3.5 rounded-full bg-green-500 ring-2 ring-card animate-pulse" />
+                  )}
+                </span>
+                <span className="text-[10px] font-semibold text-foreground">{t("nav.record", "Gravar")}</span>
+              </div>
+            ) : (
+              <Link
+                to={recordTo}
+                aria-label={t("nav.record", "Gravar")}
+                className="flex flex-col items-center gap-1 transition-base active:scale-90"
+              >
+                <span className="relative -mt-8 grid h-14 w-14 place-items-center rounded-full bg-[var(--sun,#E8821E)] text-white shadow-float ring-4 ring-card transition-base">
+                  <CircleDot size={26} strokeWidth={2.2} />
+                  {hasActiveTracking && (
+                    <span className="absolute -top-0.5 -right-0.5 h-3.5 w-3.5 rounded-full bg-green-500 ring-2 ring-card animate-pulse" />
+                  )}
+                </span>
+                <span className="text-[10px] font-semibold text-foreground">{t("nav.record", "Gravar")}</span>
+              </Link>
+            )}
           </li>
 
           {rightTabs.map(renderTab)}

@@ -637,6 +637,7 @@
     "trackTitle": "Track activity",
     "detailTitle": "Activity details",
     "start": "Start activity",
+    "startShort": "Start",
     "pause": "Pause",
     "resume": "Resume",
     "finish": "Finish",

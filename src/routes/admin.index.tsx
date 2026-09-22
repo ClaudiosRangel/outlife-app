@@ -133,6 +133,13 @@ function AdminHub() {
       badge: 0,
     },
     {
+      to: "/admin/moderacao" as const,
+      icon: ShieldAlert,
+      title: t("admin.moderationTitle", "Moderação por usuário"),
+      desc: t("admin.moderationDesc", "Excluir posts/eventos, avisar ou banir usuários."),
+      badge: 0,
+    },
+    {
       to: "/admin/opinioes" as const,
       icon: MessageSquare,
       title: t("admin.feedbackTitle", "Opiniões dos usuários"),
