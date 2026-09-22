@@ -24,11 +24,12 @@ APK. Uma frente por vez, sem quebrar o rastreamento/publisher.
 
 ## Tasks
 
-- [ ] 1. Config, deps e lógica pura (Frente A)
-  - [ ] 1.1 Instalar `mapbox-gl` (+ @types). `src/lib/map-config.ts`
-    (`hasMapbox`, `getMapboxToken`) + `map-config.test.ts` (Requisito 1.1, 1.2).
-  - [ ] 1.2 `src/lib/nearby.ts`: `filterNearby(markers, center, opts)` (bounding
-    box + limite) + testes fast-check (Requisitos 2.1, 4.2).
+- [x] 1. Config, deps e lógica pura (Frente A)
+  - [x] 1.1 Instalado `mapbox-gl@3.31`. `src/lib/map-config.ts`
+    (`hasMapbox`, `getMapboxToken`, estilo/centro) + `map-config.test.ts`
+    (Requisito 1.1, 1.2).
+  - [x] 1.2 `src/lib/nearby.ts`: `filterNearby` (bbox/raio + limite + amigos
+    primeiro) + testes fast-check (4) (Requisitos 2.1, 4.2).
 
 - [ ] 2. Componentes de mapa (Frente B)
   - [ ] 2.1 `MapboxExploreMap.tsx` (lazy, mapbox-gl): estilo outdoors, toggle

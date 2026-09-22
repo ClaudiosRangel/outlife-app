@@ -31,8 +31,8 @@ import { Route as AmigosRouteImport } from './routes/amigos'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as UUserIdRouteImport } from './routes/u.$userId'
-import { Route as SegmentoSegmentIdRouteImport } from './routes/segmento.$segmentId'
 import { Route as TrilhaTrailIdRouteImport } from './routes/trilha.$trailId'
+import { Route as SegmentoSegmentIdRouteImport } from './routes/segmento.$segmentId'
 import { Route as ParceiroPainelRouteImport } from './routes/parceiro.painel'
 import { Route as ParceiroPartnerIdRouteImport } from './routes/parceiro.$partnerId'
 import { Route as EventosEventIdRouteImport } from './routes/eventos.$eventId'
@@ -170,14 +170,14 @@ const UUserIdRoute = UUserIdRouteImport.update({
   path: '/u/$userId',
   getParentRoute: () => rootRouteImport,
 } as any)
-const SegmentoSegmentIdRoute = SegmentoSegmentIdRouteImport.update({
-  id: '/segmento/$segmentId',
-  path: '/segmento/$segmentId',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const TrilhaTrailIdRoute = TrilhaTrailIdRouteImport.update({
   id: '/trilha/$trailId',
   path: '/trilha/$trailId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SegmentoSegmentIdRoute = SegmentoSegmentIdRouteImport.update({
+  id: '/segmento/$segmentId',
+  path: '/segmento/$segmentId',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ParceiroPainelRoute = ParceiroPainelRouteImport.update({
@@ -835,18 +835,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof UUserIdRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/segmento/$segmentId': {
-      id: '/segmento/$segmentId'
-      path: '/segmento/$segmentId'
-      fullPath: '/segmento/$segmentId'
-      preLoaderRoute: typeof SegmentoSegmentIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/trilha/$trailId': {
       id: '/trilha/$trailId'
       path: '/trilha/$trailId'
       fullPath: '/trilha/$trailId'
       preLoaderRoute: typeof TrilhaTrailIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/segmento/$segmentId': {
+      id: '/segmento/$segmentId'
+      path: '/segmento/$segmentId'
+      fullPath: '/segmento/$segmentId'
+      preLoaderRoute: typeof SegmentoSegmentIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/parceiro/painel': {
