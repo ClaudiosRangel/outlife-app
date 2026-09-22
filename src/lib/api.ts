@@ -3022,3 +3022,64 @@ export async function detectAndRecordEfforts(
     return 0;
   }
 }
+
+// ============ Eventos próximos (panorama do Explorar) ============
+export type NearbyEvent = {
+  id: string;
+  title: string;
+  dateIso: string;
+  destinationId: string | null;
+  lat: number | null;
+  lng: number | null;
+  imageUrl: string | null;
+};
+
+/**
+ * Eventos futuros (a partir de agora), com coordenadas do destino vinculado
+ * (quando houver), para o painel/mapa "agora" do Explorar. Leitura pública.
+ */
+export async function fetchNearbyEvents(limit = 50): Promise<NearbyEvent[]> {
+  const nowIso = new Date().toISOString();
+  const { data, error } = await supabase
+    .from("events" as never)
+    .select(
+      "id, title, event_date, destination_id, image_url, destination:destinations(latitude, longitude)" as never,
+    )
+    .gte("event_date", nowIso)
+    .eq("status", "published")
+    .order("event_date", { ascending: true })
+    .limit(limit);
+  if (error) {
+    // status pode não ser 'published' em todos; tenta sem o filtro de status.
+    const retry = await supabase
+      .from("events" as never)
+      .select(
+        "id, title, event_date, destination_id, image_url, destination:destinations(latitude, longitude)" as never,
+      )
+      .gte("event_date", nowIso)
+      .order("event_date", { ascending: true })
+      .limit(limit);
+    if (retry.error) throw retry.error;
+    return mapNearbyEvents(retry.data);
+  }
+  return mapNearbyEvents(data);
+}
+
+function mapNearbyEvents(rows: unknown): NearbyEvent[] {
+  return ((rows ?? []) as {
+    id: string;
+    title: string;
+    event_date: string;
+    destination_id: string | null;
+    image_url: string | null;
+    destination?: { latitude: number | null; longitude: number | null } | null;
+  }[]).map((e) => ({
+    id: e.id,
+    title: e.title,
+    dateIso: e.event_date,
+    destinationId: e.destination_id,
+    lat: e.destination?.latitude != null ? Number(e.destination.latitude) : null,
+    lng: e.destination?.longitude != null ? Number(e.destination.longitude) : null,
+    imageUrl: e.image_url,
+  }));
+}

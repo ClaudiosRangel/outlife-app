@@ -175,6 +175,24 @@
       "hard": "Hard",
       "accessible": "Accessible",
       "near": "Near"
+    },
+    "panorama": {
+      "title": "Now in your region",
+      "feels": "feels like",
+      "friends": "friends",
+      "events": "events",
+      "partners": "partners",
+      "places": "places",
+      "friendActive": "active now",
+      "friendDoing": "doing {{activity}}",
+      "nextEvent": "Next event",
+      "topDestination": "Highlight",
+      "shareLocation": "Share your location to see your region's panorama.",
+      "verdict": {
+        "good": "Good to go",
+        "caution": "Caution",
+        "avoid": "Avoid today"
+      }
     }
   },
   "marketplace": {

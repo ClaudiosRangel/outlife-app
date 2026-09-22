@@ -21,7 +21,10 @@ import { PartnerList } from "@/components/PartnerList";
 import { useAuth } from "@/hooks/use-auth";
 import { useLiveActivityPublisher } from "@/hooks/use-live-activity-publisher";
 import { ExploreMap } from "@/components/explore/ExploreMap";
+import { ExplorePanorama } from "@/components/explore/ExplorePanorama";
 import { filterNearby, type NowMarker } from "@/lib/nearby";
+import { buildPanorama } from "@/lib/explore-panorama";
+import { fetchNearbyEvents } from "@/lib/api";
 import trailFallbackImg from "@/assets/dest-trail.jpg";
 
 export const Route = createFileRoute("/explorar")({
@@ -185,6 +188,12 @@ function Explore() {
       : null;
   }, [myProfile?.latitude, myProfile?.longitude]);
 
+  // Eventos futuros (com coords do destino) para o panorama e o mapa.
+  const { data: nearbyEvents = [] } = useQuery({
+    queryKey: ["nearby-events"],
+    queryFn: () => fetchNearbyEvents(50),
+  });
+
   // Camada "o que acontece agora": amigos ao vivo + parceiros próximos.
   const nowMarkers = useMemo<NowMarker[]>(() => {
     const friends: NowMarker[] = liveFriends
@@ -210,8 +219,52 @@ function Explore() {
         subtitle: p.category,
         href: `/parceiro/${p.id}`,
       }));
-    return filterNearby([...friends, ...partnerMarkers], mapCenter, { limit: 60 });
-  }, [liveFriends, partners, mapCenter]);
+    const eventMarkers: NowMarker[] = nearbyEvents
+      .filter((e) => e.lat != null && e.lng != null)
+      .map((e) => ({
+        id: `event:${e.id}`,
+        kind: "event" as const,
+        lat: e.lat!,
+        lng: e.lng!,
+        title: e.title,
+        href: `/eventos`,
+      }));
+    return filterNearby([...friends, ...partnerMarkers, ...eventMarkers], mapCenter, { limit: 80 });
+  }, [liveFriends, partners, nearbyEvents, mapCenter]);
+
+  // Panorama "agora na região": contadores + destaques (o que não cabe em pino).
+  const panorama = useMemo(
+    () =>
+      buildPanorama({
+        center: mapCenter,
+        friends: liveFriends
+          .filter((f) => f.is_live)
+          .map((f) => ({
+            id: f.id,
+            name: f.full_name ?? f.username ?? "Aventureiro",
+            lat: f.latitude,
+            lng: f.longitude,
+            activityType: f.activity_type ?? null,
+          })),
+        partners: partners
+          .filter((p) => p.coords != null)
+          .map((p) => ({ id: p.id, name: p.name, lat: p.coords!.lat, lng: p.coords!.lng })),
+        destinations: destinations
+          .filter((d) => (d as { latitude?: number | null }).latitude != null)
+          .map((d) => {
+            const dd = d as unknown as { id: string; name: string; latitude: number; longitude: number; rating?: number };
+            return { id: dd.id, name: dd.name, lat: Number(dd.latitude), lng: Number(dd.longitude), rating: Number(dd.rating ?? 0) };
+          }),
+        trails: importedTrails
+          .filter((tr) => (tr as { latitude?: number | null }).latitude != null)
+          .map((tr) => {
+            const tt = tr as unknown as { id: string; name: string; latitude: number; longitude: number };
+            return { id: tt.id, name: tt.name, lat: Number(tt.latitude), lng: Number(tt.longitude) };
+          }),
+        events: nearbyEvents.map((e) => ({ id: e.id, title: e.title, dateIso: e.dateIso, lat: e.lat, lng: e.lng })),
+      }),
+    [mapCenter, liveFriends, partners, destinations, importedTrails, nearbyEvents],
+  );
 
   useEffect(() => {
     setMounted(true);
@@ -314,6 +367,8 @@ function Explore() {
         </div>
       ) : (
         <>
+      <ExplorePanorama panorama={panorama} center={mapCenter} />
+
       {mounted ? (
         <ExploreMap
           markers={nowMarkers}
