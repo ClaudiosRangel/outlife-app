@@ -58,7 +58,21 @@
 > 3. **Cards de destino repaginados**: card imersivo (imagem cobrindo, gradiente,
 >    nome+região+badges sobre a foto, rating/dificuldade destacados).
 > tsc limpo; migration aplicada 2× + reload. APK 17:15.
-> **Próxima frente:** #7 tela de Iniciar atividade (Strava).
+**Próxima frente:** #8 Loja virtual dos parceiros.
+
+> **🟩 FRENTE #7 iniciar-atividade-redesign (15/09/2026) — CONCLUÍDA (APK 17:35):**
+> Tela de Iniciar/gravar atividade repaginada estilo Strava (`atividade.rastrear.tsx`),
+> sem tocar na lógica de rastreamento (tracker/mutations/sheets intactos):
+> - **Modo idle**: seletor de tipo por **ÍCONES** (faixa horizontal, o ativo
+>   destacado) no lugar do dropdown; botão **INICIAR circular laranja** grande e
+>   centralizado (desabilitado até escolher o tipo).
+> - **Modo gravação/pausa**: painel limpo estilo Strava — **Tempo** gigante no
+>   topo, **Distância** e **Elevação** grandes, **Veloc. atual** e **Ritmo**
+>   grandes; controles circulares centrais (pausar laranja / retomar verde) com
+>   Descartar e Finalizar como botões laterais menores.
+> Mapa mantido acima das métricas. tsc limpo. Sem migration.
+> **Sobre GPS 3D na tela de iniciar:** mesma limitação do Explorar (WebGL
+> instável no WebView) — o mapa da atividade segue 2D confiável.
 
 **Anterior:** 15/09/2026 (frente #6 explorar-redesign CONCLUÍDA — mapa 3D Mapbox + camada "agora")
 

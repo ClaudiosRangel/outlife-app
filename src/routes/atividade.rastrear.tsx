@@ -39,13 +39,6 @@ import {
   SheetTitle,
   SheetDescription,
 } from "@/components/ui/sheet";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { enqueueActivity } from "@/lib/activity-storage";
 import { useActivitySync } from "@/hooks/use-activity-sync";
@@ -499,32 +492,37 @@ function TrackActivityPage() {
         </Suspense>
       </div>
 
-      <div className="mx-5 mt-4 grid grid-cols-3 gap-2">
-        <div className="rounded-2xl bg-card p-4 shadow-card text-center">
+      {/* Painel de gravação estilo Strava: Tempo em destaque no topo, depois
+          Distância e métricas por tipo — grandes e centralizados. Só aparece
+          durante a gravação/pausa. */}
+      {(isTracking || isPaused) && (
+        <div className="mx-5 mt-5 text-center">
           <div className="text-[11px] uppercase tracking-widest text-muted-foreground">
             {t("activity.metrics.duration")}
           </div>
-          <div className="mt-1 font-display text-xl font-semibold text-primary tabular-nums">
+          <div className="font-display text-6xl font-bold tabular-nums leading-none">
             {formatDuration(tracker.durationSeconds)}
           </div>
+          <div className="mt-6 grid grid-cols-2 gap-4">
+            <div>
+              <div className="text-[11px] uppercase tracking-widest text-muted-foreground">
+                {t("activity.metrics.distance")}
+              </div>
+              <div className="mt-1 font-display text-4xl font-bold tabular-nums leading-none">
+                {formatDistance(tracker.distanceMeters)}
+              </div>
+            </div>
+            <div>
+              <div className="text-[11px] uppercase tracking-widest text-muted-foreground">
+                Elevação
+              </div>
+              <div className="mt-1 font-display text-4xl font-bold tabular-nums leading-none">
+                {tracker.elevationGainMeters > 0 ? `${Math.round(tracker.elevationGainMeters)}m` : "—"}
+              </div>
+            </div>
+          </div>
         </div>
-        <div className="rounded-2xl bg-card p-4 shadow-card text-center">
-          <div className="text-[11px] uppercase tracking-widest text-muted-foreground">
-            {t("activity.metrics.distance")}
-          </div>
-          <div className="mt-1 font-display text-xl font-semibold text-primary tabular-nums">
-            {formatDistance(tracker.distanceMeters)}
-          </div>
-        </div>
-        <div className="rounded-2xl bg-card p-4 shadow-card text-center">
-          <div className="text-[11px] uppercase tracking-widest text-muted-foreground">
-            Elevação
-          </div>
-          <div className="mt-1 font-display text-xl font-semibold text-primary tabular-nums">
-            {tracker.elevationGainMeters > 0 ? `${Math.round(tracker.elevationGainMeters)}m` : "—"}
-          </div>
-        </div>
-      </div>
+      )}
 
       {/* Requirement 4.4/4.5/4.7: Average_Pace (quando Caminhada/Pedalada)
           e Average_Speed em tempo real, atualizados a cada segundo (mesmo
@@ -544,20 +542,20 @@ function TrackActivityPage() {
         const smoothed = tracker.smoothedSpeedMps;
         const speedLabel = smoothed == null ? "—" : `${mpsToKmh(smoothed).toFixed(1)} km/h`;
         return (
-          <div className="mx-5 mt-2 grid grid-cols-2 gap-2">
-            <div className="rounded-2xl bg-card p-3 shadow-card text-center">
+          <div className="mx-5 mt-4 grid grid-cols-2 gap-4 text-center">
+            <div>
               <div className="text-[11px] uppercase tracking-widest text-muted-foreground">
                 {t("activity.metrics.currentSpeed")}
               </div>
-              <div className="mt-1 font-display text-lg font-semibold text-primary tabular-nums">
+              <div className="mt-1 font-display text-4xl font-bold tabular-nums leading-none">
                 {speedLabel}
               </div>
             </div>
-            <div className="rounded-2xl bg-card p-3 shadow-card text-center">
+            <div>
               <div className="text-[11px] uppercase tracking-widest text-muted-foreground">
                 {t("activity.metrics.pace")}
               </div>
-              <div className="mt-1 font-display text-lg font-semibold text-primary tabular-nums">
+              <div className="mt-1 font-display text-4xl font-bold tabular-nums leading-none">
                 {liveMetrics.averagePaceLabel ?? "—"}
               </div>
             </div>
@@ -569,44 +567,57 @@ function TrackActivityPage() {
           antes do botão "Iniciar" (mesmo padrão do seletor de categoria em
           comunidade.tsx). O botão só chama handleStart quando um valor
           válido estiver selecionado. */}
+      {/* Seletor de tipo por ÍCONES (estilo Strava): faixa horizontal de
+          atividades; o selecionado fica destacado. Substitui o dropdown. */}
       {isIdle && !tracker.hasOrphan && (
-        <div className="mx-5 mt-4">
-          <Label className="mb-2 block text-sm font-medium">{t("activity.activityTypeLabel")}</Label>
-          <Select
-            value={activityType ?? undefined}
-            onValueChange={(v) => { setActivityType(v as ActivityType); tracker.setActivityType(v); }}
-          >
-            <SelectTrigger className="h-12 rounded-xl">
-              <SelectValue placeholder={t("activity.selectActivityType")} />
-            </SelectTrigger>
-            <SelectContent>
-              {typeOptions.map((opt) => {
-                const { Icon } = getActivityIcon(opt.iconKey);
-                return (
-                  <SelectItem key={opt.code} value={opt.code}>
-                    <span className="flex items-center gap-2">
-                      <Icon size={16} className="text-primary" aria-hidden />
-                      {/* usa a tradução se for um dos tipos base; senão o nome do catálogo */}
-                      {t(`activity.activityTypes.${opt.code}`, { defaultValue: opt.name })}
-                    </span>
-                  </SelectItem>
-                );
-              })}
-            </SelectContent>
-          </Select>
+        <div className="mx-5 mt-5">
+          <div className="mb-2 text-center text-xs font-medium uppercase tracking-widest text-muted-foreground">
+            {t("activity.activityTypeLabel")}
+          </div>
+          <div className="flex justify-center gap-2 overflow-x-auto scrollbar-hide pb-1">
+            {typeOptions.map((opt) => {
+              const { Icon } = getActivityIcon(opt.iconKey);
+              const active = activityType === opt.code;
+              return (
+                <button
+                  key={opt.code}
+                  type="button"
+                  onClick={() => { setActivityType(opt.code as ActivityType); tracker.setActivityType(opt.code); }}
+                  aria-label={t(`activity.activityTypes.${opt.code}`, { defaultValue: opt.name })}
+                  className={`flex shrink-0 flex-col items-center gap-1 rounded-2xl px-3 py-2 transition-base ${
+                    active ? "bg-primary text-primary-foreground shadow-card" : "bg-secondary text-secondary-foreground"
+                  }`}
+                >
+                  <Icon size={22} aria-hidden />
+                  <span className="text-[10px] font-medium">
+                    {t(`activity.activityTypes.${opt.code}`, { defaultValue: opt.name })}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
         </div>
       )}
 
       <div className="mx-5 mt-4 flex flex-col gap-2">
         {isIdle && !tracker.hasOrphan && (
-          <Button
-            size="lg"
-            className="h-14 rounded-2xl text-base font-semibold"
-            onClick={handleStart}
-            disabled={isSaving}
-          >
-            <Play size={18} /> {t("activity.start")}
-          </Button>
+          <div className="flex flex-col items-center py-2">
+            <button
+              type="button"
+              onClick={handleStart}
+              disabled={isSaving || !activityType}
+              className="grid h-24 w-24 place-items-center rounded-full bg-[var(--sun,#f97316)] text-white shadow-xl transition-transform active:scale-95 disabled:opacity-50"
+              style={{ backgroundColor: "#f97316" }}
+              aria-label={t("activity.start")}
+            >
+              <span className="text-base font-bold uppercase tracking-wide">{t("activity.start")}</span>
+            </button>
+            {!activityType && (
+              <span className="mt-2 text-[11px] text-muted-foreground">
+                {t("activity.selectActivityType")}
+              </span>
+            )}
+          </div>
         )}
 
         {tracker.hasOrphan && isIdle && (
@@ -633,45 +644,52 @@ function TrackActivityPage() {
           </div>
         )}
 
-        {isTracking && (
-          <Button
-            variant="secondary"
-            size="lg"
-            className="h-14 rounded-2xl text-base font-semibold"
-            onClick={tracker.pause}
-          >
-            <Pause size={18} /> {t("activity.pause")}
-          </Button>
-        )}
-
-        {isPaused && (
-          <Button
-            size="lg"
-            className="h-14 rounded-2xl text-base font-semibold"
-            onClick={tracker.resume}
-          >
-            <Play size={18} /> {t("activity.resume")}
-          </Button>
-        )}
-
+        {/* Controles de gravação estilo Strava: botão circular central de
+            pausar/retomar, com Finalizar e Descartar como botões laterais
+            menores. */}
         {(isTracking || isPaused) && (
-          <div className="flex gap-2">
-            <Button
-              variant="destructive"
-              className="flex-1 h-12 rounded-2xl"
-              onClick={() => setFinishSheetOpen(true)}
-              disabled={isSaving}
-            >
-              <Square size={16} /> {t("activity.finish")}
-            </Button>
-            <Button
-              variant="outline"
-              className="flex-1 h-12 rounded-2xl"
+          <div className="flex items-center justify-center gap-6 py-2">
+            <button
+              type="button"
               onClick={handleDiscard}
               disabled={isSaving}
+              aria-label={t("activity.discard")}
+              className="grid h-12 w-12 place-items-center rounded-full bg-secondary text-foreground/70 shadow-card active:scale-95 disabled:opacity-50"
             >
-              <Trash2 size={16} /> {t("activity.discard")}
-            </Button>
+              <Trash2 size={18} />
+            </button>
+
+            {isTracking ? (
+              <button
+                type="button"
+                onClick={tracker.pause}
+                aria-label={t("activity.pause")}
+                className="grid h-20 w-20 place-items-center rounded-full text-white shadow-xl active:scale-95"
+                style={{ backgroundColor: "#f97316" }}
+              >
+                <Pause size={30} />
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={tracker.resume}
+                aria-label={t("activity.resume")}
+                className="grid h-20 w-20 place-items-center rounded-full text-white shadow-xl active:scale-95"
+                style={{ backgroundColor: "#16a34a" }}
+              >
+                <Play size={30} />
+              </button>
+            )}
+
+            <button
+              type="button"
+              onClick={() => setFinishSheetOpen(true)}
+              disabled={isSaving}
+              aria-label={t("activity.finish")}
+              className="grid h-12 w-12 place-items-center rounded-full bg-primary text-primary-foreground shadow-card active:scale-95 disabled:opacity-50"
+            >
+              <Square size={18} />
+            </button>
           </div>
         )}
       </div>
