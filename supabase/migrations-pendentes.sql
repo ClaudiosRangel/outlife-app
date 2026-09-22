@@ -923,3 +923,12 @@ ALTER TABLE public.profiles
 --     _limit) retorna ate N avatares de quem curtiu por post, em lote (evita
 --     N+1 no feed). SECURITY DEFINER, grant anon/authenticated. (idempotente)
 -- ############################################################################
+
+-- ############################################################################
+-- ############################################################################
+-- 33) 20260915140000_segments.sql
+--     Segmentos nativos (estilo Strava): tabelas segments + segment_efforts
+--     (bbox, RLS leitura publica/escrita do dono, cascata em profiles/
+--     atividade) + RPC segment_leaderboard(_segment_id,_limit) = melhor tempo
+--     por usuario, asc, top N. (idempotente)
+-- ############################################################################

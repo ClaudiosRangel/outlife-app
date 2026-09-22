@@ -24,14 +24,13 @@ Segmentos nativos em 3 frentes: (A) dados + lógica pura de matching + testes;
 
 ## Tasks
 
-- [ ] 1. Dados e lógica pura (Frente A)
-  - [ ] 1.1 `src/lib/segment-match.ts`: `nearestPointIndex`,
-    `matchSegmentEffort` (puro) + `segment-match.test.ts` (fast-check):
-    match/sem match/ordem/elapsed/robustez (Requisitos 2.2, 2.3).
-  - [ ] 1.2 Migration `20260915140000_segments.sql`: tabelas `segments` e
-    `segment_efforts` (+bbox, +RLS leitura pública/escrita do dono) + RPC
-    `segment_leaderboard`. Aplicar 2× + NOTIFY pgrst + consolidado
-    (Requisitos 1, 3, 4).
+- [x] 1. Dados e lógica pura (Frente A)
+  - [x] 1.1 `src/lib/segment-match.ts` (`nearestPointIndex`,
+    `matchSegmentEffort`) + `segment-match.test.ts` (6 testes fast-check
+    passando) (Requisitos 2.2, 2.3).
+  - [x] 1.2 Migration `20260915140000_segments.sql`: `segments` +
+    `segment_efforts` (+bbox, RLS) + RPC `segment_leaderboard`. Aplicada 2× +
+    NOTIFY pgrst (Requisitos 1, 3, 4).
 
 - [ ] 2. API + detecção (Frente B)
   - [ ] 2.1 API: `createSegment`, `fetchSegments`, `fetchSegmentById`,
