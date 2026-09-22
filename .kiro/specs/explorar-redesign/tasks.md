@@ -50,7 +50,35 @@ APK. Uma frente por vez, sem quebrar o rastreamento/publisher.
   - [x] 3.3 Aviso offline + publisher inerte mantidos (Requisitos 2.3, 4.4).
   - [x] 3.4 `tsc` limpo; APK 10:39; commit+push; ROADMAP+backlog.
 
+## Tarefas — Fase 2 (Explorar como diferencial)
+
+- [ ] 4. Clima Open-Meteo + panorama (dados)
+  - [ ] 4.1 `src/lib/weather.ts`: `fetchWeatherNow(lat,lng)` (Open-Meteo, sem
+    key) + `outdoorVerdict(weather)` puro (bom/atenção/evite) + testes
+    fast-check (Requisitos 5.1, 7.1, 5.5).
+  - [ ] 4.2 `src/lib/explore-panorama.ts`: `buildPanorama({friends, partners,
+    destinations, trails, events, center})` puro — contadores + destaques
+    (próximo evento, amigo mais próximo, destino bem avaliado perto) + testes
+    (Requisitos 5.2, 5.3).
+  - [ ] 4.3 API: `fetchNearbyEvents` (events + destino coords + event_date) e
+    ajustar destinos/trilhas para expor coords no Explorar (Requisito 6.2).
+
+- [ ] 5. UI do panorama + camadas de mapa
+  - [ ] 5.1 Componente `ExplorePanorama` (cartão "Panorama agora": clima +
+    veredito + contadores + destaques) no topo do Explorar (Requisitos 5.1,
+    5.2, 5.3, 5.4).
+  - [ ] 5.2 Seletor de camada/estilo do mapa (outdoor/ruas/satélite) no
+    `MapView` via tiles Mapbox; filtro por tipo de marcador (Requisitos 6.1,
+    6.3).
+  - [ ] 5.3 Plotar destinos+trilhas+eventos próximos no mapa (além de amigos+
+    parceiros) (Requisito 6.2).
+  - [ ] 5.4 Modernizar cards das seções de busca (visual chamativo) (Req 3.2).
+  - [ ] 5.5 i18n PT+EN; `tsc` limpo + testes; build APK; commit+push;
+    ROADMAP+backlog+PESQUISA-APIS.
+
 ## Notes
 
 - Documentar `VITE_MAPBOX_TOKEN` em PUBLICACAO-LOJAS (Vercel/CI).
 - Restringir token por URL no Mapbox antes de publicar.
+- Pesquisa de APIs registrada em `docs/PESQUISA-APIS-EXPLORAR.md` (clima
+  Open-Meteo escolhido; eventos = internos).

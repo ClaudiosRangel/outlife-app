@@ -81,3 +81,60 @@ parceiros, com visual melhor.
    erro fatal.
 4. QUANDO a tela montar ENTÃO NÃO DEVE abrir novos watchers de GPS (preservar a
    decisão atual do publisher inerte).
+
+
+---
+
+## Fase 2 — Explorar como diferencial (panorama da região "agora")
+
+Objetivo: tornar o Explorar o diferencial do app — ao abrir, dar um panorama
+completo do que está acontecendo na região, no mapa E em resumo escrito
+(o que não cabe em pino vira texto). App outdoor: condições de clima são
+parte central.
+
+### Requisito 5 — Panorama escrito "agora na sua região"
+
+**User Story:** Como usuário, ao abrir o Explorar quero um resumo do momento na
+minha região, além dos pinos no mapa.
+
+#### Critérios de Aceitação
+1. QUANDO o Explorar abrir com minha posição conhecida ENTÃO DEVE exibir um
+   cartão "Panorama agora" com: condições de clima atuais (temperatura,
+   sensação, vento, probabilidade de chuva) e um veredito outdoor
+   ("bom para atividade" / "atenção" / "evite"), obtido de uma API gratuita.
+2. QUANDO o panorama for exibido ENTÃO DEVE mostrar contadores do momento:
+   amigos ativos agora, eventos próximos (por data), parceiros próximos,
+   destinos/trilhas próximos.
+3. QUANDO houver destaques ENTÃO DEVE listar o próximo evento, o amigo mais
+   próximo em atividade e um destino bem avaliado por perto (o que não cabe
+   como pino).
+4. QUANDO não houver posição conhecida ENTÃO DEVE exibir um panorama nacional/
+   genérico sem quebrar, e um convite a compartilhar localização.
+5. QUANDO a API de clima falhar/offline ENTÃO o restante do panorama DEVE
+   funcionar (clima degrada graciosamente).
+
+### Requisito 6 — Camadas e controles de mapa
+
+**User Story:** Como usuário, quero ajustar o mapa (estilo/camada) e ver mais
+tipos de marcador.
+
+#### Critérios de Aceitação
+1. QUANDO eu abrir o seletor de camada ENTÃO DEVE permitir alternar estilo do
+   mapa (ex.: outdoor/ruas/satélite) usando os estilos de tiles do Mapbox.
+2. QUANDO o mapa exibir a camada "agora" ENTÃO DEVE incluir amigos ao vivo,
+   parceiros, destinos e trilhas próximos, e eventos próximos (posicionados
+   pela coordenada do destino do evento).
+3. QUANDO eu filtrar por tipo (amigos/parceiros/destinos/eventos) ENTÃO o mapa
+   e o painel DEVEM refletir o filtro.
+
+### Requisito 7 — API externa de contexto regional (clima)
+
+**User Story:** Como operador, quero usar uma API gratuita e confiável para o
+clima da região, sem custo/თkey.
+
+#### Critérios de Aceitação
+1. QUANDO buscar clima ENTÃO DEVE usar o Open-Meteo (gratuito, sem API key)
+   com lat/lng, retornando atual + resumo do dia.
+2. QUANDO a fonte de eventos externos for avaliada ENTÃO fica documentado que
+   não há API pública gratuita de "eventos outdoor por região" adequada hoje;
+   usamos os eventos do próprio app (tabela `events`) + clima do Open-Meteo.
