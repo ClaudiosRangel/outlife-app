@@ -242,14 +242,14 @@ const AdminPublicarRoute = AdminPublicarRouteImport.update({
   path: '/admin/publicar',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AdminModeracaoRoute = AdminModeracaoRouteImport.update({
-  id: '/admin/moderacao',
-  path: '/admin/moderacao',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const AdminOpinioesRoute = AdminOpinioesRouteImport.update({
   id: '/admin/opinioes',
   path: '/admin/opinioes',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminModeracaoRoute = AdminModeracaoRouteImport.update({
+  id: '/admin/moderacao',
+  path: '/admin/moderacao',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminMelhoriasRoute = AdminMelhoriasRouteImport.update({
@@ -868,18 +868,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TrilhaTrailIdRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/segmento/$segmentId': {
-      id: '/segmento/$segmentId'
-      path: '/segmento/$segmentId'
-      fullPath: '/segmento/$segmentId'
-      preLoaderRoute: typeof SegmentoSegmentIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/segmento/criar': {
       id: '/segmento/criar'
       path: '/segmento/criar'
       fullPath: '/segmento/criar'
       preLoaderRoute: typeof SegmentoCriarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/segmento/$segmentId': {
+      id: '/segmento/$segmentId'
+      path: '/segmento/$segmentId'
+      fullPath: '/segmento/$segmentId'
+      preLoaderRoute: typeof SegmentoSegmentIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/parceiro/painel': {
@@ -959,18 +959,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminPublicarRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/admin/moderacao': {
-      id: '/admin/moderacao'
-      path: '/admin/moderacao'
-      fullPath: '/admin/moderacao'
-      preLoaderRoute: typeof AdminModeracaoRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/admin/opinioes': {
       id: '/admin/opinioes'
       path: '/admin/opinioes'
       fullPath: '/admin/opinioes'
       preLoaderRoute: typeof AdminOpinioesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/moderacao': {
+      id: '/admin/moderacao'
+      path: '/admin/moderacao'
+      fullPath: '/admin/moderacao'
+      preLoaderRoute: typeof AdminModeracaoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/melhorias': {

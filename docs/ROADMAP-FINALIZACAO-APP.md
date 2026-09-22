@@ -5,7 +5,36 @@
 > `.kiro/steering/roadmap-outvitar.md`). **Mantenha-o atualizado** ao
 > concluir qualquer tarefa/bloco: marque status, data e resumo.
 
-**Última atualização:** 15/09/2026 (Explorar fase 3 — painel diferencial: clima+UV+ar+sol+lua, resumo em texto, busca por região, contadores clicáveis, camadas)
+**Última atualização:** 22/09/2026 (3 tarefas pré-#8: criar segmento pelo perfil + troféus de segmento nas Conquistas + revisão do cálculo de altimetria estilo Strava)
+
+> **🟩 RODADA "3 tarefas antes da #8" (22/09/2026) — CONCLUÍDA (APK 19:25):**
+> 1. **Criar segmento pelo Perfil** (`perfil.tsx`): card "Meus segmentos" com
+>    botão "+ Criar segmento" (→ `/segmento/criar`) e lista dos segmentos que o
+>    usuário criou (`fetchMySegments`, filtra `created_by = uid`). Antes, criar
+>    segmento só existia no detalhe da atividade.
+> 2. **Troféus de segmento nas Conquistas** (`profile-view.tsx`,
+>    `AchievementsTab`): nova RPC `my_segment_trophies` (migration
+>    `20260922120000`, SECURITY DEFINER, usa `auth.uid()`) — para cada segmento
+>    em que o usuário está no top 10, retorna posição (1 = Rei/KOM), melhor
+>    tempo, total de atletas e a `activity_id` campeã. UI com ícone por posição
+>    (Coroa p/ KOM, Medalha p/ 2º/3º, Troféu demais), tempo/distância, clicável
+>    → abre a atividade (ou o segmento se sem activity_id). Conquistas antigas
+>    (badges) mantidas abaixo.
+> 3. **Altimetria (elevation gain) estilo Strava**: nova lib pura
+>    `src/lib/elevation-gain.ts` — suavização por média móvel + histerese com
+>    threshold de **10m** de subida sustentada (padrão Strava p/ GPS SEM
+>    barômetro; o WebView Android não expõe barômetro) + descarte de altitude
+>    de pontos com acurácia horizontal ruim (>35m). Substitui o antigo "soma
+>    toda subida > 2m", que acumulava ruído do GPS e superestimava muito o
+>    ganho. Integrada no `use-activity-tracker.ts` (acumulador incremental,
+>    resetado/reidratado nos pontos de start/discard/reset/restore). 11 testes
+>    (unit + fast-check: ganho finito/não-negativo, nunca superestima o bruto,
+>    streaming == lote, threshold maior nunca dá ganho maior). Fonte: Strava
+>    FAQs de elevação (conteúdo parafraseado). 3D real segue inviável no WebView.
+> Migration aplicada 2× + reload PostgREST. tsc/diagnostics limpos; build:native
+> + cap sync + APK OK (9,94 MB).
+
+**Anterior:** 15/09/2026 (Explorar fase 3 — painel diferencial: clima+UV+ar+sol+lua, resumo em texto, busca por região, contadores clicáveis, camadas)
 
 > **🟩 EXPLORAR FASE 3 (15/09/2026) — CONCLUÍDA (APK 15:37):**
 > Explorar transformado no diferencial do app. Sobre o mapa Mapbox (tiles no

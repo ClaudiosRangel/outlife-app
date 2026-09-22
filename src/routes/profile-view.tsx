@@ -24,6 +24,8 @@ import {
   Radio,
   Route as RouteIcon,
   Trophy,
+  Crown,
+  Medal,
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import {
@@ -32,9 +34,11 @@ import {
   fetchUserPostsByAuthor,
   fetchUserAchievements,
   fetchLiveActivityFriends,
+  fetchMySegmentTrophies,
   resolveAsset,
   safeCount,
   type UserPostSummary,
+  type SegmentTrophy,
 } from "@/lib/api";
 import { getActivityIcon } from "@/lib/activity-icons";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -82,6 +86,14 @@ export function ProfileView({ viewedUserId }: { viewedUserId: string }) {
   const { data: achievements = [] } = useQuery({
     queryKey: ["achievements", viewedUserId],
     queryFn: () => fetchUserAchievements(viewedUserId),
+    enabled: isSelf,
+  });
+
+  // TASK 2: troféus de segmento (Rei/KOM + posições top 10). A RPC usa
+  // auth.uid(), então só faz sentido no próprio perfil.
+  const { data: segmentTrophies = [] } = useQuery({
+    queryKey: ["my-segment-trophies", viewedUserId],
+    queryFn: () => fetchMySegmentTrophies(10),
     enabled: isSelf,
   });
 
@@ -236,7 +248,16 @@ export function ProfileView({ viewedUserId }: { viewedUserId: string }) {
           if (p.activity_id) navigate({ to: "/atividade/$activityId", params: { activityId: p.activity_id } });
           else navigate({ to: "/comunidade" });
         }} />}
-        {tab === "conquistas" && <AchievementsTab achievements={achievements} />}
+        {tab === "conquistas" && (
+          <AchievementsTab
+            achievements={achievements}
+            trophies={segmentTrophies}
+            onOpenTrophy={(tr) => {
+              if (tr.activityId) navigate({ to: "/atividade/$activityId", params: { activityId: tr.activityId } });
+              else navigate({ to: "/segmento/$segmentId", params: { segmentId: tr.segmentId } });
+            }}
+          />
+        )}
       </div>
     </div>
   );
@@ -335,9 +356,35 @@ function PostsTab({ posts, onOpen }: { posts: UserPostSummary[]; onOpen: (p: Use
   );
 }
 
-function AchievementsTab({ achievements }: { achievements: { id: string; label: string }[] }) {
+// Formata o tempo do esforço de segmento (mm:ss ou h:mm:ss).
+function fmtEffort(s: number): string {
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const sec = Math.floor(s % 60);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return h > 0 ? `${h}:${pad(m)}:${pad(sec)}` : `${m}:${pad(sec)}`;
+}
+
+// Visual do troféu por posição no ranking do segmento (estilo Strava).
+function trophyStyle(rank: number): { Icon: typeof Crown; ring: string; color: string; label: string } {
+  if (rank === 1) return { Icon: Crown, ring: "bg-[var(--sun)]/20", color: "#d4a017", label: "KOM" };
+  if (rank === 2) return { Icon: Medal, ring: "bg-slate-300/30", color: "#9ca3af", label: "2º" };
+  if (rank === 3) return { Icon: Medal, ring: "bg-amber-700/20", color: "#b45309", label: "3º" };
+  return { Icon: Trophy, ring: "bg-primary/10", color: "hsl(var(--primary))", label: `${rank}º` };
+}
+
+function AchievementsTab({
+  achievements,
+  trophies,
+  onOpenTrophy,
+}: {
+  achievements: { id: string; label: string }[];
+  trophies: SegmentTrophy[];
+  onOpenTrophy: (tr: SegmentTrophy) => void;
+}) {
   const { t } = useTranslation();
-  if (achievements.length === 0) {
+  const isEmpty = achievements.length === 0 && trophies.length === 0;
+  if (isEmpty) {
     return (
       <div className="rounded-2xl bg-card p-6 text-center text-xs text-muted-foreground shadow-card">
         {t("profileView.emptyAchievements", "Nenhuma conquista ainda.")}
@@ -345,15 +392,73 @@ function AchievementsTab({ achievements }: { achievements: { id: string; label: 
     );
   }
   return (
-    <div className="grid grid-cols-4 gap-2">
-      {achievements.map((a) => (
-        <div key={a.id} className="flex flex-col items-center gap-1 rounded-2xl bg-card p-3 shadow-card">
-          <span className="grid h-10 w-10 place-items-center rounded-full bg-[var(--sun)]/15 text-[var(--earth)]">
-            <Award size={18} />
-          </span>
-          <span className="text-center text-[10px] font-medium">{a.label}</span>
-        </div>
-      ))}
+    <div className="space-y-5">
+      {/* TASK 2: Troféus de segmento (KOM/posição top 10). */}
+      {trophies.length > 0 && (
+        <section>
+          <h3 className="mb-2 flex items-center gap-1.5 text-sm font-semibold">
+            <Trophy size={15} className="text-[var(--sun)]" />
+            {t("segments.trophiesTitle", "Troféus de segmento")}
+          </h3>
+          <div className="space-y-2">
+            {trophies.map((tr) => {
+              const st = trophyStyle(tr.rank);
+              return (
+                <button
+                  key={tr.segmentId}
+                  onClick={() => onOpenTrophy(tr)}
+                  className="flex w-full items-center gap-3 rounded-2xl bg-card p-3 text-left shadow-card transition-base active:scale-[0.99]"
+                >
+                  <span className={`relative grid h-11 w-11 shrink-0 place-items-center rounded-full ${st.ring}`} style={{ color: st.color }}>
+                    <st.Icon size={20} />
+                    <span className="absolute -bottom-1 rounded-full bg-background px-1 text-[9px] font-bold" style={{ color: st.color }}>
+                      {st.label}
+                    </span>
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate text-sm font-semibold">{tr.segmentName}</div>
+                    <div className="mt-0.5 flex flex-wrap gap-x-3 gap-y-0.5 text-[11px] text-muted-foreground">
+                      <span className="flex items-center gap-1">
+                        {tr.rank === 1 ? (
+                          <span className="font-semibold text-[var(--sun)]">
+                            {t("segments.king", "Rei do segmento")}
+                          </span>
+                        ) : (
+                          t("segments.rankOf", { rank: tr.rank, total: tr.totalAthletes, defaultValue: "{{rank}}º de {{total}}" })
+                        )}
+                      </span>
+                      <span className="flex items-center gap-1"><Clock size={11} /> {fmtEffort(tr.bestSeconds)}</span>
+                      <span className="flex items-center gap-1"><RouteIcon size={11} /> {fmtDistance(tr.distanceMeters)}</span>
+                    </div>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </section>
+      )}
+
+      {/* Conquistas gerais (badges). */}
+      {achievements.length > 0 && (
+        <section>
+          {trophies.length > 0 && (
+            <h3 className="mb-2 flex items-center gap-1.5 text-sm font-semibold">
+              <Award size={15} className="text-[var(--earth)]" />
+              {t("profileView.badgesTitle", "Conquistas")}
+            </h3>
+          )}
+          <div className="grid grid-cols-4 gap-2">
+            {achievements.map((a) => (
+              <div key={a.id} className="flex flex-col items-center gap-1 rounded-2xl bg-card p-3 shadow-card">
+                <span className="grid h-10 w-10 place-items-center rounded-full bg-[var(--sun)]/15 text-[var(--earth)]">
+                  <Award size={18} />
+                </span>
+                <span className="text-center text-[10px] font-medium">{a.label}</span>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
     </div>
   );
 }

@@ -144,7 +144,8 @@
     "tabAchievements": "Conquistas",
     "emptyActivities": "Nenhuma atividade ainda.",
     "emptyPosts": "Nenhuma publicação ainda.",
-    "emptyAchievements": "Nenhuma conquista ainda."
+    "emptyAchievements": "Nenhuma conquista ainda.",
+    "badgesTitle": "Conquistas"
   },
   "liveFriends": {
     "empty": "Nenhum amigo em atividade agora.",
@@ -925,7 +926,12 @@
     "nameRequired": "Dê um nome ao segmento.",
     "namePrompt": "Nome do segmento:",
     "created": "Segmento criado!",
-    "tooShort": "Trajeto muito curto para um segmento."
+    "tooShort": "Trajeto muito curto para um segmento.",
+    "mySegments": "Meus segmentos",
+    "mySegmentsHint": "Crie trechos e dispute o ranking",
+    "trophiesTitle": "Troféus de segmento",
+    "king": "Rei do segmento",
+    "rankOf": "{{rank}}º de {{total}}"
   },
   "legal": {
     "gateTitle": "Termos de Uso e Privacidade",

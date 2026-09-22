@@ -17,6 +17,11 @@ import {
 } from "@/lib/gps-signal";
 import type { ActivityType } from "@/lib/activity-metrics";
 import {
+  createElevationGainState,
+  pushElevationSample,
+  type ElevationGainState,
+} from "@/lib/elevation-gain";
+import {
   loadActive,
   saveActive,
   clearActive,
@@ -53,6 +58,9 @@ export function useActivityTracker() {
   const distanceRef = useRef(0);
   const durationRef = useRef(0);
   const elevationGainRef = useRef(0);
+  // Estado do acumulador puro de elevation gain (suavização + histerese com
+  // threshold de 10m, método Strava sem barômetro). Ver src/lib/elevation-gain.ts.
+  const elevationStateRef = useRef<ElevationGainState>(createElevationGainState());
   // Handle do listener nativo `locationUpdate` (Native_Location_Tracking_Module),
   // usado apenas quando `Capacitor.isNativePlatform()` é `true` (Requirement 2.5).
   const nativeListenerRef = useRef<PluginListenerHandle | null>(null);
@@ -204,16 +212,20 @@ export function useActivityTracker() {
       // Distância só entre Accepted_Points (Req 4.1, 7.2, Property 10).
       distanceRef.current += haversineMeters(prev, acceptedPt);
       setDistance(distanceRef.current);
-      // Elevation gain: soma apenas subidas > 2m (filtra ruído barométrico),
-      // usando a última Accepted_Point como referência.
-      const prevAlt = pointsRef.current[pointsRef.current.length - 1]?.alt;
-      if (acceptedPt.alt != null && prevAlt != null) {
-        const altDiff = acceptedPt.alt - prevAlt;
-        if (altDiff > 2) {
-          elevationGainRef.current += altDiff;
-          setElevationGain(elevationGainRef.current);
-        }
+      // Elevation gain (altimetria) — método Strava para GPS sem barômetro:
+      // altitude suavizada por média móvel + histerese com threshold de 10m
+      // de subida sustentada (`src/lib/elevation-gain.ts`), descartando
+      // altitude de pontos com baixa acurácia horizontal. Substitui o antigo
+      // "soma toda subida > 2m", que acumulava o ruído do GPS e superestimava.
+      const nextElevState = pushElevationSample(elevationStateRef.current, {
+        altitude: sample.altitude,
+        accuracy: sample.accuracy,
+      });
+      if (nextElevState.gain !== elevationStateRef.current.gain) {
+        elevationGainRef.current = nextElevState.gain;
+        setElevationGain(nextElevState.gain);
       }
+      elevationStateRef.current = nextElevState;
     }
 
     // Auto-resume se estava em auto-pause (movimento detectado).
@@ -316,6 +328,16 @@ export function useActivityTracker() {
         distanceRef.current = p.distance;
         durationRef.current = restoredDuration;
         elevationGainRef.current = restoredElevationGain;
+        // Reidrata o acumulador de elevação a partir das altitudes dos pontos
+        // restaurados (para o vale/janela ficarem coerentes ao continuar),
+        // mas fixa o `gain` no valor persistido (fonte de verdade do total).
+        {
+          let st = createElevationGainState();
+          for (const pt of p.points) {
+            if (pt.alt != null) st = pushElevationSample(st, { altitude: pt.alt });
+          }
+          elevationStateRef.current = { ...st, gain: restoredElevationGain };
+        }
         activityIdRef.current = p.activityId ?? null;
         activityTypeRef.current = p.activityType ?? null;
         // Reidrata a referência de validação do último ponto persistido (só
@@ -376,6 +398,7 @@ export function useActivityTracker() {
     distanceRef.current = 0;
     durationRef.current = 0;
     elevationGainRef.current = 0;
+    elevationStateRef.current = createElevationGainState();
     lastCheckpointTsRef.current = Date.now();
     lastCheckpointDistanceRef.current = 0;
     lastMovementTsRef.current = Date.now();
@@ -431,6 +454,7 @@ export function useActivityTracker() {
     distanceRef.current = 0;
     durationRef.current = 0;
     elevationGainRef.current = 0;
+    elevationStateRef.current = createElevationGainState();
     lastAcceptedRef.current = null;
     speedWindowRef.current = [];
     signalAccuraciesRef.current = [];
@@ -490,6 +514,7 @@ export function useActivityTracker() {
     distanceRef.current = 0;
     durationRef.current = 0;
     elevationGainRef.current = 0;
+    elevationStateRef.current = createElevationGainState();
     lastAcceptedRef.current = null;
     speedWindowRef.current = [];
     signalAccuraciesRef.current = [];

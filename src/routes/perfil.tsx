@@ -22,6 +22,8 @@ import {
   ShieldCheck,
   MessageSquarePlus,
   Star,
+  Flag,
+  ChevronRight,
 } from "lucide-react";
 import { StatusBar } from "@/components/StatusBar";
 import { Stars } from "@/components/Stars";
@@ -52,6 +54,7 @@ import {
   countPendingApprovals,
   submitUserFeedback,
   fetchUnreadMessagesCount,
+  fetchMySegments,
 } from "@/lib/api";
 import { classifyLevel, levelProgress, type UserLevel } from "@/lib/user-level";
 import type { ActivityType } from "@/lib/activity-metrics";
@@ -161,6 +164,13 @@ function Profile() {
   const { data: activities = [], isLoading: activitiesLoading } = useQuery({
     queryKey: ["user-activities", user?.id],
     queryFn: fetchUserActivities,
+    enabled: !!user,
+  });
+
+  // TASK 1: segmentos criados pelo usuário (para listar/criar a partir do perfil).
+  const { data: mySegments = [] } = useQuery({
+    queryKey: ["my-segments", user?.id],
+    queryFn: fetchMySegments,
     enabled: !!user,
   });
 
@@ -363,6 +373,53 @@ function Profile() {
           <span className="text-xs text-primary font-medium">{t("common.open")}</span>
         </Link>
       </div>
+
+      {/* TASK 1: Segmentos do usuário — criar e listar os meus. */}
+      <section className="mx-5 mt-3 rounded-2xl bg-card p-3 shadow-card">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <span className="grid h-9 w-9 place-items-center rounded-xl bg-primary/10 text-primary">
+              <Flag size={16} />
+            </span>
+            <div className="flex flex-col">
+              <span className="text-sm font-semibold">{t("segments.mySegments", "Meus segmentos")}</span>
+              <span className="text-[11px] text-muted-foreground">
+                {t("segments.mySegmentsHint", "Crie trechos e dispute o ranking")}
+              </span>
+            </div>
+          </div>
+          <Link
+            to="/segmento/criar"
+            className="rounded-full bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground"
+          >
+            + {t("segments.create", "Criar segmento")}
+          </Link>
+        </div>
+
+        {mySegments.length > 0 && (
+          <div className="mt-3 space-y-2">
+            {mySegments.map((seg) => (
+              <Link
+                key={seg.id}
+                to="/segmento/$segmentId"
+                params={{ segmentId: seg.id }}
+                className="flex items-center justify-between rounded-xl bg-secondary/50 px-3 py-2 transition-base active:scale-[0.99]"
+              >
+                <div className="min-w-0 flex-1">
+                  <div className="truncate text-sm font-medium">{seg.name}</div>
+                  <div className="text-[11px] text-muted-foreground">
+                    {(seg.distance_meters / 1000).toFixed(2)} km
+                    {seg.activity_type
+                      ? ` · ${t(`activity.activityTypes.${seg.activity_type}`, { defaultValue: seg.activity_type })}`
+                      : ""}
+                  </div>
+                </div>
+                <ChevronRight size={16} className="text-muted-foreground" />
+              </Link>
+            ))}
+          </div>
+        )}
+      </section>
 
       {isAdmin && (
         <div className="mx-5 mt-3">

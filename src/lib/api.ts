@@ -2915,6 +2915,66 @@ export async function fetchSegments(): Promise<Segment[]> {
   return (data ?? []) as unknown as Segment[];
 }
 
+/** Segmentos criados pelo usuário logado (mais recentes primeiro). TASK 1. */
+export async function fetchMySegments(): Promise<Segment[]> {
+  const { data: userData } = await supabase.auth.getUser();
+  if (!userData.user) return [];
+  const { data, error } = await supabase
+    .from("segments" as never)
+    .select("*")
+    .eq("created_by" as never, userData.user.id as never)
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return (data ?? []) as unknown as Segment[];
+}
+
+export type SegmentTrophy = {
+  segmentId: string;
+  segmentName: string;
+  activityType: string | null;
+  distanceMeters: number;
+  bestSeconds: number;
+  activityId: string | null;
+  achievedAt: string;
+  rank: number;
+  totalAthletes: number;
+};
+
+/**
+ * Troféus de segmento do usuário: para cada segmento em que ele figura no
+ * top `maxRank`, retorna a posição (1 = Rei/KOM), o melhor tempo e a
+ * atividade campeã. TASK 2 (Conquistas). RPC SECURITY DEFINER `my_segment_trophies`.
+ */
+export async function fetchMySegmentTrophies(maxRank = 10): Promise<SegmentTrophy[]> {
+  const { data: userData } = await supabase.auth.getUser();
+  if (!userData.user) return [];
+  const { data, error } = await supabase.rpc("my_segment_trophies" as never, {
+    _max_rank: maxRank,
+  } as never);
+  if (error) throw error;
+  return ((data ?? []) as unknown as {
+    segment_id: string;
+    segment_name: string;
+    activity_type: string | null;
+    distance_meters: number;
+    best_seconds: number;
+    activity_id: string | null;
+    achieved_at: string;
+    rank: number;
+    total_athletes: number;
+  }[]).map((r) => ({
+    segmentId: r.segment_id,
+    segmentName: r.segment_name,
+    activityType: r.activity_type,
+    distanceMeters: Number(r.distance_meters),
+    bestSeconds: r.best_seconds,
+    activityId: r.activity_id,
+    achievedAt: r.achieved_at,
+    rank: r.rank,
+    totalAthletes: r.total_athletes,
+  }));
+}
+
 export async function fetchSegmentById(id: string): Promise<Segment | null> {
   const { data, error } = await supabase
     .from("segments" as never)

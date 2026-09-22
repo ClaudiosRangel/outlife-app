@@ -144,7 +144,8 @@
     "tabAchievements": "Achievements",
     "emptyActivities": "No activities yet.",
     "emptyPosts": "No posts yet.",
-    "emptyAchievements": "No achievements yet."
+    "emptyAchievements": "No achievements yet.",
+    "badgesTitle": "Achievements"
   },
   "liveFriends": {
     "empty": "No friends active right now.",
@@ -925,7 +926,12 @@
     "nameRequired": "Name the segment.",
     "namePrompt": "Segment name:",
     "created": "Segment created!",
-    "tooShort": "Route too short for a segment."
+    "tooShort": "Route too short for a segment.",
+    "mySegments": "My segments",
+    "mySegmentsHint": "Create sections and compete on the leaderboard",
+    "trophiesTitle": "Segment trophies",
+    "king": "King of the segment",
+    "rankOf": "{{rank}} of {{total}}"
   },
   "legal": {
     "gateTitle": "Terms of Use and Privacy",
