@@ -19,9 +19,12 @@ export async function geocodePlace(query: string): Promise<GeocodeResult | null>
   const token = getMapboxToken();
   if (!token) return null;
   try {
+    // `fuzzyMatch=true` + `autocomplete=true` toleram grafia parcial e sem
+    // acento (ex.: "Tres Rio" → "Três Rios"). `limit=1` pega o melhor match.
     const url =
       `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(q)}.json` +
-      `?access_token=${token}&country=br&language=pt&limit=1&types=place,locality,region,poi`;
+      `?access_token=${token}&country=br&language=pt&limit=1&autocomplete=true&fuzzyMatch=true` +
+      `&types=place,locality,region,district,neighborhood,poi`;
     const res = await fetch(url);
     if (!res.ok) return null;
     const j = (await res.json()) as {

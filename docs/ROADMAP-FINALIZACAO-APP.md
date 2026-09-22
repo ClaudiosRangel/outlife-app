@@ -27,6 +27,24 @@
 > **Nota:** não existe API única gratuita/confiável de "tudo que rola por
 > região" para app comercial — diferencial = conteúdo próprio + Open-Meteo.
 > Cards de busca ainda no visual atual (repaginar depois se quiser).
+> **🔧 AJUSTES PÓS-TESTE (Explorar fase 3.1):**
+> 1. **Eventos apareciam só se tivessem destino com coords.** Corrigido:
+>    `fetchNearbyEvents` não filtra mais por `status` (eventos reais usam
+>    'active', não 'published') e traz `meeting_point`; eventos SEM destino são
+>    geocodificados pelo ponto de encontro (ex.: "Lapa") para plotar no mapa; e
+>    o `buildPanorama` conta/lista eventos futuros mesmo SEM coordenadas (não
+>    esconde por falta de lat/lng). Assim a região do evento vem do destino OU
+>    do ponto de encontro.
+> 2. **Busca de cidade falhava com grafia parcial/sem acento** ("Tres Rio").
+>    `geocodePlace` agora usa `autocomplete=true&fuzzyMatch=true` + mais tipos
+>    (district/neighborhood) — tolera nome incompleto/sem acento.
+> 3. **Posição ao vivo só atualizava clicando em "Atualizar agora".** O
+>    observador (`shared-locations` no Explorar/MapView) passou de 60s para
+>    **15s** (alinhado ao intervalo de publicação de 15s do celular que grava),
+>    com `refetchIntervalInBackground` + refetch ao focar. Agora atualiza
+>    sozinho. **Limitação conhecida:** o publisher só roda com a tela de
+>    rastrear aberta; publicar em segundo plano (app minimizado) exigiria um
+>    serviço nativo de background — anotado para frente futura.
 > **Próxima frente:** #7 tela de Iniciar atividade (Strava).
 
 **Anterior:** 15/09/2026 (frente #6 explorar-redesign CONCLUÍDA — mapa 3D Mapbox + camada "agora")

@@ -143,9 +143,11 @@ function Explore() {
   const { data: liveFriends = [] } = useQuery({
     queryKey: ["shared-locations"],
     queryFn: fetchLiveActivityFriends,
-    refetchInterval: 60_000,
-    // Ao ENTRAR na aba Explorar, força buscar os amigos ao vivo na hora
-    // (antes só atualizava a cada 60s ou ao clicar em "Atualizar agora").
+    // Tempo real (~15s, alinhado ao intervalo de publicação do celular que
+    // está gravando): a posição dos amigos atualiza sozinha, sem depender do
+    // botão "Atualizar agora". Continua atualizando em background e ao focar.
+    refetchInterval: 15_000,
+    refetchIntervalInBackground: true,
     refetchOnMount: "always",
     refetchOnWindowFocus: true,
     enabled: !!user,
@@ -197,11 +199,49 @@ function Explore() {
 
   const regionName = searchedRegion?.name ?? myProfile?.location ?? null;
 
-  // Eventos futuros (com coords do destino) para o panorama e o mapa.
-  const { data: nearbyEvents = [] } = useQuery({
+  // Eventos futuros para o panorama e o mapa.
+  const { data: rawEvents = [] } = useQuery({
     queryKey: ["nearby-events"],
     queryFn: () => fetchNearbyEvents(50),
   });
+
+  // Geocodifica os pontos de encontro dos eventos SEM destino/coords (ex.:
+  // "Lapa") para poder plotá-los no mapa. Em lote, memoizado por texto único.
+  const meetingPointsToGeocode = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          rawEvents
+            .filter((e) => (e.lat == null || e.lng == null) && e.meetingPoint)
+            .map((e) => e.meetingPoint as string),
+        ),
+      ),
+    [rawEvents],
+  );
+  const { data: geocodedPoints = {} } = useQuery({
+    queryKey: ["event-meeting-geocode", meetingPointsToGeocode],
+    queryFn: async () => {
+      const out: Record<string, { lat: number; lng: number }> = {};
+      for (const mp of meetingPointsToGeocode) {
+        const r = await geocodePlace(mp);
+        if (r) out[mp] = { lat: r.lat, lng: r.lng };
+      }
+      return out;
+    },
+    enabled: meetingPointsToGeocode.length > 0,
+    staleTime: 60 * 60_000,
+  });
+
+  // Eventos com coords resolvidas (destino OU ponto de encontro geocodificado).
+  const nearbyEvents = useMemo(
+    () =>
+      rawEvents.map((e) => {
+        if (e.lat != null && e.lng != null) return e;
+        const g = e.meetingPoint ? geocodedPoints[e.meetingPoint] : null;
+        return g ? { ...e, lat: g.lat, lng: g.lng } : e;
+      }),
+    [rawEvents, geocodedPoints],
+  );
 
   // Camada "o que acontece agora": amigos ao vivo + parceiros próximos.
   const nowMarkers = useMemo<NowMarker[]>(() => {

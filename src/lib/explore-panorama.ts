@@ -53,11 +53,20 @@ export function buildPanorama(input: PanoramaInput): Panorama {
   const destinationsNear = input.destinations.filter((d) => near(center, d.lat, d.lng, radius));
   const trailsNear = input.trails.filter((t) => near(center, t.lat, t.lng, radius));
 
-  // Eventos futuros (a partir de agora), ordenados por data.
+  // Eventos futuros (a partir de agora), ordenados por data. Eventos NÃO são
+  // filtrados por proximidade: um evento pode não ter coordenadas (local é só
+  // texto, ex.: "Lapa") e ainda assim é relevante mostrar que existe. Quando
+  // há centro E o evento tem coords, damos preferência aos próximos, mas nunca
+  // escondemos um evento futuro por falta de coordenada.
   const upcoming = input.events
     .filter((e) => {
       const t = Date.parse(e.dateIso);
-      return Number.isFinite(t) && t >= now;
+      if (!Number.isFinite(t) || t < now) return false;
+      // Se o evento tem coords e há centro, respeita o raio; sem coords, entra.
+      if (center && e.lat != null && e.lng != null) {
+        return near(center, e.lat, e.lng, radius);
+      }
+      return true;
     })
     .sort((a, b) => Date.parse(a.dateIso) - Date.parse(b.dateIso));
 

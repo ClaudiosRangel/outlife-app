@@ -3032,6 +3032,9 @@ export type NearbyEvent = {
   lat: number | null;
   lng: number | null;
   imageUrl: string | null;
+  /** Ponto de encontro (texto livre, ex.: "Lapa") — usado para geocodificar
+   *  no mapa quando o evento não tem destino com coordenadas. */
+  meetingPoint: string | null;
 };
 
 /**
@@ -3043,25 +3046,14 @@ export async function fetchNearbyEvents(limit = 50): Promise<NearbyEvent[]> {
   const { data, error } = await supabase
     .from("events" as never)
     .select(
-      "id, title, event_date, destination_id, image_url, destination:destinations(latitude, longitude)" as never,
+      "id, title, event_date, destination_id, image_url, meeting_point, destination:destinations(latitude, longitude)" as never,
     )
     .gte("event_date", nowIso)
-    .eq("status", "published")
     .order("event_date", { ascending: true })
     .limit(limit);
-  if (error) {
-    // status pode não ser 'published' em todos; tenta sem o filtro de status.
-    const retry = await supabase
-      .from("events" as never)
-      .select(
-        "id, title, event_date, destination_id, image_url, destination:destinations(latitude, longitude)" as never,
-      )
-      .gte("event_date", nowIso)
-      .order("event_date", { ascending: true })
-      .limit(limit);
-    if (retry.error) throw retry.error;
-    return mapNearbyEvents(retry.data);
-  }
+  // Sem filtro de status: os eventos do app usam status variados ('active',
+  // 'published', ...). O que define "próximo" é a data futura, não o status.
+  if (error) throw error;
   return mapNearbyEvents(data);
 }
 
@@ -3072,6 +3064,7 @@ function mapNearbyEvents(rows: unknown): NearbyEvent[] {
     event_date: string;
     destination_id: string | null;
     image_url: string | null;
+    meeting_point: string | null;
     destination?: { latitude: number | null; longitude: number | null } | null;
   }[]).map((e) => ({
     id: e.id,
@@ -3081,5 +3074,6 @@ function mapNearbyEvents(rows: unknown): NearbyEvent[] {
     lat: e.destination?.latitude != null ? Number(e.destination.latitude) : null,
     lng: e.destination?.longitude != null ? Number(e.destination.longitude) : null,
     imageUrl: e.image_url,
+    meetingPoint: e.meeting_point ?? null,
   }));
 }

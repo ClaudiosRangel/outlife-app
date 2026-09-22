@@ -143,7 +143,11 @@ export default function MapView({
   const { data: shared = [] } = useQuery<MaybeLiveLocation[]>({
     queryKey: ["shared-locations"],
     queryFn: fetchLiveActivityFriends,
-    refetchInterval: 60_000,
+    // Tempo real (~15s): acompanha o publisher do celular em atividade sem
+    // exigir toque em "Atualizar agora".
+    refetchInterval: 15_000,
+    refetchIntervalInBackground: true,
+    refetchOnWindowFocus: true,
     enabled: !!user,
   });
 
