@@ -24,6 +24,7 @@ import { ExploreMap } from "@/components/explore/ExploreMap";
 import { ExplorePanorama } from "@/components/explore/ExplorePanorama";
 import { filterNearby, type NowMarker } from "@/lib/nearby";
 import { buildPanorama } from "@/lib/explore-panorama";
+import { geocodePlace } from "@/lib/geocode";
 import { fetchNearbyEvents } from "@/lib/api";
 import trailFallbackImg from "@/assets/dest-trail.jpg";
 
@@ -98,6 +99,10 @@ function Explore() {
   // e destacar o marcador (Req 4.1/4.2). Limpo quando o amigo deixa de estar ao
   // vivo (Req 4.4).
   const [selectedFriendId, setSelectedFriendId] = useState<string | null>(null);
+  // Busca de destino (texto) + região geocodificada (fase 3): ao buscar uma
+  // cidade/lugar, o mapa e o panorama passam a refletir aquela região.
+  const [destQuery, setDestQuery] = useState("");
+  const [searchedRegion, setSearchedRegion] = useState<{ name: string; lat: number; lng: number } | null>(null);
 
   const { data: destinations = [], isLoading } = useQuery({
     queryKey: ["destinations"],
@@ -179,14 +184,18 @@ function Explore() {
     [destinations, difficultyFilter],
   );
 
-  // Centro do mapa = minha posição compartilhada, quando disponível.
+  // Centro do mapa/panorama: prioriza a REGIÃO BUSCADA (ex.: "Juiz de Fora");
+  // senão a minha posição compartilhada.
   const mapCenter = useMemo(() => {
+    if (searchedRegion) return { lat: searchedRegion.lat, lng: searchedRegion.lng };
     const lat = myProfile?.latitude != null ? Number(myProfile.latitude) : null;
     const lng = myProfile?.longitude != null ? Number(myProfile.longitude) : null;
     return lat != null && lng != null && Number.isFinite(lat) && Number.isFinite(lng)
       ? { lat, lng }
       : null;
-  }, [myProfile?.latitude, myProfile?.longitude]);
+  }, [searchedRegion, myProfile?.latitude, myProfile?.longitude]);
+
+  const regionName = searchedRegion?.name ?? myProfile?.location ?? null;
 
   // Eventos futuros (com coords do destino) para o panorama e o mapa.
   const { data: nearbyEvents = [] } = useQuery({
@@ -266,6 +275,40 @@ function Explore() {
     [mapCenter, liveFriends, partners, destinations, importedTrails, nearbyEvents],
   );
 
+  // Lugares (destinos + trilhas) próximos como marcadores, para o contador
+  // "lugares" abrir a lista e para o card de "perto de você" (item 5).
+  const placeMarkers = useMemo<NowMarker[]>(() => {
+    const dests: NowMarker[] = destinations
+      .filter((d) => (d as { latitude?: number | null }).latitude != null)
+      .map((d) => {
+        const dd = d as unknown as { id: string; name: string; latitude: number; longitude: number; region?: string };
+        return {
+          id: `dest:${dd.id}`,
+          kind: "event" as const, // reutiliza pino; navegação via href
+          lat: Number(dd.latitude),
+          lng: Number(dd.longitude),
+          title: dd.name,
+          subtitle: dd.region,
+          href: `/destino/${dd.id}`,
+        };
+      });
+    const trls: NowMarker[] = importedTrails
+      .filter((tr) => (tr as { latitude?: number | null }).latitude != null)
+      .map((tr) => {
+        const tt = tr as unknown as { id: string; name: string; latitude: number; longitude: number; region?: string };
+        return {
+          id: `trail:${tt.id}`,
+          kind: "event" as const,
+          lat: Number(tt.latitude),
+          lng: Number(tt.longitude),
+          title: tt.name,
+          subtitle: tt.region,
+          href: `/trilha/${tt.id}`,
+        };
+      });
+    return filterNearby([...dests, ...trls], mapCenter, { limit: 40 });
+  }, [destinations, importedTrails, mapCenter]);
+
   useEffect(() => {
     setMounted(true);
   }, []);
@@ -304,10 +347,47 @@ function Explore() {
 
         {exploreTab === "destinos" ? (
           <>
-            <div className="mt-4 flex items-center gap-2 rounded-2xl border border-border bg-card p-3">
+            <form
+              onSubmit={async (e) => {
+                e.preventDefault();
+                const q = destQuery.trim();
+                if (!q) {
+                  setSearchedRegion(null);
+                  return;
+                }
+                const r = await geocodePlace(q);
+                if (r) {
+                  setSearchedRegion(r);
+                } else {
+                  toast(t("explore.regionNotFound", "Não encontrei essa região."));
+                }
+              }}
+              className="mt-4 flex items-center gap-2 rounded-2xl border border-border bg-card p-3"
+            >
               <Search size={18} className="text-muted-foreground" />
-              <input placeholder={t("explore.placeholder")} className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground" />
-            </div>
+              <input
+                value={destQuery}
+                onChange={(e) => setDestQuery(e.target.value)}
+                placeholder={t("explore.placeholder")}
+                className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+                inputMode="search"
+                enterKeyHint="search"
+              />
+            </form>
+
+            {/* Chip da região buscada (fase 3): mostra e permite limpar. */}
+            {searchedRegion && (
+              <button
+                onClick={() => {
+                  setSearchedRegion(null);
+                  setDestQuery("");
+                }}
+                className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary"
+              >
+                <MapPin size={12} /> {searchedRegion.name}
+                <span className="ml-1 text-primary/70">✕</span>
+              </button>
+            )}
 
             <div className="mt-4 flex gap-2 overflow-x-auto scrollbar-hide -mx-5 px-5">
               {filterKeys.map((k) => (
@@ -367,7 +447,16 @@ function Explore() {
         </div>
       ) : (
         <>
-      <ExplorePanorama panorama={panorama} center={mapCenter} />
+      <ExplorePanorama
+        panorama={panorama}
+        center={mapCenter}
+        regionName={regionName}
+        friendMarkers={nowMarkers.filter((m) => m.kind === "friend")}
+        partnerMarkers={nowMarkers.filter((m) => m.kind === "partner")}
+        eventMarkers={nowMarkers.filter((m) => m.kind === "event")}
+        placeMarkers={placeMarkers}
+        onOpen={(href) => navigate({ to: href })}
+      />
 
       {mounted ? (
         <ExploreMap

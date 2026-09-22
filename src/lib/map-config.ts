@@ -14,3 +14,11 @@ export function hasMapbox(): boolean {
 
 /** Estilo de tiles raster do Mapbox usado no Leaflet (visual outdoor). */
 export const MAPBOX_TILES_STYLE = "outdoors-v12";
+
+/** Camadas de mapa disponíveis (tiles Mapbox). */
+export const MAP_LAYERS = [
+  { key: "outdoors", style: "outdoors-v12" },
+  { key: "satellite", style: "satellite-streets-v12" },
+  { key: "streets", style: "streets-v12" },
+] as const;
+export type MapLayerKey = (typeof MAP_LAYERS)[number]["key"];

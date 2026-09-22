@@ -11,6 +11,27 @@ export type WeatherNow = {
   tempMaxC: number | null;
   tempMinC: number | null;
   weatherCode: number;
+  /** Índice UV máximo do dia (Open-Meteo daily). */
+  uvIndexMax: number | null;
+  /** Nascer/pôr do sol (ISO local) do dia. */
+  sunriseIso: string | null;
+  sunsetIso: string | null;
+};
+
+export type AirQuality = {
+  /** US AQI (0-500). */
+  usAqi: number | null;
+  pm25: number | null;
+};
+
+/** Fase da lua calculada (0..1): 0=nova, 0.5=cheia. Puro. */
+export type MoonPhase = {
+  /** fração 0..1 do ciclo lunar. */
+  phase: number;
+  /** iluminação aproximada 0..1. */
+  illumination: number;
+  /** chave de tradução do nome da fase. */
+  key: string;
 };
 
 export type OutdoorVerdict = "good" | "caution" | "avoid";
@@ -74,7 +95,7 @@ export async function fetchWeatherNow(lat: number, lng: number): Promise<Weather
   const url =
     `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}` +
     `&current=temperature_2m,apparent_temperature,precipitation,wind_speed_10m,weather_code` +
-    `&daily=precipitation_probability_max,temperature_2m_max,temperature_2m_min` +
+    `&daily=precipitation_probability_max,temperature_2m_max,temperature_2m_min,uv_index_max,sunrise,sunset` +
     `&timezone=auto`;
   const res = await fetch(url);
   if (!res.ok) throw new Error("weather fetch failed");
@@ -90,6 +111,9 @@ export async function fetchWeatherNow(lat: number, lng: number): Promise<Weather
       precipitation_probability_max?: number[];
       temperature_2m_max?: number[];
       temperature_2m_min?: number[];
+      uv_index_max?: number[];
+      sunrise?: string[];
+      sunset?: string[];
     };
   };
   const cur = j.current;
@@ -103,5 +127,71 @@ export async function fetchWeatherNow(lat: number, lng: number): Promise<Weather
     tempMaxC: j.daily?.temperature_2m_max?.[0] != null ? Math.round(j.daily.temperature_2m_max[0]) : null,
     tempMinC: j.daily?.temperature_2m_min?.[0] != null ? Math.round(j.daily.temperature_2m_min[0]) : null,
     weatherCode: cur.weather_code ?? 0,
+    uvIndexMax: j.daily?.uv_index_max?.[0] ?? null,
+    sunriseIso: j.daily?.sunrise?.[0] ?? null,
+    sunsetIso: j.daily?.sunset?.[0] ?? null,
   };
+}
+
+/** Qualidade do ar (US AQI + PM2.5) via Open-Meteo Air Quality (sem key). */
+export async function fetchAirQuality(lat: number, lng: number): Promise<AirQuality | null> {
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+  const url =
+    `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lng}` +
+    `&current=us_aqi,pm2_5&timezone=auto`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error("air quality fetch failed");
+  const j = (await res.json()) as { current?: { us_aqi?: number; pm2_5?: number } };
+  const cur = j.current;
+  if (!cur) return null;
+  return {
+    usAqi: cur.us_aqi != null ? Math.round(cur.us_aqi) : null,
+    pm25: cur.pm2_5 ?? null,
+  };
+}
+
+/** Classifica o índice UV em chave de tradução (puro). */
+export function uvLevelKey(uv: number | null): string | null {
+  if (uv == null) return null;
+  if (uv < 3) return "low";
+  if (uv < 6) return "moderate";
+  if (uv < 8) return "high";
+  if (uv < 11) return "veryHigh";
+  return "extreme";
+}
+
+/** Classifica o US AQI em chave de tradução (puro). */
+export function aqiLevelKey(aqi: number | null): string | null {
+  if (aqi == null) return null;
+  if (aqi <= 50) return "good";
+  if (aqi <= 100) return "moderate";
+  if (aqi <= 150) return "sensitive";
+  if (aqi <= 200) return "unhealthy";
+  if (aqi <= 300) return "veryUnhealthy";
+  return "hazardous";
+}
+
+/**
+ * Fase da lua para uma data (puro). Algoritmo baseado no número de dias desde
+ * uma lua nova de referência (2000-01-06) dividido pelo período sinódico
+ * (~29.53 dias). Retorna fração 0..1, iluminação aproximada e chave do nome.
+ */
+export function moonPhase(date: Date): MoonPhase {
+  const SYNODIC = 29.530588853;
+  const refNewMoon = Date.UTC(2000, 0, 6, 18, 14) / 86400000; // dias epoch
+  const days = date.getTime() / 86400000;
+  let phase = ((days - refNewMoon) % SYNODIC) / SYNODIC;
+  if (phase < 0) phase += 1;
+  // Iluminação: 0 na nova, 1 na cheia (0.5).
+  const illumination = (1 - Math.cos(2 * Math.PI * phase)) / 2;
+  let key: string;
+  if (phase < 0.03 || phase > 0.97) key = "new";
+  else if (phase < 0.22) key = "waxingCrescent";
+  else if (phase < 0.28) key = "firstQuarter";
+  else if (phase < 0.47) key = "waxingGibbous";
+  else if (phase < 0.53) key = "full";
+  else if (phase < 0.72) key = "waningGibbous";
+  else if (phase < 0.78) key = "lastQuarter";
+  else key = "waningCrescent";
+  return { phase, illumination, key };
 }

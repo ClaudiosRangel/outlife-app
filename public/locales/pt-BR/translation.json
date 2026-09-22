@@ -187,13 +187,50 @@
       "friendDoing": "em {{activity}}",
       "nextEvent": "Próximo evento",
       "topDestination": "Destaque",
-      "shareLocation": "Compartilhe sua localização para ver o panorama da sua região.",
+      "shareLocation": "Compartilhe sua localização ou busque uma região para ver o panorama.",
+      "titleRegion": "Agora em {{region}}",
+      "uv": "UV",
+      "air": "Ar",
+      "sunrise": "Nascer",
+      "sunset": "Pôr",
+      "moon": "Lua",
       "verdict": {
         "good": "Bom p/ atividade",
         "caution": "Atenção",
         "avoid": "Evite hoje"
+      },
+      "uvLevel": {
+        "low": "UV baixo",
+        "moderate": "UV moderado",
+        "high": "UV alto",
+        "veryHigh": "UV muito alto",
+        "extreme": "UV extremo"
+      },
+      "aqiLevel": {
+        "good": "Ar bom",
+        "moderate": "Ar moderado",
+        "sensitive": "Sensíveis",
+        "unhealthy": "Ruim",
+        "veryUnhealthy": "Muito ruim",
+        "hazardous": "Perigoso"
+      },
+      "moonPhase": {
+        "new": "Nova",
+        "waxingCrescent": "Crescente côncava",
+        "firstQuarter": "Quarto crescente",
+        "waxingGibbous": "Crescente convexa",
+        "full": "Cheia",
+        "waningGibbous": "Minguante convexa",
+        "lastQuarter": "Quarto minguante",
+        "waningCrescent": "Minguante côncava"
       }
-    }
+    },
+    "mapLayers": {
+      "outdoors": "Relevo",
+      "satellite": "Satélite",
+      "streets": "Ruas"
+    },
+    "regionNotFound": "Não encontrei essa região."
   },
   "marketplace": {
     "title": "Marketplace",

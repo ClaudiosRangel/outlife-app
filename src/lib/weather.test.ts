@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import fc from "fast-check";
-import { outdoorVerdict, weatherCodeKey } from "./weather";
+import { outdoorVerdict, weatherCodeKey, uvLevelKey, aqiLevelKey, moonPhase } from "./weather";
 
 describe("weather.outdoorVerdict", () => {
   it("avoid em tempestade, vento extremo ou alta chance de chuva", () => {
@@ -42,5 +42,44 @@ describe("weather.outdoorVerdict", () => {
     expect(weatherCodeKey(61)).toBe("rain");
     expect(weatherCodeKey(75)).toBe("snow");
     expect(weatherCodeKey(97)).toBe("storm");
+  });
+});
+
+describe("weather extras", () => {
+  it("uvLevelKey classifica faixas", () => {
+    expect(uvLevelKey(null)).toBeNull();
+    expect(uvLevelKey(1)).toBe("low");
+    expect(uvLevelKey(4)).toBe("moderate");
+    expect(uvLevelKey(7)).toBe("high");
+    expect(uvLevelKey(9)).toBe("veryHigh");
+    expect(uvLevelKey(12)).toBe("extreme");
+  });
+
+  it("aqiLevelKey classifica faixas", () => {
+    expect(aqiLevelKey(null)).toBeNull();
+    expect(aqiLevelKey(30)).toBe("good");
+    expect(aqiLevelKey(80)).toBe("moderate");
+    expect(aqiLevelKey(120)).toBe("sensitive");
+    expect(aqiLevelKey(180)).toBe("unhealthy");
+    expect(aqiLevelKey(250)).toBe("veryUnhealthy");
+    expect(aqiLevelKey(400)).toBe("hazardous");
+  });
+
+  it("moonPhase retorna fase 0..1 e chave válida", () => {
+    const keys = new Set([
+      "new", "waxingCrescent", "firstQuarter", "waxingGibbous",
+      "full", "waningGibbous", "lastQuarter", "waningCrescent",
+    ]);
+    fc.assert(
+      fc.property(fc.integer({ min: 0, max: 60000 }), (daysOffset) => {
+        const d = new Date(Date.UTC(2020, 0, 1) + daysOffset * 86400000);
+        const m = moonPhase(d);
+        expect(m.phase).toBeGreaterThanOrEqual(0);
+        expect(m.phase).toBeLessThanOrEqual(1);
+        expect(m.illumination).toBeGreaterThanOrEqual(0);
+        expect(m.illumination).toBeLessThanOrEqual(1);
+        expect(keys.has(m.key)).toBe(true);
+      }),
+    );
   });
 });

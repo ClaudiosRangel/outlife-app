@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
@@ -14,10 +14,10 @@ import {
 } from "@/lib/api";
 import type { SharedLocation, LiveActivityFriend } from "@/lib/api";
 import { deriveIsLive } from "@/lib/live-activity";
-import { Locate, User } from "lucide-react";
+import { Locate, User, Layers } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/use-auth";
-import { getMapboxToken, MAPBOX_TILES_STYLE } from "@/lib/map-config";
+import { getMapboxToken, MAP_LAYERS, type MapLayerKey } from "@/lib/map-config";
 
 const BRAZIL_CENTER: [number, number] = [-15.7801, -47.9292];
 const BRAZIL_ZOOM = 4;
@@ -126,6 +126,8 @@ export default function MapView({
   const { t } = useTranslation();
   const { user } = useAuth();
   const mapRef = useRef<L.Map | null>(null);
+  // Camada de mapa selecionada (outdoors/satélite/ruas) — item 2 do redesign.
+  const [layer, setLayer] = useState<MapLayerKey>("outdoors");
 
   const { data: destinations = [] } = useQuery({
     queryKey: ["destinations-raw"],
@@ -204,6 +206,23 @@ export default function MapView({
           apareçam por cima de outros conteúdos da página (mesmo bug
           corrigido em ActivityMap.tsx). */}
       <div className="relative isolate mx-5 mb-2 h-72 overflow-hidden rounded-3xl shadow-card bg-gradient-sky">
+        {/* Seletor de camada (outdoors/satélite/ruas) — só com tiles Mapbox. */}
+        {getMapboxToken() && (
+          <div className="absolute right-2 top-2 z-[1000] flex gap-1 rounded-full bg-white/90 p-1 shadow-md backdrop-blur">
+            {MAP_LAYERS.map((l) => (
+              <button
+                key={l.key}
+                onClick={() => setLayer(l.key)}
+                aria-label={t(`explore.mapLayers.${l.key}`, l.key)}
+                className={`grid h-7 w-7 place-items-center rounded-full text-[10px] font-semibold transition-base ${
+                  layer === l.key ? "bg-primary text-primary-foreground" : "text-gray-700"
+                }`}
+              >
+                {l.key === "outdoors" ? <Layers size={13} /> : l.key === "satellite" ? "🛰" : "🗺"}
+              </button>
+            ))}
+          </div>
+        )}
         <MapContainer
           center={BRAZIL_CENTER}
           zoom={BRAZIL_ZOOM}
@@ -220,12 +239,14 @@ export default function MapView({
             // token, cai nos tiles gratuitos do OpenStreetMap.
             const token = getMapboxToken();
             if (token) {
+              const style = MAP_LAYERS.find((l) => l.key === layer)?.style ?? "outdoors-v12";
               return (
                 <TileLayer
+                  key={style}
                   attribution='&copy; <a href="https://www.mapbox.com/">Mapbox</a> &copy; OpenStreetMap'
                   tileSize={512}
                   zoomOffset={-1}
-                  url={`https://api.mapbox.com/styles/v1/mapbox/${MAPBOX_TILES_STYLE}/tiles/{z}/{x}/{y}?access_token=${token}`}
+                  url={`https://api.mapbox.com/styles/v1/mapbox/${style}/tiles/{z}/{x}/{y}?access_token=${token}`}
                 />
               );
             }

@@ -187,13 +187,50 @@
       "friendDoing": "doing {{activity}}",
       "nextEvent": "Next event",
       "topDestination": "Highlight",
-      "shareLocation": "Share your location to see your region's panorama.",
+      "shareLocation": "Share your location or search a region to see the panorama.",
+      "titleRegion": "Now in {{region}}",
+      "uv": "UV",
+      "air": "Air",
+      "sunrise": "Sunrise",
+      "sunset": "Sunset",
+      "moon": "Moon",
       "verdict": {
         "good": "Good to go",
         "caution": "Caution",
         "avoid": "Avoid today"
+      },
+      "uvLevel": {
+        "low": "Low UV",
+        "moderate": "Moderate UV",
+        "high": "High UV",
+        "veryHigh": "Very high UV",
+        "extreme": "Extreme UV"
+      },
+      "aqiLevel": {
+        "good": "Good air",
+        "moderate": "Moderate air",
+        "sensitive": "Sensitive groups",
+        "unhealthy": "Unhealthy",
+        "veryUnhealthy": "Very unhealthy",
+        "hazardous": "Hazardous"
+      },
+      "moonPhase": {
+        "new": "New",
+        "waxingCrescent": "Waxing crescent",
+        "firstQuarter": "First quarter",
+        "waxingGibbous": "Waxing gibbous",
+        "full": "Full",
+        "waningGibbous": "Waning gibbous",
+        "lastQuarter": "Last quarter",
+        "waningCrescent": "Waning crescent"
       }
-    }
+    },
+    "mapLayers": {
+      "outdoors": "Terrain",
+      "satellite": "Satellite",
+      "streets": "Streets"
+    },
+    "regionNotFound": "Region not found."
   },
   "marketplace": {
     "title": "Marketplace",

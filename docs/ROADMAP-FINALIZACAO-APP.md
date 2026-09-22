@@ -5,7 +5,31 @@
 > `.kiro/steering/roadmap-outvitar.md`). **Mantenha-o atualizado** ao
 > concluir qualquer tarefa/bloco: marque status, data e resumo.
 
-**Última atualização:** 15/09/2026 (frente #6 explorar-redesign CONCLUÍDA — mapa 3D Mapbox + camada "agora")
+**Última atualização:** 15/09/2026 (Explorar fase 3 — painel diferencial: clima+UV+ar+sol+lua, resumo em texto, busca por região, contadores clicáveis, camadas)
+
+> **🟩 EXPLORAR FASE 3 (15/09/2026) — CONCLUÍDA (APK 15:37):**
+> Explorar transformado no diferencial do app. Sobre o mapa Mapbox (tiles no
+> Leaflet), o painel "Agora na sua região" ganhou:
+> - **Resumo em linguagem natural** (`explore-summary.ts`): parágrafo tipo
+>   "Ótimo dia para atividades ao ar livre em Juiz de Fora: 24°. 2 amigos ativos
+>   e 1 evento chegando. Destaque: Pedra do Sino."
+> - **Clima enriquecido (Open-Meteo, grátis, sem key)**: temperatura, sensação,
+>   vento, chuva, mín/máx, **índice UV**, **qualidade do ar (US AQI)**,
+>   **nascer/pôr do sol** e **fase da lua** (`weather.ts` + `fetchAirQuality`).
+> - **Veredito outdoor** (bom/atenção/evite).
+> - **Contadores clicáveis** (amigos/eventos/parceiros/lugares): 1 item vai
+>   direto ao destino; vários abrem uma lista (bottom sheet). "Lugares" =
+>   destinos + trilhas próximos ordenados por distância.
+> - **Busca por região** (`geocode.ts` via Mapbox): digitar uma cidade
+>   recentra o mapa E recalcula o panorama daquela região; chip com limpar.
+> - **Camadas de mapa** (relevo/satélite/ruas) num seletor sobre o mapa.
+> Libs puras testadas (summary, weather extras, moonPhase/uv/aqi). tsc limpo.
+> **Nota:** não existe API única gratuita/confiável de "tudo que rola por
+> região" para app comercial — diferencial = conteúdo próprio + Open-Meteo.
+> Cards de busca ainda no visual atual (repaginar depois se quiser).
+> **Próxima frente:** #7 tela de Iniciar atividade (Strava).
+
+**Anterior:** 15/09/2026 (frente #6 explorar-redesign CONCLUÍDA — mapa 3D Mapbox + camada "agora")
 
 > **🟩 FRENTE #6 explorar-redesign (15/09/2026) — CONCLUÍDA (APK 10:39):**
 > Explorar repaginado com mapa de destaque (h-72) e provider plugável:

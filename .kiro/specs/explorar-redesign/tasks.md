@@ -82,3 +82,28 @@ APK. Uma frente por vez, sem quebrar o rastreamento/publisher.
 - Restringir token por URL no Mapbox antes de publicar.
 - Pesquisa de APIs registrada em `docs/PESQUISA-APIS-EXPLORAR.md` (clima
   Open-Meteo escolhido; eventos = internos).
+
+- [x] 4. Fase 3 — Explorar como diferencial (panorama total + busca por região)
+  - [x] 4.1 Clima enriquecido (Open-Meteo, sem key): índice UV, qualidade do ar
+    (US AQI), nascer/pôr do sol, fase da lua (`weather.ts` + `fetchAirQuality`
+    + `uvLevelKey`/`aqiLevelKey`/`moonPhase`). Testes.
+  - [x] 4.2 Resumo em linguagem natural (`explore-summary.ts` +
+    `buildExploreSummary`) — parágrafo no topo do painel. Testes.
+  - [x] 4.3 Busca por região geocodificada (`geocode.ts` via Mapbox): digitar
+    "Juiz de Fora" recentra mapa + panorama; chip da região com limpar.
+  - [x] 4.4 Contadores clicáveis (amigos/eventos/parceiros/lugares): 1 vai
+    direto ao item; vários abrem lista (bottom sheet). Lugares = destinos +
+    trilhas próximos ordenados por distância.
+  - [x] 4.5 Camadas de mapa (outdoors/satélite/ruas) via seletor sobre o mapa
+    (`MAP_LAYERS`, tiles Mapbox).
+  - [x] 4.6 i18n PT+EN; tsc limpo; testes (summary 4 + weather extras);
+    APK 15:37.
+
+## Notes fase 3
+
+- Não há API única gratuita e confiável de "tudo que rola por região" para app
+  comercial (Eventbrite/Meetup/PredictHQ são fragmentados/pagos/fracos no BR).
+  Diferencial = conteúdo próprio + camadas grátis do Open-Meteo (clima, UV, ar,
+  sol, lua). Documentado.
+- Cards de busca (destinos/trilhas/parceiros) ainda no visual atual — repaginar
+  numa próxima passada se desejado.
