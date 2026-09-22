@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { resolveAsset } from "@/lib/api";
+import { geocodePlace } from "@/lib/geocode";
 import {
   Sheet,
   SheetContent,
@@ -373,6 +374,22 @@ function CreateEventSheet({ open, onOpenChange }: { open: boolean; onOpenChange:
         imageUrl = pub.publicUrl;
       }
 
+      // Registra automaticamente cidade + coordenadas do evento, geocodificando
+      // o ponto de encontro. Assim o evento é encontrado pela cidade no
+      // Explorar (spec 3.2). Best-effort — se não geocodificar, grava sem.
+      let city: string | null = null;
+      let latitude: number | null = null;
+      let longitude: number | null = null;
+      const mp = meetingPoint.trim();
+      if (mp) {
+        const g = await geocodePlace(mp);
+        if (g) {
+          city = g.city;
+          latitude = g.lat;
+          longitude = g.lng;
+        }
+      }
+
       const { error } = await supabase.from("events" as never).insert({
         created_by: user.id,
         title: finalTitle,
@@ -383,6 +400,9 @@ function CreateEventSheet({ open, onOpenChange }: { open: boolean; onOpenChange:
         destination_id: destinationId || null,
         image_url: imageUrl || destinationImage,
         meeting_point: meetingPoint.trim() || null,
+        city,
+        latitude,
+        longitude,
       } as never);
       if (error) throw error;
     },

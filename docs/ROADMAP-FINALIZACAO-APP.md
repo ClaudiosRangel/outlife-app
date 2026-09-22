@@ -45,6 +45,19 @@
 >    sozinho. **Limitação conhecida:** o publisher só roda com a tela de
 >    rastrear aberta; publicar em segundo plano (app minimizado) exigiria um
 >    serviço nativo de background — anotado para frente futura.
+> **🟩 EXPLORAR FASE 3.2 (15/09/2026) — busca unificada + cidade do evento + cards):**
+> 1. **Cidade/coords do evento automáticas**: migration `20260915150000`
+>    (`events.city/latitude/longitude`). Ao criar evento, geocodifica o ponto
+>    de encontro e grava cidade+coords → o evento é achado pela cidade que o
+>    criou, sem depender de destino vinculado. `fetchNearbyEvents` usa as coords
+>    próprias com prioridade.
+> 2. **Busca unificada** (`ExploreSearch`): um só campo busca **cidades**
+>    (geocode), **pessoas** (searchUsers), **parceiros** e **eventos**, com
+>    sugestões agrupadas conforme digita. Cidade recentra o panorama; os demais
+>    navegam para o perfil/parceiro/eventos.
+> 3. **Cards de destino repaginados**: card imersivo (imagem cobrindo, gradiente,
+>    nome+região+badges sobre a foto, rating/dificuldade destacados).
+> tsc limpo; migration aplicada 2× + reload. APK 17:15.
 > **Próxima frente:** #7 tela de Iniciar atividade (Strava).
 
 **Anterior:** 15/09/2026 (frente #6 explorar-redesign CONCLUÍDA — mapa 3D Mapbox + camada "agora")

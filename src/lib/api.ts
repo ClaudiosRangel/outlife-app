@@ -3032,9 +3032,10 @@ export type NearbyEvent = {
   lat: number | null;
   lng: number | null;
   imageUrl: string | null;
-  /** Ponto de encontro (texto livre, ex.: "Lapa") — usado para geocodificar
-   *  no mapa quando o evento não tem destino com coordenadas. */
+  /** Ponto de encontro (texto livre, ex.: "Lapa"). */
   meetingPoint: string | null;
+  /** Cidade registrada automaticamente ao criar o evento (geocode). */
+  city: string | null;
 };
 
 /**
@@ -3046,7 +3047,7 @@ export async function fetchNearbyEvents(limit = 50): Promise<NearbyEvent[]> {
   const { data, error } = await supabase
     .from("events" as never)
     .select(
-      "id, title, event_date, destination_id, image_url, meeting_point, destination:destinations(latitude, longitude)" as never,
+      "id, title, event_date, destination_id, image_url, meeting_point, city, latitude, longitude, destination:destinations(latitude, longitude)" as never,
     )
     .gte("event_date", nowIso)
     .order("event_date", { ascending: true })
@@ -3065,15 +3066,25 @@ function mapNearbyEvents(rows: unknown): NearbyEvent[] {
     destination_id: string | null;
     image_url: string | null;
     meeting_point: string | null;
+    city: string | null;
+    latitude: number | null;
+    longitude: number | null;
     destination?: { latitude: number | null; longitude: number | null } | null;
-  }[]).map((e) => ({
-    id: e.id,
-    title: e.title,
-    dateIso: e.event_date,
-    destinationId: e.destination_id,
-    lat: e.destination?.latitude != null ? Number(e.destination.latitude) : null,
-    lng: e.destination?.longitude != null ? Number(e.destination.longitude) : null,
-    imageUrl: e.image_url,
-    meetingPoint: e.meeting_point ?? null,
-  }));
+  }[]).map((e) => {
+    // Coordenadas próprias do evento (city/lat/lng) têm prioridade; fallback
+    // para as do destino vinculado.
+    const lat = e.latitude != null ? Number(e.latitude) : e.destination?.latitude != null ? Number(e.destination.latitude) : null;
+    const lng = e.longitude != null ? Number(e.longitude) : e.destination?.longitude != null ? Number(e.destination.longitude) : null;
+    return {
+      id: e.id,
+      title: e.title,
+      dateIso: e.event_date,
+      destinationId: e.destination_id,
+      lat,
+      lng,
+      imageUrl: e.image_url,
+      meetingPoint: e.meeting_point ?? null,
+      city: e.city ?? null,
+    };
+  });
 }

@@ -230,7 +230,14 @@
       "satellite": "Satélite",
       "streets": "Ruas"
     },
-    "regionNotFound": "Não encontrei essa região."
+    "regionNotFound": "Não encontrei essa região.",
+    "search": {
+      "empty": "Nada encontrado.",
+      "cities": "Cidades",
+      "friends": "Pessoas",
+      "partners": "Parceiros",
+      "events": "Eventos"
+    }
   },
   "marketplace": {
     "title": "Marketplace",

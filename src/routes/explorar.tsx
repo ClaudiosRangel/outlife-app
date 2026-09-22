@@ -26,6 +26,7 @@ import { filterNearby, type NowMarker } from "@/lib/nearby";
 import { buildPanorama } from "@/lib/explore-panorama";
 import { geocodePlace } from "@/lib/geocode";
 import { fetchNearbyEvents } from "@/lib/api";
+import { ExploreSearch } from "@/components/explore/ExploreSearch";
 import trailFallbackImg from "@/assets/dest-trail.jpg";
 
 export const Route = createFileRoute("/explorar")({
@@ -99,9 +100,8 @@ function Explore() {
   // e destacar o marcador (Req 4.1/4.2). Limpo quando o amigo deixa de estar ao
   // vivo (Req 4.4).
   const [selectedFriendId, setSelectedFriendId] = useState<string | null>(null);
-  // Busca de destino (texto) + região geocodificada (fase 3): ao buscar uma
-  // cidade/lugar, o mapa e o panorama passam a refletir aquela região.
-  const [destQuery, setDestQuery] = useState("");
+  // Região selecionada na busca (fase 3): ao escolher uma cidade, o mapa e o
+  // panorama passam a refletir aquela região.
   const [searchedRegion, setSearchedRegion] = useState<{ name: string; lat: number; lng: number } | null>(null);
 
   const { data: destinations = [], isLoading } = useQuery({
@@ -387,41 +387,27 @@ function Explore() {
 
         {exploreTab === "destinos" ? (
           <>
-            <form
-              onSubmit={async (e) => {
-                e.preventDefault();
-                const q = destQuery.trim();
-                if (!q) {
-                  setSearchedRegion(null);
-                  return;
-                }
-                const r = await geocodePlace(q);
-                if (r) {
-                  setSearchedRegion(r);
-                } else {
-                  toast(t("explore.regionNotFound", "Não encontrei essa região."));
-                }
-              }}
-              className="mt-4 flex items-center gap-2 rounded-2xl border border-border bg-card p-3"
-            >
-              <Search size={18} className="text-muted-foreground" />
-              <input
-                value={destQuery}
-                onChange={(e) => setDestQuery(e.target.value)}
+            {/* Busca unificada (fase 3.2): cidades + amigos + parceiros +
+                eventos, com sugestões. Cidade recentra o panorama; os demais
+                navegam. */}
+            <div className="mt-4">
+              <ExploreSearch
+                partners={partners}
+                events={nearbyEvents}
                 placeholder={t("explore.placeholder")}
-                className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
-                inputMode="search"
-                enterKeyHint="search"
+                onPick={(r) => {
+                  if (r.kind === "region") setSearchedRegion({ name: r.label, lat: r.lat, lng: r.lng });
+                  else if (r.kind === "friend") navigate({ to: "/u/$userId", params: { userId: r.userId } });
+                  else if (r.kind === "partner") navigate({ to: "/parceiro/$partnerId", params: { partnerId: r.partnerId } });
+                  else if (r.kind === "event") navigate({ to: "/eventos" });
+                }}
               />
-            </form>
+            </div>
 
             {/* Chip da região buscada (fase 3): mostra e permite limpar. */}
             {searchedRegion && (
               <button
-                onClick={() => {
-                  setSearchedRegion(null);
-                  setDestQuery("");
-                }}
+                onClick={() => setSearchedRegion(null)}
                 className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary"
               >
                 <MapPin size={12} /> {searchedRegion.name}
@@ -553,24 +539,40 @@ function Explore() {
               to="/destino/$destinationId"
               params={{ destinationId: d.id }}
               key={d.id}
-              className="overflow-hidden rounded-2xl bg-card shadow-card transition-base active:scale-[0.98]"
+              className="group relative overflow-hidden rounded-3xl shadow-card transition-base active:scale-[0.98]"
             >
-              <div className="relative h-32">
-                <img src={d.img} alt={d.name} loading="lazy" className="h-full w-full object-cover" width={800} height={1024} />
-                <div className="absolute right-2 top-2 rounded-full bg-white/90 px-1.5 py-0.5 text-[10px] font-semibold">★ {d.rating}</div>
-                <div className="absolute inset-x-2 bottom-2 flex flex-wrap gap-1">
-                  <span className="rounded-full bg-white/20 px-2 py-0.5 text-[10px] font-medium text-white backdrop-blur-sm">{d.type}</span>
-                  <span className="rounded-full bg-white/20 px-2 py-0.5 text-[10px] font-medium text-white backdrop-blur-sm">{d.duration}</span>
+              {/* Card imersivo: imagem cobre tudo + gradiente + texto sobre a foto. */}
+              <div className="relative h-48">
+                <img
+                  src={d.img}
+                  alt={d.name}
+                  loading="lazy"
+                  className="h-full w-full object-cover transition-transform duration-500 group-active:scale-105"
+                  width={800}
+                  height={1024}
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                {/* Rating no topo */}
+                <div className="absolute right-2 top-2 flex items-center gap-0.5 rounded-full bg-black/40 px-2 py-0.5 text-[11px] font-semibold text-white backdrop-blur-md">
+                  ★ {d.rating}
                 </div>
-              </div>
-              <div className="p-3">
-                <div className="text-[13px] font-semibold leading-tight line-clamp-1">{d.name}</div>
-                <div className="mt-1 flex items-center gap-1 text-[10px] text-muted-foreground">
-                  <MapPin size={10} /> {d.region} · {d.difficulty}
-                </div>
-                <div className="mt-1 flex flex-wrap gap-1">
-                  <span className="rounded-full bg-secondary px-1.5 py-0.5 text-[9px] font-medium text-secondary-foreground">{d.elevation}m</span>
-                  <span className="rounded-full bg-secondary px-1.5 py-0.5 text-[9px] font-medium text-secondary-foreground">{d.trailType}</span>
+                {/* Dificuldade no topo esquerdo */}
+                <span className="absolute left-2 top-2 rounded-full bg-primary/90 px-2 py-0.5 text-[10px] font-semibold text-primary-foreground backdrop-blur-md">
+                  {d.difficulty}
+                </span>
+                {/* Conteúdo sobre a foto */}
+                <div className="absolute inset-x-3 bottom-2.5">
+                  <div className="line-clamp-1 text-sm font-bold text-white drop-shadow">{d.name}</div>
+                  <div className="mt-0.5 flex items-center gap-1 text-[10px] text-white/85">
+                    <MapPin size={10} /> {d.region}
+                  </div>
+                  <div className="mt-1.5 flex flex-wrap gap-1">
+                    <span className="rounded-full bg-white/20 px-2 py-0.5 text-[9px] font-medium text-white backdrop-blur-sm">{d.type}</span>
+                    <span className="rounded-full bg-white/20 px-2 py-0.5 text-[9px] font-medium text-white backdrop-blur-sm">{d.duration}</span>
+                    {d.elevation ? (
+                      <span className="rounded-full bg-white/20 px-2 py-0.5 text-[9px] font-medium text-white backdrop-blur-sm">{d.elevation}m</span>
+                    ) : null}
+                  </div>
                 </div>
               </div>
             </Link>

@@ -230,7 +230,14 @@
       "satellite": "Satellite",
       "streets": "Streets"
     },
-    "regionNotFound": "Region not found."
+    "regionNotFound": "Region not found.",
+    "search": {
+      "empty": "Nothing found.",
+      "cities": "Cities",
+      "friends": "People",
+      "partners": "Partners",
+      "events": "Events"
+    }
   },
   "marketplace": {
     "title": "Marketplace",

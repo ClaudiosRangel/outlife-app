@@ -932,3 +932,12 @@ ALTER TABLE public.profiles
 --     atividade) + RPC segment_leaderboard(_segment_id,_limit) = melhor tempo
 --     por usuario, asc, top N. (idempotente)
 -- ############################################################################
+
+-- ############################################################################
+-- ############################################################################
+-- 34) 20260915150000_event-city-coords.sql
+--     Explorar: eventos ganham city/latitude/longitude proprios (registrados
+--     automaticamente ao criar, geocodificando o ponto de encontro). Permite
+--     achar o evento pela cidade que o criou, sem depender de destino vinculado.
+--     (idempotente)
+-- ############################################################################
