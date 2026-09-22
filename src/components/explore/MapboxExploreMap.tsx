@@ -44,10 +44,17 @@ export default function MapboxExploreMap({
         zoom: center ? 11 : BRAZIL_ZOOM,
         attributionControl: true,
       });
+      // Garante que o mapa preencha o container após o layout (evita mapa
+      // "em branco" quando o container ganhou altura depois do init).
+      map.on("load", () => map.resize());
       map.on("error", (e) => {
-        // Erros de tile/estilo não devem derrubar a tela; se o estilo não
-        // carregar, cai no fallback.
-        if (e?.error && (e.error as { status?: number }).status === 401) onError?.();
+        // Só cai no fallback em erro de AUTENTICAÇÃO do token (401/403) —
+        // erros transitórios de tile não devem derrubar o mapa.
+        const status = (e?.error as { status?: number } | undefined)?.status;
+        if (status === 401 || status === 403) {
+          console.error("[mapbox] token rejeitado (", status, ") — usando fallback");
+          onError?.();
+        }
       });
       mapRef.current = map;
     } catch {

@@ -182,7 +182,7 @@ export default function MapView({
           chegam a 1000) dentro deste elemento, evitando que "escapem" e
           apareçam por cima de outros conteúdos da página (mesmo bug
           corrigido em ActivityMap.tsx). */}
-      <div className="relative isolate mx-5 mb-2 h-40 overflow-hidden rounded-2xl shadow-card bg-gradient-sky">
+      <div className="relative isolate mx-5 mb-2 h-72 overflow-hidden rounded-3xl shadow-card bg-gradient-sky">
         <MapContainer
           center={BRAZIL_CENTER}
           zoom={BRAZIL_ZOOM}
