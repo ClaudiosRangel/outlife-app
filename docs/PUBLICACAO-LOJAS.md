@@ -46,6 +46,12 @@ runners macOS). Pré-requisitos a configurar quando formos gerar o IPA:
 - [ ] Ficha na App Store Connect (nome, descrição, screenshots, ícone 1024,
       política de privacidade — URL obrigatória, ver bloco Termos de Uso).
 
+## Env vars adicionais
+
+| Variável | Onde | Observação |
+|----------|------|-----------|
+| `VITE_MAPBOX_TOKEN` | `.env` local + Vercel/CI | Token público Mapbox (`pk.`) usado no mapa do Explorar. Fica visível no bundle (normal para token público). **Restringir por URL no dashboard Mapbox antes de publicar.** Sem o token, o app cai no mapa gratuito (Leaflet/OSM). |
+
 ## 2. Google Play (Android)
 
 - appId atual: `app.outlife.mobile`
