@@ -31,22 +31,21 @@ verificação). Uma frente por vez, sem quebrar o existente.
   - [x] 1.3 API: `fetchCommunityPosts` com embed de `user_activities`;
     `fetchPostLikeAvatars`; tipos (Requisitos 1.2, 3.1, 6.1).
 
-- [ ] 2. Componentes visuais (Frente B)
-  - [ ] 2.1 `LikeAvatars.tsx` (até 3 avatares + total) (Requisito 6).
-  - [ ] 2.2 `MediaCarousel.tsx` (scroll-snap mapa/foto/vídeo; 1 mídia sem
+- [x] 2. Componentes visuais (Frente B)
+  - [x] 2.1 `LikeAvatars.tsx` (até 3 avatares + total) (Requisito 6).
+  - [x] 2.2 `MediaCarousel.tsx` (scroll-snap mapa/foto/vídeo; 1 mídia sem
     controles; vídeo via SafeVideo) (Requisito 5).
-  - [ ] 2.3 `CommunityPostCard.tsx`: cabeçalho (autor+ícone+data/hora+cidade),
-    descrição destacada, métricas por metric_form, selo de conquista/nível
-    (slot de segmento), carrossel, ações (mantém like/comment/share/follow/
-    delete) + avatares (Requisitos 1, 2, 3, 4, 6, 7).
-  - [ ] 2.4 Trocar o JSX inline do card em `comunidade.tsx` por
-    `<CommunityPostCard>`, mantendo todo o state/handlers (Requisito 7.1).
-  - [ ] 2.5 i18n de rótulos novos (métricas/"deram kudos"/conquista) PT+EN.
+  - [x] 2.3 `CommunityPostCard.tsx`: cabeçalho, descrição destacada, métricas
+    por metric_form, selo de conquista/nível (slot de segmento), carrossel,
+    ações + avatares (Requisitos 1, 2, 3, 4, 6, 7).
+  - [x] 2.4 Trocado o JSX inline do card em `comunidade.tsx` por
+    `<CommunityPostCard>`, mantendo state/handlers (Requisito 7.1).
+  - [x] 2.5 i18n `community.gaveKudos_*`/`activityCompleted` PT+EN.
 
-- [ ] 3. Verificação e fechamento
-  - [ ] 3.1 `tsc` limpo (só 6 de use-local-push); testes novos passando.
-  - [ ] 3.2 Build APK (build:native → cap sync → assembleDebug).
-  - [ ] 3.3 Commit+push na main; atualizar ROADMAP + backlog.
+- [x] 3. Verificação e fechamento
+  - [x] 3.1 `tsc` limpo (só 6 de use-local-push); 4 testes community-card.
+  - [x] 3.2 Build APK — APK 08:32.
+  - [x] 3.3 Commit+push na main; ROADMAP + backlog atualizados.
 
 ## Notes
 

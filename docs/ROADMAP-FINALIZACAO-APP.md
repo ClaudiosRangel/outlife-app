@@ -5,7 +5,30 @@
 > `.kiro/steering/roadmap-outvitar.md`). **Mantenha-o atualizado** ao
 > concluir qualquer tarefa/bloco: marque status, data e resumo.
 
-**Última atualização:** 15/09/2026 (frente #2 perfil-bio CONCLUÍDA — frase de perfil)
+**Última atualização:** 15/09/2026 (frente #3/#4 comunidade-card-strava CONCLUÍDA — card do feed repaginado + likes com avatares)
+
+> **🟩 FRENTE #3/#4 comunidade-card-strava (15/09/2026) — CONCLUÍDA (APK 08:32):**
+> Card do feed da Comunidade repaginado estilo Strava, extraído para
+> `src/components/community/CommunityPostCard.tsx` (+ `MediaCarousel.tsx`,
+> `LikeAvatars.tsx`, lib pura `src/lib/community-card.ts`). Novidades:
+> - Cabeçalho com ícone da atividade (por tipo) + nome da atividade + cidade +
+>   data/hora.
+> - Descrição destacada (título).
+> - Métricas por `metric_form` (distância/tempo/ritmo-velocidade/elevação),
+>   reusando `computeByMetricForm`.
+> - Carrossel de mídias (mapa do trajeto → foto → vídeo; 1 mídia sem controle;
+>   vídeo via SafeVideo sem autoplay).
+> - **Likes com avatares** (até 3 avatares sobrepostos + total) via RPC em lote
+>   `post_like_avatars` (migration `20260915130000`, sem N+1). Botão de curtir
+>   mantido como era.
+> - Selo "Atividade concluída" (slot pronto para "conquista de segmento" quando
+>   a frente #5 existir).
+> `fetchCommunityPosts` agora traz embed de `user_activities`. Não regrediu
+> like/comentar/compartilhar/seguir/excluir/abas. tsc limpo; 4 testes
+> (community-card). Migration aplicada 2× + NOTIFY pgrst + consolidado.
+> **Próxima frente:** #5 Segmentos nativos (ranking top 10 por tempo médio).
+
+**Anterior:** 15/09/2026 (frente #2 perfil-bio CONCLUÍDA — frase de perfil)
 
 > **🟩 FRENTE #2 perfil-bio (15/09/2026) — CONCLUÍDA (APK 21:57):**
 > Frase/bio de perfil. Coluna nova `profiles.bio` (migration

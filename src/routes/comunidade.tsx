@@ -57,30 +57,23 @@ import {
   isCurrentUserAdmin,
   fetchActivityById,
   fetchActivityTypes,
+  fetchPostLikeAvatars,
   type PostComment,
   type CommunityPostCategory,
 } from "@/lib/api";
+import {
+  CommunityPostCard,
+  type CardActivity,
+  type ActivityTypeMeta,
+  type CommunityCardPost,
+} from "@/components/community/CommunityPostCard";
 import { useAuth } from "@/hooks/use-auth";
 import { shareContent } from "@/lib/share";
 import { generatePostBanner, generateActivityBanner, type ActivityBannerMetric } from "@/lib/banner-generator";
 import { computeByMetricForm, type MetricForm } from "@/lib/metric-forms";
-import { getActivityIcon } from "@/lib/activity-icons";
 import { captureVideoFrame } from "@/lib/video-frame";
-
-// Mapeia a categoria do post para uma icon_key do Icon_Model_Set (Frente D/E),
-// para exibir o ícone da atividade ao lado da descrição no feed (ponto 1).
-const CATEGORY_TO_ICON_KEY: Record<string, string> = {
-  trilha: "trail",
-  caminhada: "walk",
-  pedalada: "bike",
-  camping: "activity",
-  relato: "activity",
-  outro: "activity",
-};
 import { communityCategoryTranslationKey } from "@/lib/community-category-label";
 import { createObjectUrlManager } from "@/lib/object-url-preview";
-import { SafeImage } from "@/components/SafeImage";
-import { SafeVideo } from "@/components/SafeVideo";
 import {
   validateVideoFileMeta,
   validateVideoDuration,
@@ -117,6 +110,8 @@ type UIPost = {
   /** Quando o post foi gerado ao finalizar uma atividade, o id dela — permite
    *  abrir o detalhe da atividade e incluir o deep link no compartilhamento. */
   activityId?: string | null;
+  /** Dados da atividade vinculada (embed), para o card estilo Strava. */
+  activity?: CardActivity | null;
 };
 
 // As abas "Para você"/"Seguindo"/"Trilhas"/"Camping"/"Relatos" agora
@@ -184,6 +179,19 @@ function toUIPost(p: any): UIPost {
     likes: p.likes ?? 0,
     comments: p.comments_count ?? 0,
     activityId: p.activity_id ?? null,
+    activity: p.activity
+      ? {
+          activityType: p.activity.activity_type ?? null,
+          distanceMeters: p.activity.distance_meters ?? null,
+          durationSeconds: p.activity.duration_seconds ?? null,
+          elevationGain: p.activity.elevation_gain ?? null,
+          mapSnapshotUrl: p.activity.map_snapshot_url ?? null,
+          imageUrl: p.activity.image_url ?? null,
+          videoUrl: p.activity.video_url ?? null,
+          description: p.activity.description ?? null,
+          startTime: p.activity.start_time ?? null,
+        }
+      : null,
   };
 }
 
@@ -235,6 +243,32 @@ function Community() {
 
   const [activeTab, setActiveTab] = useState<CommunityTab>("forYou");
   const visiblePosts = filterPostsByTab(posts, activeTab);
+
+  // Avatares de quem curtiu, em lote para os posts visíveis (Req 6.4, sem N+1).
+  // A chave depende dos ids + total de likes para revalidar quando muda.
+  const visiblePostIds = visiblePosts.map((p) => p.id);
+  const likeAvatarsKey = visiblePosts.map((p) => `${p.id}:${p.likes}`).join(",");
+  const { data: likeAvatarsMap = {} } = useQuery({
+    queryKey: ["post-like-avatars", likeAvatarsKey],
+    queryFn: () => fetchPostLikeAvatars(visiblePostIds, 3),
+    enabled: visiblePostIds.length > 0,
+    staleTime: 15_000,
+  });
+
+  // Catálogo de tipos de atividade → metric_form/ícone/nome para o card.
+  const { data: activityTypes = [] } = useQuery({
+    queryKey: ["activity-types"],
+    queryFn: fetchActivityTypes,
+    staleTime: 5 * 60_000,
+  });
+  const activityMetaByType = new Map<string, ActivityTypeMeta>();
+  for (const tp of activityTypes) {
+    activityMetaByType.set(tp.code, {
+      metricForm: (tp.metric_form as MetricForm) ?? "speed_elevation",
+      iconKey: tp.icon_key ?? "activity",
+      name: tp.name ?? tp.code,
+    });
+  }
 
   const [isOpen, setIsOpen] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
@@ -625,124 +659,30 @@ function Community() {
               </div>
             )
           : visiblePosts.map((p) => (
-              <article key={p.id} className="overflow-hidden rounded-3xl bg-card shadow-card">
-                <header className="flex items-center gap-3 p-4">
-                  {/* Ponto 3: clicar no autor (avatar/nome) abre o perfil público. */}
-                  <Link
-                    to="/u/$userId"
-                    params={{ userId: p.authorId }}
-                    className="flex min-w-0 flex-1 items-center gap-3"
-                  >
-                    <img
-                      src={p.avatar}
-                      alt={p.user}
-                      loading="lazy"
-                      className="h-10 w-10 rounded-full object-cover"
-                    />
-                    <div className="min-w-0 flex-1">
-                      <div className="text-sm font-semibold leading-tight">{p.user}</div>
-                      <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
-                        <MapPin size={10} /> {p.place} · {p.time}
-                      </div>
-                    </div>
-                  </Link>
-                  {/* Requirement 7.2/7.3 — o botão de seguir não faz sentido no
-                      próprio post; exibi-lo levava ao erro genérico "Não foi
-                      possível seguir" (toggleAuthorFollow rejeita seguir a si
-                      mesmo). Ocultado quando o autor é o usuário autenticado. */}
-                  {p.authorId !== user?.id && (
-                    <button
-                      onClick={() => handleToggleFollow(p.id, p.authorId)}
-                      className={`rounded-full px-2 py-0.5 text-xs font-semibold transition-base ${
-                        p.following
-                          ? "bg-secondary text-foreground/60"
-                          : "text-primary"
-                      }`}
-                    >
-                      {p.following ? t("community.following") : t("community.follow")}
-                    </button>
-                  )}
-                  {/* Excluir a própria publicação: só aparece no post do
-                      próprio usuário autenticado. */}
-                  {p.authorId === user?.id && (
-                    <button
-                      onClick={() => setPendingDeleteId(p.id)}
-                      aria-label={t("community.deletePost")}
-                      className="ml-2 shrink-0 text-muted-foreground transition-base hover:text-destructive"
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  )}
-                </header>
-
-                {/* Post de atividade (activityId presente): a imagem vira um
-                    botão que leva ao detalhe da atividade (/atividade/:id).
-                    Posts manuais (sem activityId) seguem como imagem estática. */}
-                {p.videoUrl ? (
-                  // Precedência (Req 1.3/4.4): quando há vídeo, ele é a mídia
-                  // principal; a imagem do post vira o poster. SafeVideo não faz
-                  // autoplay/preload — só o poster é decodificado até o play.
-                  <SafeVideo src={p.videoUrl} posterSrc={p.realImg ?? undefined} />
-                ) : p.activityId ? (
-                  <SafeImage
-                    src={p.img}
-                    alt=""
-                    fallbackSrc={community1}
-                    onClick={() => navigate({ to: "/atividade/$activityId", params: { activityId: p.activityId! } })}
-                    ariaLabel={t("activity.detailTitle")}
-                  />
-                ) : (
-                  <SafeImage src={p.img} alt="" fallbackSrc={community1} />
-                )}
-
-                <div className="p-4">
-                  {/* Requirement 9.1/9.2/9.3: rótulo da categoria, sempre
-                      visível sem exigir toque/rolagem, na mesma tradução
-                      usada no seletor do formulário de criação (mesma
-                      fonte, `communityCategoryTranslationKey`). */}
-                  <span className="mb-2 inline-block rounded-full bg-secondary px-2.5 py-0.5 text-[11px] font-medium text-secondary-foreground">
-                    {t(communityCategoryTranslationKey(p.category))}
-                  </span>
-                  <div className="flex items-center gap-4 text-foreground">
-                    <button
-                      onClick={() => handleToggleLike(p.id)}
-                      className={`flex items-center gap-1.5 text-sm transition-colors ${
-                        p.liked ? "text-red-500" : ""
-                      }`}
-                    >
-                      <Heart size={20} fill={p.liked ? "currentColor" : "none"} />
-                      <span className="font-medium">{p.likes}</span>
-                    </button>
-                    <button onClick={() => toggleComments(p.id)} className="flex items-center gap-1.5 text-sm">
-                      <MessageCircle size={20} />
-                      <span className="font-medium">{p.comments}</span>
-                    </button>
-                    <button onClick={() => handleShare(p)} className="ml-auto" aria-label={t("common.share")}>
-                      <Share2 size={20} />
-                    </button>
-                  </div>
-                  <p className="mt-3 flex items-start gap-1.5 text-sm leading-relaxed">
-                    {(() => {
-                      // Ponto 1: ícone da atividade ao lado da descrição, conforme a categoria do post.
-                      const { Icon } = getActivityIcon(CATEGORY_TO_ICON_KEY[p.category] ?? "activity");
-                      return <Icon size={16} className="mt-0.5 shrink-0 text-primary" aria-hidden />;
-                    })()}
-                    <span>
-                      <span className="font-semibold">{p.handle}</span> {p.text}
-                    </span>
-                  </p>
-                  {p.comments > 0 && (
-                    <button onClick={() => toggleComments(p.id)} className="mt-2 text-xs text-muted-foreground">
-                      {showComments[p.id] ? t("community.hideComments") : t("community.showComments", { count: p.comments })}
-                    </button>
-                  )}
-
-
-                  {showComments[p.id] && (
-                    <PostComments postId={p.id} currentUserId={user?.id} isAdmin={isAdmin} />
-                  )}
-                </div>
-              </article>
+              <CommunityPostCard
+                key={p.id}
+                post={p as unknown as CommunityCardPost}
+                currentUserId={user?.id}
+                likeAvatars={likeAvatarsMap[p.id] ?? []}
+                activityMeta={
+                  p.activity?.activityType
+                    ? activityMetaByType.get(p.activity.activityType) ?? null
+                    : null
+                }
+                onToggleLike={handleToggleLike}
+                onToggleFollow={handleToggleFollow}
+                onShare={(cp) => handleShare(cp as unknown as UIPost)}
+                onDelete={setPendingDeleteId}
+                onToggleComments={toggleComments}
+                onOpenActivity={(activityId) =>
+                  navigate({ to: "/atividade/$activityId", params: { activityId } })
+                }
+                showCommentsButton={p.comments > 0}
+                commentsExpanded={!!showComments[p.id]}
+                commentsNode={
+                  <PostComments postId={p.id} currentUserId={user?.id} isAdmin={isAdmin} />
+                }
+              />
             ))}
       </div>
 
