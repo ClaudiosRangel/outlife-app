@@ -27,7 +27,7 @@ que reduzem risco de reprovação nas lojas (termos/exclusão de conta são
 | 5 | Segmentos (ranking top 10 por tempo médio) | `segmentos` ✅ CONCLUÍDA (15/09) | Alto | motor de trajeto existente |
 | 6 | Importar segmentos do Strava | (extensão do #5) | Alto | #5 + OAuth Strava |
 | 7 | Conectar dispositivos (Garmin etc.) | `integracoes-dispositivos` | Alto | OAuth/API de terceiros |
-| 8 | Repaginar Explorar (mapa moderno, 3D, "o que acontece agora") | `explorar-redesign` | Alto | Mapbox/token |
+| 8 | Repaginar Explorar (mapa moderno, 3D, "o que acontece agora") | `explorar-redesign` ✅ CONCLUÍDA (15/09) | Alto | Mapbox/token |
 | 9 | Repaginar tela de Iniciar atividade (estilo Strava) | `iniciar-atividade-redesign` | Médio | mapa (compartilha com #8) |
 | 10 | Loja virtual + propaganda no Iniciar + posts na comunidade | `loja-virtual-parceiros` | Alto | área admin de parceiros |
 

@@ -1,5 +1,5 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { lazy, Suspense, useEffect, useMemo, useState } from "react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useEffect, useMemo, useState } from "react";
 import { ChevronLeft, MapPin, Search, SlidersHorizontal, WifiOff } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
@@ -20,9 +20,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { PartnerList } from "@/components/PartnerList";
 import { useAuth } from "@/hooks/use-auth";
 import { useLiveActivityPublisher } from "@/hooks/use-live-activity-publisher";
+import { ExploreMap } from "@/components/explore/ExploreMap";
+import { filterNearby, type NowMarker } from "@/lib/nearby";
 import trailFallbackImg from "@/assets/dest-trail.jpg";
-
-const MapView = lazy(() => import("@/components/MapView"));
 
 export const Route = createFileRoute("/explorar")({
   component: Explore,
@@ -68,6 +68,7 @@ export function filterDestinationsByDifficulty(
 function Explore() {
   const { t } = useTranslation();
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [mounted, setMounted] = useState(false);
   // Ponto 1: acompanhamento ao vivo depende de internet. Detecta o estado de
   // conexão para avisar o usuário quando estiver offline (o "ao vivo" não
@@ -107,11 +108,11 @@ function Explore() {
     enabled: exploreTab === "destinos",
   });
 
-  // Parceiros para a aba Parceiros (item 8). Só busca quando a aba está ativa.
+  // Parceiros: usados tanto na aba Parceiros quanto na camada "agora" do mapa
+  // (marcadores de parceiros próximos), por isso carregam sempre.
   const { data: partners = [], isLoading: partnersLoading } = useQuery({
     queryKey: ["partners"],
     queryFn: fetchPartners,
-    enabled: exploreTab === "parceiros",
   });
 
   const filteredPartners = useMemo(() => {
@@ -174,6 +175,43 @@ function Explore() {
     () => filterDestinationsByDifficulty(destinations, difficultyFilter),
     [destinations, difficultyFilter],
   );
+
+  // Centro do mapa = minha posição compartilhada, quando disponível.
+  const mapCenter = useMemo(() => {
+    const lat = myProfile?.latitude != null ? Number(myProfile.latitude) : null;
+    const lng = myProfile?.longitude != null ? Number(myProfile.longitude) : null;
+    return lat != null && lng != null && Number.isFinite(lat) && Number.isFinite(lng)
+      ? { lat, lng }
+      : null;
+  }, [myProfile?.latitude, myProfile?.longitude]);
+
+  // Camada "o que acontece agora": amigos ao vivo + parceiros próximos.
+  const nowMarkers = useMemo<NowMarker[]>(() => {
+    const friends: NowMarker[] = liveFriends
+      .filter((f) => f.is_live)
+      .map((f) => ({
+        id: `friend:${f.id}`,
+        kind: "friend" as const,
+        lat: f.latitude,
+        lng: f.longitude,
+        title: f.full_name ?? f.username ?? "Aventureiro",
+        subtitle: f.activity_type ?? undefined,
+        avatarUrl: f.avatar_url,
+        href: `/u/${f.id}`,
+      }));
+    const partnerMarkers: NowMarker[] = partners
+      .filter((p) => p.coords != null)
+      .map((p) => ({
+        id: `partner:${p.id}`,
+        kind: "partner" as const,
+        lat: p.coords!.lat,
+        lng: p.coords!.lng,
+        title: p.name,
+        subtitle: p.category,
+        href: `/parceiro/${p.id}`,
+      }));
+    return filterNearby([...friends, ...partnerMarkers], mapCenter, { limit: 60 });
+  }, [liveFriends, partners, mapCenter]);
 
   useEffect(() => {
     setMounted(true);
@@ -277,19 +315,22 @@ function Explore() {
       ) : (
         <>
       {mounted ? (
-        <Suspense fallback={<div className="mx-5 mb-5 h-40 rounded-2xl bg-gradient-sky shadow-card" />}>
-          <MapView
-            selectedFriendId={selectedFriendId}
-            onSelectedFriendUnavailable={() => {
-              // O amigo selecionado deixou de estar ao vivo (Req 4.4): avisa o
-              // usuário e limpa a seleção.
-              toast(t("liveFriends.unavailable"));
-              setSelectedFriendId(null);
-            }}
-          />
-        </Suspense>
+        <ExploreMap
+          markers={nowMarkers}
+          center={mapCenter}
+          selectedFriendId={selectedFriendId}
+          onSelectedFriendUnavailable={() => {
+            // O amigo selecionado deixou de estar ao vivo (Req 4.4): avisa o
+            // usuário e limpa a seleção.
+            toast(t("liveFriends.unavailable"));
+            setSelectedFriendId(null);
+          }}
+          onMarkerClick={(m) => {
+            if (m.href) navigate({ to: m.href });
+          }}
+        />
       ) : (
-        <div className="mx-5 mb-5 h-40 rounded-2xl bg-gradient-sky shadow-card" />
+        <div className="mx-5 mb-3 h-72 rounded-3xl bg-gradient-sky shadow-card" />
       )}
 
       {/* Lista de amigos em atividade ao vivo, logo abaixo do mapa (Req 3.1).

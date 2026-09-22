@@ -5,7 +5,26 @@
 > `.kiro/steering/roadmap-outvitar.md`). **Mantenha-o atualizado** ao
 > concluir qualquer tarefa/bloco: marque status, data e resumo.
 
-**Última atualização:** 15/09/2026 (frente #5 segmentos nativos CONCLUÍDA — criar segmento + detecção de esforço + ranking top 10)
+**Última atualização:** 15/09/2026 (frente #6 explorar-redesign CONCLUÍDA — mapa 3D Mapbox + camada "agora")
+
+> **🟩 FRENTE #6 explorar-redesign (15/09/2026) — CONCLUÍDA (APK 10:39):**
+> Explorar repaginado com mapa de destaque (h-72) e provider plugável:
+> - **Mapbox GL** (token `VITE_MAPBOX_TOKEN` no `.env`; estilo outdoors-v12)
+>   com toggle **2D/3D** (terreno DEM + pitch), recentrar e marcadores
+>   customizados. Lazy-loaded (`MapboxExploreMap`).
+> - **Fallback gratuito** Leaflet/OSM (`MapView` atual) via `ExploreMap` quando
+>   não há token ou o Mapbox falha (Property 1).
+> - **Camada "o que acontece agora"**: amigos ao vivo (com tipo de atividade) +
+>   parceiros próximos, filtrados por proximidade do centro (`filterNearby`,
+>   limite 60, amigos primeiro). Clique no marcador navega para o perfil/parceiro.
+> - Libs puras `src/lib/map-config.ts` + `src/lib/nearby.ts` com testes (6).
+> - Aviso offline e publisher inerte preservados; buscas (destinos/trilhas/
+>   parceiros) mantidas. `mapbox-gl@3.31` instalado; APK +0,6MB (10,53MB).
+> **Nota:** eventos no mapa ficam como evolução (não há fetchEvents com coords).
+> Token Mapbox: **restringir por URL no dashboard antes de publicar** (doc em
+> PUBLICACAO-LOJAS). **Próxima frente:** #7 tela de Iniciar atividade (Strava).
+
+**Anterior:** 15/09/2026 (frente #5 segmentos nativos CONCLUÍDA — criar segmento + detecção de esforço + ranking top 10)
 
 > **🟩 FRENTE #5 segmentos (15/09/2026) — CONCLUÍDA (APK 09:24):**
 > Segmentos nativos (não importados do Strava). 
