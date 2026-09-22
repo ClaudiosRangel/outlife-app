@@ -465,12 +465,46 @@ export type CommunityPostCategory =
   | "caminhada";
 
 export async function fetchCommunityPosts() {
+  // Embed da atividade vinculada (quando activity_id) para o card estilo
+  // Strava exibir métricas/mapa/mídias sem uma 2ª rodada de chamadas.
   const { data, error } = await supabase
     .from("community_posts")
-    .select("*, author:profiles(full_name, username, avatar_url)")
+    .select(
+      "*, author:profiles(full_name, username, avatar_url), activity:user_activities(activity_type, distance_meters, duration_seconds, elevation_gain, map_snapshot_url, image_url, video_url, description, start_time)" as never,
+    )
     .order("created_at", { ascending: false });
   if (error) throw error;
   return data ?? [];
+}
+
+// Avatares de quem curtiu, por post, em lote (RPC post_like_avatars).
+// Retorna um mapa postId -> lista de { userId, fullName, avatarUrl }.
+export type PostLikeAvatar = { userId: string; fullName: string | null; avatarUrl: string | null };
+
+export async function fetchPostLikeAvatars(
+  postIds: string[],
+  limit = 3,
+): Promise<Record<string, PostLikeAvatar[]>> {
+  const map: Record<string, PostLikeAvatar[]> = {};
+  if (postIds.length === 0) return map;
+  const { data, error } = await supabase.rpc("post_like_avatars" as never, {
+    _post_ids: postIds,
+    _limit: limit,
+  } as never);
+  if (error) throw error;
+  for (const row of (data ?? []) as unknown as {
+    post_id: string;
+    user_id: string;
+    full_name: string | null;
+    avatar_url: string | null;
+  }[]) {
+    (map[row.post_id] ??= []).push({
+      userId: row.user_id,
+      fullName: row.full_name,
+      avatarUrl: row.avatar_url,
+    });
+  }
+  return map;
 }
 
 const MAX_COMMUNITY_POST_IMAGE_BYTES = 5 * 1024 * 1024;

@@ -23,17 +23,13 @@ verificação). Uma frente por vez, sem quebrar o existente.
 
 ## Tasks
 
-- [ ] 1. Dados e lógica pura (Frente A)
-  - [ ] 1.1 `src/lib/community-card.ts`: `buildCardMedia(post)` (ordena
-    mapa/foto/vídeo existentes) e `formatLikeSummary(count)` + testes
-    fast-check (Requisitos 3, 5.1, 5.2, 6.1).
-  - [ ] 1.2 Migration `20260915130000_post-like-avatars.sql`: RPC
-    `post_like_avatars(_post_ids uuid[], _limit int)` retornando avatares por
-    post (join post_likes+profiles). Aplicar 2× + NOTIFY pgrst + consolidado
-    (Requisito 6.1, 6.4).
-  - [ ] 1.3 API: enriquecer `fetchCommunityPosts` com embed de
-    `user_activities`; `fetchPostLikeAvatars(postIds, limit)`; tipos
-    (Requisitos 1.2, 3.1, 6.1).
+- [x] 1. Dados e lógica pura (Frente A)
+  - [x] 1.1 `src/lib/community-card.ts`: `buildCardMedia`/`formatLikeSummary` +
+    testes fast-check (4 passando) (Requisitos 3, 5.1, 5.2, 6.1).
+  - [x] 1.2 Migration `20260915130000_post-like-avatars.sql`: RPC
+    `post_like_avatars`. Aplicada 2× + NOTIFY pgrst (Requisito 6.1, 6.4).
+  - [x] 1.3 API: `fetchCommunityPosts` com embed de `user_activities`;
+    `fetchPostLikeAvatars`; tipos (Requisitos 1.2, 3.1, 6.1).
 
 - [ ] 2. Componentes visuais (Frente B)
   - [ ] 2.1 `LikeAvatars.tsx` (até 3 avatares + total) (Requisito 6).

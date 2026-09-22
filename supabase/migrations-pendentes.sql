@@ -915,3 +915,11 @@ ALTER TABLE public.profiles
 --     Frase/bio de perfil: coluna profiles.bio (text). Campo pessoal curto,
 --     distinto de description (descricao comercial do parceiro). (idempotente)
 -- ############################################################################
+
+-- ############################################################################
+-- ############################################################################
+-- 32) 20260915130000_post-like-avatars.sql
+--     Card da comunidade estilo Strava: RPC post_like_avatars(_post_ids[],
+--     _limit) retorna ate N avatares de quem curtiu por post, em lote (evita
+--     N+1 no feed). SECURITY DEFINER, grant anon/authenticated. (idempotente)
+-- ############################################################################
