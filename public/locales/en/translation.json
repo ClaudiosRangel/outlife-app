@@ -841,6 +841,15 @@
       "done": "Account deleted."
     }
   },
+  "segments": {
+    "notFound": "Segment not found",
+    "leaderboardTitle": "Leaderboard — top 10 times",
+    "empty": "No one has ridden this segment yet. Be the first!",
+    "createFromActivity": "Create segment from this route",
+    "namePrompt": "Segment name:",
+    "created": "Segment created!",
+    "tooShort": "Route too short for a segment."
+  },
   "legal": {
     "gateTitle": "Terms of Use and Privacy",
     "gateBody": "To keep using OutVitar, please read and accept our Terms of Use and Privacy Policy.",

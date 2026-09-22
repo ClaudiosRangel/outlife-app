@@ -31,6 +31,7 @@ import { Route as AmigosRouteImport } from './routes/amigos'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as UUserIdRouteImport } from './routes/u.$userId'
+import { Route as SegmentoSegmentIdRouteImport } from './routes/segmento.$segmentId'
 import { Route as TrilhaTrailIdRouteImport } from './routes/trilha.$trailId'
 import { Route as ParceiroPainelRouteImport } from './routes/parceiro.painel'
 import { Route as ParceiroPartnerIdRouteImport } from './routes/parceiro.$partnerId'
@@ -167,6 +168,11 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
 const UUserIdRoute = UUserIdRouteImport.update({
   id: '/u/$userId',
   path: '/u/$userId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SegmentoSegmentIdRoute = SegmentoSegmentIdRouteImport.update({
+  id: '/segmento/$segmentId',
+  path: '/segmento/$segmentId',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TrilhaTrailIdRoute = TrilhaTrailIdRouteImport.update({
@@ -345,6 +351,7 @@ export interface FileRoutesByFullPath {
   '/eventos/$eventId': typeof EventosEventIdRoute
   '/parceiro/$partnerId': typeof ParceiroPartnerIdRoute
   '/parceiro/painel': typeof ParceiroPainelRoute
+  '/segmento/$segmentId': typeof SegmentoSegmentIdRoute
   '/trilha/$trailId': typeof TrilhaTrailIdRoute
   '/u/$userId': typeof UUserIdRoute
   '/admin/': typeof AdminIndexRoute
@@ -396,6 +403,7 @@ export interface FileRoutesByTo {
   '/eventos/$eventId': typeof EventosEventIdRoute
   '/parceiro/$partnerId': typeof ParceiroPartnerIdRoute
   '/parceiro/painel': typeof ParceiroPainelRoute
+  '/segmento/$segmentId': typeof SegmentoSegmentIdRoute
   '/trilha/$trailId': typeof TrilhaTrailIdRoute
   '/u/$userId': typeof UUserIdRoute
   '/admin': typeof AdminIndexRoute
@@ -448,6 +456,7 @@ export interface FileRoutesById {
   '/eventos/$eventId': typeof EventosEventIdRoute
   '/parceiro/$partnerId': typeof ParceiroPartnerIdRoute
   '/parceiro/painel': typeof ParceiroPainelRoute
+  '/segmento/$segmentId': typeof SegmentoSegmentIdRoute
   '/trilha/$trailId': typeof TrilhaTrailIdRoute
   '/u/$userId': typeof UUserIdRoute
   '/admin/': typeof AdminIndexRoute
@@ -501,6 +510,7 @@ export interface FileRouteTypes {
     | '/eventos/$eventId'
     | '/parceiro/$partnerId'
     | '/parceiro/painel'
+    | '/segmento/$segmentId'
     | '/trilha/$trailId'
     | '/u/$userId'
     | '/admin/'
@@ -552,6 +562,7 @@ export interface FileRouteTypes {
     | '/eventos/$eventId'
     | '/parceiro/$partnerId'
     | '/parceiro/painel'
+    | '/segmento/$segmentId'
     | '/trilha/$trailId'
     | '/u/$userId'
     | '/admin'
@@ -603,6 +614,7 @@ export interface FileRouteTypes {
     | '/eventos/$eventId'
     | '/parceiro/$partnerId'
     | '/parceiro/painel'
+    | '/segmento/$segmentId'
     | '/trilha/$trailId'
     | '/u/$userId'
     | '/admin/'
@@ -654,6 +666,7 @@ export interface RootRouteChildren {
   DestinoDestinationIdRoute: typeof DestinoDestinationIdRoute
   ParceiroPartnerIdRoute: typeof ParceiroPartnerIdRoute
   ParceiroPainelRoute: typeof ParceiroPainelRoute
+  SegmentoSegmentIdRoute: typeof SegmentoSegmentIdRoute
   TrilhaTrailIdRoute: typeof TrilhaTrailIdRoute
   UUserIdRoute: typeof UUserIdRoute
   AdminIndexRoute: typeof AdminIndexRoute
@@ -820,6 +833,13 @@ declare module '@tanstack/react-router' {
       path: '/u/$userId'
       fullPath: '/u/$userId'
       preLoaderRoute: typeof UUserIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/segmento/$segmentId': {
+      id: '/segmento/$segmentId'
+      path: '/segmento/$segmentId'
+      fullPath: '/segmento/$segmentId'
+      preLoaderRoute: typeof SegmentoSegmentIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/trilha/$trailId': {
@@ -1064,6 +1084,7 @@ const rootRouteChildren: RootRouteChildren = {
   DestinoDestinationIdRoute: DestinoDestinationIdRoute,
   ParceiroPartnerIdRoute: ParceiroPartnerIdRoute,
   ParceiroPainelRoute: ParceiroPainelRoute,
+  SegmentoSegmentIdRoute: SegmentoSegmentIdRoute,
   TrilhaTrailIdRoute: TrilhaTrailIdRoute,
   UUserIdRoute: UUserIdRoute,
   AdminIndexRoute: AdminIndexRoute,

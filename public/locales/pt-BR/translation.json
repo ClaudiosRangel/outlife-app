@@ -841,6 +841,15 @@
       "done": "Conta excluída."
     }
   },
+  "segments": {
+    "notFound": "Segmento não encontrado",
+    "leaderboardTitle": "Ranking — 10 melhores tempos",
+    "empty": "Ninguém percorreu este segmento ainda. Seja o primeiro!",
+    "createFromActivity": "Criar segmento deste trajeto",
+    "namePrompt": "Nome do segmento:",
+    "created": "Segmento criado!",
+    "tooShort": "Trajeto muito curto para um segmento."
+  },
   "legal": {
     "gateTitle": "Termos de Uso e Privacidade",
     "gateBody": "Para continuar usando o OutVitar, leia e aceite nossos Termos de Uso e nossa Política de Privacidade.",

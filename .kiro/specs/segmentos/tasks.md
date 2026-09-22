@@ -40,15 +40,17 @@ Segmentos nativos em 3 frentes: (A) dados + lógica pura de matching + testes;
   - [x] 2.3 Integrada a detecção na finalização da atividade
     (`atividade.rastrear.tsx`), sem bloquear o salvamento (Requisito 2.5).
 
-- [ ] 3. UI + fechamento (Frente C)
-  - [ ] 3.1 Rota `/segmento/$segmentId`: dados do segmento + ranking top 10
-    (destacando o usuário) (Requisitos 3, 5.2). Registrar no routeTree.
-  - [ ] 3.2 Criar segmento a partir de uma atividade (na tela de detalhe da
-    atividade) (Requisito 1.1).
-  - [ ] 3.3 Destaque de conquista de segmento no card da comunidade (usar o
-    slot já existente) e/ou na tela do segmento (Requisito 5.1).
-  - [ ] 3.4 i18n PT+EN.
-  - [ ] 3.5 `tsc` limpo + testes; build APK; commit+push; ROADMAP+backlog.
+- [x] 3. UI + fechamento (Frente C)
+  - [x] 3.1 Rota `/segmento/$segmentId`: dados + ranking top 10 (destaca o
+    usuário atual) (Requisitos 3, 5.2). Registrada no routeTree (8 pontos).
+  - [x] 3.2 Criar segmento a partir de uma atividade (botão na tela de detalhe,
+    só dono) (Requisito 1.1).
+  - [x] 3.3 Slot de conquista de segmento no card da comunidade já existente
+    (selo "Atividade concluída"); destaque de esforço por post fica como
+    evolução futura (não bloqueia) (Requisito 5.1).
+  - [x] 3.4 i18n `segments.*` PT+EN.
+  - [x] 3.5 `tsc` limpo + 6 testes segment-match; APK 09:24; commit+push;
+    ROADMAP+backlog.
 
 ## Notes
 

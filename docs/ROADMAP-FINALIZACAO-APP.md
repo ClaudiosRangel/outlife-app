@@ -5,7 +5,28 @@
 > `.kiro/steering/roadmap-outvitar.md`). **Mantenha-o atualizado** ao
 > concluir qualquer tarefa/bloco: marque status, data e resumo.
 
-**Última atualização:** 15/09/2026 (frente #3/#4 comunidade-card-strava CONCLUÍDA — card do feed repaginado + likes com avatares)
+**Última atualização:** 15/09/2026 (frente #5 segmentos nativos CONCLUÍDA — criar segmento + detecção de esforço + ranking top 10)
+
+> **🟩 FRENTE #5 segmentos (15/09/2026) — CONCLUÍDA (APK 09:24):**
+> Segmentos nativos (não importados do Strava). 
+> - Tabelas `segments` + `segment_efforts` (migration `20260915140000`, RLS
+>   leitura pública/escrita do dono, cascata em profiles/atividade) + RPC
+>   `segment_leaderboard` (melhor tempo por usuário, asc, top N).
+> - Lógica pura `src/lib/segment-match.ts` (`matchSegmentEffort`): casa o
+>   trajeto gravado (pontos com timestamp) contra o segmento (início→fim na
+>   ordem, dentro de raio, distância compatível) e calcula o tempo. 6 testes
+>   fast-check.
+> - `detectAndRecordEfforts` roda ao concluir a atividade (best-effort, não
+>   bloqueia o salvamento), busca segmentos candidatos por bbox e grava os
+>   esforços detectados. Integrado em `atividade.rastrear.tsx`.
+> - Tela `/segmento/$segmentId` com ranking top 10 (destaca o usuário).
+> - Botão "Criar segmento deste trajeto" na tela de detalhe da atividade (dono).
+> tsc limpo. Migration aplicada 2× + NOTIFY pgrst + consolidado.
+> **Nota:** importar do Strava/Garmin fica fora (decisão do usuário: nativos).
+> **Próxima frente:** #6 Explorar repaginado (mapa 3D Mapbox + "o que acontece
+> agora"). O usuário vai criar conta Mapbox; manter fallback gratuito (MapLibre).
+
+**Anterior:** 15/09/2026 (frente #3/#4 comunidade-card-strava CONCLUÍDA — card do feed repaginado + likes com avatares)
 
 > **🟩 FRENTE #3/#4 comunidade-card-strava (15/09/2026) — CONCLUÍDA (APK 08:32):**
 > Card do feed da Comunidade repaginado estilo Strava, extraído para

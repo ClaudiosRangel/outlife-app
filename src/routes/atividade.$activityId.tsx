@@ -1,10 +1,10 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { lazy, Suspense, useRef, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Clock, Route as RouteIcon, Calendar, Share2, Loader2, Mountain, ImagePlus } from "lucide-react";
+import { ArrowLeft, Clock, Route as RouteIcon, Calendar, Share2, Loader2, Mountain, ImagePlus, Flag } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
-import { fetchActivityById, fetchActivityTypes, uploadActivityImage, updateActivityImage } from "@/lib/api";
+import { fetchActivityById, fetchActivityTypes, uploadActivityImage, updateActivityImage, createSegment } from "@/lib/api";
 import { StatusBar } from "@/components/StatusBar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
@@ -110,6 +110,25 @@ function ActivityDetailPage() {
       toast.success(t("activity.imageUpdated", { defaultValue: "Imagem atualizada!" }));
       qc.invalidateQueries({ queryKey: ["activity", activityId] });
       qc.invalidateQueries({ queryKey: ["community-posts"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  // Criar segmento a partir do trajeto desta atividade (spec segmentos).
+  const navigate = useNavigate();
+  const createSegmentMut = useMutation({
+    mutationFn: async () => {
+      const polyline = (activity?.route_geojson?.coordinates ?? []) as [number, number][];
+      if (polyline.length < 2) throw new Error(t("segments.tooShort", "Trajeto muito curto para um segmento."));
+      const name =
+        window.prompt(t("segments.namePrompt", "Nome do segmento:"), activityName || "Meu segmento")?.trim();
+      if (!name) return null;
+      return createSegment({ name, activityType: activity?.activity_type ?? null, polyline });
+    },
+    onSuccess: (seg) => {
+      if (!seg) return;
+      toast.success(t("segments.created", "Segmento criado!"));
+      navigate({ to: "/segmento/$segmentId", params: { segmentId: seg.id } });
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -318,6 +337,16 @@ function ActivityDetailPage() {
             {activity?.image_url
               ? t("activity.changeImage", { defaultValue: "Trocar imagem" })
               : t("activity.addImage", { defaultValue: "Adicionar imagem" })}
+          </Button>
+          {/* Criar segmento do trajeto (spec segmentos) */}
+          <Button
+            variant="outline"
+            className="mt-2 h-11 w-full rounded-2xl"
+            onClick={() => createSegmentMut.mutate()}
+            disabled={createSegmentMut.isPending}
+          >
+            {createSegmentMut.isPending ? <Loader2 size={16} className="animate-spin" /> : <Flag size={16} />}
+            {t("segments.createFromActivity", { defaultValue: "Criar segmento deste trajeto" })}
           </Button>
         </div>
       )}
