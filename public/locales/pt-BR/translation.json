@@ -627,11 +627,21 @@
     "listTitle": "Campanhas",
     "empty": "Nenhuma campanha ainda.",
     "tagStart": "Iniciar",
-    "tagCommunity": "Comunidade"
+    "tagCommunity": "Comunidade",
+    "theme": "Cores do banner",
+    "layout": "Layout",
+    "layouts": {
+      "overlay": "Imagem cheia",
+      "split": "Imagem + texto",
+      "solid": "Cor sólida"
+    },
+    "preview": "Prévia",
+    "previewTitle": "Título da campanha"
   },
   "startCampaign": {
     "label": "Oferta de parceiro",
-    "defaultCta": "Ver oferta"
+    "defaultCta": "Ver oferta",
+    "sponsored": "Patrocinado"
   },
   "adminTips": {
     "title": "Dicas / Melhorias",

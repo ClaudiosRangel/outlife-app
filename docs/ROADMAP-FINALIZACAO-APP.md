@@ -47,6 +47,18 @@
 >   de pedido/pagamento + conformidade de loja). Não implementado nesta rodada.
 > Migration aplicada 2× + reload. Diagnostics limpos; APK 9,95 MB.
 
+> **🔧 Banner de campanha chamativo + temas/layout (23/09 14:52):**
+> Campanha ganhou **tema (paleta de cores)** — 6 presets (Floresta, Pôr do sol,
+> Oceano, Frutas, Meia-noite, Limão) — e **layout** — 3 variantes (Imagem
+> cheia/overlay, Imagem+texto/split, Cor sólida). Escolhidos na criação em
+> `/admin/loja` com **seletor de cores + layout + preview ao vivo**
+> (`CampaignCard` reutilizável). Banner do Iniciar redesenhado, mais chamativo:
+> cantos 3xl, badge "Patrocinado", CTA em pílula destacada, chip de preço,
+> indicadores clicáveis. Lib pura `src/lib/campaign-style.ts` (presets).
+> Migration `20260923160000` (colunas theme/layout + RPC recriada). Aplicada
+> 2× + reload. Diagnostics limpos; APK 9,95 MB. **Próxima frente: checkout
+> Pix + cupom (docs/PAGAMENTOS-E-CUPONS.md).**
+
 > **🎉 Com a #8, todas as 9 grandes frentes pré-lançamento estão concluídas.**
 > Pendências fora do lançamento (fase futura): importar segmentos do Strava (#6)
 > e conectar Garmin/dispositivos (#7) — dependem de aprovação nos programas de

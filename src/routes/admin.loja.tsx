@@ -22,6 +22,8 @@ import {
   resolveAsset,
   type PartnerCampaign,
 } from "@/lib/api";
+import { CampaignCard } from "@/components/StartCampaignBanner";
+import { CAMPAIGN_THEMES, CAMPAIGN_LAYOUTS, type CampaignTheme, type CampaignLayout } from "@/lib/campaign-style";
 
 export const Route = createFileRoute("/admin/loja")({
   component: AdminStore,
@@ -47,6 +49,8 @@ type FormState = {
   postToCommunity: boolean;
   notifyUsers: boolean;
   status: "active" | "paused";
+  theme: CampaignTheme;
+  layout: CampaignLayout;
 };
 
 const emptyForm: FormState = {
@@ -62,6 +66,8 @@ const emptyForm: FormState = {
   postToCommunity: false,
   notifyUsers: false,
   status: "active",
+  theme: "forest",
+  layout: "overlay",
 };
 
 function AdminStore() {
@@ -111,6 +117,8 @@ function AdminStore() {
         postToCommunity: form.postToCommunity,
         notifyUsers: form.notifyUsers,
         status: form.status,
+        theme: form.theme,
+        layout: form.layout,
       }),
     onSuccess: () => {
       toast.success(t("adminStore.saved", "Campanha salva."));
@@ -161,6 +169,8 @@ function AdminStore() {
       postToCommunity: c.post_to_community,
       notifyUsers: c.notify_users,
       status: c.status,
+      theme: (c.theme as CampaignTheme) ?? "forest",
+      layout: (c.layout as CampaignLayout) ?? "overlay",
     });
     setEditing(true);
     if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
@@ -287,6 +297,62 @@ function AdminStore() {
         <div className="space-y-1.5">
           <Label>{t("adminStore.ctaUrl", "Link (loja/WhatsApp)")}</Label>
           <Input value={form.ctaUrl} onChange={(e) => setForm((s) => ({ ...s, ctaUrl: e.target.value }))} placeholder="https://…" inputMode="url" />
+        </div>
+
+        {/* Tema (paleta de cores) */}
+        <div className="space-y-1.5">
+          <Label>{t("adminStore.theme", "Cores do banner")}</Label>
+          <div className="flex flex-wrap gap-2">
+            {Object.values(CAMPAIGN_THEMES).map((th) => (
+              <button
+                key={th.key}
+                type="button"
+                onClick={() => setForm((s) => ({ ...s, theme: th.key }))}
+                aria-label={th.label}
+                className={`h-9 w-9 rounded-full border-2 transition-base ${form.theme === th.key ? "border-foreground scale-110" : "border-transparent"}`}
+                style={{ background: th.gradient }}
+                title={th.label}
+              />
+            ))}
+          </div>
+        </div>
+
+        {/* Layout */}
+        <div className="space-y-1.5">
+          <Label>{t("adminStore.layout", "Layout")}</Label>
+          <div className="grid grid-cols-3 gap-2">
+            {CAMPAIGN_LAYOUTS.map((l) => (
+              <button
+                key={l.key}
+                type="button"
+                onClick={() => setForm((s) => ({ ...s, layout: l.key }))}
+                className={`rounded-xl border px-2 py-2 text-xs font-medium transition-base ${
+                  form.layout === l.key ? "border-primary bg-primary/10 text-primary" : "border-border bg-secondary text-secondary-foreground"
+                }`}
+              >
+                {t(`adminStore.layouts.${l.key}`, { defaultValue: l.label })}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Preview ao vivo */}
+        <div className="space-y-1.5">
+          <Label>{t("adminStore.preview", "Prévia")}</Label>
+          <CampaignCard
+            preview
+            c={{
+              title: form.title || t("adminStore.previewTitle", "Título da campanha"),
+              description: form.description || null,
+              image_url: form.imageUrl,
+              cta_label: form.ctaLabel || null,
+              cta_url: form.ctaUrl || null,
+              price: form.price || null,
+              partner_id: form.partnerId,
+              theme: form.theme,
+              layout: form.layout,
+            }}
+          />
         </div>
 
         <div className="flex items-center justify-between rounded-xl bg-secondary/50 p-3">

@@ -1083,3 +1083,11 @@ create index if not exists idx_segments_visibility on public.segments(visibility
 --     notified_at. Ver o arquivo de migration para o SQL completo da RPC.
 --     (idempotente)
 -- ############################################################################
+
+-- ############################################################################
+-- 40) 20260923160000_campaign-theme-layout.sql
+--     Loja virtual — banner chamativo: colunas partner_campaigns.theme
+--     (forest|sunset|ocean|berry|midnight|lime) + layout (overlay|split|solid),
+--     com CHECK, e admin_upsert_campaign recriada com _theme/_layout.
+--     Ver o arquivo de migration para o SQL completo da RPC. (idempotente)
+-- ############################################################################

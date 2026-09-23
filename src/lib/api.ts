@@ -2975,6 +2975,8 @@ export type PartnerCampaign = {
   notified_at: string | null;
   community_post_id: string | null;
   status: "active" | "paused";
+  theme: string;
+  layout: string;
   starts_at: string | null;
   ends_at: string | null;
   created_by: string | null;
@@ -3023,6 +3025,8 @@ export interface CampaignInput {
   postToCommunity: boolean;
   notifyUsers: boolean;
   status: "active" | "paused";
+  theme: string;
+  layout: string;
   startsAt?: string | null;
   endsAt?: string | null;
 }
@@ -3044,6 +3048,8 @@ export async function adminUpsertCampaign(input: CampaignInput): Promise<Partner
     _starts_at: input.startsAt ?? null,
     _ends_at: input.endsAt ?? null,
     _notify_users: input.notifyUsers,
+    _theme: input.theme,
+    _layout: input.layout,
   } as never);
   if (error) throw error;
   const row = (Array.isArray(data) ? data[0] : data) as unknown as PartnerCampaign;

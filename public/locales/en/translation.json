@@ -627,11 +627,21 @@
     "listTitle": "Campaigns",
     "empty": "No campaigns yet.",
     "tagStart": "Start",
-    "tagCommunity": "Community"
+    "tagCommunity": "Community",
+    "theme": "Banner colors",
+    "layout": "Layout",
+    "layouts": {
+      "overlay": "Full image",
+      "split": "Image + text",
+      "solid": "Solid color"
+    },
+    "preview": "Preview",
+    "previewTitle": "Campaign title"
   },
   "startCampaign": {
     "label": "Partner offer",
-    "defaultCta": "See offer"
+    "defaultCta": "See offer",
+    "sponsored": "Sponsored"
   },
   "adminTips": {
     "title": "Tips / Improvements",
