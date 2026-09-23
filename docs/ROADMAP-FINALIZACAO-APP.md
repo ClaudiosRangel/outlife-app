@@ -136,6 +136,12 @@
 >    horizontal, um card por vez (85% da largura), igual à Home. Sem migration;
 >    APK 9,96 MB.
 
+> **🔧 Carrossel de ofertas com AUTOPLAY (23/09 20:07):**
+> Novo componente reutilizável `src/components/CampaignCarousel.tsx`: passa
+> sozinho a cada 4s com scroll suave, pausa ao tocar/arrastar e retoma após
+> ~2,5s, com indicadores (pontinho ativo alonga). Usado na Comunidade e na Home
+> (substituiu os carrosséis manuais). Sem migration; APK 9,96 MB.
+
 > **Próxima frente: tela de admin de cupons (/admin/cupons), depois rebranding
 > técnico (appId → OutVitar) + publicação.**
 

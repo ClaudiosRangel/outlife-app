@@ -62,7 +62,7 @@ import {
   type PostComment,
   type CommunityPostCategory,
 } from "@/lib/api";
-import { CampaignCard } from "@/components/StartCampaignBanner";
+import CampaignCarousel from "@/components/CampaignCarousel";
 import {
   CommunityPostCard,
   type CardActivity,
@@ -646,19 +646,10 @@ function Community() {
 
 
       <div className="space-y-4 px-5 pb-6">
-        {/* Campanhas de parceiros (loja virtual) — CARROSSEL horizontal
-            (um card por vez, com scroll-snap) só na aba "Para você". */}
+        {/* Campanhas de parceiros (loja virtual) — CARROSSEL com autoplay
+            (passa sozinho, scroll suave) só na aba "Para você". */}
         {activeTab === "forYou" && communityCampaigns.length > 0 && (
-          <div className="-mx-5 flex snap-x snap-mandatory gap-3 overflow-x-auto scrollbar-hide px-5 pb-1">
-            {communityCampaigns.map((c) => (
-              <div key={`campaign-${c.id}`} className="w-[85%] shrink-0 snap-center first:ml-0">
-                <CampaignCard
-                  c={c}
-                  onClick={() => navigate({ to: "/oferta/$campaignId", params: { campaignId: c.id } })}
-                />
-              </div>
-            ))}
-          </div>
+          <CampaignCarousel campaigns={communityCampaigns} />
         )}
 
         {isLoading
