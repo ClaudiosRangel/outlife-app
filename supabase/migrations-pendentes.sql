@@ -1100,3 +1100,15 @@ create index if not exists idx_segments_visibility on public.segments(visibility
 --     genérico (o feed renderiza o CampaignCard direto). Limpa os posts
 --     genéricos já criados e zera community_post_id. (idempotente)
 -- ############################################################################
+
+-- ############################################################################
+-- 42) 20260924120000_checkout-pix-cupom.sql
+--     Checkout + Cupons (agnóstico de PSP). Tabelas: coupons, orders (valores
+--     em CENTAVOS, status pending/paid/failed/canceled/refunded, campos do
+--     Pix/PSP), coupon_redemptions. RLS: coupons público-ativos, orders/
+--     redemptions só do dono. RPCs: campaign_price_cents, validate_coupon,
+--     create_order (nasce pending, aplica cupom), my_orders. Ver arquivo.
+-- 43) 20260924130000_coupons-admin.sql
+--     increment_coupon_redemptions (usada pelo webhook) + CRUD admin de cupons
+--     (admin_list_coupons, admin_upsert_coupon, admin_delete_coupon), is_admin.
+-- ############################################################################

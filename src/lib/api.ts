@@ -3098,6 +3098,118 @@ export async function uploadCampaignImage(file: File): Promise<string> {
   return uploadCommunityPostImage(file);
 }
 
+// ============ Checkout (Pix/cartão) + Cupons (frente futura, estrutura pronta) ============
+
+export type OrderStatus = "pending" | "paid" | "failed" | "canceled" | "refunded";
+
+export type Order = {
+  id: string;
+  user_id: string;
+  campaign_id: string | null;
+  partner_id: string | null;
+  title: string;
+  amount_cents: number;
+  discount_cents: number;
+  total_cents: number;
+  coupon_id: string | null;
+  coupon_code: string | null;
+  payment_method: "pix" | "card" | null;
+  status: OrderStatus;
+  psp_provider: string | null;
+  psp_charge_id: string | null;
+  pix_qr_code: string | null;
+  pix_qr_image: string | null;
+  paid_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+/** Valida um cupom para um valor base (centavos) e parceiro. Não consome. */
+export async function validateCoupon(
+  code: string,
+  amountCents: number,
+  partnerId: string | null,
+): Promise<{ valid: boolean; discountCents: number; message: string }> {
+  const { data, error } = await supabase.rpc("validate_coupon" as never, {
+    _code: code,
+    _amount_cents: amountCents,
+    _partner_id: partnerId,
+  } as never);
+  if (error) throw error;
+  const row = (Array.isArray(data) ? data[0] : data) as
+    | { valid: boolean; discount_cents: number; message: string }
+    | null;
+  return {
+    valid: !!row?.valid,
+    discountCents: row?.discount_cents ?? 0,
+    message: row?.message ?? "",
+  };
+}
+
+/** Cria um pedido (pending) a partir de uma campanha, com cupom/método opcionais. */
+export async function createOrder(
+  campaignId: string,
+  couponCode: string | null,
+  paymentMethod: "pix" | "card",
+): Promise<Order> {
+  const { data, error } = await supabase.rpc("create_order" as never, {
+    _campaign_id: campaignId,
+    _coupon_code: couponCode,
+    _payment_method: paymentMethod,
+  } as never);
+  if (error) throw error;
+  return (Array.isArray(data) ? data[0] : data) as unknown as Order;
+}
+
+/**
+ * Aciona a Edge Function que cria a cobrança no PSP para um pedido. Retorna os
+ * dados do Pix (quando aplicável). Em modo simulado (sem PSP configurado),
+ * retorna um Pix de exemplo e status pending.
+ */
+export async function createPayment(orderId: string): Promise<{
+  ok: boolean;
+  status: OrderStatus;
+  pixQrCode: string | null;
+  pixQrImage: string | null;
+  provider?: string;
+}> {
+  const { data, error } = await supabase.functions.invoke("payment-create", {
+    body: { orderId },
+  });
+  if (error) throw error;
+  const d = data as { ok?: boolean; status?: OrderStatus; pixQrCode?: string | null; pixQrImage?: string | null; provider?: string };
+  return {
+    ok: !!d?.ok,
+    status: (d?.status ?? "pending") as OrderStatus,
+    pixQrCode: d?.pixQrCode ?? null,
+    pixQrImage: d?.pixQrImage ?? null,
+    provider: d?.provider,
+  };
+}
+
+/** Um pedido por id (RLS: só o dono). */
+export async function fetchOrderById(id: string): Promise<Order | null> {
+  const { data, error } = await supabase
+    .from("orders" as never)
+    .select("*")
+    .eq("id" as never, id as never)
+    .maybeSingle();
+  if (error) throw error;
+  return (data as unknown as Order) ?? null;
+}
+
+/** Meus pedidos (RPC). */
+export async function fetchMyOrders(): Promise<Order[]> {
+  const { data, error } = await supabase.rpc("my_orders" as never, {} as never);
+  if (error) throw error;
+  return (data ?? []) as unknown as Order[];
+}
+
+/** Formata centavos em BRL. */
+export function formatCents(cents: number): string {
+  return (cents / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+}
+
 /** Lista parceiros (id + nome) para o seletor do admin ao criar campanha. */
 export async function fetchPartnersLite(): Promise<{ id: string; name: string }[]> {
   const { data, error } = await supabase

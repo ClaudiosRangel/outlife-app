@@ -56,6 +56,9 @@ import { Route as AdminComplianceRouteImport } from './routes/admin.compliance'
 import { Route as AdminAtividadesRouteImport } from './routes/admin.atividades'
 import { Route as AActivityIdRouteImport } from './routes/a.$activityId'
 import { Route as OfertaCampaignIdRouteImport } from './routes/oferta.$campaignId'
+import { Route as PedidosRouteImport } from './routes/pedidos'
+import { Route as CheckoutCampaignIdRouteImport } from './routes/checkout.$campaignId'
+import { Route as PagamentoOrderIdRouteImport } from './routes/pagamento.$orderId'
 import { Route as SegmentoEditarSegmentIdRouteImport } from './routes/segmento.editar.$segmentId'
 import { Route as SegmentoIrSegmentIdRouteImport } from './routes/segmento.ir.$segmentId'
 import { Route as ApiPushSendFcmRouteImport } from './routes/api.push.send-fcm'
@@ -301,6 +304,21 @@ const OfertaCampaignIdRoute = OfertaCampaignIdRouteImport.update({
   path: '/oferta/$campaignId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PedidosRoute = PedidosRouteImport.update({
+  id: '/pedidos',
+  path: '/pedidos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CheckoutCampaignIdRoute = CheckoutCampaignIdRouteImport.update({
+  id: '/checkout/$campaignId',
+  path: '/checkout/$campaignId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PagamentoOrderIdRoute = PagamentoOrderIdRouteImport.update({
+  id: '/pagamento/$orderId',
+  path: '/pagamento/$orderId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SegmentoEditarSegmentIdRoute = SegmentoEditarSegmentIdRouteImport.update({
   id: '/segmento/editar/$segmentId',
   path: '/segmento/editar/$segmentId',
@@ -370,6 +388,9 @@ export interface FileRoutesByFullPath {
   '/termos': typeof TermosRoute
   '/a/$activityId': typeof AActivityIdRoute
   '/oferta/$campaignId': typeof OfertaCampaignIdRoute
+  '/pedidos': typeof PedidosRoute
+  '/checkout/$campaignId': typeof CheckoutCampaignIdRoute
+  '/pagamento/$orderId': typeof PagamentoOrderIdRoute
   '/admin/atividades': typeof AdminAtividadesRoute
   '/admin/compliance': typeof AdminComplianceRoute
   '/admin/conteudo': typeof AdminConteudoRoute
@@ -428,6 +449,9 @@ export interface FileRoutesByTo {
   '/termos': typeof TermosRoute
   '/a/$activityId': typeof AActivityIdRoute
   '/oferta/$campaignId': typeof OfertaCampaignIdRoute
+  '/pedidos': typeof PedidosRoute
+  '/checkout/$campaignId': typeof CheckoutCampaignIdRoute
+  '/pagamento/$orderId': typeof PagamentoOrderIdRoute
   '/admin/atividades': typeof AdminAtividadesRoute
   '/admin/compliance': typeof AdminComplianceRoute
   '/admin/conteudo': typeof AdminConteudoRoute
@@ -487,6 +511,9 @@ export interface FileRoutesById {
   '/termos': typeof TermosRoute
   '/a/$activityId': typeof AActivityIdRoute
   '/oferta/$campaignId': typeof OfertaCampaignIdRoute
+  '/pedidos': typeof PedidosRoute
+  '/checkout/$campaignId': typeof CheckoutCampaignIdRoute
+  '/pagamento/$orderId': typeof PagamentoOrderIdRoute
   '/admin/atividades': typeof AdminAtividadesRoute
   '/admin/compliance': typeof AdminComplianceRoute
   '/admin/conteudo': typeof AdminConteudoRoute
@@ -547,6 +574,9 @@ export interface FileRouteTypes {
     | '/termos'
     | '/a/$activityId'
     | '/oferta/$campaignId'
+    | '/pedidos'
+    | '/checkout/$campaignId'
+    | '/pagamento/$orderId'
     | '/admin/atividades'
     | '/admin/compliance'
     | '/admin/conteudo'
@@ -606,6 +636,9 @@ export interface FileRouteTypes {
     | '/termos'
     | '/a/$activityId'
     | '/oferta/$campaignId'
+    | '/pedidos'
+    | '/checkout/$campaignId'
+    | '/pagamento/$orderId'
     | '/admin/atividades'
     | '/admin/compliance'
     | '/admin/conteudo'
@@ -665,6 +698,9 @@ export interface FileRouteTypes {
     | '/termos'
     | '/a/$activityId'
     | '/oferta/$campaignId'
+    | '/pedidos'
+    | '/checkout/$campaignId'
+    | '/pagamento/$orderId'
     | '/admin/atividades'
     | '/admin/compliance'
     | '/admin/conteudo'
@@ -725,6 +761,9 @@ export interface RootRouteChildren {
   TermosRoute: typeof TermosRoute
   AActivityIdRoute: typeof AActivityIdRoute
   OfertaCampaignIdRoute: typeof OfertaCampaignIdRoute
+  PedidosRoute: typeof PedidosRoute
+  CheckoutCampaignIdRoute: typeof CheckoutCampaignIdRoute
+  PagamentoOrderIdRoute: typeof PagamentoOrderIdRoute
   AdminAtividadesRoute: typeof AdminAtividadesRoute
   AdminComplianceRoute: typeof AdminComplianceRoute
   AdminConteudoRoute: typeof AdminConteudoRoute
@@ -1091,6 +1130,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OfertaCampaignIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/pedidos': {
+      id: '/pedidos'
+      path: '/pedidos'
+      fullPath: '/pedidos'
+      preLoaderRoute: typeof PedidosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/checkout/$campaignId': {
+      id: '/checkout/$campaignId'
+      path: '/checkout/$campaignId'
+      fullPath: '/checkout/$campaignId'
+      preLoaderRoute: typeof CheckoutCampaignIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pagamento/$orderId': {
+      id: '/pagamento/$orderId'
+      path: '/pagamento/$orderId'
+      fullPath: '/pagamento/$orderId'
+      preLoaderRoute: typeof PagamentoOrderIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/segmento/editar/$segmentId': {
       id: '/segmento/editar/$segmentId'
       path: '/segmento/editar/$segmentId'
@@ -1191,6 +1251,9 @@ const rootRouteChildren: RootRouteChildren = {
   TermosRoute: TermosRoute,
   AActivityIdRoute: AActivityIdRoute,
   OfertaCampaignIdRoute: OfertaCampaignIdRoute,
+  PedidosRoute: PedidosRoute,
+  CheckoutCampaignIdRoute: CheckoutCampaignIdRoute,
+  PagamentoOrderIdRoute: PagamentoOrderIdRoute,
   AdminAtividadesRoute: AdminAtividadesRoute,
   AdminComplianceRoute: AdminComplianceRoute,
   AdminConteudoRoute: AdminConteudoRoute,

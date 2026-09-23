@@ -24,6 +24,7 @@ import {
   Star,
   Flag,
   ChevronRight,
+  ShoppingBag,
 } from "lucide-react";
 import { StatusBar } from "@/components/StatusBar";
 import { Stars } from "@/components/Stars";
@@ -428,6 +429,19 @@ function Profile() {
           </div>
         )}
       </section>
+
+      {/* Meus pedidos (loja virtual / checkout) */}
+      <div className="mx-5 mt-3">
+        <Link to="/pedidos" className="flex items-center justify-between rounded-2xl bg-card p-3 shadow-card">
+          <div className="flex items-center gap-3">
+            <span className="grid h-9 w-9 place-items-center rounded-xl bg-primary/10 text-primary">
+              <ShoppingBag size={16} />
+            </span>
+            <span className="text-sm font-semibold">{t("orders.title", "Meus pedidos")}</span>
+          </div>
+          <span className="text-xs text-primary font-medium">{t("common.open")}</span>
+        </Link>
+      </div>
 
       {isAdmin && (
         <div className="mx-5 mt-3">

@@ -647,7 +647,43 @@
   "offer": {
     "notFound": "Offer not found or ended.",
     "partner": "Partner",
-    "viewPartner": "View partner"
+    "viewPartner": "View partner",
+    "buy": "Buy"
+  },
+  "checkout": {
+    "title": "Payment",
+    "notFound": "Offer not found.",
+    "noPrice": "This offer has no price set. Contact the partner from the offer.",
+    "coupon": "Discount coupon",
+    "couponPlaceholder": "Enter the code",
+    "method": "Payment method",
+    "card": "Card",
+    "subtotal": "Subtotal",
+    "discount": "Discount",
+    "total": "Total",
+    "pay": "Pay",
+    "secure": "Payment processed securely"
+  },
+  "payment": {
+    "title": "Payment",
+    "notFound": "Order not found.",
+    "paid": "Payment confirmed!",
+    "failed": "Payment not completed.",
+    "pending": "Waiting for payment…",
+    "pixTitle": "Pay with Pix",
+    "copy": "Copy Pix code",
+    "copied": "Pix code copied!",
+    "simulated": "The payment method is still being set up. This is a test environment — real payments will be enabled once the gateway is connected.",
+    "myOrders": "View my orders"
+  },
+  "orders": {
+    "title": "My orders",
+    "empty": "You haven't placed any orders yet.",
+    "paid": "Paid",
+    "failed": "Failed",
+    "canceled": "Canceled",
+    "refunded": "Refunded",
+    "pending": "Pending"
   },
   "adminTips": {
     "title": "Tips / Improvements",

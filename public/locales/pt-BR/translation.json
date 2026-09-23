@@ -647,7 +647,43 @@
   "offer": {
     "notFound": "Oferta não encontrada ou encerrada.",
     "partner": "Parceiro",
-    "viewPartner": "Ver o parceiro"
+    "viewPartner": "Ver o parceiro",
+    "buy": "Comprar"
+  },
+  "checkout": {
+    "title": "Pagamento",
+    "notFound": "Oferta não encontrada.",
+    "noPrice": "Esta oferta não tem preço definido. Entre em contato com o parceiro pela oferta.",
+    "coupon": "Cupom de desconto",
+    "couponPlaceholder": "Digite o código",
+    "method": "Forma de pagamento",
+    "card": "Cartão",
+    "subtotal": "Subtotal",
+    "discount": "Desconto",
+    "total": "Total",
+    "pay": "Pagar",
+    "secure": "Pagamento processado com segurança"
+  },
+  "payment": {
+    "title": "Pagamento",
+    "notFound": "Pedido não encontrado.",
+    "paid": "Pagamento confirmado!",
+    "failed": "Pagamento não concluído.",
+    "pending": "Aguardando pagamento…",
+    "pixTitle": "Pague com Pix",
+    "copy": "Copiar código Pix",
+    "copied": "Código Pix copiado!",
+    "simulated": "O meio de pagamento ainda está em configuração. Este é um ambiente de teste — o pagamento real será ativado quando o gateway for conectado.",
+    "myOrders": "Ver meus pedidos"
+  },
+  "orders": {
+    "title": "Meus pedidos",
+    "empty": "Você ainda não fez nenhum pedido.",
+    "paid": "Pago",
+    "failed": "Falhou",
+    "canceled": "Cancelado",
+    "refunded": "Reembolsado",
+    "pending": "Aguardando"
   },
   "adminTips": {
     "title": "Dicas / Melhorias",

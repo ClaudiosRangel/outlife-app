@@ -97,7 +97,26 @@
 > cada card leva à tela de oferta `/oferta/$campaignId`. Silenciosa quando não há
 > campanha. i18n `home.storeTitle`. O banner do Iniciar (já funcionando) e o card
 > na Comunidade permanecem. Sem migration. Diagnostics limpos; APK 9,95 MB.
-> **Próxima frente: checkout Pix + cupom.**
+
+> **🟩 CHECKOUT (Pix/cartão) + CUPONS — estrutura pronta (23/09 18:18):**
+> Base de pagamento montada AGNÓSTICA de gateway, em **modo simulado** até
+> plugar o PSP (pedido nasce `pending`, app mostra tela de pagamento com Pix de
+> exemplo). Como ativar: `docs/CHECKOUT-ATIVAR-PAGAMENTO.md`.
+> - Backend (migrations `20260924120000`+`20260924130000`): tabelas `coupons`,
+>   `orders` (CENTAVOS), `coupon_redemptions` + RLS + RPCs (create_order,
+>   validate_coupon, my_orders, campaign_price_cents, increment_coupon_redemptions,
+>   CRUD admin de cupons).
+> - Edge Functions (`supabase/functions/`): `payment-create`, `payment-webhook`,
+>   `_shared/psp.ts` (adaptador; modo simulado + espaço p/ MercadoPago/Asaas/
+>   AbacatePay). Deploy + envs `PSP_*` pendentes.
+> - Frontend: `/checkout/$campaignId`, `/pagamento/$orderId` (QR Pix + polling),
+>   `/pedidos` + card no perfil; botão "Comprar" na oferta com preço.
+> routeTree manual (3 rotas flat, verificadas). Migrations 2× + reload.
+> Diagnostics limpos; APK 9,96 MB. **Nota:** cache do vite corrompeu após kills
+> de processo (travava antes de transformar) — resolvido com `rm node_modules/.vite`.
+> **Falta p/ funcionar:** escolher PSP, implementar `_shared/psp.ts`, deploy das
+> functions + envs (guia no doc).
+> **Próxima frente sugerida: rebranding técnico (appId → OutVitar) + publicação.**
 
 > **🎉 Com a #8, todas as 9 grandes frentes pré-lançamento estão concluídas.**
 > Pendências fora do lançamento (fase futura): importar segmentos do Strava (#6)

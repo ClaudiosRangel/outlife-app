@@ -1,11 +1,20 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { ChevronLeft, ExternalLink, Store, Tag, Briefcase } from "lucide-react";
+import { ChevronLeft, ExternalLink, Store, Tag, Briefcase, ShoppingBag } from "lucide-react";
 import { StatusBar } from "@/components/StatusBar";
 import { Skeleton } from "@/components/ui/skeleton";
-import { fetchCampaignById, fetchPartnerById, resolveAsset } from "@/lib/api";
+import { fetchCampaignById, fetchPartnerById, resolveAsset, formatCents } from "@/lib/api";
 import { getTheme } from "@/lib/campaign-style";
+
+function priceCents(price: string | null | undefined): number {
+  if (!price) return 0;
+  let c = price.replace(/[^0-9,.]/g, "");
+  if (!c) return 0;
+  if (c.includes(",")) c = c.replace(/\./g, "").replace(",", ".");
+  const v = Number(c);
+  return Number.isFinite(v) ? Math.round(v * 100) : 0;
+}
 
 export const Route = createFileRoute("/oferta/$campaignId")({
   component: OfferPage,
@@ -112,10 +121,19 @@ function OfferPage() {
 
       {/* CTA fixo */}
       <div className="mx-5 mt-4 space-y-2">
+        {/* Se a oferta tem preço, o CTA principal é COMPRAR (checkout no app). */}
+        {priceCents(campaign.price) > 0 && (
+          <button
+            onClick={() => navigate({ to: "/checkout/$campaignId", params: { campaignId: campaign.id } })}
+            className="flex w-full items-center justify-center gap-2 rounded-2xl bg-primary py-3.5 text-sm font-semibold text-primary-foreground active:scale-[0.99]"
+          >
+            <ShoppingBag size={16} /> {t("offer.buy", "Comprar")} {formatCents(priceCents(campaign.price))}
+          </button>
+        )}
         {campaign.cta_url && (
           <button
             onClick={() => window.open(campaign.cta_url as string, "_blank")}
-            className="flex w-full items-center justify-center gap-2 rounded-2xl bg-primary py-3.5 text-sm font-semibold text-primary-foreground active:scale-[0.99]"
+            className="flex w-full items-center justify-center gap-2 rounded-2xl border border-border bg-card py-3 text-sm font-semibold active:scale-[0.99]"
           >
             {campaign.cta_label || t("startCampaign.defaultCta", "Ver oferta")}
             <ExternalLink size={16} />
