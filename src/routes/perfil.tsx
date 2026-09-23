@@ -339,7 +339,11 @@ function Profile() {
       </div>
 
 
-      <div className="mx-5 mt-3">
+      {/* Item 1: seção Social (Mensagens + Amigos) */}
+      <h2 className="mx-5 mt-5 mb-1 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+        {t("profile.sections.social", "Social")}
+      </h2>
+      <div className="mx-5 mt-1">
         <Link to="/mensagens" className="flex items-center justify-between rounded-2xl bg-card p-3 shadow-card">
           <div className="flex items-center gap-3">
             <span className="relative grid h-9 w-9 place-items-center rounded-xl bg-primary/10 text-primary">
@@ -374,8 +378,12 @@ function Profile() {
         </Link>
       </div>
 
-      {/* TASK 1: Segmentos do usuário — criar e listar os meus. */}
-      <section className="mx-5 mt-3 rounded-2xl bg-card p-3 shadow-card">
+      {/* Item 1: seção Minhas coisas (Segmentos, Checklists, Salvos, Favoritos) */}
+      <h2 className="mx-5 mt-5 mb-1 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+        {t("profile.sections.myStuff", "Minhas coisas")}
+      </h2>
+      {/* Segmentos do usuário — criar e listar os meus. */}
+      <section className="mx-5 mt-1 rounded-2xl bg-card p-3 shadow-card">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <span className="grid h-9 w-9 place-items-center rounded-xl bg-primary/10 text-primary">
@@ -482,8 +490,12 @@ function Profile() {
         </div>
       )}
 
+      {/* Item 1: seção App (opinião, idioma, aparência) */}
+      <h2 className="mx-5 mt-5 mb-1 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+        {t("profile.sections.app", "App")}
+      </h2>
       {/* Dê sua opinião — visível para todos os usuários */}
-      <div className="mx-5 mt-3">
+      <div className="mx-5 mt-1">
         <button
           onClick={() => setFeedbackOpen(true)}
           className="flex w-full items-center justify-between rounded-2xl bg-card p-3 shadow-card"

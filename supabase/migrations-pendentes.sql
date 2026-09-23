@@ -1018,3 +1018,45 @@ $$;
 
 revoke all on function public.my_segment_trophies(int) from public;
 grant execute on function public.my_segment_trophies(int) to authenticated;
+
+-- ############################################################################
+-- 37) 20260922130000_segment-visibility.sql
+--     Visibilidade de segmento (item 2): coluna segments.visibility TEXT
+--     (public|friends|private, default public) + CHECK + RLS de leitura
+--     respeitando a visibilidade (public: todos; próprio criador sempre;
+--     friends: amizade 'accepted' em user_friends nas duas direções) +
+--     índice. (idempotente)
+-- ############################################################################
+
+alter table public.segments
+  add column if not exists visibility text not null default 'public';
+
+do $$
+begin
+  alter table public.segments
+    add constraint segments_visibility_check
+    check (visibility in ('public', 'friends', 'private'));
+exception
+  when duplicate_object then null;
+end $$;
+
+drop policy if exists "segments_select_all" on public.segments;
+drop policy if exists "segments_select_visibility" on public.segments;
+create policy "segments_select_visibility" on public.segments for select
+  using (
+    visibility = 'public'
+    or created_by = auth.uid()
+    or (
+      visibility = 'friends'
+      and exists (
+        select 1 from public.user_friends uf
+        where uf.status = 'accepted'
+          and (
+            (uf.requester_id = auth.uid() and uf.addressee_id = segments.created_by)
+            or (uf.addressee_id = auth.uid() and uf.requester_id = segments.created_by)
+          )
+      )
+    )
+  );
+
+create index if not exists idx_segments_visibility on public.segments(visibility);

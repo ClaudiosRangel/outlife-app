@@ -1,16 +1,27 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { lazy, Suspense } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { ChevronLeft, Trophy, Route as RouteIcon, Medal } from "lucide-react";
+import { ChevronLeft, Trophy, Route as RouteIcon, Medal, Navigation, Pencil, Globe, Users, Lock } from "lucide-react";
 import { StatusBar } from "@/components/StatusBar";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   fetchSegmentById,
   fetchSegmentLeaderboard,
   resolveAsset,
+  type SegmentVisibility,
 } from "@/lib/api";
+import { buildDirectionsUrl } from "@/lib/navigation-url";
 import { useAuth } from "@/hooks/use-auth";
 import avatarFallback from "@/assets/avatar-rafael.jpg";
+
+const SegmentViewMap = lazy(() => import("@/components/SegmentViewMap"));
+
+function visibilityBadge(v: SegmentVisibility | undefined, t: (k: string, d?: string) => string) {
+  if (v === "private") return { Icon: Lock, label: t("segments.visibility.private", "Só eu") };
+  if (v === "friends") return { Icon: Users, label: t("segments.visibility.friends", "Amigos") };
+  return { Icon: Globe, label: t("segments.visibility.public", "Público") };
+}
 
 export const Route = createFileRoute("/segmento/$segmentId")({
   component: SegmentDetailPage,
@@ -34,6 +45,7 @@ function SegmentDetailPage() {
   const { segmentId } = Route.useParams();
   const { t } = useTranslation();
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   const { data: segment, isLoading } = useQuery({
     queryKey: ["segment", segmentId],
@@ -82,14 +94,63 @@ function SegmentDetailPage() {
 
       {/* Cabeçalho do segmento */}
       <div className="mx-5 mt-4 rounded-2xl bg-gradient-forest p-4 text-white">
-        <div className="flex items-center gap-2 text-sm font-medium">
-          <RouteIcon size={16} />
-          {(segment.distance_meters / 1000).toFixed(2)} km
-          {segment.activity_type ? ` · ${segment.activity_type}` : ""}
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 text-sm font-medium">
+            <RouteIcon size={16} />
+            {(segment.distance_meters / 1000).toFixed(2)} km
+            {segment.activity_type ? ` · ${t(`activity.activityTypes.${segment.activity_type}`, { defaultValue: segment.activity_type })}` : ""}
+          </div>
+          {(() => {
+            const vb = visibilityBadge(segment.visibility, t);
+            return (
+              <span className="flex items-center gap-1 rounded-full bg-white/15 px-2 py-0.5 text-[11px] font-medium">
+                <vb.Icon size={12} /> {vb.label}
+              </span>
+            );
+          })()}
         </div>
         <div className="mt-1 text-xs text-white/70">
           {t("segments.leaderboardTitle", "Ranking — 10 melhores tempos")}
         </div>
+      </div>
+
+      {/* Item 3: mapa do trecho marcado */}
+      {(segment.polyline?.length ?? 0) >= 2 || (segment.start_lat != null && segment.end_lat != null) ? (
+        <div className="mx-5 mt-4">
+          <Suspense fallback={<Skeleton className="h-[260px] w-full rounded-2xl" />}>
+            <SegmentViewMap
+              polyline={segment.polyline}
+              start={segment.start_lat != null && segment.start_lng != null ? { lat: segment.start_lat, lng: segment.start_lng } : null}
+              end={segment.end_lat != null && segment.end_lng != null ? { lat: segment.end_lat, lng: segment.end_lng } : null}
+            />
+          </Suspense>
+        </div>
+      ) : null}
+
+      {/* Ações: me leve até lá (item 4) + editar (dono, item 3) */}
+      <div className="mx-5 mt-3 flex gap-2">
+        {segment.start_lat != null && segment.start_lng != null && (
+          <button
+            onClick={() => {
+              const url = buildDirectionsUrl(
+                { lat: segment.start_lat as number, lng: segment.start_lng as number },
+                { activityType: segment.activity_type },
+              );
+              if (url) window.open(url, "_blank");
+            }}
+            className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-primary py-3 text-sm font-semibold text-primary-foreground active:scale-[0.99]"
+          >
+            <Navigation size={16} /> {t("segments.navigate", "Me leve até lá")}
+          </button>
+        )}
+        {segment.created_by === user?.id && (
+          <button
+            onClick={() => navigate({ to: "/segmento/$segmentId/editar", params: { segmentId } })}
+            className="flex items-center justify-center gap-2 rounded-2xl border border-border bg-card px-4 py-3 text-sm font-semibold active:scale-[0.99]"
+          >
+            <Pencil size={16} /> {t("segments.edit", "Editar")}
+          </button>
+        )}
       </div>
 
       {/* Ranking */}

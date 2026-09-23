@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
-import { Play, Pause, Square, Trash2, ArrowLeft, MapPin, Camera, Video, Loader2, Mountain, PauseCircle, Satellite } from "lucide-react";
+import { Play, Pause, Square, Trash2, ArrowLeft, MapPin, Camera, Video, Loader2, Mountain, PauseCircle, Satellite, ListChecks } from "lucide-react";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/use-auth";
@@ -141,6 +141,8 @@ function TrackActivityPage() {
   const [savedActivityId, setSavedActivityId] = useState<string | null>(null);
   const [reviewDestinationId, setReviewDestinationId] = useState<string | null>(null);
   const [reviewOpen, setReviewOpen] = useState(false);
+  // Item 5: lembrete de checklist ao iniciar trilha/escalada.
+  const [checklistReminderOpen, setChecklistReminderOpen] = useState(false);
   const lastSyncRef = useRef(0);
   useActivitySync();
 
@@ -284,6 +286,17 @@ function TrackActivityPage() {
       toast.error(t("activity.activityTypeRequired"));
       return;
     }
+    // Item 5: em trilha/escalada, lembra o checklist antes de iniciar.
+    if (activityType === "trilha" || activityType === "escalada") {
+      setChecklistReminderOpen(true);
+      return;
+    }
+    startMut.mutate();
+  };
+
+  // Início efetivo (usado após o lembrete de checklist, ou direto).
+  const proceedStart = () => {
+    setChecklistReminderOpen(false);
     startMut.mutate();
   };
 
@@ -830,6 +843,38 @@ function TrackActivityPage() {
                 {t("activity.saveActivity")}
               </button>
             </div>
+          </div>
+        </SheetContent>
+      </Sheet>
+
+      {/* Item 5: lembrete de checklist ao iniciar trilha/escalada. */}
+      <Sheet open={checklistReminderOpen} onOpenChange={setChecklistReminderOpen}>
+        <SheetContent side="bottom" className="rounded-t-3xl">
+          <SheetHeader>
+            <SheetTitle className="font-display flex items-center gap-2">
+              <ListChecks size={18} className="text-primary" />
+              {t("activity.checklistReminder.title")}
+            </SheetTitle>
+            <SheetDescription>
+              {t("activity.checklistReminder.description", {
+                activity: t(`activity.activityTypes.${activityType ?? "trilha"}`, { defaultValue: activityType ?? "" }).toLowerCase(),
+              })}
+            </SheetDescription>
+          </SheetHeader>
+          <div className="mt-5 space-y-2 pb-4">
+            <Link
+              to="/perfil"
+              onClick={() => setChecklistReminderOpen(false)}
+              className="flex w-full items-center justify-center gap-2 rounded-xl border border-border bg-card py-3.5 text-sm font-semibold text-foreground active:scale-[0.98] transition-transform"
+            >
+              <ListChecks size={16} /> {t("activity.checklistReminder.view")}
+            </Link>
+            <button
+              onClick={proceedStart}
+              className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-forest py-3.5 text-sm font-semibold text-white active:scale-[0.98] transition-transform"
+            >
+              <Play size={16} fill="currentColor" /> {t("activity.checklistReminder.proceed")}
+            </button>
           </div>
         </SheetContent>
       </Sheet>

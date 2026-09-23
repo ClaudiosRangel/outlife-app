@@ -454,6 +454,11 @@
       "avancado": "Avançado"
     },
     "achievements": "Conquistas",
+    "sections": {
+      "social": "Social",
+      "myStuff": "Minhas coisas",
+      "app": "App"
+    },
     "nextAdventure": "Próxima aventura",
     "checklist": "Checklist outdoor",
     "trackCta": "Rastrear nova atividade",
@@ -667,6 +672,13 @@
     "activityTypeLabel": "Tipo de atividade",
     "selectActivityType": "Selecione o tipo",
     "activityTypeRequired": "Selecione o tipo de atividade antes de iniciar.",
+    "checklistReminder": {
+      "title": "Você já olhou seu checklist?",
+      "description": "Antes de partir para {{activity}}, confira seu checklist para não esquecer nada — água, lanterna, capa de chuva, kit de primeiros socorros…",
+      "view": "Ver meu checklist",
+      "proceed": "Já conferi, iniciar",
+      "createFirst": "Você ainda não tem checklist. Crie um em Você › Checklist."
+    },
     "activityTypes": {
       "caminhada": "Caminhada",
       "pedalada": "Pedalada",
@@ -931,7 +943,22 @@
     "mySegmentsHint": "Crie trechos e dispute o ranking",
     "trophiesTitle": "Troféus de segmento",
     "king": "Rei do segmento",
-    "rankOf": "{{rank}}º de {{total}}"
+    "rankOf": "{{rank}}º de {{total}}",
+    "navigate": "Me leve até lá",
+    "edit": "Editar",
+    "editTitle": "Editar segmento",
+    "editHint": "Toque no mapa para remarcar início e fim.",
+    "updated": "Segmento atualizado!",
+    "deleted": "Segmento excluído.",
+    "delete": "Excluir segmento",
+    "confirmDelete": "Excluir este segmento? Esta ação não pode ser desfeita.",
+    "notOwner": "Só o criador pode editar este segmento.",
+    "visibility": {
+      "label": "Quem pode ver",
+      "public": "Público",
+      "friends": "Amigos",
+      "private": "Só eu"
+    }
   },
   "legal": {
     "gateTitle": "Termos de Uso e Privacidade",

@@ -5,7 +5,37 @@
 > `.kiro/steering/roadmap-outvitar.md`). **Mantenha-o atualizado** ao
 > concluir qualquer tarefa/bloco: marque status, data e resumo.
 
-**Última atualização:** 22/09/2026 (3 tarefas pré-#8: criar segmento pelo perfil + troféus de segmento nas Conquistas + revisão do cálculo de altimetria estilo Strava)
+**Última atualização:** 23/09/2026 (5 pontos pré-#8: proposta+seções do menu Você, visibilidade de segmento, editar trecho, "me leve até lá", lembrete de checklist em trilha/escalada)
+
+> **🟩 RODADA "5 pontos antes da #8" (23/09/2026) — CONCLUÍDA (APK 09:26):**
+> 1. **Menu Você organizado** (item 1): pesquisa dos melhores apps (Strava/
+>    Komoot/AllTrails) documentada em `docs/PROPOSTA-MENU-VOCE.md`; aplicados
+>    títulos de seção no `perfil.tsx` (**Social**, **Minhas coisas**, **App**)
+>    para dar hierarquia sem remover nada. i18n `profile.sections.*`.
+> 2. **Visibilidade do segmento** (item 2): coluna `segments.visibility`
+>    (public/friends/private, default public) + CHECK + RLS de leitura que
+>    respeita a visibilidade (friends = amizade `accepted` em `user_friends`).
+>    Migration `20260922130000`. Seletor de 3 opções (Globe/Users/Lock) na tela
+>    de criar segmento; badge de visibilidade no detalhe.
+> 3. **Editar segmento** (item 3): ao clicar em "Meus segmentos" → detalhe
+>    mostra o **trecho no mapa** (`SegmentViewMap`, Leaflet+tiles Mapbox,
+>    fitBounds) + botão "Editar" (só dono) → nova rota
+>    `/segmento/$segmentId/editar` (remarcar início/fim, nome, tipo,
+>    visibilidade, excluir). `updateSegment`/`deleteSegment` na API (RLS do dono).
+> 4. **"Me leve até lá"** (item 4): botão no detalhe do segmento abre o app de
+>    mapas (Google Maps) com rota até o INÍCIO do segmento, modo por tipo
+>    (pedalada→bicycling, senão walking). Lib pura `src/lib/navigation-url.ts`
+>    (6 testes fast-check). No WebView não há navegação turn-by-turn própria —
+>    delega ao app de mapas nativo (padrão de mercado, estilo Waze/easy).
+> 5. **Lembrete de checklist** (item 5): ao iniciar **trilha** ou **escalada**,
+>    abre um lembrete ("Você já olhou seu checklist? Não esqueça nada…") com
+>    "Ver meu checklist" (→ /perfil) ou "Já conferi, iniciar". Só para esses
+>    dois tipos; demais iniciam direto. i18n `activity.checklistReminder.*`.
+> routeTree editado manualmente (rota /editar, 8 pontos via script temporário).
+> Migration aplicada 2× + reload PostgREST. Diagnostics limpos; build:native +
+> cap sync + APK OK (9,94 MB).
+
+**Anterior:** 22/09/2026 (3 tarefas pré-#8: criar segmento pelo perfil + troféus de segmento nas Conquistas + revisão do cálculo de altimetria estilo Strava)
 
 > **🟩 RODADA "3 tarefas antes da #8" (22/09/2026) — CONCLUÍDA (APK 19:25):**
 > 1. **Criar segmento pelo Perfil** (`perfil.tsx`): card "Meus segmentos" com

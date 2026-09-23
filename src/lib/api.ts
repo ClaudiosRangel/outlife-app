@@ -2830,6 +2830,8 @@ export async function deleteMyAccount(): Promise<void> {
 import { matchSegmentEffort, type MatchPoint } from "@/lib/segment-match";
 import { haversineMeters } from "@/lib/haversine";
 
+export type SegmentVisibility = "public" | "friends" | "private";
+
 export type Segment = {
   id: string;
   created_by: string | null;
@@ -2845,6 +2847,7 @@ export type Segment = {
   max_lat: number | null;
   min_lng: number | null;
   max_lng: number | null;
+  visibility: SegmentVisibility;
   created_at: string;
 };
 
@@ -2883,6 +2886,7 @@ export async function createSegment(input: {
   name: string;
   activityType?: string | null;
   polyline: [number, number][];
+  visibility?: SegmentVisibility;
 }): Promise<Segment> {
   const { data: userData } = await supabase.auth.getUser();
   if (!userData.user) throw new Error("Não autenticado");
@@ -2899,11 +2903,59 @@ export async function createSegment(input: {
       start_lat: s.startLat, start_lng: s.startLng,
       end_lat: s.endLat, end_lng: s.endLng,
       min_lat: s.minLat, max_lat: s.maxLat, min_lng: s.minLng, max_lng: s.maxLng,
+      visibility: input.visibility ?? "public",
     } as never)
     .select()
     .single();
   if (error) throw error;
   return data as unknown as Segment;
+}
+
+/**
+ * Atualiza um segmento do próprio usuário (item 3): nome, tipo, visibilidade
+ * e/ou o trecho (início→fim redesenhado no mapa). Recalcula distância/bbox
+ * quando a polilinha muda. A RLS `segments_update_own` garante que só o dono
+ * altera.
+ */
+export async function updateSegment(
+  id: string,
+  patch: {
+    name?: string;
+    activityType?: string | null;
+    visibility?: SegmentVisibility;
+    polyline?: [number, number][];
+  },
+): Promise<Segment> {
+  const { data: userData } = await supabase.auth.getUser();
+  if (!userData.user) throw new Error("Não autenticado");
+  const row: Record<string, unknown> = {};
+  if (patch.name != null) row.name = patch.name.trim();
+  if ("activityType" in patch) row.activity_type = patch.activityType ?? null;
+  if (patch.visibility != null) row.visibility = patch.visibility;
+  if (patch.polyline != null) {
+    if (patch.polyline.length < 2) throw new Error("Trecho muito curto para um segmento.");
+    const s = summarizePolyline(patch.polyline);
+    row.polyline = patch.polyline;
+    row.distance_meters = Math.round(s.distance);
+    row.start_lat = s.startLat; row.start_lng = s.startLng;
+    row.end_lat = s.endLat; row.end_lng = s.endLng;
+    row.min_lat = s.minLat; row.max_lat = s.maxLat; row.min_lng = s.minLng; row.max_lng = s.maxLng;
+  }
+  if (Object.keys(row).length === 0) throw new Error("Nada para atualizar.");
+  const { data, error } = await supabase
+    .from("segments" as never)
+    .update(row as never)
+    .eq("id" as never, id as never)
+    .select()
+    .single();
+  if (error) throw error;
+  return data as unknown as Segment;
+}
+
+/** Exclui um segmento do próprio usuário (RLS segments_delete_own). */
+export async function deleteSegment(id: string): Promise<void> {
+  const { error } = await supabase.from("segments" as never).delete().eq("id" as never, id as never);
+  if (error) throw error;
 }
 
 export async function fetchSegments(): Promise<Segment[]> {

@@ -454,6 +454,11 @@
       "avancado": "Advanced"
     },
     "achievements": "Achievements",
+    "sections": {
+      "social": "Social",
+      "myStuff": "My stuff",
+      "app": "App"
+    },
     "nextAdventure": "Next adventure",
     "checklist": "Outdoor checklist",
     "trackCta": "Track new activity",
@@ -667,6 +672,13 @@
     "activityTypeLabel": "Activity type",
     "selectActivityType": "Select the type",
     "activityTypeRequired": "Select the activity type before starting.",
+    "checklistReminder": {
+      "title": "Did you check your checklist?",
+      "description": "Before heading out for {{activity}}, review your checklist so you don't forget anything — water, flashlight, raincoat, first-aid kit…",
+      "view": "View my checklist",
+      "proceed": "Checked, start now",
+      "createFirst": "You don't have a checklist yet. Create one in You › Checklist."
+    },
     "activityTypes": {
       "caminhada": "Walking",
       "pedalada": "Biking",
@@ -931,7 +943,22 @@
     "mySegmentsHint": "Create sections and compete on the leaderboard",
     "trophiesTitle": "Segment trophies",
     "king": "King of the segment",
-    "rankOf": "{{rank}} of {{total}}"
+    "rankOf": "{{rank}} of {{total}}",
+    "navigate": "Take me there",
+    "edit": "Edit",
+    "editTitle": "Edit segment",
+    "editHint": "Tap the map to re-mark start and finish.",
+    "updated": "Segment updated!",
+    "deleted": "Segment deleted.",
+    "delete": "Delete segment",
+    "confirmDelete": "Delete this segment? This action can't be undone.",
+    "notOwner": "Only the creator can edit this segment.",
+    "visibility": {
+      "label": "Who can see",
+      "public": "Public",
+      "friends": "Friends",
+      "private": "Only me"
+    }
   },
   "legal": {
     "gateTitle": "Terms of Use and Privacy",
