@@ -2958,6 +2958,119 @@ export async function deleteSegment(id: string): Promise<void> {
   if (error) throw error;
 }
 
+// ============ Loja virtual dos parceiros (frente #8) ============
+
+export type PartnerCampaign = {
+  id: string;
+  partner_id: string | null;
+  title: string;
+  description: string | null;
+  image_url: string | null;
+  cta_label: string | null;
+  cta_url: string | null;
+  price: string | null;
+  show_on_start: boolean;
+  post_to_community: boolean;
+  community_post_id: string | null;
+  status: "active" | "paused";
+  starts_at: string | null;
+  ends_at: string | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+/**
+ * Campanhas ativas para exibir na tela Iniciar (propaganda dos parceiros).
+ * Leitura pública (RLS: status active + show_on_start). Filtra o período de
+ * veiculação no cliente (starts_at/ends_at).
+ */
+export async function fetchActiveStartCampaigns(): Promise<PartnerCampaign[]> {
+  const { data, error } = await supabase
+    .from("partner_campaigns" as never)
+    .select("*")
+    .eq("status" as never, "active" as never)
+    .eq("show_on_start" as never, true as never)
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  const now = Date.now();
+  return ((data ?? []) as unknown as PartnerCampaign[]).filter((c) => {
+    const okStart = !c.starts_at || new Date(c.starts_at).getTime() <= now;
+    const okEnd = !c.ends_at || new Date(c.ends_at).getTime() >= now;
+    return okStart && okEnd;
+  });
+}
+
+/** Lista todas as campanhas (admin) via RPC SECURITY DEFINER. */
+export async function adminListCampaigns(): Promise<PartnerCampaign[]> {
+  const { data, error } = await supabase.rpc("admin_list_campaigns" as never, {} as never);
+  if (error) throw error;
+  return (data ?? []) as unknown as PartnerCampaign[];
+}
+
+export interface CampaignInput {
+  id?: string | null;
+  partnerId: string | null;
+  title: string;
+  description?: string | null;
+  imageUrl?: string | null;
+  ctaLabel?: string | null;
+  ctaUrl?: string | null;
+  price?: string | null;
+  showOnStart: boolean;
+  postToCommunity: boolean;
+  status: "active" | "paused";
+  startsAt?: string | null;
+  endsAt?: string | null;
+}
+
+/** Cria/atualiza uma campanha (admin). */
+export async function adminUpsertCampaign(input: CampaignInput): Promise<PartnerCampaign> {
+  const { data, error } = await supabase.rpc("admin_upsert_campaign" as never, {
+    _id: input.id ?? null,
+    _partner_id: input.partnerId,
+    _title: input.title.trim(),
+    _description: input.description ?? null,
+    _image_url: input.imageUrl ?? null,
+    _cta_label: input.ctaLabel ?? null,
+    _cta_url: input.ctaUrl ?? null,
+    _price: input.price ?? null,
+    _show_on_start: input.showOnStart,
+    _post_to_community: input.postToCommunity,
+    _status: input.status,
+    _starts_at: input.startsAt ?? null,
+    _ends_at: input.endsAt ?? null,
+  } as never);
+  if (error) throw error;
+  const row = (Array.isArray(data) ? data[0] : data) as unknown as PartnerCampaign;
+  return row;
+}
+
+/** Exclui uma campanha (admin) — remove também o post vinculado, se houver. */
+export async function adminDeleteCampaign(id: string): Promise<void> {
+  const { error } = await supabase.rpc("admin_delete_campaign" as never, { _id: id } as never);
+  if (error) throw error;
+}
+
+/** Upload da imagem da campanha (reusa o bucket community-post-images). */
+export async function uploadCampaignImage(file: File): Promise<string> {
+  return uploadCommunityPostImage(file);
+}
+
+/** Lista parceiros (id + nome) para o seletor do admin ao criar campanha. */
+export async function fetchPartnersLite(): Promise<{ id: string; name: string }[]> {
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("id, full_name")
+    .eq("role", "partner")
+    .order("full_name", { ascending: true });
+  if (error) throw error;
+  return (data ?? []).map((p: { id: string; full_name: string | null }) => ({
+    id: p.id,
+    name: p.full_name ?? "Parceiro",
+  }));
+}
+
 export async function fetchSegments(): Promise<Segment[]> {
   const { data, error } = await supabase
     .from("segments" as never)

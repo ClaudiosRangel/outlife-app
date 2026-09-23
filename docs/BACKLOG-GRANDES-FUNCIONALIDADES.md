@@ -29,7 +29,7 @@ que reduzem risco de reprovação nas lojas (termos/exclusão de conta são
 | 7 | Conectar dispositivos (Garmin etc.) | `integracoes-dispositivos` | Alto | OAuth/API de terceiros |
 | 8 | Repaginar Explorar (mapa moderno, 3D, "o que acontece agora") | `explorar-redesign` ✅ CONCLUÍDA (15/09) | Alto | Mapbox/token |
 | 9 | Repaginar tela de Iniciar atividade (estilo Strava) | `iniciar-atividade-redesign` ✅ CONCLUÍDA (15/09) | Médio | mapa (compartilha com #8) |
-| 10 | Loja virtual + propaganda no Iniciar + posts na comunidade | `loja-virtual-parceiros` | Alto | área admin de parceiros |
+| 10 | Loja virtual + propaganda no Iniciar + posts na comunidade | `loja-virtual-parceiros` ✅ CONCLUÍDA (23/09) | Alto | área admin de parceiros |
 
 > A numeração das frentes não precisa ser rígida; itens de baixo risco (1–4)
 > podem sair primeiro para destravar a submissão e dar ganho visível rápido.

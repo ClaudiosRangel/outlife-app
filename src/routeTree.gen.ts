@@ -45,6 +45,7 @@ import { Route as AtividadeActivityIdRouteImport } from './routes/atividade.$act
 import { Route as ApiNotifyAdminsRouteImport } from './routes/api.notify-admins'
 import { Route as AdminTrilhasRouteImport } from './routes/admin.trilhas'
 import { Route as AdminPublicarRouteImport } from './routes/admin.publicar'
+import { Route as AdminLojaRouteImport } from './routes/admin.loja'
 import { Route as AdminOpinioesRouteImport } from './routes/admin.opinioes'
 import { Route as AdminModeracaoRouteImport } from './routes/admin.moderacao'
 import { Route as AdminMelhoriasRouteImport } from './routes/admin.melhorias'
@@ -244,6 +245,11 @@ const AdminPublicarRoute = AdminPublicarRouteImport.update({
   path: '/admin/publicar',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminLojaRoute = AdminLojaRouteImport.update({
+  id: '/admin/loja',
+  path: '/admin/loja',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminOpinioesRoute = AdminOpinioesRouteImport.update({
   id: '/admin/opinioes',
   path: '/admin/opinioes',
@@ -365,6 +371,7 @@ export interface FileRoutesByFullPath {
   '/admin/melhorias': typeof AdminMelhoriasRoute
   '/admin/moderacao': typeof AdminModeracaoRoute
   '/admin/opinioes': typeof AdminOpinioesRoute
+  '/admin/loja': typeof AdminLojaRoute
   '/admin/publicar': typeof AdminPublicarRoute
   '/admin/trilhas': typeof AdminTrilhasRoute
   '/api/notify-admins': typeof ApiNotifyAdminsRoute
@@ -421,6 +428,7 @@ export interface FileRoutesByTo {
   '/admin/melhorias': typeof AdminMelhoriasRoute
   '/admin/moderacao': typeof AdminModeracaoRoute
   '/admin/opinioes': typeof AdminOpinioesRoute
+  '/admin/loja': typeof AdminLojaRoute
   '/admin/publicar': typeof AdminPublicarRoute
   '/admin/trilhas': typeof AdminTrilhasRoute
   '/api/notify-admins': typeof ApiNotifyAdminsRoute
@@ -478,6 +486,7 @@ export interface FileRoutesById {
   '/admin/melhorias': typeof AdminMelhoriasRoute
   '/admin/moderacao': typeof AdminModeracaoRoute
   '/admin/opinioes': typeof AdminOpinioesRoute
+  '/admin/loja': typeof AdminLojaRoute
   '/admin/publicar': typeof AdminPublicarRoute
   '/admin/trilhas': typeof AdminTrilhasRoute
   '/api/notify-admins': typeof ApiNotifyAdminsRoute
@@ -536,6 +545,7 @@ export interface FileRouteTypes {
     | '/admin/melhorias'
     | '/admin/moderacao'
     | '/admin/opinioes'
+    | '/admin/loja'
     | '/admin/publicar'
     | '/admin/trilhas'
     | '/api/notify-admins'
@@ -593,6 +603,7 @@ export interface FileRouteTypes {
     | '/admin/melhorias'
     | '/admin/moderacao'
     | '/admin/opinioes'
+    | '/admin/loja'
     | '/admin/publicar'
     | '/admin/trilhas'
     | '/api/notify-admins'
@@ -650,6 +661,7 @@ export interface FileRouteTypes {
     | '/admin/melhorias'
     | '/admin/moderacao'
     | '/admin/opinioes'
+    | '/admin/loja'
     | '/admin/publicar'
     | '/admin/trilhas'
     | '/api/notify-admins'
@@ -708,6 +720,7 @@ export interface RootRouteChildren {
   AdminMelhoriasRoute: typeof AdminMelhoriasRoute
   AdminModeracaoRoute: typeof AdminModeracaoRoute
   AdminOpinioesRoute: typeof AdminOpinioesRoute
+  AdminLojaRoute: typeof AdminLojaRoute
   AdminPublicarRoute: typeof AdminPublicarRoute
   AdminTrilhasRoute: typeof AdminTrilhasRoute
   ApiNotifyAdminsRoute: typeof ApiNotifyAdminsRoute
@@ -981,6 +994,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminTrilhasRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/loja': {
+      id: '/admin/loja'
+      path: '/admin/loja'
+      fullPath: '/admin/loja'
+      preLoaderRoute: typeof AdminLojaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/publicar': {
       id: '/admin/publicar'
       path: '/admin/publicar'
@@ -1158,6 +1178,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminMelhoriasRoute: AdminMelhoriasRoute,
   AdminModeracaoRoute: AdminModeracaoRoute,
   AdminOpinioesRoute: AdminOpinioesRoute,
+  AdminLojaRoute: AdminLojaRoute,
   AdminPublicarRoute: AdminPublicarRoute,
   AdminTrilhasRoute: AdminTrilhasRoute,
   ApiNotifyAdminsRoute: ApiNotifyAdminsRoute,

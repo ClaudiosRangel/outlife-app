@@ -51,6 +51,7 @@ import { getActivityIcon } from "@/lib/activity-icons";
 const ACTIVITY_TYPES: readonly ActivityType[] = ["caminhada", "pedalada", "trilha", "outro"];
 
 const ActivityMap = lazy(() => import("@/components/ActivityMap"));
+const StartCampaignBanner = lazy(() => import("@/components/StartCampaignBanner"));
 
 export const Route = createFileRoute("/atividade/rastrear")({
   component: TrackActivityPage,
@@ -580,6 +581,13 @@ function TrackActivityPage() {
           antes do botão "Iniciar" (mesmo padrão do seletor de categoria em
           comunidade.tsx). O botão só chama handleStart quando um valor
           válido estiver selecionado. */}
+      {/* Loja virtual (#8): banner de campanha de parceiro no Iniciar. */}
+      {isIdle && !tracker.hasOrphan && (
+        <Suspense fallback={null}>
+          <StartCampaignBanner />
+        </Suspense>
+      )}
+
       {/* Seletor de tipo por ÍCONES (estilo Strava): faixa horizontal de
           atividades; o selecionado fica destacado. Substitui o dropdown. */}
       {isIdle && !tracker.hasOrphan && (

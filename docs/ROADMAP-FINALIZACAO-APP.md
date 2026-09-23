@@ -5,7 +5,38 @@
 > `.kiro/steering/roadmap-outvitar.md`). **Mantenha-o atualizado** ao
 > concluir qualquer tarefa/bloco: marque status, data e resumo.
 
-**Última atualização:** 23/09/2026 (5 pontos pré-#8: proposta+seções do menu Você, visibilidade de segmento, editar trecho, "me leve até lá", lembrete de checklist em trilha/escalada)
+**Última atualização:** 23/09/2026 (🎉 FRENTE #8 loja-virtual-parceiros CONCLUÍDA — última das 9 grandes funcionalidades pré-lançamento)
+
+> **🟩 FRENTE #8 loja-virtual-parceiros (23/09/2026) — CONCLUÍDA (APK 13:34):**
+> Loja virtual dos parceiros, gerenciada 100% pela área administrativa:
+> - **Backend** (migration `20260923120000_partner-campaigns.sql`): tabela
+>   `partner_campaigns` (parceiro opcional, título, descrição, imagem, CTA
+>   label/url, preço, `show_on_start`, `post_to_community`, `community_post_id`,
+>   status active/paused, período starts_at/ends_at). RLS de leitura pública só
+>   das ativas com `show_on_start`. RPCs SECURITY DEFINER protegidas por
+>   `is_admin`: `admin_list_campaigns`, `admin_upsert_campaign` (cria/atualiza e,
+>   quando `post_to_community`, cria UMA vez um post na comunidade em nome do
+>   parceiro e vincula), `admin_delete_campaign` (remove campanha + post).
+> - **Admin** (`/admin/loja` + card no hub): CRUD de campanhas — escolher
+>   parceiro (ou institucional), título/descrição, upload de imagem (bucket
+>   community-post-images), CTA + preço + link, toggles "Aparecer no Iniciar" e
+>   "Postar na Comunidade", status, com lista e editar/excluir.
+> - **Tela Iniciar** (`atividade.rastrear.tsx`): `StartCampaignBanner` mostra as
+>   campanhas ativas (banner imersivo com imagem/gradiente/CTA), rotacionando a
+>   cada 6s quando há mais de uma; toque abre o link ou o perfil do parceiro.
+>   Silencioso quando não há campanha.
+> - API: `fetchActiveStartCampaigns`, `adminListCampaigns`, `adminUpsertCampaign`,
+>   `adminDeleteCampaign`, `uploadCampaignImage`, `fetchPartnersLite`.
+> routeTree editado manualmente (rota /admin/loja); rotas flat de segmento
+> verificadas após o build. Migration aplicada 2× + reload PostgREST.
+> Diagnostics limpos; build:native + cap sync + APK OK (9,95 MB).
+> **🎉 Com a #8, todas as 9 grandes frentes pré-lançamento estão concluídas.**
+> Pendências fora do lançamento (fase futura): importar segmentos do Strava (#6)
+> e conectar Garmin/dispositivos (#7) — dependem de aprovação nos programas de
+> parceiro deles. Próximo grande bloco: rebranding técnico (appId → OutVitar) e
+> publicação nas lojas (ver docs/PUBLICACAO-LOJAS.md).
+
+**Anterior:** 23/09/2026 (5 pontos pré-#8: proposta+seções do menu Você, visibilidade de segmento, editar trecho, "me leve até lá", lembrete de checklist em trilha/escalada)
 
 > **🟩 RODADA "5 pontos antes da #8" (23/09/2026) — CONCLUÍDA (APK 09:26):**
 > 1. **Menu Você organizado** (item 1): pesquisa dos melhores apps (Strava/

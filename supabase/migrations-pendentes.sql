@@ -1060,3 +1060,16 @@ create policy "segments_select_visibility" on public.segments for select
   );
 
 create index if not exists idx_segments_visibility on public.segments(visibility);
+
+-- ############################################################################
+-- 38) 20260923120000_partner-campaigns.sql
+--     Loja virtual dos parceiros (frente #8). Tabela partner_campaigns
+--     (parceiro, título, descrição, imagem, CTA, preço, show_on_start,
+--     post_to_community, community_post_id, status active|paused, período) +
+--     RLS de leitura pública (active + show_on_start) + RPCs SECURITY DEFINER
+--     protegidas por is_admin: admin_list_campaigns, admin_upsert_campaign
+--     (cria/atualiza; gera post na comunidade quando post_to_community),
+--     admin_delete_campaign (remove campanha + post vinculado). (idempotente)
+--     Ver o arquivo de migration para o SQL completo (grande — não duplicado
+--     aqui; aplicar o arquivo diretamente).
+-- ############################################################################
