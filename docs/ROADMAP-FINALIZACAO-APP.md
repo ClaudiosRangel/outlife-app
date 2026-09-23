@@ -116,7 +116,13 @@
 > de processo (travava antes de transformar) — resolvido com `rm node_modules/.vite`.
 > **Falta p/ funcionar:** escolher PSP, implementar `_shared/psp.ts`, deploy das
 > functions + envs (guia no doc).
-> **Próxima frente sugerida: rebranding técnico (appId → OutVitar) + publicação.**
+> **🔧 Banner de oferta removido da tela Gravar (23/09 18:43):** a pedido do
+> usuário, o `StartCampaignBanner` saiu da tela Rastrear/Gravar (poluía a tela
+> de iniciar atividade). As ofertas continuam na **Comunidade** (topo do feed)
+> e na **Home** (seção Loja Virtual em carrossel). Sem migration; APK 9,96 MB.
+
+> **Próxima frente: tela de admin de cupons (/admin/cupons), depois rebranding
+> técnico (appId → OutVitar) + publicação.**
 
 > **🎉 Com a #8, todas as 9 grandes frentes pré-lançamento estão concluídas.**
 > Pendências fora do lançamento (fase futura): importar segmentos do Strava (#6)
