@@ -33,10 +33,9 @@ export default function StartCampaignBanner() {
   if (campaigns.length === 0) return null;
   const c = campaigns[idx % campaigns.length];
 
-  const open = () => {
-    if (c.cta_url) window.open(c.cta_url, "_blank");
-    else if (c.partner_id) navigate({ to: "/u/$userId", params: { userId: c.partner_id } });
-  };
+  // Clique no banner leva à tela de detalhe da oferta (dentro do app), onde há
+  // a descrição completa, o parceiro e o botão para o link externo.
+  const open = () => navigate({ to: "/oferta/$campaignId", params: { campaignId: c.id } });
 
   return (
     <div className="mx-5 mt-4">
@@ -69,7 +68,7 @@ export function CampaignCard({
   onClick,
   preview = false,
 }: {
-  c: Pick<PartnerCampaign, "title" | "description" | "image_url" | "cta_label" | "cta_url" | "price" | "partner_id" | "theme" | "layout">;
+  c: Pick<PartnerCampaign, "title" | "description" | "image_url" | "cta_label" | "cta_url" | "price" | "partner_id" | "theme" | "layout"> & { id?: string };
   onClick?: () => void;
   preview?: boolean;
 }) {

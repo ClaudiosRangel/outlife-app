@@ -71,7 +71,23 @@
 > **Sobre "não apareceu no Iniciar":** verificado no banco — a campanha está
 > `active`+`show_on_start=true` e a leitura pública retorna; era APK/cache
 > anterior ao banner. O banner tem refetch on focus. Aplicada 2× + reload.
-> Diagnostics limpos; APK 9,95 MB. **Próxima frente: checkout Pix + cupom.**
+> Diagnostics limpos; APK 9,95 MB.
+
+> **🔧 Tela de oferta + banner no Iniciar (23/09 16:03):**
+> 1. **Destino do clique** (banner/notificação/comunidade): agora leva a uma
+>    **tela de detalhe da oferta dentro do app** — nova rota `/oferta/$campaignId`
+>    (`oferta.$campaignId.tsx`): imagem grande/hero, título, preço, descrição
+>    completa, card do parceiro (→ perfil) e botões "Ver oferta" (link externo)
+>    + "Ver o parceiro". `fetchCampaignById` na API. É o lugar natural do futuro
+>    checkout. O clique no banner (Iniciar e Comunidade) e na notificação do
+>    sininho abrem essa tela.
+> 2. **Banner não aparecia no Iniciar**: causa era o `lazy`+`Suspense
+>    fallback={null}` do `StartCampaignBanner` — se o chunk demorasse/falhasse,
+>    sumia sem erro. Trocado por **import direto** (o componente é leve) e a
+>    condição simplificada para `isIdle`. Backend já estava correto (validado no
+>    banco). Agora o banner aparece no topo da tela Gravar (modo idle).
+> Rotas flat verificadas após o build. Sem migration. Diagnostics limpos;
+> APK 9,95 MB. **Próxima frente: checkout Pix + cupom.**
 
 > **🎉 Com a #8, todas as 9 grandes frentes pré-lançamento estão concluídas.**
 > Pendências fora do lançamento (fase futura): importar segmentos do Strava (#6)

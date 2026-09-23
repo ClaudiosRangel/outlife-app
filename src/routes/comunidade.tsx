@@ -652,10 +652,7 @@ function Community() {
           <CampaignCard
             key={`campaign-${c.id}`}
             c={c}
-            onClick={() => {
-              if (c.cta_url) window.open(c.cta_url, "_blank");
-              else if (c.partner_id) navigate({ to: "/u/$userId", params: { userId: c.partner_id } });
-            }}
+            onClick={() => navigate({ to: "/oferta/$campaignId", params: { campaignId: c.id } })}
           />
         ))}
 

@@ -3025,6 +3025,17 @@ export async function fetchCommunityCampaigns(): Promise<PartnerCampaign[]> {
   });
 }
 
+/** Uma campanha por id (leitura pública das ativas visíveis). */
+export async function fetchCampaignById(id: string): Promise<PartnerCampaign | null> {
+  const { data, error } = await supabase
+    .from("partner_campaigns" as never)
+    .select("*")
+    .eq("id" as never, id as never)
+    .maybeSingle();
+  if (error) throw error;
+  return (data as unknown as PartnerCampaign) ?? null;
+}
+
 /** Lista todas as campanhas (admin) via RPC SECURITY DEFINER. */
 export async function adminListCampaigns(): Promise<PartnerCampaign[]> {
   const { data, error } = await supabase.rpc("admin_list_campaigns" as never, {} as never);

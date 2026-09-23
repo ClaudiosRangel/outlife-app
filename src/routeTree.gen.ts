@@ -55,6 +55,7 @@ import { Route as AdminConteudoRouteImport } from './routes/admin.conteudo'
 import { Route as AdminComplianceRouteImport } from './routes/admin.compliance'
 import { Route as AdminAtividadesRouteImport } from './routes/admin.atividades'
 import { Route as AActivityIdRouteImport } from './routes/a.$activityId'
+import { Route as OfertaCampaignIdRouteImport } from './routes/oferta.$campaignId'
 import { Route as SegmentoEditarSegmentIdRouteImport } from './routes/segmento.editar.$segmentId'
 import { Route as SegmentoIrSegmentIdRouteImport } from './routes/segmento.ir.$segmentId'
 import { Route as ApiPushSendFcmRouteImport } from './routes/api.push.send-fcm'
@@ -295,6 +296,11 @@ const AActivityIdRoute = AActivityIdRouteImport.update({
   path: '/a/$activityId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const OfertaCampaignIdRoute = OfertaCampaignIdRouteImport.update({
+  id: '/oferta/$campaignId',
+  path: '/oferta/$campaignId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SegmentoEditarSegmentIdRoute = SegmentoEditarSegmentIdRouteImport.update({
   id: '/segmento/editar/$segmentId',
   path: '/segmento/editar/$segmentId',
@@ -363,6 +369,7 @@ export interface FileRoutesByFullPath {
   '/sugerir-destino': typeof SugerirDestinoRoute
   '/termos': typeof TermosRoute
   '/a/$activityId': typeof AActivityIdRoute
+  '/oferta/$campaignId': typeof OfertaCampaignIdRoute
   '/admin/atividades': typeof AdminAtividadesRoute
   '/admin/compliance': typeof AdminComplianceRoute
   '/admin/conteudo': typeof AdminConteudoRoute
@@ -420,6 +427,7 @@ export interface FileRoutesByTo {
   '/sugerir-destino': typeof SugerirDestinoRoute
   '/termos': typeof TermosRoute
   '/a/$activityId': typeof AActivityIdRoute
+  '/oferta/$campaignId': typeof OfertaCampaignIdRoute
   '/admin/atividades': typeof AdminAtividadesRoute
   '/admin/compliance': typeof AdminComplianceRoute
   '/admin/conteudo': typeof AdminConteudoRoute
@@ -478,6 +486,7 @@ export interface FileRoutesById {
   '/sugerir-destino': typeof SugerirDestinoRoute
   '/termos': typeof TermosRoute
   '/a/$activityId': typeof AActivityIdRoute
+  '/oferta/$campaignId': typeof OfertaCampaignIdRoute
   '/admin/atividades': typeof AdminAtividadesRoute
   '/admin/compliance': typeof AdminComplianceRoute
   '/admin/conteudo': typeof AdminConteudoRoute
@@ -537,6 +546,7 @@ export interface FileRouteTypes {
     | '/sugerir-destino'
     | '/termos'
     | '/a/$activityId'
+    | '/oferta/$campaignId'
     | '/admin/atividades'
     | '/admin/compliance'
     | '/admin/conteudo'
@@ -595,6 +605,7 @@ export interface FileRouteTypes {
     | '/sugerir-destino'
     | '/termos'
     | '/a/$activityId'
+    | '/oferta/$campaignId'
     | '/admin/atividades'
     | '/admin/compliance'
     | '/admin/conteudo'
@@ -653,6 +664,7 @@ export interface FileRouteTypes {
     | '/sugerir-destino'
     | '/termos'
     | '/a/$activityId'
+    | '/oferta/$campaignId'
     | '/admin/atividades'
     | '/admin/compliance'
     | '/admin/conteudo'
@@ -712,6 +724,7 @@ export interface RootRouteChildren {
   SugerirDestinoRoute: typeof SugerirDestinoRoute
   TermosRoute: typeof TermosRoute
   AActivityIdRoute: typeof AActivityIdRoute
+  OfertaCampaignIdRoute: typeof OfertaCampaignIdRoute
   AdminAtividadesRoute: typeof AdminAtividadesRoute
   AdminComplianceRoute: typeof AdminComplianceRoute
   AdminConteudoRoute: typeof AdminConteudoRoute
@@ -1071,6 +1084,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AActivityIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/oferta/$campaignId': {
+      id: '/oferta/$campaignId'
+      path: '/oferta/$campaignId'
+      fullPath: '/oferta/$campaignId'
+      preLoaderRoute: typeof OfertaCampaignIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/segmento/editar/$segmentId': {
       id: '/segmento/editar/$segmentId'
       path: '/segmento/editar/$segmentId'
@@ -1170,6 +1190,7 @@ const rootRouteChildren: RootRouteChildren = {
   SugerirDestinoRoute: SugerirDestinoRoute,
   TermosRoute: TermosRoute,
   AActivityIdRoute: AActivityIdRoute,
+  OfertaCampaignIdRoute: OfertaCampaignIdRoute,
   AdminAtividadesRoute: AdminAtividadesRoute,
   AdminComplianceRoute: AdminComplianceRoute,
   AdminConteudoRoute: AdminConteudoRoute,

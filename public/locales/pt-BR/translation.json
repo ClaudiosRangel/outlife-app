@@ -643,6 +643,11 @@
     "defaultCta": "Ver oferta",
     "sponsored": "Patrocinado"
   },
+  "offer": {
+    "notFound": "Oferta não encontrada ou encerrada.",
+    "partner": "Parceiro",
+    "viewPartner": "Ver o parceiro"
+  },
   "adminTips": {
     "title": "Dicas / Melhorias",
     "subtitle": "Registre ideias e marque como pronto quando estiver feito.",

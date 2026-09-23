@@ -339,7 +339,7 @@ function NotificationsScreen() {
     // Campanha da loja virtual (broadcast admin). payload { campaignId, title,
     // imageUrl, ctaUrl, partnerId }. Toque abre o link ou o perfil do parceiro.
     if (n.type === "campaign") {
-      const payload = n.payload as { title?: string; imageUrl?: string; ctaUrl?: string; partnerId?: string };
+      const payload = n.payload as { campaignId?: string; title?: string; imageUrl?: string; ctaUrl?: string; partnerId?: string };
       const card = (
         <>
           {payload.imageUrl ? (
@@ -361,13 +361,13 @@ function NotificationsScreen() {
           {!n.is_read && <span className="h-2 w-2 shrink-0 rounded-full bg-primary" />}
         </>
       );
-      // Ao tocar: link externo tem prioridade; senão leva à Comunidade, onde
-      // o banner da campanha aparece (a "publicação" que o usuário vê).
-      if (payload.ctaUrl) {
+      // Ao tocar: leva à tela de detalhe da oferta (dentro do app). Fallback
+      // para a Comunidade se, por algum motivo, não houver campaignId.
+      if (payload.campaignId) {
         return (
-          <a key={n.id} href={payload.ctaUrl} target="_blank" rel="noreferrer" className={cardClassName}>
+          <Link key={n.id} to="/oferta/$campaignId" params={{ campaignId: payload.campaignId }} className={cardClassName}>
             {card}
-          </a>
+          </Link>
         );
       }
       return (
