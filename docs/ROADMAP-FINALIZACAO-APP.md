@@ -87,7 +87,17 @@
 >    condição simplificada para `isIdle`. Backend já estava correto (validado no
 >    banco). Agora o banner aparece no topo da tela Gravar (modo idle).
 > Rotas flat verificadas após o build. Sem migration. Diagnostics limpos;
-> APK 9,95 MB. **Próxima frente: checkout Pix + cupom.**
+> APK 9,95 MB.
+
+> **🔧 Seção "Loja Virtual" na Home (23/09 16:59):**
+> O usuário queria a loja como uma **seção própria na tela Início** (Home), com
+> **carrossel** de ofertas — não na tela de detalhe. Adicionado `HomeStoreSection`
+> em `index.tsx` (após "Próximos Eventos"): carrossel horizontal das campanhas
+> ativas com `post_to_community` (reusa `CampaignCard` + `fetchCommunityCampaigns`),
+> cada card leva à tela de oferta `/oferta/$campaignId`. Silenciosa quando não há
+> campanha. i18n `home.storeTitle`. O banner do Iniciar (já funcionando) e o card
+> na Comunidade permanecem. Sem migration. Diagnostics limpos; APK 9,95 MB.
+> **Próxima frente: checkout Pix + cupom.**
 
 > **🎉 Com a #8, todas as 9 grandes frentes pré-lançamento estão concluídas.**
 > Pendências fora do lançamento (fase futura): importar segmentos do Strava (#6)

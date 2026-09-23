@@ -9,7 +9,9 @@ import seloCadastur from "@/assets/selo-cadastur.jpg";
 import avatarFallback from "@/assets/avatar-rafael.jpg";
 import { StatusBar } from "@/components/StatusBar";
 import { Stars } from "@/components/Stars";
-import { fetchAppContent, fetchDestinations, fetchMyProfile, fetchPartners, fetchUnreadNotificationCount, resolveAsset, type Destination } from "@/lib/api";
+import { fetchAppContent, fetchDestinations, fetchMyProfile, fetchPartners, fetchUnreadNotificationCount, fetchCommunityCampaigns, resolveAsset, type Destination } from "@/lib/api";
+import { CampaignCard } from "@/components/StartCampaignBanner";
+import { useNavigate } from "@tanstack/react-router";
 import { useAuth } from "@/hooks/use-auth";
 import { playNotificationSound } from "@/lib/notification-sound";
 import { supabase } from "@/integrations/supabase/client";
@@ -209,6 +211,9 @@ function Home() {
 
       {/* Eventos — grid de cards com imagem */}
       <EventosHomeSection />
+
+      {/* Loja Virtual — carrossel de ofertas/publicações dos parceiros */}
+      <HomeStoreSection />
 
       {/* Categories */}
       <section className="mt-7 px-5">
@@ -446,6 +451,40 @@ function EventosHomeSection() {
               )}
             </div>
           </Link>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+// Loja Virtual na Home — carrossel horizontal das campanhas de parceiros
+// (mesmas exibidas na Comunidade/Iniciar). Silenciosa quando não há campanha.
+function HomeStoreSection() {
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+
+  const { data: campaigns = [] } = useQuery({
+    queryKey: ["community-campaigns"],
+    queryFn: fetchCommunityCampaigns,
+    staleTime: 30_000,
+    refetchOnWindowFocus: true,
+  });
+
+  if (campaigns.length === 0) return null;
+
+  return (
+    <section className="mt-7">
+      <div className="flex items-center justify-between px-5">
+        <h2 className="font-display text-xl font-semibold">{t("home.storeTitle", "Loja Virtual")}</h2>
+      </div>
+      <div className="mt-3 flex gap-3 overflow-x-auto scrollbar-hide px-5 pb-2">
+        {campaigns.map((c) => (
+          <div key={c.id} className="w-[300px] shrink-0">
+            <CampaignCard
+              c={c}
+              onClick={() => navigate({ to: "/oferta/$campaignId", params: { campaignId: c.id } })}
+            />
+          </div>
         ))}
       </div>
     </section>
