@@ -56,8 +56,22 @@
 > cantos 3xl, badge "Patrocinado", CTA em pílula destacada, chip de preço,
 > indicadores clicáveis. Lib pura `src/lib/campaign-style.ts` (presets).
 > Migration `20260923160000` (colunas theme/layout + RPC recriada). Aplicada
-> 2× + reload. Diagnostics limpos; APK 9,95 MB. **Próxima frente: checkout
-> Pix + cupom (docs/PAGAMENTOS-E-CUPONS.md).**
+> 2× + reload. Diagnostics limpos; APK 9,95 MB.
+
+> **🔧 Campanha na Comunidade = banner estilizado (23/09 15:30):**
+> Antes a campanha aparecia na Comunidade como POST COMUM (texto+imagem), sem o
+> visual da prévia. Corrigido: a campanha agora aparece na Comunidade como o
+> MESMO banner chamativo (`CampaignCard`, tema+layout), renderizado no topo do
+> feed "Para você" (query `fetchCommunityCampaigns`). A RPC deixou de criar
+> `community_posts` genérico; RLS de leitura pública liberada para ativas com
+> `show_on_start` OU `post_to_community` (migration `20260923180000`, que também
+> limpou os posts genéricos já criados). Toggle renomeado para "Aparecer na
+> Comunidade". Notificação do sininho de campanha: link externo tem prioridade;
+> senão leva à **Comunidade** (onde o banner está), não mais ao perfil.
+> **Sobre "não apareceu no Iniciar":** verificado no banco — a campanha está
+> `active`+`show_on_start=true` e a leitura pública retorna; era APK/cache
+> anterior ao banner. O banner tem refetch on focus. Aplicada 2× + reload.
+> Diagnostics limpos; APK 9,95 MB. **Próxima frente: checkout Pix + cupom.**
 
 > **🎉 Com a #8, todas as 9 grandes frentes pré-lançamento estão concluídas.**
 > Pendências fora do lançamento (fase futura): importar segmentos do Strava (#6)

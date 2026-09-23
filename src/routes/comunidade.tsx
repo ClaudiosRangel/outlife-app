@@ -41,6 +41,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import {
   fetchCommunityPosts,
+  fetchCommunityCampaigns,
   createCommunityPost,
   uploadCommunityPostImage,
   uploadCommunityPostVideo,
@@ -61,6 +62,7 @@ import {
   type PostComment,
   type CommunityPostCategory,
 } from "@/lib/api";
+import { CampaignCard } from "@/components/StartCampaignBanner";
 import {
   CommunityPostCard,
   type CardActivity,
@@ -209,6 +211,15 @@ function Community() {
     queryKey: ["community-posts"],
     queryFn: fetchCommunityPosts,
     refetchInterval: 20_000,
+  });
+
+  // Campanhas de parceiros (loja virtual) que aparecem na Comunidade como
+  // banner estilizado (não post comum). Exibidas no topo da aba "Para você".
+  const { data: communityCampaigns = [] } = useQuery({
+    queryKey: ["community-campaigns"],
+    queryFn: fetchCommunityCampaigns,
+    staleTime: 30_000,
+    refetchOnWindowFocus: true,
   });
 
   const { data: likedPostIds = [] } = useQuery({
@@ -635,6 +646,19 @@ function Community() {
 
 
       <div className="space-y-4 px-5 pb-6">
+        {/* Campanhas de parceiros (loja virtual) como banner estilizado — só
+            na aba "Para você", no topo do feed. */}
+        {activeTab === "forYou" && communityCampaigns.map((c) => (
+          <CampaignCard
+            key={`campaign-${c.id}`}
+            c={c}
+            onClick={() => {
+              if (c.cta_url) window.open(c.cta_url, "_blank");
+              else if (c.partner_id) navigate({ to: "/u/$userId", params: { userId: c.partner_id } });
+            }}
+          />
+        ))}
+
         {isLoading
           ? Array.from({ length: 3 }).map((_, i) => (
               <div key={i} className="overflow-hidden rounded-3xl bg-card shadow-card">

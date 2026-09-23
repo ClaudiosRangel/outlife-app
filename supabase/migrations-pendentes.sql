@@ -1091,3 +1091,12 @@ create index if not exists idx_segments_visibility on public.segments(visibility
 --     com CHECK, e admin_upsert_campaign recriada com _theme/_layout.
 --     Ver o arquivo de migration para o SQL completo da RPC. (idempotente)
 -- ############################################################################
+
+-- ############################################################################
+-- 41) 20260923180000_campaign-community-card.sql
+--     Loja virtual — a campanha na Comunidade vira BANNER estilizado (não post
+--     comum): RLS de leitura pública libera ativas com show_on_start OU
+--     post_to_community; admin_upsert_campaign NÃO cria mais community_posts
+--     genérico (o feed renderiza o CampaignCard direto). Limpa os posts
+--     genéricos já criados e zera community_post_id. (idempotente)
+-- ############################################################################

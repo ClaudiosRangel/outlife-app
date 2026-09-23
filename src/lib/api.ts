@@ -3005,6 +3005,26 @@ export async function fetchActiveStartCampaigns(): Promise<PartnerCampaign[]> {
   });
 }
 
+/**
+ * Campanhas ativas marcadas para aparecer na Comunidade (como banner
+ * estilizado, não post comum). Leitura pública. Filtra período no cliente.
+ */
+export async function fetchCommunityCampaigns(): Promise<PartnerCampaign[]> {
+  const { data, error } = await supabase
+    .from("partner_campaigns" as never)
+    .select("*")
+    .eq("status" as never, "active" as never)
+    .eq("post_to_community" as never, true as never)
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  const now = Date.now();
+  return ((data ?? []) as unknown as PartnerCampaign[]).filter((c) => {
+    const okStart = !c.starts_at || new Date(c.starts_at).getTime() <= now;
+    const okEnd = !c.ends_at || new Date(c.ends_at).getTime() >= now;
+    return okStart && okEnd;
+  });
+}
+
 /** Lista todas as campanhas (admin) via RPC SECURITY DEFINER. */
 export async function adminListCampaigns(): Promise<PartnerCampaign[]> {
   const { data, error } = await supabase.rpc("admin_list_campaigns" as never, {} as never);

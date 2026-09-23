@@ -361,6 +361,8 @@ function NotificationsScreen() {
           {!n.is_read && <span className="h-2 w-2 shrink-0 rounded-full bg-primary" />}
         </>
       );
+      // Ao tocar: link externo tem prioridade; senão leva à Comunidade, onde
+      // o banner da campanha aparece (a "publicação" que o usuário vê).
       if (payload.ctaUrl) {
         return (
           <a key={n.id} href={payload.ctaUrl} target="_blank" rel="noreferrer" className={cardClassName}>
@@ -368,14 +370,11 @@ function NotificationsScreen() {
           </a>
         );
       }
-      if (payload.partnerId) {
-        return (
-          <Link key={n.id} to="/u/$userId" params={{ userId: payload.partnerId }} className={cardClassName}>
-            {card}
-          </Link>
-        );
-      }
-      return <div key={n.id} className={cardClassName}>{card}</div>;
+      return (
+        <Link key={n.id} to="/comunidade" className={cardClassName}>
+          {card}
+        </Link>
+      );
     }
 
     // Fallback genérico para tipos de notificação futuros/desconhecidos.
