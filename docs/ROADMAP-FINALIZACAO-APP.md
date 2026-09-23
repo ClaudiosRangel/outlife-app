@@ -121,6 +121,21 @@
 > de iniciar atividade). As ofertas continuam na **Comunidade** (topo do feed)
 > e na **Home** (seção Loja Virtual em carrossel). Sem migration; APK 9,96 MB.
 
+> **🔧 Velocidade média irreal + carrossel de ofertas na Comunidade (23/09 19:11):**
+> 1. **Velocidade média absurda** (ex.: 47,5 km/h numa pedalada): causa raiz —
+>    o `duration_seconds` ficava MENOR que o tempo real porque o Android congela
+>    o `setInterval` do timer em segundo plano, mas o GPS nativo segue enviando
+>    pontos (distância cresce sem o tempo). Correção: nova lib pura
+>    `src/lib/activity-duration.ts` (`elapsedFromPoints` = tempo entre 1º e
+>    último ponto GPS); no `finalize` a duração final é `max(contador,
+>    elapsedFromPoints)` — imune à suspensão do timer. 3 testes fast-check.
+>    Dados históricos corrigidos por script one-off (2 atividades: 47,5→19,0 e
+>    36,9→16,8 km/h) usando start_time→end_time. Velocidade média = distância ÷
+>    tempo; velocidade (tela de gravar) = instantânea suavizada do GPS.
+> 2. **Ofertas na Comunidade viraram CARROSSEL** (antes empilhadas): scroll-snap
+>    horizontal, um card por vez (85% da largura), igual à Home. Sem migration;
+>    APK 9,96 MB.
+
 > **Próxima frente: tela de admin de cupons (/admin/cupons), depois rebranding
 > técnico (appId → OutVitar) + publicação.**
 

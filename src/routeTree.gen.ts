@@ -15,6 +15,7 @@ import { Route as RedefinirSenhaRouteImport } from './routes/redefinir-senha'
 import { Route as RankingRouteImport } from './routes/ranking'
 import { Route as PrivacidadeRouteImport } from './routes/privacidade'
 import { Route as PerfilRouteImport } from './routes/perfil'
+import { Route as PedidosRouteImport } from './routes/pedidos'
 import { Route as NotificacoesRouteImport } from './routes/notificacoes'
 import { Route as MercadoRouteImport } from './routes/mercado'
 import { Route as MensagensRouteImport } from './routes/mensagens'
@@ -36,8 +37,11 @@ import { Route as SegmentoCriarRouteImport } from './routes/segmento.criar'
 import { Route as SegmentoSegmentIdRouteImport } from './routes/segmento.$segmentId'
 import { Route as ParceiroPainelRouteImport } from './routes/parceiro.painel'
 import { Route as ParceiroPartnerIdRouteImport } from './routes/parceiro.$partnerId'
+import { Route as PagamentoOrderIdRouteImport } from './routes/pagamento.$orderId'
+import { Route as OfertaCampaignIdRouteImport } from './routes/oferta.$campaignId'
 import { Route as EventosEventIdRouteImport } from './routes/eventos.$eventId'
 import { Route as DestinoDestinationIdRouteImport } from './routes/destino.$destinationId'
+import { Route as CheckoutCampaignIdRouteImport } from './routes/checkout.$campaignId'
 import { Route as ChecklistChecklistIdRouteImport } from './routes/checklist.$checklistId'
 import { Route as ChatUserIdRouteImport } from './routes/chat.$userId'
 import { Route as AtividadeRastrearRouteImport } from './routes/atividade.rastrear'
@@ -45,22 +49,18 @@ import { Route as AtividadeActivityIdRouteImport } from './routes/atividade.$act
 import { Route as ApiNotifyAdminsRouteImport } from './routes/api.notify-admins'
 import { Route as AdminTrilhasRouteImport } from './routes/admin.trilhas'
 import { Route as AdminPublicarRouteImport } from './routes/admin.publicar'
-import { Route as AdminLojaRouteImport } from './routes/admin.loja'
 import { Route as AdminOpinioesRouteImport } from './routes/admin.opinioes'
 import { Route as AdminModeracaoRouteImport } from './routes/admin.moderacao'
 import { Route as AdminMelhoriasRouteImport } from './routes/admin.melhorias'
+import { Route as AdminLojaRouteImport } from './routes/admin.loja'
 import { Route as AdminDestinosRouteImport } from './routes/admin.destinos'
 import { Route as AdminDashboardRouteImport } from './routes/admin.dashboard'
 import { Route as AdminConteudoRouteImport } from './routes/admin.conteudo'
 import { Route as AdminComplianceRouteImport } from './routes/admin.compliance'
 import { Route as AdminAtividadesRouteImport } from './routes/admin.atividades'
 import { Route as AActivityIdRouteImport } from './routes/a.$activityId'
-import { Route as OfertaCampaignIdRouteImport } from './routes/oferta.$campaignId'
-import { Route as PedidosRouteImport } from './routes/pedidos'
-import { Route as CheckoutCampaignIdRouteImport } from './routes/checkout.$campaignId'
-import { Route as PagamentoOrderIdRouteImport } from './routes/pagamento.$orderId'
-import { Route as SegmentoEditarSegmentIdRouteImport } from './routes/segmento.editar.$segmentId'
 import { Route as SegmentoIrSegmentIdRouteImport } from './routes/segmento.ir.$segmentId'
+import { Route as SegmentoEditarSegmentIdRouteImport } from './routes/segmento.editar.$segmentId'
 import { Route as ApiPushSendFcmRouteImport } from './routes/api.push.send-fcm'
 import { Route as ApiPushRegisterWebRouteImport } from './routes/api.push.register-web'
 import { Route as ApiPushRegisterNativeRouteImport } from './routes/api.push.register-native'
@@ -97,6 +97,11 @@ const PrivacidadeRoute = PrivacidadeRouteImport.update({
 const PerfilRoute = PerfilRouteImport.update({
   id: '/perfil',
   path: '/perfil',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PedidosRoute = PedidosRouteImport.update({
+  id: '/pedidos',
+  path: '/pedidos',
   getParentRoute: () => rootRouteImport,
 } as any)
 const NotificacoesRoute = NotificacoesRouteImport.update({
@@ -204,6 +209,16 @@ const ParceiroPartnerIdRoute = ParceiroPartnerIdRouteImport.update({
   path: '/parceiro/$partnerId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PagamentoOrderIdRoute = PagamentoOrderIdRouteImport.update({
+  id: '/pagamento/$orderId',
+  path: '/pagamento/$orderId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OfertaCampaignIdRoute = OfertaCampaignIdRouteImport.update({
+  id: '/oferta/$campaignId',
+  path: '/oferta/$campaignId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const EventosEventIdRoute = EventosEventIdRouteImport.update({
   id: '/$eventId',
   path: '/$eventId',
@@ -212,6 +227,11 @@ const EventosEventIdRoute = EventosEventIdRouteImport.update({
 const DestinoDestinationIdRoute = DestinoDestinationIdRouteImport.update({
   id: '/destino/$destinationId',
   path: '/destino/$destinationId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CheckoutCampaignIdRoute = CheckoutCampaignIdRouteImport.update({
+  id: '/checkout/$campaignId',
+  path: '/checkout/$campaignId',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ChecklistChecklistIdRoute = ChecklistChecklistIdRouteImport.update({
@@ -249,11 +269,6 @@ const AdminPublicarRoute = AdminPublicarRouteImport.update({
   path: '/admin/publicar',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AdminLojaRoute = AdminLojaRouteImport.update({
-  id: '/admin/loja',
-  path: '/admin/loja',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const AdminOpinioesRoute = AdminOpinioesRouteImport.update({
   id: '/admin/opinioes',
   path: '/admin/opinioes',
@@ -267,6 +282,11 @@ const AdminModeracaoRoute = AdminModeracaoRouteImport.update({
 const AdminMelhoriasRoute = AdminMelhoriasRouteImport.update({
   id: '/admin/melhorias',
   path: '/admin/melhorias',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminLojaRoute = AdminLojaRouteImport.update({
+  id: '/admin/loja',
+  path: '/admin/loja',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminDestinosRoute = AdminDestinosRouteImport.update({
@@ -299,34 +319,14 @@ const AActivityIdRoute = AActivityIdRouteImport.update({
   path: '/a/$activityId',
   getParentRoute: () => rootRouteImport,
 } as any)
-const OfertaCampaignIdRoute = OfertaCampaignIdRouteImport.update({
-  id: '/oferta/$campaignId',
-  path: '/oferta/$campaignId',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PedidosRoute = PedidosRouteImport.update({
-  id: '/pedidos',
-  path: '/pedidos',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CheckoutCampaignIdRoute = CheckoutCampaignIdRouteImport.update({
-  id: '/checkout/$campaignId',
-  path: '/checkout/$campaignId',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PagamentoOrderIdRoute = PagamentoOrderIdRouteImport.update({
-  id: '/pagamento/$orderId',
-  path: '/pagamento/$orderId',
+const SegmentoIrSegmentIdRoute = SegmentoIrSegmentIdRouteImport.update({
+  id: '/segmento/ir/$segmentId',
+  path: '/segmento/ir/$segmentId',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SegmentoEditarSegmentIdRoute = SegmentoEditarSegmentIdRouteImport.update({
   id: '/segmento/editar/$segmentId',
   path: '/segmento/editar/$segmentId',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SegmentoIrSegmentIdRoute = SegmentoIrSegmentIdRouteImport.update({
-  id: '/segmento/ir/$segmentId',
-  path: '/segmento/ir/$segmentId',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPushSendFcmRoute = ApiPushSendFcmRouteImport.update({
@@ -380,6 +380,7 @@ export interface FileRoutesByFullPath {
   '/mensagens': typeof MensagensRoute
   '/mercado': typeof MercadoRoute
   '/notificacoes': typeof NotificacoesRoute
+  '/pedidos': typeof PedidosRoute
   '/perfil': typeof PerfilRoute
   '/privacidade': typeof PrivacidadeRoute
   '/ranking': typeof RankingRoute
@@ -387,19 +388,15 @@ export interface FileRoutesByFullPath {
   '/sugerir-destino': typeof SugerirDestinoRoute
   '/termos': typeof TermosRoute
   '/a/$activityId': typeof AActivityIdRoute
-  '/oferta/$campaignId': typeof OfertaCampaignIdRoute
-  '/pedidos': typeof PedidosRoute
-  '/checkout/$campaignId': typeof CheckoutCampaignIdRoute
-  '/pagamento/$orderId': typeof PagamentoOrderIdRoute
   '/admin/atividades': typeof AdminAtividadesRoute
   '/admin/compliance': typeof AdminComplianceRoute
   '/admin/conteudo': typeof AdminConteudoRoute
   '/admin/dashboard': typeof AdminDashboardRoute
   '/admin/destinos': typeof AdminDestinosRoute
+  '/admin/loja': typeof AdminLojaRoute
   '/admin/melhorias': typeof AdminMelhoriasRoute
   '/admin/moderacao': typeof AdminModeracaoRoute
   '/admin/opinioes': typeof AdminOpinioesRoute
-  '/admin/loja': typeof AdminLojaRoute
   '/admin/publicar': typeof AdminPublicarRoute
   '/admin/trilhas': typeof AdminTrilhasRoute
   '/api/notify-admins': typeof ApiNotifyAdminsRoute
@@ -407,8 +404,11 @@ export interface FileRoutesByFullPath {
   '/atividade/rastrear': typeof AtividadeRastrearRoute
   '/chat/$userId': typeof ChatUserIdRoute
   '/checklist/$checklistId': typeof ChecklistChecklistIdRoute
+  '/checkout/$campaignId': typeof CheckoutCampaignIdRoute
   '/destino/$destinationId': typeof DestinoDestinationIdRoute
   '/eventos/$eventId': typeof EventosEventIdRoute
+  '/oferta/$campaignId': typeof OfertaCampaignIdRoute
+  '/pagamento/$orderId': typeof PagamentoOrderIdRoute
   '/parceiro/$partnerId': typeof ParceiroPartnerIdRoute
   '/parceiro/painel': typeof ParceiroPainelRoute
   '/segmento/$segmentId': typeof SegmentoSegmentIdRoute
@@ -441,6 +441,7 @@ export interface FileRoutesByTo {
   '/mensagens': typeof MensagensRoute
   '/mercado': typeof MercadoRoute
   '/notificacoes': typeof NotificacoesRoute
+  '/pedidos': typeof PedidosRoute
   '/perfil': typeof PerfilRoute
   '/privacidade': typeof PrivacidadeRoute
   '/ranking': typeof RankingRoute
@@ -448,19 +449,15 @@ export interface FileRoutesByTo {
   '/sugerir-destino': typeof SugerirDestinoRoute
   '/termos': typeof TermosRoute
   '/a/$activityId': typeof AActivityIdRoute
-  '/oferta/$campaignId': typeof OfertaCampaignIdRoute
-  '/pedidos': typeof PedidosRoute
-  '/checkout/$campaignId': typeof CheckoutCampaignIdRoute
-  '/pagamento/$orderId': typeof PagamentoOrderIdRoute
   '/admin/atividades': typeof AdminAtividadesRoute
   '/admin/compliance': typeof AdminComplianceRoute
   '/admin/conteudo': typeof AdminConteudoRoute
   '/admin/dashboard': typeof AdminDashboardRoute
   '/admin/destinos': typeof AdminDestinosRoute
+  '/admin/loja': typeof AdminLojaRoute
   '/admin/melhorias': typeof AdminMelhoriasRoute
   '/admin/moderacao': typeof AdminModeracaoRoute
   '/admin/opinioes': typeof AdminOpinioesRoute
-  '/admin/loja': typeof AdminLojaRoute
   '/admin/publicar': typeof AdminPublicarRoute
   '/admin/trilhas': typeof AdminTrilhasRoute
   '/api/notify-admins': typeof ApiNotifyAdminsRoute
@@ -468,8 +465,11 @@ export interface FileRoutesByTo {
   '/atividade/rastrear': typeof AtividadeRastrearRoute
   '/chat/$userId': typeof ChatUserIdRoute
   '/checklist/$checklistId': typeof ChecklistChecklistIdRoute
+  '/checkout/$campaignId': typeof CheckoutCampaignIdRoute
   '/destino/$destinationId': typeof DestinoDestinationIdRoute
   '/eventos/$eventId': typeof EventosEventIdRoute
+  '/oferta/$campaignId': typeof OfertaCampaignIdRoute
+  '/pagamento/$orderId': typeof PagamentoOrderIdRoute
   '/parceiro/$partnerId': typeof ParceiroPartnerIdRoute
   '/parceiro/painel': typeof ParceiroPainelRoute
   '/segmento/$segmentId': typeof SegmentoSegmentIdRoute
@@ -503,6 +503,7 @@ export interface FileRoutesById {
   '/mensagens': typeof MensagensRoute
   '/mercado': typeof MercadoRoute
   '/notificacoes': typeof NotificacoesRoute
+  '/pedidos': typeof PedidosRoute
   '/perfil': typeof PerfilRoute
   '/privacidade': typeof PrivacidadeRoute
   '/ranking': typeof RankingRoute
@@ -510,19 +511,15 @@ export interface FileRoutesById {
   '/sugerir-destino': typeof SugerirDestinoRoute
   '/termos': typeof TermosRoute
   '/a/$activityId': typeof AActivityIdRoute
-  '/oferta/$campaignId': typeof OfertaCampaignIdRoute
-  '/pedidos': typeof PedidosRoute
-  '/checkout/$campaignId': typeof CheckoutCampaignIdRoute
-  '/pagamento/$orderId': typeof PagamentoOrderIdRoute
   '/admin/atividades': typeof AdminAtividadesRoute
   '/admin/compliance': typeof AdminComplianceRoute
   '/admin/conteudo': typeof AdminConteudoRoute
   '/admin/dashboard': typeof AdminDashboardRoute
   '/admin/destinos': typeof AdminDestinosRoute
+  '/admin/loja': typeof AdminLojaRoute
   '/admin/melhorias': typeof AdminMelhoriasRoute
   '/admin/moderacao': typeof AdminModeracaoRoute
   '/admin/opinioes': typeof AdminOpinioesRoute
-  '/admin/loja': typeof AdminLojaRoute
   '/admin/publicar': typeof AdminPublicarRoute
   '/admin/trilhas': typeof AdminTrilhasRoute
   '/api/notify-admins': typeof ApiNotifyAdminsRoute
@@ -530,8 +527,11 @@ export interface FileRoutesById {
   '/atividade/rastrear': typeof AtividadeRastrearRoute
   '/chat/$userId': typeof ChatUserIdRoute
   '/checklist/$checklistId': typeof ChecklistChecklistIdRoute
+  '/checkout/$campaignId': typeof CheckoutCampaignIdRoute
   '/destino/$destinationId': typeof DestinoDestinationIdRoute
   '/eventos/$eventId': typeof EventosEventIdRoute
+  '/oferta/$campaignId': typeof OfertaCampaignIdRoute
+  '/pagamento/$orderId': typeof PagamentoOrderIdRoute
   '/parceiro/$partnerId': typeof ParceiroPartnerIdRoute
   '/parceiro/painel': typeof ParceiroPainelRoute
   '/segmento/$segmentId': typeof SegmentoSegmentIdRoute
@@ -566,6 +566,7 @@ export interface FileRouteTypes {
     | '/mensagens'
     | '/mercado'
     | '/notificacoes'
+    | '/pedidos'
     | '/perfil'
     | '/privacidade'
     | '/ranking'
@@ -573,19 +574,15 @@ export interface FileRouteTypes {
     | '/sugerir-destino'
     | '/termos'
     | '/a/$activityId'
-    | '/oferta/$campaignId'
-    | '/pedidos'
-    | '/checkout/$campaignId'
-    | '/pagamento/$orderId'
     | '/admin/atividades'
     | '/admin/compliance'
     | '/admin/conteudo'
     | '/admin/dashboard'
     | '/admin/destinos'
+    | '/admin/loja'
     | '/admin/melhorias'
     | '/admin/moderacao'
     | '/admin/opinioes'
-    | '/admin/loja'
     | '/admin/publicar'
     | '/admin/trilhas'
     | '/api/notify-admins'
@@ -593,14 +590,15 @@ export interface FileRouteTypes {
     | '/atividade/rastrear'
     | '/chat/$userId'
     | '/checklist/$checklistId'
+    | '/checkout/$campaignId'
     | '/destino/$destinationId'
     | '/eventos/$eventId'
+    | '/oferta/$campaignId'
+    | '/pagamento/$orderId'
     | '/parceiro/$partnerId'
     | '/parceiro/painel'
     | '/segmento/$segmentId'
     | '/segmento/criar'
-    | '/segmento/editar/$segmentId'
-    | '/segmento/ir/$segmentId'
     | '/trilha/$trailId'
     | '/u/$userId'
     | '/admin/'
@@ -611,7 +609,8 @@ export interface FileRouteTypes {
     | '/api/push/register-native'
     | '/api/push/register-web'
     | '/api/push/send-fcm'
-    | '/segmento/$segmentId/editar'
+    | '/segmento/editar/$segmentId'
+    | '/segmento/ir/$segmentId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -628,6 +627,7 @@ export interface FileRouteTypes {
     | '/mensagens'
     | '/mercado'
     | '/notificacoes'
+    | '/pedidos'
     | '/perfil'
     | '/privacidade'
     | '/ranking'
@@ -635,19 +635,15 @@ export interface FileRouteTypes {
     | '/sugerir-destino'
     | '/termos'
     | '/a/$activityId'
-    | '/oferta/$campaignId'
-    | '/pedidos'
-    | '/checkout/$campaignId'
-    | '/pagamento/$orderId'
     | '/admin/atividades'
     | '/admin/compliance'
     | '/admin/conteudo'
     | '/admin/dashboard'
     | '/admin/destinos'
+    | '/admin/loja'
     | '/admin/melhorias'
     | '/admin/moderacao'
     | '/admin/opinioes'
-    | '/admin/loja'
     | '/admin/publicar'
     | '/admin/trilhas'
     | '/api/notify-admins'
@@ -655,14 +651,15 @@ export interface FileRouteTypes {
     | '/atividade/rastrear'
     | '/chat/$userId'
     | '/checklist/$checklistId'
+    | '/checkout/$campaignId'
     | '/destino/$destinationId'
     | '/eventos/$eventId'
+    | '/oferta/$campaignId'
+    | '/pagamento/$orderId'
     | '/parceiro/$partnerId'
     | '/parceiro/painel'
     | '/segmento/$segmentId'
     | '/segmento/criar'
-    | '/segmento/editar/$segmentId'
-    | '/segmento/ir/$segmentId'
     | '/trilha/$trailId'
     | '/u/$userId'
     | '/admin'
@@ -673,7 +670,8 @@ export interface FileRouteTypes {
     | '/api/push/register-native'
     | '/api/push/register-web'
     | '/api/push/send-fcm'
-    | '/segmento/$segmentId/editar'
+    | '/segmento/editar/$segmentId'
+    | '/segmento/ir/$segmentId'
   id:
     | '__root__'
     | '/'
@@ -690,6 +688,7 @@ export interface FileRouteTypes {
     | '/mensagens'
     | '/mercado'
     | '/notificacoes'
+    | '/pedidos'
     | '/perfil'
     | '/privacidade'
     | '/ranking'
@@ -697,19 +696,15 @@ export interface FileRouteTypes {
     | '/sugerir-destino'
     | '/termos'
     | '/a/$activityId'
-    | '/oferta/$campaignId'
-    | '/pedidos'
-    | '/checkout/$campaignId'
-    | '/pagamento/$orderId'
     | '/admin/atividades'
     | '/admin/compliance'
     | '/admin/conteudo'
     | '/admin/dashboard'
     | '/admin/destinos'
+    | '/admin/loja'
     | '/admin/melhorias'
     | '/admin/moderacao'
     | '/admin/opinioes'
-    | '/admin/loja'
     | '/admin/publicar'
     | '/admin/trilhas'
     | '/api/notify-admins'
@@ -717,14 +712,15 @@ export interface FileRouteTypes {
     | '/atividade/rastrear'
     | '/chat/$userId'
     | '/checklist/$checklistId'
+    | '/checkout/$campaignId'
     | '/destino/$destinationId'
     | '/eventos/$eventId'
+    | '/oferta/$campaignId'
+    | '/pagamento/$orderId'
     | '/parceiro/$partnerId'
     | '/parceiro/painel'
     | '/segmento/$segmentId'
     | '/segmento/criar'
-    | '/segmento/editar/$segmentId'
-    | '/segmento/ir/$segmentId'
     | '/trilha/$trailId'
     | '/u/$userId'
     | '/admin/'
@@ -735,7 +731,8 @@ export interface FileRouteTypes {
     | '/api/push/register-native'
     | '/api/push/register-web'
     | '/api/push/send-fcm'
-    | '/segmento/$segmentId/editar'
+    | '/segmento/editar/$segmentId'
+    | '/segmento/ir/$segmentId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -753,6 +750,7 @@ export interface RootRouteChildren {
   MensagensRoute: typeof MensagensRoute
   MercadoRoute: typeof MercadoRoute
   NotificacoesRoute: typeof NotificacoesRoute
+  PedidosRoute: typeof PedidosRoute
   PerfilRoute: typeof PerfilRoute
   PrivacidadeRoute: typeof PrivacidadeRoute
   RankingRoute: typeof RankingRoute
@@ -760,19 +758,15 @@ export interface RootRouteChildren {
   SugerirDestinoRoute: typeof SugerirDestinoRoute
   TermosRoute: typeof TermosRoute
   AActivityIdRoute: typeof AActivityIdRoute
-  OfertaCampaignIdRoute: typeof OfertaCampaignIdRoute
-  PedidosRoute: typeof PedidosRoute
-  CheckoutCampaignIdRoute: typeof CheckoutCampaignIdRoute
-  PagamentoOrderIdRoute: typeof PagamentoOrderIdRoute
   AdminAtividadesRoute: typeof AdminAtividadesRoute
   AdminComplianceRoute: typeof AdminComplianceRoute
   AdminConteudoRoute: typeof AdminConteudoRoute
   AdminDashboardRoute: typeof AdminDashboardRoute
   AdminDestinosRoute: typeof AdminDestinosRoute
+  AdminLojaRoute: typeof AdminLojaRoute
   AdminMelhoriasRoute: typeof AdminMelhoriasRoute
   AdminModeracaoRoute: typeof AdminModeracaoRoute
   AdminOpinioesRoute: typeof AdminOpinioesRoute
-  AdminLojaRoute: typeof AdminLojaRoute
   AdminPublicarRoute: typeof AdminPublicarRoute
   AdminTrilhasRoute: typeof AdminTrilhasRoute
   ApiNotifyAdminsRoute: typeof ApiNotifyAdminsRoute
@@ -780,12 +774,13 @@ export interface RootRouteChildren {
   AtividadeRastrearRoute: typeof AtividadeRastrearRoute
   ChatUserIdRoute: typeof ChatUserIdRoute
   ChecklistChecklistIdRoute: typeof ChecklistChecklistIdRoute
+  CheckoutCampaignIdRoute: typeof CheckoutCampaignIdRoute
   DestinoDestinationIdRoute: typeof DestinoDestinationIdRoute
+  OfertaCampaignIdRoute: typeof OfertaCampaignIdRoute
+  PagamentoOrderIdRoute: typeof PagamentoOrderIdRoute
   ParceiroPartnerIdRoute: typeof ParceiroPartnerIdRoute
   ParceiroPainelRoute: typeof ParceiroPainelRoute
   SegmentoSegmentIdRoute: typeof SegmentoSegmentIdRoute
-  SegmentoEditarSegmentIdRoute: typeof SegmentoEditarSegmentIdRoute
-  SegmentoIrSegmentIdRoute: typeof SegmentoIrSegmentIdRoute
   SegmentoCriarRoute: typeof SegmentoCriarRoute
   TrilhaTrailIdRoute: typeof TrilhaTrailIdRoute
   UUserIdRoute: typeof UUserIdRoute
@@ -797,6 +792,8 @@ export interface RootRouteChildren {
   ApiPushRegisterNativeRoute: typeof ApiPushRegisterNativeRoute
   ApiPushRegisterWebRoute: typeof ApiPushRegisterWebRoute
   ApiPushSendFcmRoute: typeof ApiPushSendFcmRoute
+  SegmentoEditarSegmentIdRoute: typeof SegmentoEditarSegmentIdRoute
+  SegmentoIrSegmentIdRoute: typeof SegmentoIrSegmentIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -841,6 +838,13 @@ declare module '@tanstack/react-router' {
       path: '/perfil'
       fullPath: '/perfil'
       preLoaderRoute: typeof PerfilRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pedidos': {
+      id: '/pedidos'
+      path: '/pedidos'
+      fullPath: '/pedidos'
+      preLoaderRoute: typeof PedidosRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/notificacoes': {
@@ -990,6 +994,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ParceiroPartnerIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/pagamento/$orderId': {
+      id: '/pagamento/$orderId'
+      path: '/pagamento/$orderId'
+      fullPath: '/pagamento/$orderId'
+      preLoaderRoute: typeof PagamentoOrderIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/oferta/$campaignId': {
+      id: '/oferta/$campaignId'
+      path: '/oferta/$campaignId'
+      fullPath: '/oferta/$campaignId'
+      preLoaderRoute: typeof OfertaCampaignIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/eventos/$eventId': {
       id: '/eventos/$eventId'
       path: '/$eventId'
@@ -1002,6 +1020,13 @@ declare module '@tanstack/react-router' {
       path: '/destino/$destinationId'
       fullPath: '/destino/$destinationId'
       preLoaderRoute: typeof DestinoDestinationIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/checkout/$campaignId': {
+      id: '/checkout/$campaignId'
+      path: '/checkout/$campaignId'
+      fullPath: '/checkout/$campaignId'
+      preLoaderRoute: typeof CheckoutCampaignIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/checklist/$checklistId': {
@@ -1046,13 +1071,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminTrilhasRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/admin/loja': {
-      id: '/admin/loja'
-      path: '/admin/loja'
-      fullPath: '/admin/loja'
-      preLoaderRoute: typeof AdminLojaRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/admin/publicar': {
       id: '/admin/publicar'
       path: '/admin/publicar'
@@ -1079,6 +1097,13 @@ declare module '@tanstack/react-router' {
       path: '/admin/melhorias'
       fullPath: '/admin/melhorias'
       preLoaderRoute: typeof AdminMelhoriasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/loja': {
+      id: '/admin/loja'
+      path: '/admin/loja'
+      fullPath: '/admin/loja'
+      preLoaderRoute: typeof AdminLojaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/destinos': {
@@ -1123,32 +1148,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AActivityIdRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/oferta/$campaignId': {
-      id: '/oferta/$campaignId'
-      path: '/oferta/$campaignId'
-      fullPath: '/oferta/$campaignId'
-      preLoaderRoute: typeof OfertaCampaignIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/pedidos': {
-      id: '/pedidos'
-      path: '/pedidos'
-      fullPath: '/pedidos'
-      preLoaderRoute: typeof PedidosRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/checkout/$campaignId': {
-      id: '/checkout/$campaignId'
-      path: '/checkout/$campaignId'
-      fullPath: '/checkout/$campaignId'
-      preLoaderRoute: typeof CheckoutCampaignIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/pagamento/$orderId': {
-      id: '/pagamento/$orderId'
-      path: '/pagamento/$orderId'
-      fullPath: '/pagamento/$orderId'
-      preLoaderRoute: typeof PagamentoOrderIdRouteImport
+    '/segmento/ir/$segmentId': {
+      id: '/segmento/ir/$segmentId'
+      path: '/segmento/ir/$segmentId'
+      fullPath: '/segmento/ir/$segmentId'
+      preLoaderRoute: typeof SegmentoIrSegmentIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/segmento/editar/$segmentId': {
@@ -1156,13 +1160,6 @@ declare module '@tanstack/react-router' {
       path: '/segmento/editar/$segmentId'
       fullPath: '/segmento/editar/$segmentId'
       preLoaderRoute: typeof SegmentoEditarSegmentIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/segmento/ir/$segmentId': {
-      id: '/segmento/ir/$segmentId'
-      path: '/segmento/ir/$segmentId'
-      fullPath: '/segmento/ir/$segmentId'
-      preLoaderRoute: typeof SegmentoIrSegmentIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/push/send-fcm': {
@@ -1243,6 +1240,7 @@ const rootRouteChildren: RootRouteChildren = {
   MensagensRoute: MensagensRoute,
   MercadoRoute: MercadoRoute,
   NotificacoesRoute: NotificacoesRoute,
+  PedidosRoute: PedidosRoute,
   PerfilRoute: PerfilRoute,
   PrivacidadeRoute: PrivacidadeRoute,
   RankingRoute: RankingRoute,
@@ -1250,19 +1248,15 @@ const rootRouteChildren: RootRouteChildren = {
   SugerirDestinoRoute: SugerirDestinoRoute,
   TermosRoute: TermosRoute,
   AActivityIdRoute: AActivityIdRoute,
-  OfertaCampaignIdRoute: OfertaCampaignIdRoute,
-  PedidosRoute: PedidosRoute,
-  CheckoutCampaignIdRoute: CheckoutCampaignIdRoute,
-  PagamentoOrderIdRoute: PagamentoOrderIdRoute,
   AdminAtividadesRoute: AdminAtividadesRoute,
   AdminComplianceRoute: AdminComplianceRoute,
   AdminConteudoRoute: AdminConteudoRoute,
   AdminDashboardRoute: AdminDashboardRoute,
   AdminDestinosRoute: AdminDestinosRoute,
+  AdminLojaRoute: AdminLojaRoute,
   AdminMelhoriasRoute: AdminMelhoriasRoute,
   AdminModeracaoRoute: AdminModeracaoRoute,
   AdminOpinioesRoute: AdminOpinioesRoute,
-  AdminLojaRoute: AdminLojaRoute,
   AdminPublicarRoute: AdminPublicarRoute,
   AdminTrilhasRoute: AdminTrilhasRoute,
   ApiNotifyAdminsRoute: ApiNotifyAdminsRoute,
@@ -1270,12 +1264,13 @@ const rootRouteChildren: RootRouteChildren = {
   AtividadeRastrearRoute: AtividadeRastrearRoute,
   ChatUserIdRoute: ChatUserIdRoute,
   ChecklistChecklistIdRoute: ChecklistChecklistIdRoute,
+  CheckoutCampaignIdRoute: CheckoutCampaignIdRoute,
   DestinoDestinationIdRoute: DestinoDestinationIdRoute,
+  OfertaCampaignIdRoute: OfertaCampaignIdRoute,
+  PagamentoOrderIdRoute: PagamentoOrderIdRoute,
   ParceiroPartnerIdRoute: ParceiroPartnerIdRoute,
   ParceiroPainelRoute: ParceiroPainelRoute,
   SegmentoSegmentIdRoute: SegmentoSegmentIdRoute,
-  SegmentoEditarSegmentIdRoute: SegmentoEditarSegmentIdRoute,
-  SegmentoIrSegmentIdRoute: SegmentoIrSegmentIdRoute,
   SegmentoCriarRoute: SegmentoCriarRoute,
   TrilhaTrailIdRoute: TrilhaTrailIdRoute,
   UUserIdRoute: UUserIdRoute,
@@ -1287,6 +1282,8 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPushRegisterNativeRoute: ApiPushRegisterNativeRoute,
   ApiPushRegisterWebRoute: ApiPushRegisterWebRoute,
   ApiPushSendFcmRoute: ApiPushSendFcmRoute,
+  SegmentoEditarSegmentIdRoute: SegmentoEditarSegmentIdRoute,
+  SegmentoIrSegmentIdRoute: SegmentoIrSegmentIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

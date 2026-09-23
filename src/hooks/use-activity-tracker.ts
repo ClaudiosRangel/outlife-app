@@ -21,6 +21,7 @@ import {
   pushElevationSample,
   type ElevationGainState,
 } from "@/lib/elevation-gain";
+import { elapsedFromPoints } from "@/lib/activity-duration";
 import {
   loadActive,
   saveActive,
@@ -500,10 +501,15 @@ export function useActivityTracker() {
             coordinates: pointsRef.current.map((p) => [p.lng, p.lat]),
           }
         : null;
+    // Duração final: usa o MAIOR entre o contador do timer e o tempo real
+    // entre o 1º e o último ponto GPS. Corrige o caso em que o app ficou em
+    // segundo plano (timer suspenso) e a distância acumulou sem o tempo —
+    // antes isso inflava a velocidade média (ex.: 47 km/h numa pedalada).
+    const durationFinal = Math.max(durationRef.current, elapsedFromPoints(pointsRef.current));
     return {
       route,
       distance: distanceRef.current,
-      duration: durationRef.current,
+      duration: durationFinal,
       points: pointsRef.current,
       elevationGain: elevationGainRef.current,
     };
