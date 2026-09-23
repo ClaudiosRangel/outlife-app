@@ -615,6 +615,8 @@
     "showOnStartHint": "Banner on the record activity screen",
     "postToCommunity": "Post to Community",
     "postToCommunityHint": "Creates a campaign post (once)",
+    "notifyUsers": "Notify everyone in the bell",
+    "notifyUsersHint": "Sends a notification to all users (once)",
     "status": "Status",
     "statusActive": "Active",
     "statusPaused": "Paused",

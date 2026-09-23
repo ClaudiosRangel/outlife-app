@@ -18,7 +18,9 @@ export default function StartCampaignBanner() {
   const { data: campaigns = [] } = useQuery({
     queryKey: ["start-campaigns"],
     queryFn: fetchActiveStartCampaigns,
-    staleTime: 60_000,
+    staleTime: 15_000,
+    refetchOnWindowFocus: true,
+    refetchOnMount: true,
   });
 
   // Rotaciona entre campanhas.

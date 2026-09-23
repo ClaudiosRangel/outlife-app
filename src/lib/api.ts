@@ -2971,6 +2971,8 @@ export type PartnerCampaign = {
   price: string | null;
   show_on_start: boolean;
   post_to_community: boolean;
+  notify_users: boolean;
+  notified_at: string | null;
   community_post_id: string | null;
   status: "active" | "paused";
   starts_at: string | null;
@@ -3019,6 +3021,7 @@ export interface CampaignInput {
   price?: string | null;
   showOnStart: boolean;
   postToCommunity: boolean;
+  notifyUsers: boolean;
   status: "active" | "paused";
   startsAt?: string | null;
   endsAt?: string | null;
@@ -3040,6 +3043,7 @@ export async function adminUpsertCampaign(input: CampaignInput): Promise<Partner
     _status: input.status,
     _starts_at: input.startsAt ?? null,
     _ends_at: input.endsAt ?? null,
+    _notify_users: input.notifyUsers,
   } as never);
   if (error) throw error;
   const row = (Array.isArray(data) ? data[0] : data) as unknown as PartnerCampaign;

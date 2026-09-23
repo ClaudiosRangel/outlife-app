@@ -1073,3 +1073,13 @@ create index if not exists idx_segments_visibility on public.segments(visibility
 --     Ver o arquivo de migration para o SQL completo (grande — não duplicado
 --     aqui; aplicar o arquivo diretamente).
 -- ############################################################################
+
+-- ############################################################################
+-- 39) 20260923140000_campaign-notify.sql
+--     Loja virtual — item 2: colunas partner_campaigns.notify_users +
+--     notified_at, e admin_upsert_campaign recriada com _notify_users. Quando
+--     marcado e ainda não notificado (campanha ativa), insere Notification
+--     tipo 'campaign' para TODOS os perfis (broadcast, uma vez) e marca
+--     notified_at. Ver o arquivo de migration para o SQL completo da RPC.
+--     (idempotente)
+-- ############################################################################

@@ -45,6 +45,7 @@ type FormState = {
   price: string;
   showOnStart: boolean;
   postToCommunity: boolean;
+  notifyUsers: boolean;
   status: "active" | "paused";
 };
 
@@ -59,6 +60,7 @@ const emptyForm: FormState = {
   price: "",
   showOnStart: true,
   postToCommunity: false,
+  notifyUsers: false,
   status: "active",
 };
 
@@ -107,6 +109,7 @@ function AdminStore() {
         price: form.price || null,
         showOnStart: form.showOnStart,
         postToCommunity: form.postToCommunity,
+        notifyUsers: form.notifyUsers,
         status: form.status,
       }),
     onSuccess: () => {
@@ -156,6 +159,7 @@ function AdminStore() {
       price: c.price ?? "",
       showOnStart: c.show_on_start,
       postToCommunity: c.post_to_community,
+      notifyUsers: c.notify_users,
       status: c.status,
     });
     setEditing(true);
@@ -299,6 +303,14 @@ function AdminStore() {
             <div className="text-[11px] text-muted-foreground">{t("adminStore.postToCommunityHint", "Cria uma publicação da campanha (uma vez)")}</div>
           </div>
           <Switch checked={form.postToCommunity} onCheckedChange={(v) => setForm((s) => ({ ...s, postToCommunity: v }))} />
+        </div>
+
+        <div className="flex items-center justify-between rounded-xl bg-secondary/50 p-3">
+          <div className="text-sm">
+            <div className="font-medium">{t("adminStore.notifyUsers", "Notificar todos no sininho")}</div>
+            <div className="text-[11px] text-muted-foreground">{t("adminStore.notifyUsersHint", "Envia uma notificação para todos os usuários (uma vez)")}</div>
+          </div>
+          <Switch checked={form.notifyUsers} onCheckedChange={(v) => setForm((s) => ({ ...s, notifyUsers: v }))} />
         </div>
 
         <div className="flex items-center justify-between rounded-xl bg-secondary/50 p-3">

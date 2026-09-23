@@ -30,6 +30,23 @@
 > routeTree editado manualmente (rota /admin/loja); rotas flat de segmento
 > verificadas após o build. Migration aplicada 2× + reload PostgREST.
 > Diagnostics limpos; build:native + cap sync + APK OK (9,95 MB).
+> **🔧 AJUSTES loja virtual (23/09 14:27):**
+> - **Banner do Iniciar não aparecia**: não era bug — a leitura pública das
+>   campanhas funciona (validado no banco). A publicação tinha sido feita pela
+>   tela "Publicar interação" (só comunidade) e/ou cache/APK antigo. Reforçado
+>   o `StartCampaignBanner` com `refetchOnWindowFocus`+`staleTime 15s` para
+>   aparecer assim que há campanha ativa.
+> - **Notificar todos no sininho** (item 2): novo toggle "Notificar todos no
+>   sininho" na campanha (`/admin/loja`). Migration `20260923140000`: colunas
+>   `notify_users`/`notified_at` + `admin_upsert_campaign` recriada com
+>   `_notify_users` — insere Notification tipo `campaign` para TODOS os perfis
+>   (broadcast, uma única vez). Tratamento do tipo `campaign` no sininho
+>   (`notificacoes.tsx`): título+imagem, abre link ou perfil do parceiro.
+> - **Pagamento (Pix/cartão) e cupom** (itens 3/4): documentados como frente
+>   futura em `docs/PAGAMENTOS-E-CUPONS.md` (exige PSP + Edge Function + tabelas
+>   de pedido/pagamento + conformidade de loja). Não implementado nesta rodada.
+> Migration aplicada 2× + reload. Diagnostics limpos; APK 9,95 MB.
+
 > **🎉 Com a #8, todas as 9 grandes frentes pré-lançamento estão concluídas.**
 > Pendências fora do lançamento (fase futura): importar segmentos do Strava (#6)
 > e conectar Garmin/dispositivos (#7) — dependem de aprovação nos programas de

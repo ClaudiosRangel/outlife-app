@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { ArrowLeft, Bell, MessageCircle } from "lucide-react";
+import { ArrowLeft, Bell, MessageCircle, Store } from "lucide-react";
 import { StatusBar } from "@/components/StatusBar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/hooks/use-auth";
@@ -329,6 +329,48 @@ function NotificationsScreen() {
       if (payload.sender_id) {
         return (
           <Link key={n.id} to="/chat/$userId" params={{ userId: payload.sender_id }} className={cardClassName}>
+            {card}
+          </Link>
+        );
+      }
+      return <div key={n.id} className={cardClassName}>{card}</div>;
+    }
+
+    // Campanha da loja virtual (broadcast admin). payload { campaignId, title,
+    // imageUrl, ctaUrl, partnerId }. Toque abre o link ou o perfil do parceiro.
+    if (n.type === "campaign") {
+      const payload = n.payload as { title?: string; imageUrl?: string; ctaUrl?: string; partnerId?: string };
+      const card = (
+        <>
+          {payload.imageUrl ? (
+            <img src={resolveAsset(payload.imageUrl)} alt="" className="h-10 w-10 shrink-0 rounded-xl object-cover" />
+          ) : (
+            <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary/15 text-primary">
+              <Store size={16} />
+            </div>
+          )}
+          <div className="min-w-0 flex-1">
+            <div className="text-sm">
+              <span className="font-semibold">{payload.title || t("startCampaign.label", "Oferta de parceiro")}</span>
+            </div>
+            <div className="text-[11px] text-muted-foreground">{t("startCampaign.label", "Oferta de parceiro")}</div>
+            <div className="mt-0.5 text-[11px] text-muted-foreground">
+              {new Date(n.created_at).toLocaleString("pt-BR")}
+            </div>
+          </div>
+          {!n.is_read && <span className="h-2 w-2 shrink-0 rounded-full bg-primary" />}
+        </>
+      );
+      if (payload.ctaUrl) {
+        return (
+          <a key={n.id} href={payload.ctaUrl} target="_blank" rel="noreferrer" className={cardClassName}>
+            {card}
+          </a>
+        );
+      }
+      if (payload.partnerId) {
+        return (
+          <Link key={n.id} to="/u/$userId" params={{ userId: payload.partnerId }} className={cardClassName}>
             {card}
           </Link>
         );
