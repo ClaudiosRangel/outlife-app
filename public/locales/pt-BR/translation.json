@@ -952,6 +952,8 @@
     "distanceToStart": "Distância até o início",
     "followGreenLine": "Siga a linha verde até o marcador. O trajeto do segmento está em laranja.",
     "noStart": "Este segmento não tem ponto de início.",
+    "typeLabel": "Modalidade (obrigatória — o ranking é por modalidade)",
+    "typeRequired": "Escolha a modalidade do segmento.",
     "edit": "Editar",
     "editTitle": "Editar segmento",
     "editHint": "Toque no mapa para remarcar início e fim.",

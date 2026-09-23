@@ -53,6 +53,22 @@
 > Rotas flat sobreviveram ao build (verificado). Sem migration. tsc/diagnostics
 > limpos; APK 9,95 MB.
 
+> **🔧 AJUSTES pós-teste (23/09 12:40) — CONCLUÍDA:**
+> 1. **Segmento ligado à modalidade** (troféus justos por tipo): a modalidade
+>    virou **obrigatória** ao criar/editar segmento (bike, caminhada, etc.).
+>    No `detectAndRecordEfforts`, o esforço só é gravado quando a atividade é do
+>    MESMO `activity_type` do segmento (segmento de bike só conta esforço de
+>    bike) — o ranking/troféus fica por modalidade. Segmento antigo sem tipo
+>    (legado) segue aceitando qualquer modalidade. Sem migration (coluna
+>    `segments.activity_type` já existia).
+> 2. **Todos os mapas padronizados com seletor de camada** (relevo/satélite/
+>    ruas), igual ao Explorar: extraídos `MapLayerControl` + `MapTileLayer`
+>    (`src/components/map-layers.tsx`) e aplicados em `SegmentDrawMap`,
+>    `SegmentViewMap`, `SegmentNavMap` e `PartnerLocationMap` (que ganhou
+>    wrapper `relative` + tiles Mapbox). `ActivityMap` e `MapView` (Explorar)
+>    já tinham. Seletor só aparece quando há token Mapbox.
+> Sem migration. tsc/diagnostics limpos; APK 9,95 MB.
+
 **Anterior:** 22/09/2026 (3 tarefas pré-#8: criar segmento pelo perfil + troféus de segmento nas Conquistas + revisão do cálculo de altimetria estilo Strava)
 
 > **🟩 RODADA "3 tarefas antes da #8" (22/09/2026) — CONCLUÍDA (APK 19:25):**

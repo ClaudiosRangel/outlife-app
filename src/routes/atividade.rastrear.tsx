@@ -358,7 +358,7 @@ function TrackActivityPage() {
         // segmento a partir dos pontos gravados (com timestamp). Best-effort —
         // já é try/catch interno em detectAndRecordEfforts; nunca bloqueia o
         // salvamento. Usa o id remoto da atividade quando disponível.
-        void detectAndRecordEfforts(activityId, result.points);
+        void detectAndRecordEfforts(activityId, result.points, activityType ?? undefined);
 
         return finished;
       } catch (err) {

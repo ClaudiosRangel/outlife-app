@@ -1,10 +1,11 @@
-import { useEffect, useRef } from "react";
-import { MapContainer, TileLayer, Marker, Polyline, useMapEvents } from "react-leaflet";
+import { useEffect, useRef, useState } from "react";
+import { MapContainer, Marker, Polyline, useMapEvents } from "react-leaflet";
 import L from "leaflet";
 import markerIcon from "leaflet/dist/images/marker-icon.png";
 import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
 import markerShadow from "leaflet/dist/images/marker-shadow.png";
-import { getMapboxToken, MAPBOX_TILES_STYLE } from "@/lib/map-config";
+import type { MapLayerKey } from "@/lib/map-config";
+import { MapLayerControl, MapTileLayer } from "@/components/map-layers";
 
 const defaultIcon = L.icon({
   iconUrl: markerIcon,
@@ -41,11 +42,13 @@ export default function SegmentDrawMap({
       ? [start.lat, start.lng]
       : [-15.7801, -47.9292];
   const initialZoom = center || start ? 14 : 4;
+  const [layer, setLayer] = useState<MapLayerKey>("outdoors");
 
   return (
     <div className="relative isolate overflow-hidden rounded-2xl shadow-card" style={{ height }}>
+      <MapLayerControl layer={layer} onChange={setLayer} />
       <MapContainer center={initialCenter} zoom={initialZoom} style={{ height: "100%", width: "100%" }}>
-        <TileLayerAuto />
+        <MapTileLayer layer={layer} />
         <ClickCapture start={start} end={end} onChange={onChange} />
         {start && <Marker position={[start.lat, start.lng]} icon={defaultIcon} />}
         {end && <Marker position={[end.lat, end.lng]} icon={defaultIcon} />}
@@ -56,21 +59,6 @@ export default function SegmentDrawMap({
       </MapContainer>
     </div>
   );
-}
-
-function TileLayerAuto() {
-  const token = getMapboxToken();
-  if (token) {
-    return (
-      <TileLayer
-        attribution='&copy; Mapbox &copy; OpenStreetMap'
-        tileSize={512}
-        zoomOffset={-1}
-        url={`https://api.mapbox.com/styles/v1/mapbox/${MAPBOX_TILES_STYLE}/tiles/{z}/{x}/{y}?access_token=${token}`}
-      />
-    );
-  }
-  return <TileLayer attribution="&copy; OpenStreetMap" url="https://tile.openstreetmap.org/{z}/{x}/{y}.png" />;
 }
 
 function ClickCapture({

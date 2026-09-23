@@ -61,13 +61,14 @@ function CreateSegmentPage() {
     mutationFn: async () => {
       if (!start || !end) throw new Error(t("segments.markBoth", "Marque o início e o fim no mapa."));
       if (!name.trim()) throw new Error(t("segments.nameRequired", "Dê um nome ao segmento."));
+      if (!activityType) throw new Error(t("segments.typeRequired", "Escolha a modalidade do segmento."));
       // Polilinha simples início→fim ([lng,lat]). O matcher usa início/fim +
       // distância; uma reta de 2 pontos é suficiente para o esforço básico.
       const polyline: [number, number][] = [
         [start.lng, start.lat],
         [end.lng, end.lat],
       ];
-      return createSegment({ name: name.trim(), activityType: activityType || null, polyline, visibility });
+      return createSegment({ name: name.trim(), activityType, polyline, visibility });
     },
     onSuccess: (seg) => {
       toast.success(t("segments.created", "Segmento criado!"));
@@ -131,19 +132,24 @@ function CreateSegmentPage() {
           placeholder={t("segments.namePlaceholder", "Nome do segmento (ex.: Subida do Cristo)")}
           maxLength={80}
         />
-        <div className="flex gap-2 overflow-x-auto scrollbar-hide">
-          {types.map((tp) => (
-            <button
-              key={tp.code}
-              type="button"
-              onClick={() => setActivityType(activityType === tp.code ? "" : tp.code)}
-              className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-medium transition-base ${
-                activityType === tp.code ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground"
-              }`}
-            >
-              {t(`activity.activityTypes.${tp.code}`, { defaultValue: tp.name })}
-            </button>
-          ))}
+        <div>
+          <div className="mb-1.5 text-xs font-medium text-muted-foreground">
+            {t("segments.typeLabel", "Modalidade (obrigatória — o ranking é por modalidade)")}
+          </div>
+          <div className="flex gap-2 overflow-x-auto scrollbar-hide">
+            {types.map((tp) => (
+              <button
+                key={tp.code}
+                type="button"
+                onClick={() => setActivityType(tp.code)}
+                className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-medium transition-base ${
+                  activityType === tp.code ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground"
+                }`}
+              >
+                {t(`activity.activityTypes.${tp.code}`, { defaultValue: tp.name })}
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Item 2: visibilidade do segmento (público / amigos / só eu). */}
@@ -176,7 +182,7 @@ function CreateSegmentPage() {
 
         <Button
           className="h-12 w-full rounded-2xl text-sm font-semibold"
-          disabled={!start || !end || !name.trim() || createMut.isPending}
+          disabled={!start || !end || !name.trim() || !activityType || createMut.isPending}
           onClick={() => createMut.mutate()}
         >
           {createMut.isPending ? <Loader2 size={16} className="mr-2 animate-spin" /> : <Flag size={16} className="mr-2" />}

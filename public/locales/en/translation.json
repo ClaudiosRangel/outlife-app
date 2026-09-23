@@ -952,6 +952,8 @@
     "distanceToStart": "Distance to start",
     "followGreenLine": "Follow the green line to the marker. The segment route is in orange.",
     "noStart": "This segment has no start point.",
+    "typeLabel": "Activity type (required — ranking is per activity type)",
+    "typeRequired": "Choose the segment's activity type.",
     "edit": "Edit",
     "editTitle": "Edit segment",
     "editHint": "Tap the map to re-mark start and finish.",

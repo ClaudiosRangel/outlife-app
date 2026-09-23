@@ -3086,6 +3086,7 @@ async function recordSegmentEffort(input: {
 export async function detectAndRecordEfforts(
   activityId: string | null,
   points: MatchPoint[],
+  activityType?: string | null,
 ): Promise<number> {
   try {
     if (!points || points.length < 2) return 0;
@@ -3100,7 +3101,7 @@ export async function detectAndRecordEfforts(
     const m = 0.003;
     const { data, error } = await supabase
       .from("segments" as never)
-      .select("id, start_lat, start_lng, end_lat, end_lng, distance_meters")
+      .select("id, start_lat, start_lng, end_lat, end_lng, distance_meters, activity_type")
       .gte("min_lat", minLat - m)
       .lte("max_lat", maxLat + m)
       .gte("min_lng", minLng - m)
@@ -3111,9 +3112,16 @@ export async function detectAndRecordEfforts(
       start_lat: number; start_lng: number;
       end_lat: number; end_lng: number;
       distance_meters: number;
+      activity_type: string | null;
     }[];
     let recorded = 0;
     for (const c of candidates) {
+      // Item 1: troféus justos por modalidade — só registra esforço quando a
+      // atividade é do MESMO tipo do segmento. Segmento sem tipo (legado)
+      // aceita qualquer modalidade.
+      if (c.activity_type != null && activityType != null && c.activity_type !== activityType) {
+        continue;
+      }
       const r = matchSegmentEffort(points, {
         startLat: c.start_lat, startLng: c.start_lng,
         endLat: c.end_lat, endLng: c.end_lng,

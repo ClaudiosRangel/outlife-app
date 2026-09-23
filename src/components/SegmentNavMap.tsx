@@ -1,10 +1,11 @@
-import { useEffect } from "react";
-import { MapContainer, TileLayer, Marker, Polyline, CircleMarker, useMap } from "react-leaflet";
+import { useEffect, useState } from "react";
+import { MapContainer, Marker, Polyline, CircleMarker, useMap } from "react-leaflet";
 import L from "leaflet";
 import markerIcon from "leaflet/dist/images/marker-icon.png";
 import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
 import markerShadow from "leaflet/dist/images/marker-shadow.png";
-import { getMapboxToken, MAPBOX_TILES_STYLE } from "@/lib/map-config";
+import type { MapLayerKey } from "@/lib/map-config";
+import { MapLayerControl, MapTileLayer } from "@/components/map-layers";
 
 const defaultIcon = L.icon({
   iconUrl: markerIcon,
@@ -42,10 +43,13 @@ export default function SegmentNavMap({
       ? [start.lat, start.lng]
       : segLine[0] ?? [-15.7801, -47.9292];
 
+  const [layer, setLayer] = useState<MapLayerKey>("outdoors");
+
   return (
     <div className="relative isolate overflow-hidden rounded-2xl shadow-card" style={{ height }}>
+      <MapLayerControl layer={layer} onChange={setLayer} />
       <MapContainer center={center} zoom={15} style={{ height: "100%", width: "100%" }}>
-        <TileLayerAuto />
+        <MapTileLayer layer={layer} />
         {/* Trajeto do segmento em destaque (laranja). */}
         {segLine.length >= 2 && (
           <Polyline positions={segLine} pathOptions={{ color: "#f97316", weight: 6, opacity: 0.9 }} />
@@ -69,21 +73,6 @@ export default function SegmentNavMap({
       </MapContainer>
     </div>
   );
-}
-
-function TileLayerAuto() {
-  const token = getMapboxToken();
-  if (token) {
-    return (
-      <TileLayer
-        attribution="&copy; Mapbox &copy; OpenStreetMap"
-        tileSize={512}
-        zoomOffset={-1}
-        url={`https://api.mapbox.com/styles/v1/mapbox/${MAPBOX_TILES_STYLE}/tiles/{z}/{x}/{y}?access_token=${token}`}
-      />
-    );
-  }
-  return <TileLayer attribution="&copy; OpenStreetMap" url="https://tile.openstreetmap.org/{z}/{x}/{y}.png" />;
 }
 
 // Recentraliza no usuário conforme ele se move.
