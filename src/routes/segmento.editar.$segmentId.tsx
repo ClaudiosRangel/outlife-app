@@ -20,7 +20,7 @@ import type { LatLng } from "@/components/SegmentDrawMap";
 
 const SegmentDrawMap = lazy(() => import("@/components/SegmentDrawMap"));
 
-export const Route = createFileRoute("/segmento/$segmentId/editar")({
+export const Route = createFileRoute("/segmento/editar/$segmentId")({
   component: EditSegmentPage,
   head: () => ({
     meta: [

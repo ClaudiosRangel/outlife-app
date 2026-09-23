@@ -35,6 +35,24 @@
 > Migration aplicada 2× + reload PostgREST. Diagnostics limpos; build:native +
 > cap sync + APK OK (9,94 MB).
 
+> **🔧 AJUSTES pós-teste (23/09 11:34) — CONCLUÍDA:**
+> 1. **Editar segmento não abria**: o `build:native` regenerou o routeTree e
+>    ANINHOU `/segmento/$segmentId/editar` como filha de `/segmento/$segmentId`
+>    (que não tem `<Outlet/>`), então a tela de editar nunca renderizava.
+>    Corrigido tornando a rota FLAT: arquivo renomeado para
+>    `segmento.editar.$segmentId.tsx` → `/segmento/editar/$segmentId` (sem
+>    colisão de aninhamento). A tela edita nome, tipo, **visibilidade**
+>    (público/amigos/só eu), trecho no mapa e permite excluir.
+> 2. **"Me leve até lá" agora é navegação DENTRO do app** (não abre mais o
+>    Google Maps): nova rota `/segmento/ir/$segmentId` (`SegmentNavMap`) que
+>    mostra o mapa com a **posição do usuário ao vivo** (GPS: plugin nativo no
+>    shell, Web Geolocation fora), o **trajeto do segmento em laranja**, uma
+>    **linha guia verde tracejada** do usuário até o início, distância em tempo
+>    real e detecção de chegada (≤25m) com atalho para iniciar atividade.
+>    Removida a lib `navigation-url.ts` (Google Maps) — código morto.
+> Rotas flat sobreviveram ao build (verificado). Sem migration. tsc/diagnostics
+> limpos; APK 9,95 MB.
+
 **Anterior:** 22/09/2026 (3 tarefas pré-#8: criar segmento pelo perfil + troféus de segmento nas Conquistas + revisão do cálculo de altimetria estilo Strava)
 
 > **🟩 RODADA "3 tarefas antes da #8" (22/09/2026) — CONCLUÍDA (APK 19:25):**

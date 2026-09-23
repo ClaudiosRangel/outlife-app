@@ -54,7 +54,8 @@ import { Route as AdminConteudoRouteImport } from './routes/admin.conteudo'
 import { Route as AdminComplianceRouteImport } from './routes/admin.compliance'
 import { Route as AdminAtividadesRouteImport } from './routes/admin.atividades'
 import { Route as AActivityIdRouteImport } from './routes/a.$activityId'
-import { Route as SegmentoSegmentIdEditarRouteImport } from './routes/segmento.$segmentId.editar'
+import { Route as SegmentoEditarSegmentIdRouteImport } from './routes/segmento.editar.$segmentId'
+import { Route as SegmentoIrSegmentIdRouteImport } from './routes/segmento.ir.$segmentId'
 import { Route as ApiPushSendFcmRouteImport } from './routes/api.push.send-fcm'
 import { Route as ApiPushRegisterWebRouteImport } from './routes/api.push.register-web'
 import { Route as ApiPushRegisterNativeRouteImport } from './routes/api.push.register-native'
@@ -288,10 +289,15 @@ const AActivityIdRoute = AActivityIdRouteImport.update({
   path: '/a/$activityId',
   getParentRoute: () => rootRouteImport,
 } as any)
-const SegmentoSegmentIdEditarRoute = SegmentoSegmentIdEditarRouteImport.update({
-  id: '/editar',
-  path: '/editar',
-  getParentRoute: () => SegmentoSegmentIdRoute,
+const SegmentoEditarSegmentIdRoute = SegmentoEditarSegmentIdRouteImport.update({
+  id: '/segmento/editar/$segmentId',
+  path: '/segmento/editar/$segmentId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SegmentoIrSegmentIdRoute = SegmentoIrSegmentIdRouteImport.update({
+  id: '/segmento/ir/$segmentId',
+  path: '/segmento/ir/$segmentId',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPushSendFcmRoute = ApiPushSendFcmRouteImport.update({
   id: '/api/push/send-fcm',
@@ -370,7 +376,7 @@ export interface FileRoutesByFullPath {
   '/eventos/$eventId': typeof EventosEventIdRoute
   '/parceiro/$partnerId': typeof ParceiroPartnerIdRoute
   '/parceiro/painel': typeof ParceiroPainelRoute
-  '/segmento/$segmentId': typeof SegmentoSegmentIdRouteWithChildren
+  '/segmento/$segmentId': typeof SegmentoSegmentIdRoute
   '/segmento/criar': typeof SegmentoCriarRoute
   '/trilha/$trailId': typeof TrilhaTrailIdRoute
   '/u/$userId': typeof UUserIdRoute
@@ -382,7 +388,8 @@ export interface FileRoutesByFullPath {
   '/api/push/register-native': typeof ApiPushRegisterNativeRoute
   '/api/push/register-web': typeof ApiPushRegisterWebRoute
   '/api/push/send-fcm': typeof ApiPushSendFcmRoute
-  '/segmento/$segmentId/editar': typeof SegmentoSegmentIdEditarRoute
+  '/segmento/editar/$segmentId': typeof SegmentoEditarSegmentIdRoute
+  '/segmento/ir/$segmentId': typeof SegmentoIrSegmentIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -425,7 +432,7 @@ export interface FileRoutesByTo {
   '/eventos/$eventId': typeof EventosEventIdRoute
   '/parceiro/$partnerId': typeof ParceiroPartnerIdRoute
   '/parceiro/painel': typeof ParceiroPainelRoute
-  '/segmento/$segmentId': typeof SegmentoSegmentIdRouteWithChildren
+  '/segmento/$segmentId': typeof SegmentoSegmentIdRoute
   '/segmento/criar': typeof SegmentoCriarRoute
   '/trilha/$trailId': typeof TrilhaTrailIdRoute
   '/u/$userId': typeof UUserIdRoute
@@ -437,7 +444,8 @@ export interface FileRoutesByTo {
   '/api/push/register-native': typeof ApiPushRegisterNativeRoute
   '/api/push/register-web': typeof ApiPushRegisterWebRoute
   '/api/push/send-fcm': typeof ApiPushSendFcmRoute
-  '/segmento/$segmentId/editar': typeof SegmentoSegmentIdEditarRoute
+  '/segmento/editar/$segmentId': typeof SegmentoEditarSegmentIdRoute
+  '/segmento/ir/$segmentId': typeof SegmentoIrSegmentIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -481,7 +489,7 @@ export interface FileRoutesById {
   '/eventos/$eventId': typeof EventosEventIdRoute
   '/parceiro/$partnerId': typeof ParceiroPartnerIdRoute
   '/parceiro/painel': typeof ParceiroPainelRoute
-  '/segmento/$segmentId': typeof SegmentoSegmentIdRouteWithChildren
+  '/segmento/$segmentId': typeof SegmentoSegmentIdRoute
   '/segmento/criar': typeof SegmentoCriarRoute
   '/trilha/$trailId': typeof TrilhaTrailIdRoute
   '/u/$userId': typeof UUserIdRoute
@@ -493,7 +501,8 @@ export interface FileRoutesById {
   '/api/push/register-native': typeof ApiPushRegisterNativeRoute
   '/api/push/register-web': typeof ApiPushRegisterWebRoute
   '/api/push/send-fcm': typeof ApiPushSendFcmRoute
-  '/segmento/$segmentId/editar': typeof SegmentoSegmentIdEditarRoute
+  '/segmento/editar/$segmentId': typeof SegmentoEditarSegmentIdRoute
+  '/segmento/ir/$segmentId': typeof SegmentoIrSegmentIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -540,6 +549,8 @@ export interface FileRouteTypes {
     | '/parceiro/painel'
     | '/segmento/$segmentId'
     | '/segmento/criar'
+    | '/segmento/editar/$segmentId'
+    | '/segmento/ir/$segmentId'
     | '/trilha/$trailId'
     | '/u/$userId'
     | '/admin/'
@@ -595,6 +606,8 @@ export interface FileRouteTypes {
     | '/parceiro/painel'
     | '/segmento/$segmentId'
     | '/segmento/criar'
+    | '/segmento/editar/$segmentId'
+    | '/segmento/ir/$segmentId'
     | '/trilha/$trailId'
     | '/u/$userId'
     | '/admin'
@@ -650,6 +663,8 @@ export interface FileRouteTypes {
     | '/parceiro/painel'
     | '/segmento/$segmentId'
     | '/segmento/criar'
+    | '/segmento/editar/$segmentId'
+    | '/segmento/ir/$segmentId'
     | '/trilha/$trailId'
     | '/u/$userId'
     | '/admin/'
@@ -703,7 +718,9 @@ export interface RootRouteChildren {
   DestinoDestinationIdRoute: typeof DestinoDestinationIdRoute
   ParceiroPartnerIdRoute: typeof ParceiroPartnerIdRoute
   ParceiroPainelRoute: typeof ParceiroPainelRoute
-  SegmentoSegmentIdRoute: typeof SegmentoSegmentIdRouteWithChildren
+  SegmentoSegmentIdRoute: typeof SegmentoSegmentIdRoute
+  SegmentoEditarSegmentIdRoute: typeof SegmentoEditarSegmentIdRoute
+  SegmentoIrSegmentIdRoute: typeof SegmentoIrSegmentIdRoute
   SegmentoCriarRoute: typeof SegmentoCriarRoute
   TrilhaTrailIdRoute: typeof TrilhaTrailIdRoute
   UUserIdRoute: typeof UUserIdRoute
@@ -1034,12 +1051,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AActivityIdRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/segmento/$segmentId/editar': {
-      id: '/segmento/$segmentId/editar'
-      path: '/editar'
-      fullPath: '/segmento/$segmentId/editar'
-      preLoaderRoute: typeof SegmentoSegmentIdEditarRouteImport
-      parentRoute: typeof SegmentoSegmentIdRoute
+    '/segmento/editar/$segmentId': {
+      id: '/segmento/editar/$segmentId'
+      path: '/segmento/editar/$segmentId'
+      fullPath: '/segmento/editar/$segmentId'
+      preLoaderRoute: typeof SegmentoEditarSegmentIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/segmento/ir/$segmentId': {
+      id: '/segmento/ir/$segmentId'
+      path: '/segmento/ir/$segmentId'
+      fullPath: '/segmento/ir/$segmentId'
+      preLoaderRoute: typeof SegmentoIrSegmentIdRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/push/send-fcm': {
       id: '/api/push/send-fcm'
@@ -1104,17 +1128,6 @@ const EventosRouteChildren: EventosRouteChildren = {
 const EventosRouteWithChildren =
   EventosRoute._addFileChildren(EventosRouteChildren)
 
-interface SegmentoSegmentIdRouteChildren {
-  SegmentoSegmentIdEditarRoute: typeof SegmentoSegmentIdEditarRoute
-}
-
-const SegmentoSegmentIdRouteChildren: SegmentoSegmentIdRouteChildren = {
-  SegmentoSegmentIdEditarRoute: SegmentoSegmentIdEditarRoute,
-}
-
-const SegmentoSegmentIdRouteWithChildren =
-  SegmentoSegmentIdRoute._addFileChildren(SegmentoSegmentIdRouteChildren)
-
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AmigosRoute: AmigosRoute,
@@ -1155,7 +1168,9 @@ const rootRouteChildren: RootRouteChildren = {
   DestinoDestinationIdRoute: DestinoDestinationIdRoute,
   ParceiroPartnerIdRoute: ParceiroPartnerIdRoute,
   ParceiroPainelRoute: ParceiroPainelRoute,
-  SegmentoSegmentIdRoute: SegmentoSegmentIdRouteWithChildren,
+  SegmentoSegmentIdRoute: SegmentoSegmentIdRoute,
+  SegmentoEditarSegmentIdRoute: SegmentoEditarSegmentIdRoute,
+  SegmentoIrSegmentIdRoute: SegmentoIrSegmentIdRoute,
   SegmentoCriarRoute: SegmentoCriarRoute,
   TrilhaTrailIdRoute: TrilhaTrailIdRoute,
   UUserIdRoute: UUserIdRoute,

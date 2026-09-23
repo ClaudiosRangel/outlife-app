@@ -11,7 +11,6 @@ import {
   resolveAsset,
   type SegmentVisibility,
 } from "@/lib/api";
-import { buildDirectionsUrl } from "@/lib/navigation-url";
 import { useAuth } from "@/hooks/use-auth";
 import avatarFallback from "@/assets/avatar-rafael.jpg";
 
@@ -131,13 +130,7 @@ function SegmentDetailPage() {
       <div className="mx-5 mt-3 flex gap-2">
         {segment.start_lat != null && segment.start_lng != null && (
           <button
-            onClick={() => {
-              const url = buildDirectionsUrl(
-                { lat: segment.start_lat as number, lng: segment.start_lng as number },
-                { activityType: segment.activity_type },
-              );
-              if (url) window.open(url, "_blank");
-            }}
+            onClick={() => navigate({ to: "/segmento/ir/$segmentId", params: { segmentId } })}
             className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-primary py-3 text-sm font-semibold text-primary-foreground active:scale-[0.99]"
           >
             <Navigation size={16} /> {t("segments.navigate", "Me leve até lá")}
@@ -145,7 +138,7 @@ function SegmentDetailPage() {
         )}
         {segment.created_by === user?.id && (
           <button
-            onClick={() => navigate({ to: "/segmento/$segmentId/editar", params: { segmentId } })}
+            onClick={() => navigate({ to: "/segmento/editar/$segmentId", params: { segmentId } })}
             className="flex items-center justify-center gap-2 rounded-2xl border border-border bg-card px-4 py-3 text-sm font-semibold active:scale-[0.99]"
           >
             <Pencil size={16} /> {t("segments.edit", "Editar")}
