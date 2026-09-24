@@ -5,7 +5,38 @@
 > `.kiro/steering/roadmap-outvitar.md`). **Mantenha-o atualizado** ao
 > concluir qualquer tarefa/bloco: marque status, data e resumo.
 
-**Última atualização:** 23/09/2026 (🎉 FRENTE #8 loja-virtual-parceiros CONCLUÍDA — última das 9 grandes funcionalidades pré-lançamento)
+**Última atualização:** 24/09/2026 (🟩 FILA #1 CONCLUÍDA — Programa de indicação + convite WhatsApp PRO ao app)
+
+> **🟩 FILA #1 — WhatsApp PRO + Programa de Indicação (24/09/2026) — CONCLUÍDA (APK 14:19, 9,96 MB):**
+> Cada usuário tem um código de indicação; quem se cadastra pelo link/código
+> vincula-se ao indicador e, ao confirmar, o INDICADOR ganha um cupom de
+> desconto (% e validade definidos na administração) válido em qualquer loja
+> virtual. Também: convite chamativo que leva quem NÃO tem o app a baixar/
+> cadastrar para participar de um evento.
+> - **Backend** (migration `20260924180000_referral-program.sql`, aplicada 2× +
+>   reload): colunas `profiles.referral_code` (único, `gen_referral_code()` com
+>   alfabeto sem ambíguos) + `profiles.referred_by`; tabela `referrals`
+>   (pending/confirmed/rewarded, coupon_id) com RLS própria; config em
+>   `app_content` (key/value): `referral.enabled`/`discount_percent`(15)/
+>   `coupon_days`(60). RPCs `my_referral_code`, `apply_referral(code)`,
+>   `confirm_referral` (cria cupom pessoal `IND-XXXX` % da config + notifica
+>   sininho tipo `referral_reward`), `my_referral_stats`.
+>   **Nota:** a config usa `app_content` (não existe tabela `parametros` neste
+>   projeto — corrigido antes de aplicar).
+> - **API**: `fetchMyReferralCode/applyReferral/confirmReferral/fetchMyReferralStats`.
+> - **Vínculo automático**: `src/lib/referral.ts` captura `?ref=CODIGO` no
+>   cadastro e aplica após signup/login (idempotente no backend).
+> - **whatsapp-link**: `buildInviteUrl` (embute `?ref=`), `buildAppInviteMessage`/
+>   `buildAppInviteUrl` (convite ao app com slogan + link + código). +8 testes
+>   (17 passando no total).
+> - **UI**: `ReferralCard` no Perfil (código, link, stats, "Convidar pelo
+>   WhatsApp"); botão "Convidar quem não tem o app" no detalhe do evento
+>   (embute o código); notificação `referral_reward` no sininho leva ao perfil;
+>   config do programa (%/validade/ativo) em `/admin/conteudo`. i18n pt-BR/en.
+> Sem rota nova (reuso de /perfil, /oferta, /comunidade). Diagnostics limpos;
+> commit `db822de` na main.
+
+**Anterior:** 23/09/2026 (🎉 FRENTE #8 loja-virtual-parceiros CONCLUÍDA — última das 9 grandes funcionalidades pré-lançamento)
 
 > **🟩 FRENTE #8 loja-virtual-parceiros (23/09/2026) — CONCLUÍDA (APK 13:34):**
 > Loja virtual dos parceiros, gerenciada 100% pela área administrativa:
@@ -183,11 +214,9 @@
 > em tela cheia, (5) onboarding. Aguardando o usuário avaliar e priorizar.
 
 > **📌 FILA acordada com o usuário (ordem a definir com ele):**
-> 1. **Estratégia WhatsApp PRO + indicação com cupom** — convite bonito/chamativo
->    que leva quem NÃO tem o app a baixar/cadastrar para participar do evento; +
->    programa de INDICAÇÃO: quem convida amigo que aceita ganha CUPOM de desconto
->    (% definido na administração) válido em qualquer loja virtual. **Pensar a
->    estratégia junto com o usuário antes de implementar.**
+> 1. ✅ **Estratégia WhatsApp PRO + indicação com cupom** — CONCLUÍDA em
+>    24/09/2026 (ver rodada no topo). Convite chamativo ao app + programa de
+>    indicação com cupom % configurável no admin.
 > 2. **Replay/vídeo do percurso PREMIUM (estilo TrivLock)** — evoluir o
 >    `ActivityReplayMap` para: (a) modo TELA CHEIA com o trajeto (satélite) e
 >    métricas sobrepostas (distância/tempo/elevação/ritmo) animando enquanto o
