@@ -685,6 +685,26 @@
     "refunded": "Reembolsado",
     "pending": "Aguardando"
   },
+  "referral": {
+    "title": "Convide amigos e ganhe",
+    "subtitle": "A cada amigo que se cadastrar pelo seu convite, você ganha um cupom de desconto para usar nas lojas dos parceiros.",
+    "yourCode": "Seu código",
+    "copyCode": "Copiar código",
+    "codeCopied": "Código copiado!",
+    "linkCopied": "Link de convite copiado!",
+    "invite": "Convidar pelo WhatsApp",
+    "copyLink": "Copiar link",
+    "invited": "Convidados",
+    "rewards": "Cupons ganhos"
+  },
+  "adminReferral": {
+    "title": "Programa de indicação",
+    "subtitle": "Quem convida um amigo que se cadastra ganha um cupom de desconto para usar nas lojas dos parceiros.",
+    "enabled": "Programa ativo",
+    "percent": "Desconto (%)",
+    "days": "Validade (dias)",
+    "saved": "Programa de indicação salvo."
+  },
   "adminTips": {
     "title": "Dicas / Melhorias",
     "subtitle": "Registre ideias e marque como pronto quando estiver feito.",
@@ -967,6 +987,7 @@
     "postLikeText": "curtiu seu relato.",
     "activityCompletedText": "concluiu uma atividade.",
     "reviewReceivedText": "Você recebeu uma nova avaliação.",
+    "referralRewardText": "Alguém aceitou seu convite! Você ganhou um cupom de {{percent}}% de desconto.",
     "partnerLeadText": "Alguém demonstrou interesse no seu perfil.",
     "genericText": "Você tem uma nova notificação.",
     "bellAria": "Notificações",

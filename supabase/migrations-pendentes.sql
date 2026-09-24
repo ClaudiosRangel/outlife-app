@@ -1121,3 +1121,20 @@ create index if not exists idx_segments_visibility on public.segments(visibility
 
 alter table public.profile_contacts
   add column if not exists whatsapp text;
+
+-- ############################################################################
+-- 45) 20260924180000_referral-program.sql
+--     Programa de indicação (frente WhatsApp PRO + indicação). Colunas
+--     profiles.referral_code (único, gerado por gen_referral_code() com
+--     alfabeto sem ambíguos) + profiles.referred_by. Tabela referrals
+--     (referrer_id, referred_id único, status pending|confirmed|rewarded,
+--     coupon_id) com RLS de leitura própria. Config em app_content (key/value):
+--     referral.enabled='true', referral.discount_percent='15',
+--     referral.coupon_days='60' (defaults, ON CONFLICT DO NOTHING). RPCs
+--     SECURITY DEFINER: my_referral_code() (garante/retorna código),
+--     apply_referral(code) (vincula referred_by + cria referral pending, não
+--     pode auto-indicar nem indicar-se 2x), confirm_referral() (recompensa o
+--     INDICADOR com cupom pessoal IND-XXXX de % da config + notifica sininho
+--     tipo 'referral_reward'; idempotente, 1x), my_referral_stats() (código,
+--     total indicados, total recompensados). (idempotente)
+-- ############################################################################

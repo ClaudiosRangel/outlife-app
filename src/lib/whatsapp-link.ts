@@ -65,3 +65,66 @@ export function buildWhatsAppUrl(message: string, phone?: string | null): string
 export function buildEventInviteUrl(input: EventInviteInput, phone?: string | null): string {
   return buildWhatsAppUrl(buildEventMessage(input), phone);
 }
+
+export interface AppInviteInput {
+  /** Nome de quem está convidando (aparece na mensagem). */
+  inviterName?: string | null;
+  /** Código de indicação do convidante. */
+  referralCode?: string | null;
+  /** Link de instalação/deep link do app (com ?ref= embutido, idealmente). */
+  appUrl: string;
+  /** Evento associado (convite para participar de um evento específico). */
+  event?: EventInviteInput | null;
+}
+
+/**
+ * Monta a URL completa de convite com o código de indicação embutido
+ * (`?ref=CODIGO`). Se a URL já tiver query, concatena com `&`.
+ */
+export function buildInviteUrl(appUrl: string, referralCode?: string | null): string {
+  if (!referralCode) return appUrl;
+  const sep = appUrl.includes("?") ? "&" : "?";
+  return `${appUrl}${sep}ref=${encodeURIComponent(referralCode)}`;
+}
+
+/**
+ * Mensagem de convite ao APP (para quem ainda não é usuário). Chamativa,
+ * destaca o benefício de participar do evento e usar o código de indicação.
+ * Texto puro/testável.
+ */
+export function buildAppInviteMessage(input: AppInviteInput): string {
+  const lines: string[] = [];
+  const who = input.inviterName?.trim();
+  if (input.event?.title) {
+    lines.push(
+      who
+        ? `🏕️ *${who}* te convidou para *${input.event.title}* no OutVitar!`
+        : `🏕️ Você foi convidado para *${input.event.title}* no OutVitar!`,
+    );
+    const date = fmtDate(input.event.dateIso);
+    if (date) lines.push(`📅 ${date}`);
+    const local = [input.event.meetingPoint, input.event.city].filter(Boolean).join(" · ");
+    if (local) lines.push(`📍 ${local}`);
+  } else {
+    lines.push(
+      who
+        ? `🚵 *${who}* está te chamando para o OutVitar!`
+        : `🚵 Bora viver aventuras de verdade com o OutVitar!`,
+    );
+  }
+  lines.push("");
+  lines.push("*VIVER É DIFERENTE DE ESTAR VIVO.* 🌄");
+  lines.push("Trilhas, pedais, comunidade e desafios num só app.");
+  lines.push("");
+  lines.push("👇 Baixe e cadastre-se pelo meu link:");
+  lines.push(buildInviteUrl(input.appUrl, input.referralCode));
+  if (input.referralCode) {
+    lines.push(`\n(ou use meu código de convite: *${input.referralCode}*)`);
+  }
+  return lines.join("\n");
+}
+
+/** Conveniência: link do WhatsApp com o convite ao app (sem número = escolher contato). */
+export function buildAppInviteUrl(input: AppInviteInput, phone?: string | null): string {
+  return buildWhatsAppUrl(buildAppInviteMessage(input), phone);
+}

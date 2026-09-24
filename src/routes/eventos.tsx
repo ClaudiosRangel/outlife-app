@@ -10,7 +10,9 @@ import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { resolveAsset } from "@/lib/api";
 import { geocodePlace } from "@/lib/geocode";
-import { buildEventInviteUrl } from "@/lib/whatsapp-link";
+import { buildEventInviteUrl, buildAppInviteUrl } from "@/lib/whatsapp-link";
+import { fetchMyReferralCode } from "@/lib/api";
+import { APP_INSTALL_URL } from "@/lib/app-links";
 import {
   Sheet,
   SheetContent,
@@ -521,6 +523,15 @@ function EventDetailSheet({ event, open, onClose, onEdit }: { event: EventItem |
   const qc = useQueryClient();
   const [msg, setMsg] = useState("");
 
+  // Código de indicação do usuário, para embutir no convite ao app (quem não
+  // tem o OutVitar entra pelo link já vinculado a quem convidou).
+  const { data: myReferralCode } = useQuery({
+    queryKey: ["my-referral-code"],
+    queryFn: fetchMyReferralCode,
+    enabled: !!user && open,
+    staleTime: 5 * 60 * 1000,
+  });
+
   // Perguntas/mensagens do evento
   const { data: messages = [] } = useQuery({
     queryKey: ["event-questions", event?.id],
@@ -624,6 +635,29 @@ function EventDetailSheet({ event, open, onClose, onEdit }: { event: EventItem |
             </span>
           </div>
         )}
+
+        {/* Convite chamativo para quem NÃO tem o app: leva a pessoa a baixar/
+            cadastrar (com o código de indicação embutido) para participar do
+            evento. Destaque acima dos botões de convite comum. */}
+        <button
+          onClick={() => {
+            const url = buildAppInviteUrl({
+              inviterName: user?.user_metadata?.full_name ?? null,
+              referralCode: myReferralCode ?? null,
+              appUrl: APP_INSTALL_URL,
+              event: {
+                title: event.title,
+                dateIso: event.event_date,
+                meetingPoint: (event as any).meeting_point ?? null,
+                city: (event as any).city ?? null,
+              },
+            });
+            window.open(url, "_blank");
+          }}
+          className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-forest py-3 text-sm font-semibold text-white shadow-card active:scale-[0.99]"
+        >
+          <Send size={16} /> Convidar quem não tem o app
+        </button>
 
         {/* Convidar / lembrar pelo WhatsApp (item 3): abre o WhatsApp com a
             mensagem pronta; o usuário escolhe o contato. */}

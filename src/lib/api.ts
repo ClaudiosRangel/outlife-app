@@ -3555,3 +3555,51 @@ export async function adminSetBan(userId: string, banned: boolean, reason?: stri
   } as never);
   if (error) throw error;
 }
+
+// ============================================================================
+// Programa de indicação (WhatsApp PRO + indicação)
+// ============================================================================
+
+export interface ReferralStats {
+  code: string | null;
+  total: number;
+  rewarded: number;
+}
+
+/** Garante e retorna o código de indicação do usuário logado. */
+export async function fetchMyReferralCode(): Promise<string | null> {
+  const { data, error } = await supabase.rpc("my_referral_code" as never, {} as never);
+  if (error) throw error;
+  return (data as unknown as string) ?? null;
+}
+
+/** Aplica um código de indicação (chamado logo após o cadastro). */
+export async function applyReferral(code: string): Promise<boolean> {
+  const { data, error } = await supabase.rpc("apply_referral" as never, {
+    _code: code,
+  } as never);
+  if (error) throw error;
+  return Boolean(data);
+}
+
+/** Confirma a indicação do usuário atual e recompensa o indicador (idempotente). */
+export async function confirmReferral(): Promise<void> {
+  const { error } = await supabase.rpc("confirm_referral" as never, {} as never);
+  if (error) throw error;
+}
+
+/** Estatísticas de indicação do usuário logado (código, total, recompensados). */
+export async function fetchMyReferralStats(): Promise<ReferralStats> {
+  const { data, error } = await supabase.rpc("my_referral_stats" as never, {} as never);
+  if (error) throw error;
+  const row = (Array.isArray(data) ? data[0] : data) as unknown as {
+    code: string | null;
+    total: number | null;
+    rewarded: number | null;
+  } | null;
+  return {
+    code: row?.code ?? null,
+    total: Number(row?.total ?? 0),
+    rewarded: Number(row?.rewarded ?? 0),
+  };
+}

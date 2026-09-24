@@ -377,6 +377,35 @@ function NotificationsScreen() {
       );
     }
 
+    // Recompensa de indicação: o indicador ganhou um cupom porque alguém
+    // aceitou o convite. payload { couponCode, percent }. Leva ao perfil,
+    // onde ficam a seção de indicação e o cupom ganho.
+    if (n.type === "referral_reward") {
+      const payload = n.payload as { couponCode?: string; percent?: number };
+      return (
+        <Link key={n.id} to="/perfil" className={cardClassName}>
+          <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[var(--sun)]/15 text-lg text-[var(--sun)]">
+            🎁
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="text-sm">
+              {t("notifications.referralRewardText", {
+                defaultValue: "Alguém aceitou seu convite! Você ganhou um cupom de {{percent}}% de desconto.",
+                percent: payload.percent ?? 0,
+              })}
+            </div>
+            {payload.couponCode && (
+              <div className="mt-0.5 text-xs font-semibold text-[var(--sun)]">{payload.couponCode}</div>
+            )}
+            <div className="mt-0.5 text-xs text-muted-foreground">
+              {new Date(n.created_at).toLocaleString("pt-BR")}
+            </div>
+          </div>
+          {!n.is_read && <span className="h-2 w-2 shrink-0 rounded-full bg-primary" />}
+        </Link>
+      );
+    }
+
     // Fallback genérico para tipos de notificação futuros/desconhecidos.
     return (
       <div key={n.id} className={cardClassName}>

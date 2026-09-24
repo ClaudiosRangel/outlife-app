@@ -58,6 +58,7 @@ import {
   fetchMySegments,
 } from "@/lib/api";
 import { classifyLevel, levelProgress, type UserLevel } from "@/lib/user-level";
+import { ReferralCard } from "@/components/ReferralCard";
 import type { ActivityType } from "@/lib/activity-metrics";
 import { Activity as ActivityIcon, Clock, Route as RouteIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -442,6 +443,9 @@ function Profile() {
           <span className="text-xs text-primary font-medium">{t("common.open")}</span>
         </Link>
       </div>
+
+      {/* Programa de indicação: convide amigos e ganhe cupom */}
+      <ReferralCard inviterName={displayName} />
 
       {isAdmin && (
         <div className="mx-5 mt-3">

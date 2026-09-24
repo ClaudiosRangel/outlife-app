@@ -15,6 +15,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { getAuthRedirectUrl } from "@/lib/auth-redirect";
 import { useTranslation } from "react-i18next";
+import { redeemPendingReferral } from "@/lib/referral";
 
 // Traduz mensagens de erro da API do Supabase para pt-BR
 function translateAuthError(msg: string): string {
@@ -71,6 +72,9 @@ function Login() {
       toast.error(translateAuthError(error.message) || t("auth.loginError"));
       return;
     }
+    // Aplica indicação pendente (usuário que se cadastrou por link de convite
+    // com confirmação de e-mail e só agora tem sessão ativa). Silencioso.
+    await redeemPendingReferral();
     toast.success(t("auth.loginSuccess"));
     navigate({ to: "/perfil" });
   };

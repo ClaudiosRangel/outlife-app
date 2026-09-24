@@ -52,11 +52,18 @@ function AdminContent() {
 
   const [slogan, setSlogan] = useState("");
   const [ecosystem, setEcosystem] = useState("");
+  // Config do programa de indicação (mesmas chaves referral.* em app_content).
+  const [refEnabled, setRefEnabled] = useState(true);
+  const [refPercent, setRefPercent] = useState("15");
+  const [refDays, setRefDays] = useState("60");
 
   useEffect(() => {
     if (content) {
       setSlogan(content["home.slogan"] ?? DEFAULT_SLOGAN);
       setEcosystem(content["home.ecosystem"] ?? DEFAULT_ECOSYSTEM);
+      setRefEnabled((content["referral.enabled"] ?? "true") === "true");
+      setRefPercent(content["referral.discount_percent"] ?? "15");
+      setRefDays(content["referral.coupon_days"] ?? "60");
     }
   }, [content]);
 
@@ -68,6 +75,21 @@ function AdminContent() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["app-content"] });
       toast.success(t("adminContent.saved"));
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const saveReferralMutation = useMutation({
+    mutationFn: async () => {
+      const pct = Math.max(0, Math.min(100, Number(refPercent) || 0));
+      const days = Math.max(1, Math.min(3650, Number(refDays) || 60));
+      await upsertAppContent("referral.enabled", refEnabled ? "true" : "false");
+      await upsertAppContent("referral.discount_percent", String(pct));
+      await upsertAppContent("referral.coupon_days", String(days));
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["app-content"] });
+      toast.success(t("adminReferral.saved", { defaultValue: "Programa de indicação salvo." }));
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -160,6 +182,70 @@ function AdminContent() {
             <RotateCcw size={16} /> {t("adminContent.restore")}
           </button>
         </div>
+      </section>
+
+      {/* Programa de indicação (WhatsApp PRO): % de desconto do cupom que o
+          indicador ganha por convite aceito e validade do cupom. */}
+      <section className="px-5 mt-8 space-y-4">
+        <div className="border-t border-border pt-6">
+          <h2 className="font-display text-lg font-semibold">
+            {t("adminReferral.title", { defaultValue: "Programa de indicação" })}
+          </h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {t("adminReferral.subtitle", {
+              defaultValue:
+                "Quem convida um amigo que se cadastra ganha um cupom de desconto para usar nas lojas dos parceiros.",
+            })}
+          </p>
+        </div>
+
+        <label className="flex items-center justify-between rounded-2xl bg-card p-3 shadow-card">
+          <span className="text-sm font-medium">
+            {t("adminReferral.enabled", { defaultValue: "Programa ativo" })}
+          </span>
+          <input
+            type="checkbox"
+            checked={refEnabled}
+            onChange={(e) => setRefEnabled(e.target.checked)}
+            className="h-5 w-5 accent-[var(--forest,#166534)]"
+          />
+        </label>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-1.5">
+            <Label htmlFor="ref-percent">
+              {t("adminReferral.percent", { defaultValue: "Desconto (%)" })}
+            </Label>
+            <Input
+              id="ref-percent"
+              type="number"
+              min={0}
+              max={100}
+              value={refPercent}
+              onChange={(e) => setRefPercent(e.target.value)}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="ref-days">
+              {t("adminReferral.days", { defaultValue: "Validade (dias)" })}
+            </Label>
+            <Input
+              id="ref-days"
+              type="number"
+              min={1}
+              value={refDays}
+              onChange={(e) => setRefDays(e.target.value)}
+            />
+          </div>
+        </div>
+
+        <button
+          onClick={() => saveReferralMutation.mutate()}
+          disabled={saveReferralMutation.isPending}
+          className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3.5 text-sm font-semibold text-primary-foreground shadow-card active:scale-[0.98] transition-transform disabled:opacity-60"
+        >
+          <Save size={16} /> {saveReferralMutation.isPending ? t("common.loading") : t("common.save")}
+        </button>
       </section>
     </div>
   );

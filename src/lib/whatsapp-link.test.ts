@@ -1,6 +1,14 @@
 import { describe, expect, it } from "vitest";
 import * as fc from "fast-check";
-import { normalizePhoneBR, buildWhatsAppUrl, buildEventMessage, buildEventInviteUrl } from "./whatsapp-link";
+import {
+  normalizePhoneBR,
+  buildWhatsAppUrl,
+  buildEventMessage,
+  buildEventInviteUrl,
+  buildInviteUrl,
+  buildAppInviteMessage,
+  buildAppInviteUrl,
+} from "./whatsapp-link";
 
 describe("normalizePhoneBR", () => {
   it("adiciona DDI 55 a celular/fixo BR", () => {
@@ -58,5 +66,58 @@ describe("buildEventInviteUrl", () => {
     const u = buildEventInviteUrl({ title: "Trilha" });
     expect(u.startsWith("https://wa.me/")).toBe(true);
     expect(u).toContain("text=");
+  });
+});
+
+describe("buildInviteUrl", () => {
+  it("anexa ?ref quando não há query", () => {
+    expect(buildInviteUrl("https://x.com/cadastro", "ABC123")).toBe(
+      "https://x.com/cadastro?ref=ABC123",
+    );
+  });
+  it("anexa &ref quando já há query", () => {
+    expect(buildInviteUrl("https://x.com/c?a=1", "ABC123")).toBe(
+      "https://x.com/c?a=1&ref=ABC123",
+    );
+  });
+  it("retorna a url original sem código", () => {
+    expect(buildInviteUrl("https://x.com/c", null)).toBe("https://x.com/c");
+  });
+  it("codifica o código na query", () => {
+    expect(buildInviteUrl("https://x.com/c", "A B")).toContain("ref=A%20B");
+  });
+});
+
+describe("buildAppInviteMessage", () => {
+  it("inclui o slogan e o link com o código", () => {
+    const m = buildAppInviteMessage({
+      inviterName: "Rafa",
+      referralCode: "ABC123",
+      appUrl: "https://x.com/cadastro",
+    });
+    expect(m).toContain("Rafa");
+    expect(m).toContain("VIVER É DIFERENTE DE ESTAR VIVO");
+    expect(m).toContain("https://x.com/cadastro?ref=ABC123");
+    expect(m).toContain("ABC123");
+  });
+  it("usa o título do evento quando presente", () => {
+    const m = buildAppInviteMessage({
+      appUrl: "https://x.com/cadastro",
+      event: { title: "Trilha da Serra" },
+    });
+    expect(m).toContain("Trilha da Serra");
+  });
+  it("funciona sem nome nem código (não quebra)", () => {
+    const m = buildAppInviteMessage({ appUrl: "https://x.com/cadastro" });
+    expect(m).toContain("https://x.com/cadastro");
+    expect(m).not.toContain("ref=");
+  });
+});
+
+describe("buildAppInviteUrl", () => {
+  it("gera URL válida do WhatsApp com a mensagem de convite ao app", () => {
+    const u = buildAppInviteUrl({ appUrl: "https://x.com/cadastro", referralCode: "ABC123" }, null);
+    expect(u.startsWith("https://wa.me/?text=")).toBe(true);
+    expect(decodeURIComponent(u.split("text=")[1])).toContain("ABC123");
   });
 });

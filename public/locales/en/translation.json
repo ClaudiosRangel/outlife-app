@@ -685,6 +685,26 @@
     "refunded": "Refunded",
     "pending": "Pending"
   },
+  "referral": {
+    "title": "Invite friends and earn",
+    "subtitle": "For every friend who signs up through your invite, you earn a discount coupon to use at partner stores.",
+    "yourCode": "Your code",
+    "copyCode": "Copy code",
+    "codeCopied": "Code copied!",
+    "linkCopied": "Invite link copied!",
+    "invite": "Invite via WhatsApp",
+    "copyLink": "Copy link",
+    "invited": "Invited",
+    "rewards": "Coupons earned"
+  },
+  "adminReferral": {
+    "title": "Referral program",
+    "subtitle": "Whoever invites a friend who signs up earns a discount coupon to use at partner stores.",
+    "enabled": "Program active",
+    "percent": "Discount (%)",
+    "days": "Validity (days)",
+    "saved": "Referral program saved."
+  },
   "adminTips": {
     "title": "Tips / Improvements",
     "subtitle": "Log ideas and check them off when done.",
@@ -967,6 +987,7 @@
     "postLikeText": "liked your story.",
     "activityCompletedText": "completed an activity.",
     "reviewReceivedText": "You received a new review.",
+    "referralRewardText": "Someone accepted your invite! You earned a {{percent}}% discount coupon.",
     "partnerLeadText": "Someone showed interest in your profile.",
     "genericText": "You have a new notification.",
     "bellAria": "Notifications",

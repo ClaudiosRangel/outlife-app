@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ChevronLeft, Compass, Briefcase, Check } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { getAuthRedirectOrigin } from "@/lib/auth-redirect";
+import { captureReferralFromUrl, redeemPendingReferral } from "@/lib/referral";
 
 // Traduz mensagens de erro da API do Supabase para pt-BR
 function translateAuthError(msg: string): string {
@@ -75,9 +76,14 @@ function Cadastro() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
+  // Captura o código de indicação (?ref=CODIGO) assim que a tela abre.
+  useEffect(() => {
+    captureReferralFromUrl();
+  }, []);
+
   const doSignUp = async (extra: Record<string, unknown> = {}) => {
     setLoading(true);
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -89,6 +95,11 @@ function Cadastro() {
     if (error) {
       toast.error(translateAuthError(error.message));
       return false;
+    }
+    // Se já há sessão ativa (confirmação de e-mail desabilitada), vincula a
+    // indicação agora. Caso contrário, fica pendente e é aplicada no 1º login.
+    if (data.session) {
+      await redeemPendingReferral();
     }
     toast.success(t("auth.signupSuccess"));
     navigate({ to: "/perfil" });
