@@ -11,10 +11,14 @@ import { Button } from "@/components/ui/button";
 import { computeActivityMetrics } from "@/lib/activity-metrics";
 import { computeByMetricForm, type MetricForm } from "@/lib/metric-forms";
 import { generateActivityBanner, type ActivityBannerMetric, type ActivityBannerVariant } from "@/lib/banner-generator";
+import { generateActivityStory, type StoryMetric } from "@/lib/story-generator";
 import { shareContent } from "@/lib/share";
 import { useAuth } from "@/hooks/use-auth";
+import { Film, Video, Sparkles } from "lucide-react";
 
 const ActivityReplayMap = lazy(() => import("@/components/ActivityReplayMap"));
+const ActivityReplayCinematic = lazy(() => import("@/components/ActivityReplayCinematic"));
+const ActivityVideoOverlay = lazy(() => import("@/components/ActivityVideoOverlay"));
 
 export const Route = createFileRoute("/atividade/$activityId")({
   component: ActivityDetailPage,
@@ -92,6 +96,14 @@ function ActivityDetailPage() {
   // Frente E (Req 8): variante do banner — "photo" quando há foto do usuário,
   // senão "map". O usuário pode alternar quando ambos existirem.
   const [bannerVariant, setBannerVariant] = useState<ActivityBannerVariant | null>(null);
+
+  // FILA #2 — Replay/vídeo PREMIUM (estilo TrivLock):
+  // (a) replay cinematográfico em tela cheia; (b) vídeo próprio com métricas
+  // sobrepostas; (c) compartilhar story 9:16.
+  const [cinematicOpen, setCinematicOpen] = useState(false);
+  const [videoOverlayUrl, setVideoOverlayUrl] = useState<string | null>(null);
+  const [generatingStory, setGeneratingStory] = useState(false);
+  const videoInputRef = useRef<HTMLInputElement>(null);
 
   // Ponto 2: o dono pode editar/definir a imagem da atividade (ex.: atividade
   // salva offline sem foto). Sobe a nova imagem e grava em user_activities +
@@ -208,6 +220,56 @@ function ActivityDetailPage() {
     } finally {
       setGeneratingBanner(false);
     }
+  };
+
+  // Métricas grandes para o replay/vídeo/story (distância + tempo + principal
+  // do metric_form + elevação quando houver).
+  const premiumMetrics = (): StoryMetric[] => {
+    const mf = computeByMetricForm(metricForm, {
+      distanceMeters: activity?.distance_meters ?? 0,
+      durationSeconds: activity?.duration_seconds ?? 0,
+      elevationGain: activity?.elevation_gain ?? null,
+    });
+    const list: StoryMetric[] = [
+      { label: t("activity.metrics.distance"), value: `${((activity?.distance_meters ?? 0) / 1000).toFixed(2)} km` },
+      { label: t("activity.metrics.duration"), value: formatDuration(activity?.duration_seconds ?? null) },
+    ];
+    if (mf.primary) list.push({ label: mf.primary.label, value: mf.primary.value });
+    if (mf.secondary && metricForm === "speed_elevation") {
+      list.push({ label: mf.secondary.label, value: mf.secondary.value });
+    }
+    return list;
+  };
+
+  const handleShareStory = async () => {
+    if (!activity) return;
+    setGeneratingStory(true);
+    try {
+      const blob = await generateActivityStory({
+        path: coords,
+        activityName,
+        metrics: premiumMetrics(),
+        backgroundUrl: activity.image_url ?? null,
+      });
+      const deepLink = `${window.location.origin}/a/${activityId}`;
+      await shareContent({
+        file: blob,
+        fileName: "outvitar-story.webp",
+        title: t("activity.shareBannerTitle"),
+        text: `${t("activity.shareBannerText")} ${deepLink}`,
+      });
+    } catch {
+      toast.error(t("activity.shareBannerError"));
+    } finally {
+      setGeneratingStory(false);
+    }
+  };
+
+  const handlePickVideo = (file: File) => {
+    // Libera URL anterior, se houver.
+    if (videoOverlayUrl) URL.revokeObjectURL(videoOverlayUrl);
+    const url = URL.createObjectURL(file);
+    setVideoOverlayUrl(url);
   };
 
   return (
@@ -395,6 +457,76 @@ function ActivityDetailPage() {
             {generatingBanner ? t("activity.generatingBanner") : t("activity.shareBanner")}
           </Button>
         </div>
+      )}
+
+      {/* FILA #2 — Replay/vídeo PREMIUM (estilo TrivLock). Só quando há trajeto. */}
+      {!isLoading && activity && coords.length >= 2 && (
+        <div className="mx-5 mt-4 space-y-2">
+          <div className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+            {t("activity.premiumTitle", { defaultValue: "Replay & compartilhamento" })}
+          </div>
+          <button
+            onClick={() => setCinematicOpen(true)}
+            className="flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-forest py-3.5 text-sm font-semibold text-white shadow-card active:scale-[0.98]"
+          >
+            <Film size={18} /> {t("activity.watchCinematic", { defaultValue: "Assistir percurso (tela cheia)" })}
+          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={() => videoInputRef.current?.click()}
+              className="flex flex-1 items-center justify-center gap-2 rounded-2xl border border-border bg-card py-3 text-sm font-semibold active:scale-[0.98]"
+            >
+              <Video size={16} /> {t("activity.videoWithMetrics", { defaultValue: "Vídeo com métricas" })}
+            </button>
+            <button
+              onClick={handleShareStory}
+              disabled={generatingStory}
+              className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-[#f97316] py-3 text-sm font-semibold text-white active:scale-[0.98] disabled:opacity-60"
+            >
+              {generatingStory ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />}
+              {t("activity.shareStory", { defaultValue: "Story 9:16" })}
+            </button>
+          </div>
+          <input
+            ref={videoInputRef}
+            type="file"
+            accept="video/*"
+            className="hidden"
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              if (f) handlePickVideo(f);
+              e.currentTarget.value = "";
+            }}
+          />
+        </div>
+      )}
+
+      {/* Overlays full-screen (lazy) */}
+      {cinematicOpen && coords.length >= 2 && (
+        <Suspense fallback={null}>
+          <ActivityReplayCinematic
+            path={coords}
+            durationSeconds={activity?.duration_seconds ?? 0}
+            averageSpeedLabel={finalMetrics.averageSpeedKmh ? `${finalMetrics.averageSpeedKmh} km/h` : null}
+            elevationLabel={elevLabel}
+            activityName={activityName}
+            onClose={() => setCinematicOpen(false)}
+          />
+        </Suspense>
+      )}
+      {videoOverlayUrl && coords.length >= 2 && (
+        <Suspense fallback={null}>
+          <ActivityVideoOverlay
+            videoUrl={videoOverlayUrl}
+            path={coords}
+            metrics={premiumMetrics()}
+            activityName={activityName}
+            onClose={() => {
+              URL.revokeObjectURL(videoOverlayUrl);
+              setVideoOverlayUrl(null);
+            }}
+          />
+        </Suspense>
       )}
 
       {/* Descrição e foto opcionais adicionadas ao finalizar o
