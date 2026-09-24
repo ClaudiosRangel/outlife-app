@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import { createSegment, fetchMyProfile, fetchActivityTypes, type SegmentVisibility } from "@/lib/api";
+import { fetchRouteAlongRoads } from "@/lib/mapbox-directions";
 import type { LatLng } from "@/components/SegmentDrawMap";
 import { Globe, Users, Lock } from "lucide-react";
 
@@ -62,9 +63,14 @@ function CreateSegmentPage() {
       if (!start || !end) throw new Error(t("segments.markBoth", "Marque o início e o fim no mapa."));
       if (!name.trim()) throw new Error(t("segments.nameRequired", "Dê um nome ao segmento."));
       if (!activityType) throw new Error(t("segments.typeRequired", "Escolha a modalidade do segmento."));
-      // Polilinha simples início→fim ([lng,lat]). O matcher usa início/fim +
-      // distância; uma reta de 2 pontos é suficiente para o esforço básico.
-      const polyline: [number, number][] = [
+      // Item 1: busca a rota REAL seguindo as ruas (curvas) via Mapbox
+      // Directions. Se falhar (sem token/erro), cai na reta início→fim.
+      const road = await fetchRouteAlongRoads(
+        [start.lng, start.lat],
+        [end.lng, end.lat],
+        { activityType },
+      );
+      const polyline: [number, number][] = road ?? [
         [start.lng, start.lat],
         [end.lng, end.lat],
       ];

@@ -16,6 +16,7 @@ import {
   deleteSegment,
   type SegmentVisibility,
 } from "@/lib/api";
+import { fetchRouteAlongRoads } from "@/lib/mapbox-directions";
 import type { LatLng } from "@/components/SegmentDrawMap";
 
 const SegmentDrawMap = lazy(() => import("@/components/SegmentDrawMap"));
@@ -79,7 +80,13 @@ function EditSegmentPage() {
       if (!start || !end) throw new Error(t("segments.markBoth", "Marque o início e o fim no mapa."));
       if (!name.trim()) throw new Error(t("segments.nameRequired", "Dê um nome ao segmento."));
       if (!activityType) throw new Error(t("segments.typeRequired", "Escolha a modalidade do segmento."));
-      const polyline: [number, number][] = [
+      // Item 1: rota real seguindo as ruas (curvas); fallback para reta.
+      const road = await fetchRouteAlongRoads(
+        [start.lng, start.lat],
+        [end.lng, end.lat],
+        { activityType },
+      );
+      const polyline: [number, number][] = road ?? [
         [start.lng, start.lat],
         [end.lng, end.lat],
       ];

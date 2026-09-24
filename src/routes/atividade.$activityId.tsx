@@ -14,7 +14,7 @@ import { generateActivityBanner, type ActivityBannerMetric, type ActivityBannerV
 import { shareContent } from "@/lib/share";
 import { useAuth } from "@/hooks/use-auth";
 
-const ActivityMap = lazy(() => import("@/components/ActivityMap"));
+const ActivityReplayMap = lazy(() => import("@/components/ActivityReplayMap"));
 
 export const Route = createFileRoute("/atividade/$activityId")({
   component: ActivityDetailPage,
@@ -230,7 +230,7 @@ function ActivityDetailPage() {
           <Skeleton className="h-[320px] w-full rounded-2xl" />
         ) : coords.length >= 2 ? (
           <Suspense fallback={<Skeleton className="h-[320px] w-full rounded-2xl" />}>
-            <ActivityMap path={coords} showStartEnd height={320} />
+            <ActivityReplayMap path={coords} height={320} />
           </Suspense>
         ) : (
           <div className="rounded-2xl bg-card p-8 text-center text-sm text-muted-foreground shadow-card">

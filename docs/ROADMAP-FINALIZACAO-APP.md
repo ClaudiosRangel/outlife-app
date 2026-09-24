@@ -159,8 +159,24 @@
 >   implementados ainda (frentes próprias).
 > Migration 2× + reload. Diagnostics limpos; APK 9,96 MB.
 
-> **Próxima frente: implementar segmento por ruas (geometria real/Directions),
-> depois replay do percurso; e a tela de admin de cupons + rebranding.**
+> **🟩 Itens 1 e 2 (24/09 10:11) — CONCLUÍDOS:**
+> 1. **Segmento seguindo as ruas** (curvas, não reta): ao criar/editar segmento
+>    pelo mapa, busca a rota real via **Mapbox Directions API** (perfil
+>    walking/cycling por modalidade) — lib `src/lib/mapbox-directions.ts`
+>    (`fetchRouteAlongRoads`). Fallback para reta início→fim se a API falhar/sem
+>    token. A polilinha do segmento agora tem as curvas do caminho.
+> 2. **Replay do percurso** (o "Flyover" 2D do Strava): novo
+>    `src/components/ActivityReplayMap.tsx` — na tela de detalhe da atividade,
+>    um ponto laranja percorre o trajeto animado (play/pause/reiniciar), câmera
+>    acompanhando, barra de progresso com km percorridos. Substituiu o mapa
+>    estático. É animação em tempo real (não arquivo de vídeo), 2D confiável no
+>    WebView. Seletor de camadas incluído.
+> Sem migration. Diagnostics limpos; rotas flat verificadas; APK 9,96 MB.
+> **HANDOFF completo adicionado à steering `roadmap-outvitar.md`** (modo de
+> operação: build/APK, git, migrations, routeTree flat, i18n, mapa, loja, etc.).
+
+> **Próxima frente (fila): estratégia WhatsApp PRO + indicação com cupom
+> (pensar junto); admin de cupons; rebranding + publicação; análise de design.**
 
 > **🎉 Com a #8, todas as 9 grandes frentes pré-lançamento estão concluídas.**
 > Pendências fora do lançamento (fase futura): importar segmentos do Strava (#6)
