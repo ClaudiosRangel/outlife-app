@@ -1112,3 +1112,12 @@ create index if not exists idx_segments_visibility on public.segments(visibility
 --     increment_coupon_redemptions (usada pelo webhook) + CRUD admin de cupons
 --     (admin_list_coupons, admin_upsert_coupon, admin_delete_coupon), is_admin.
 -- ############################################################################
+
+-- ############################################################################
+-- 44) 20260924160000_profile-whatsapp.sql
+--     Campo WhatsApp nos dados de contato do usuário (owner-only):
+--     profile_contacts.whatsapp (TEXT). (idempotente)
+-- ############################################################################
+
+alter table public.profile_contacts
+  add column if not exists whatsapp text;

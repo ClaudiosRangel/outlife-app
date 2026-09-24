@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Calendar, MapPin, Users, Plus, MessageCircle, Loader2, Image as ImageIcon, CalendarPlus, Pencil, Trash2 } from "lucide-react";
+import { ArrowLeft, Calendar, MapPin, Users, Plus, MessageCircle, Loader2, Image as ImageIcon, CalendarPlus, Pencil, Trash2, Send, Bell } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { StatusBar } from "@/components/StatusBar";
@@ -10,6 +10,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { resolveAsset } from "@/lib/api";
 import { geocodePlace } from "@/lib/geocode";
+import { buildEventInviteUrl } from "@/lib/whatsapp-link";
 import {
   Sheet,
   SheetContent,
@@ -623,6 +624,40 @@ function EventDetailSheet({ event, open, onClose, onEdit }: { event: EventItem |
             </span>
           </div>
         )}
+
+        {/* Convidar / lembrar pelo WhatsApp (item 3): abre o WhatsApp com a
+            mensagem pronta; o usuário escolhe o contato. */}
+        <div className="flex gap-2 py-2 border-b border-border mb-1">
+          <button
+            onClick={() => {
+              const url = buildEventInviteUrl({
+                title: event.title,
+                dateIso: event.event_date,
+                meetingPoint: (event as any).meeting_point ?? null,
+                city: (event as any).city ?? null,
+              });
+              window.open(url, "_blank");
+            }}
+            className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-[#25D366] py-2.5 text-xs font-semibold text-white active:scale-[0.99]"
+          >
+            <Send size={14} /> Convidar (WhatsApp)
+          </button>
+          <button
+            onClick={() => {
+              const url = buildEventInviteUrl({
+                title: event.title,
+                dateIso: event.event_date,
+                meetingPoint: (event as any).meeting_point ?? null,
+                city: (event as any).city ?? null,
+                reminder: true,
+              });
+              window.open(url, "_blank");
+            }}
+            className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-[#25D366] py-2.5 text-xs font-semibold text-[#128C7E] active:scale-[0.99]"
+          >
+            <Bell size={14} /> Lembrar
+          </button>
+        </div>
 
         {/* Área de mensagens (scroll) */}
         <div className="flex-1 min-h-0 overflow-y-auto py-3 space-y-3">

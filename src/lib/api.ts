@@ -335,6 +335,7 @@ export interface MyContacts {
   cpf: string | null;
   cadasturNumber: string | null;
   instagram: string | null;
+  whatsapp: string | null;
 }
 
 export async function fetchMyContacts(): Promise<MyContacts> {
@@ -345,12 +346,13 @@ export async function fetchMyContacts(): Promise<MyContacts> {
     cpf: null,
     cadasturNumber: null,
     instagram: null,
+    whatsapp: null,
   };
   const { data: userData } = await supabase.auth.getUser();
   if (!userData.user) return empty;
   const { data, error } = await supabase
     .from("profile_contacts" as never)
-    .select("phone, phone_secondary, cnpj, cpf, cadastur_number, instagram")
+    .select("phone, phone_secondary, cnpj, cpf, cadastur_number, instagram, whatsapp")
     .eq("id", userData.user.id)
     .maybeSingle();
   if (error) throw error;
@@ -362,6 +364,7 @@ export async function fetchMyContacts(): Promise<MyContacts> {
     cpf: string | null;
     cadastur_number: string | null;
     instagram: string | null;
+    whatsapp: string | null;
   };
   return {
     phone: row.phone,
@@ -370,6 +373,7 @@ export async function fetchMyContacts(): Promise<MyContacts> {
     cpf: row.cpf,
     cadasturNumber: row.cadastur_number,
     instagram: row.instagram,
+    whatsapp: row.whatsapp,
   };
 }
 
@@ -396,6 +400,7 @@ export async function updateMyContacts(patch: Partial<MyContacts>): Promise<void
   if ("cpf" in patch) row.cpf = patch.cpf ?? null;
   if ("cadasturNumber" in patch) row.cadastur_number = patch.cadasturNumber ?? null;
   if ("instagram" in patch) row.instagram = patch.instagram ?? null;
+  if ("whatsapp" in patch) row.whatsapp = patch.whatsapp ?? null;
 
   const { error } = await supabase
     .from("profile_contacts" as never)

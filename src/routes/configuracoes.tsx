@@ -71,6 +71,7 @@ function SettingsScreen() {
   const [cpf, setCpf] = useState("");
   const [cnpj, setCnpj] = useState("");
   const [phone, setPhone] = useState("");
+  const [whatsapp, setWhatsapp] = useState("");
   const [zip, setZip] = useState("");
   const [street, setStreet] = useState("");
   const [addrNumber, setAddrNumber] = useState("");
@@ -102,6 +103,7 @@ function SettingsScreen() {
       setCpf(contacts.cpf ?? "");
       setCnpj(contacts.cnpj ?? "");
       setPhone(contacts.phone ?? "");
+      setWhatsapp(contacts.whatsapp ?? "");
     }
   }, [contacts]);
 
@@ -164,6 +166,7 @@ function SettingsScreen() {
       } as never);
       await updateMyContacts({
         phone: phone.trim() || null,
+        whatsapp: whatsapp.trim() || null,
         cpf: personType === "pf" ? cpf.trim() || null : null,
         cnpj: personType === "pj" ? cnpj.trim() || null : null,
       });
@@ -358,6 +361,18 @@ function SettingsScreen() {
                 inputMode="tel"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
+                placeholder="(11) 90000-0000"
+              />
+            </div>
+
+            {/* WhatsApp */}
+            <div className="space-y-1.5">
+              <Label htmlFor="whatsapp">{t("settings.whatsapp", "WhatsApp")}</Label>
+              <Input
+                id="whatsapp"
+                inputMode="tel"
+                value={whatsapp}
+                onChange={(e) => setWhatsapp(e.target.value)}
                 placeholder="(11) 90000-0000"
               />
             </div>

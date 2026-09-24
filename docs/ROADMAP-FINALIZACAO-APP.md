@@ -142,8 +142,25 @@
 > ~2,5s, com indicadores (pontinho ativo alonga). Usado na Comunidade e na Home
 > (substituiu os carrosséis manuais). Sem migration; APK 9,96 MB.
 
-> **Próxima frente: tela de admin de cupons (/admin/cupons), depois rebranding
-> técnico (appId → OutVitar) + publicação.**
+> **🔧 WhatsApp no perfil + convite/lembrete de evento por WhatsApp; pesquisa
+> segmento-por-ruas e vídeo (24/09 09:10):**
+> - **Campo WhatsApp** nos dados do usuário (Configurações): coluna
+>   `profile_contacts.whatsapp` (migration `20260924160000`) + campo na tela +
+>   API (`MyContacts.whatsapp`, fetch/update).
+> - **Convidar/Lembrar por WhatsApp no evento**: botões no detalhe do evento que
+>   abrem o WhatsApp (`wa.me`) com a mensagem pronta (título, data, local); o
+>   usuário escolhe o contato. Lib pura `src/lib/whatsapp-link.ts`
+>   (`normalizePhoneBR`, `buildWhatsAppUrl`, `buildEventMessage`,
+>   `buildEventInviteUrl`) com 9 testes.
+> - **Pesquisa (itens 1 e 2)** documentada em `docs/PESQUISA-SEGMENTO-RUAS-E-VIDEO.md`:
+>   (1) segmento com curvas = usar a geometria real do trajeto da atividade OU
+>   Mapbox Directions API (temos token); (2) "vídeo do percurso" = replay 2D
+>   animado (Flyover do Strava é animação em tempo real, não arquivo). Não
+>   implementados ainda (frentes próprias).
+> Migration 2× + reload. Diagnostics limpos; APK 9,96 MB.
+
+> **Próxima frente: implementar segmento por ruas (geometria real/Directions),
+> depois replay do percurso; e a tela de admin de cupons + rebranding.**
 
 > **🎉 Com a #8, todas as 9 grandes frentes pré-lançamento estão concluídas.**
 > Pendências fora do lançamento (fase futura): importar segmentos do Strava (#6)
