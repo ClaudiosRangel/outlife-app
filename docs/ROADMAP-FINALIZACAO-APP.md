@@ -175,8 +175,29 @@
 > **HANDOFF completo adicionado à steering `roadmap-outvitar.md`** (modo de
 > operação: build/APK, git, migrations, routeTree flat, i18n, mapa, loja, etc.).
 
-> **Próxima frente (fila): estratégia WhatsApp PRO + indicação com cupom
-> (pensar junto); admin de cupons; rebranding + publicação; análise de design.**
+> **🟦 ANÁLISE DE DESIGN entregue (24/09):** parecer sincero em
+> `docs/ANALISE-DESIGN-OUTVITAR.md` (o que mudar para ficar profissional/
+> viciante). Prioridades: (1) design system/tokens, (2) feed com
+> microrrecompensas (like animado, selos de conquista), (3) tela de atividade
+> concluída comemorativa + streak, (4) compartilhamento premium 9:16 + replay
+> em tela cheia, (5) onboarding. Aguardando o usuário avaliar e priorizar.
+
+> **📌 FILA acordada com o usuário (ordem a definir com ele):**
+> 1. **Estratégia WhatsApp PRO + indicação com cupom** — convite bonito/chamativo
+>    que leva quem NÃO tem o app a baixar/cadastrar para participar do evento; +
+>    programa de INDICAÇÃO: quem convida amigo que aceita ganha CUPOM de desconto
+>    (% definido na administração) válido em qualquer loja virtual. **Pensar a
+>    estratégia junto com o usuário antes de implementar.**
+> 2. **Replay/vídeo do percurso PREMIUM (estilo TrivLock)** — evoluir o
+>    `ActivityReplayMap` para: (a) modo TELA CHEIA com o trajeto (satélite) e
+>    métricas sobrepostas (distância/tempo/elevação/ritmo) animando enquanto o
+>    ponto percorre; (b) permitir incluir um VÍDEO próprio na atividade e
+>    sobrepor as métricas no vídeo; (c) COMPARTILHAR isso (story 9:16). Refs: 2
+>    prints do TrivLock (mapa 3D full com métricas no topo; vídeo real da pessoa
+>    correndo com distância/ritmo/tempo sobrepostos + mapa do trajeto em laranja).
+> 3. Admin de cupons (`/admin/cupons`).
+> 4. Rebranding técnico (appId → OutVitar) + publicação (Codemagic p/ iOS).
+> 5. Melhorias de design conforme análise (itens 1-5 acima).
 
 > **🎉 Com a #8, todas as 9 grandes frentes pré-lançamento estão concluídas.**
 > Pendências fora do lançamento (fase futura): importar segmentos do Strava (#6)
