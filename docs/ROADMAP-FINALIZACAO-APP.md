@@ -5,7 +5,36 @@
 > `.kiro/steering/roadmap-outvitar.md`). **Mantenha-o atualizado** ao
 > concluir qualquer tarefa/bloco: marque status, data e resumo.
 
-**Última atualização:** 24/09/2026 (🟩 FILA #2 CONCLUÍDA — Replay/vídeo PREMIUM estilo TrivLock)
+**Última atualização:** 24/09/2026 (🟩 Export de VÍDEO real do percurso compartilhável — complemento da FILA #2)
+
+> **🟩 EXPORT DE VÍDEO REAL do percurso (24/09/2026) — CONCLUÍDO (APK 15:35, 9,97 MB):**
+> A pedido do usuário ("como faço para compartilhar?" → quer vídeo pronto, não
+> só imagem/gravação de tela). Agora há um botão **"Gerar e compartilhar vídeo"**
+> na seção Replay & compartilhamento da atividade que produz um **VÍDEO real**
+> compartilhável (não é mais só o story 9:16 imagem nem depende de gravação de
+> tela manual).
+> - `src/lib/activity-video-export.ts`: renderiza os frames num `<canvas>`
+>   PRÓPRIO (1080×1920, SEM Leaflet/tiles — gravar o Leaflet no WebView é
+>   inviável) e captura via `canvas.captureStream(30fps)` + `MediaRecorder`
+>   (mp4 h264 quando suportado, senão webm vp9/vp8). Trajeto laranja com o
+>   trecho percorrido preenchendo + ponto atual + métricas animando
+>   (distância/tempo) + extras (vel. média/elevação) + marca OUTVITAR.
+>   `pickVideoMimeType()`/`canExportVideo()` degradam com segurança (o botão só
+>   aparece quando há suporte). 12s de vídeo.
+> - `atividade.$activityId.tsx`: botão com % de progresso (`onProgress`); ao
+>   concluir chama `shareContent` (folha nativa Android → WhatsApp/Instagram/
+>   etc.). Se falhar, toast orienta usar o Story 9:16.
+> - 4 testes (degradação segura em ambiente sem MediaRecorder). i18n pt-BR/en
+>   (`activity.shareVideo/videoExporting/videoExportError`). Sem rota/migration.
+>   Commit `7ac790c` na main.
+> **Resumo dos 3 caminhos de compartilhamento hoje:** (1) **Story 9:16** =
+> imagem premium (mais rápido, sempre funciona); (2) **Gerar e compartilhar
+> vídeo** = vídeo real animado do trajeto (quando o device suporta
+> MediaRecorder); (3) **Vídeo com métricas** = sobrepõe métricas a um vídeo
+> próprio do usuário (para gravar tela). Todos abrem a folha nativa via
+> `shareContent`.
+
+**Anterior:** 24/09/2026 (🟩 FILA #2 CONCLUÍDA — Replay/vídeo PREMIUM estilo TrivLock)
 
 > **🟩 FILA #2 — Replay/vídeo do percurso PREMIUM (24/09/2026) — CONCLUÍDA (APK 14:55, 9,97 MB):**
 > Evolução do replay da atividade para o padrão TrivLock/Strava, com 3 modos na
