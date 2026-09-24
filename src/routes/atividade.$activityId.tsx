@@ -12,9 +12,10 @@ import { computeActivityMetrics } from "@/lib/activity-metrics";
 import { computeByMetricForm, type MetricForm } from "@/lib/metric-forms";
 import { generateActivityBanner, type ActivityBannerMetric, type ActivityBannerVariant } from "@/lib/banner-generator";
 import { generateActivityStory, type StoryMetric } from "@/lib/story-generator";
+import { generateActivityVideo, canExportVideo } from "@/lib/activity-video-export";
 import { shareContent } from "@/lib/share";
 import { useAuth } from "@/hooks/use-auth";
-import { Film, Video, Sparkles } from "lucide-react";
+import { Film, Video, Sparkles, Clapperboard } from "lucide-react";
 
 const ActivityReplayMap = lazy(() => import("@/components/ActivityReplayMap"));
 const ActivityReplayCinematic = lazy(() => import("@/components/ActivityReplayCinematic"));
@@ -103,6 +104,8 @@ function ActivityDetailPage() {
   const [cinematicOpen, setCinematicOpen] = useState(false);
   const [videoOverlayUrl, setVideoOverlayUrl] = useState<string | null>(null);
   const [generatingStory, setGeneratingStory] = useState(false);
+  const [exportingVideo, setExportingVideo] = useState(false);
+  const [videoProgress, setVideoProgress] = useState(0);
   const videoInputRef = useRef<HTMLInputElement>(null);
 
   // Ponto 2: o dono pode editar/definir a imagem da atividade (ex.: atividade
@@ -270,6 +273,43 @@ function ActivityDetailPage() {
     if (videoOverlayUrl) URL.revokeObjectURL(videoOverlayUrl);
     const url = URL.createObjectURL(file);
     setVideoOverlayUrl(url);
+  };
+
+  // Gera um VÍDEO real do replay (canvas + MediaRecorder) e compartilha.
+  const handleExportVideo = async () => {
+    if (!activity) return;
+    setExportingVideo(true);
+    setVideoProgress(0);
+    try {
+      const extra: { label: string; value: string }[] = [];
+      if (finalMetrics.averageSpeedKmh) {
+        extra.push({ label: t("activity.metrics.speed"), value: `${finalMetrics.averageSpeedKmh} km/h` });
+      }
+      if (elevLabel !== "—") {
+        extra.push({ label: t("activity.metrics.elevation"), value: elevLabel });
+      }
+      const blob = await generateActivityVideo({
+        path: coords,
+        durationSeconds: activity.duration_seconds ?? 0,
+        activityName,
+        extraMetrics: extra,
+        videoSeconds: 12,
+        onProgress: setVideoProgress,
+      });
+      const ext = blob.type.includes("mp4") ? "mp4" : "webm";
+      const deepLink = `${window.location.origin}/a/${activityId}`;
+      await shareContent({
+        file: blob,
+        fileName: `outvitar-percurso.${ext}`,
+        title: t("activity.shareBannerTitle"),
+        text: `${t("activity.shareBannerText")} ${deepLink}`,
+      });
+    } catch {
+      toast.error(t("activity.videoExportError", { defaultValue: "Não foi possível gerar o vídeo. Tente o Story 9:16." }));
+    } finally {
+      setExportingVideo(false);
+      setVideoProgress(0);
+    }
   };
 
   return (
@@ -471,6 +511,26 @@ function ActivityDetailPage() {
           >
             <Film size={18} /> {t("activity.watchCinematic", { defaultValue: "Assistir percurso (tela cheia)" })}
           </button>
+          {/* Export de VÍDEO real do replay (compartilhável), quando o
+              dispositivo suporta MediaRecorder + canvas.captureStream. */}
+          {canExportVideo() && (
+            <button
+              onClick={handleExportVideo}
+              disabled={exportingVideo}
+              className="flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-[#f97316] bg-[#f97316]/10 py-3.5 text-sm font-semibold text-[#c2410c] active:scale-[0.98] disabled:opacity-70"
+            >
+              {exportingVideo ? (
+                <>
+                  <Loader2 size={18} className="animate-spin" />
+                  {t("activity.videoExporting", { defaultValue: "Gerando vídeo…" })} {Math.round(videoProgress * 100)}%
+                </>
+              ) : (
+                <>
+                  <Clapperboard size={18} /> {t("activity.shareVideo", { defaultValue: "Gerar e compartilhar vídeo" })}
+                </>
+              )}
+            </button>
+          )}
           <div className="flex gap-2">
             <button
               onClick={() => videoInputRef.current?.click()}
