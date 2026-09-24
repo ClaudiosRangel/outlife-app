@@ -5,7 +5,41 @@
 > `.kiro/steering/roadmap-outvitar.md`). **Mantenha-o atualizado** ao
 > concluir qualquer tarefa/bloco: marque status, data e resumo.
 
-**Última atualização:** 24/09/2026 (🟩 FILA #1 CONCLUÍDA — Programa de indicação + convite WhatsApp PRO ao app)
+**Última atualização:** 24/09/2026 (🟩 FILA #2 CONCLUÍDA — Replay/vídeo PREMIUM estilo TrivLock)
+
+> **🟩 FILA #2 — Replay/vídeo do percurso PREMIUM (24/09/2026) — CONCLUÍDA (APK 14:55, 9,97 MB):**
+> Evolução do replay da atividade para o padrão TrivLock/Strava, com 3 modos na
+> tela de detalhe da atividade (`atividade.$activityId.tsx`), só quando há trajeto:
+> - **Assistir percurso (tela cheia)** — `src/components/ActivityReplayCinematic.tsx`:
+>   overlay full-screen, mapa satélite (Leaflet + tiles, sem WebGL), trajeto em
+>   laranja com halo escuro + ponto branco/laranja percorrendo, câmera
+>   acompanhando (FollowCam), e MÉTRICAS SOBREPOSTAS animando no topo (distância
+>   percorrida + tempo decorrido proporcional à duração) + contexto (vel. média,
+>   elevação). Play/pause/reiniciar + fechar. 15–22s conforme tamanho do trajeto.
+> - **Vídeo com métricas** — `src/components/ActivityVideoOverlay.tsx`: o usuário
+>   escolhe um vídeo do dispositivo (`<input accept=video/*>`), toca em tela
+>   cheia (`<video>`), e por cima ficam as métricas (distância/tempo/principal/
+>   elevação) + um MINI-MAPA do trajeto em laranja desenhado num `<canvas>`
+>   (mesma projeção Web Mercator, sem tiles), como o 2º print do TrivLock. Serve
+>   para gravar a tela / compartilhar o resultado. URL do vídeo via
+>   `URL.createObjectURL`, revogada ao fechar.
+> - **Story 9:16** — `src/lib/story-generator.ts`: gera imagem 1080×1920
+>   desenhando o TRAJETO direto no canvas (projeção Web Mercator própria — NÃO
+>   captura o Leaflet, que é frágil no WebView), fundo gradiente premium (ou foto
+>   da atividade se houver), marca OUTVITAR + slogan, e métricas grandes em duas
+>   colunas. Compartilha via `shareContent` (plugin nativo). 3 testes puros
+>   (`routeTotalKm`, property-based).
+> Componentes lazy (chunks `ActivityReplayCinematic`/`ActivityVideoOverlay`
+> separados). i18n pt-BR/en (`activity.premiumTitle/watchCinematic/
+> videoWithMetrics/shareStory`). Sem rota nova, sem migration. Diagnostics
+> limpos; commit `f97629f` na main.
+> **Obs.:** gravar o replay como VÍDEO diretamente (MediaRecorder do canvas +
+> Leaflet) é inviável/frágil no WebView Android — por isso o caminho de
+> compartilhamento é o story 9:16 (imagem premium), e o replay/vídeo são para
+> assistir/gravar tela. Se o usuário quiser export de vídeo real depois, o
+> caminho seria renderizar frames num canvas próprio (sem Leaflet) + MediaRecorder.
+
+**Anterior:** 24/09/2026 (🟩 FILA #1 CONCLUÍDA — Programa de indicação + convite WhatsApp PRO ao app)
 
 > **🟩 FILA #1 — WhatsApp PRO + Programa de Indicação (24/09/2026) — CONCLUÍDA (APK 14:19, 9,96 MB):**
 > Cada usuário tem um código de indicação; quem se cadastra pelo link/código
@@ -217,13 +251,10 @@
 > 1. ✅ **Estratégia WhatsApp PRO + indicação com cupom** — CONCLUÍDA em
 >    24/09/2026 (ver rodada no topo). Convite chamativo ao app + programa de
 >    indicação com cupom % configurável no admin.
-> 2. **Replay/vídeo do percurso PREMIUM (estilo TrivLock)** — evoluir o
->    `ActivityReplayMap` para: (a) modo TELA CHEIA com o trajeto (satélite) e
->    métricas sobrepostas (distância/tempo/elevação/ritmo) animando enquanto o
->    ponto percorre; (b) permitir incluir um VÍDEO próprio na atividade e
->    sobrepor as métricas no vídeo; (c) COMPARTILHAR isso (story 9:16). Refs: 2
->    prints do TrivLock (mapa 3D full com métricas no topo; vídeo real da pessoa
->    correndo com distância/ritmo/tempo sobrepostos + mapa do trajeto em laranja).
+> 2. ✅ **Replay/vídeo do percurso PREMIUM (estilo TrivLock)** — CONCLUÍDA em
+>    24/09/2026 (ver rodada no topo): (a) tela cheia com trajeto satélite +
+>    métricas animando; (b) vídeo próprio com métricas + mini-mapa sobrepostos;
+>    (c) compartilhar story 9:16.
 > 3. Admin de cupons (`/admin/cupons`).
 > 4. Rebranding técnico (appId → OutVitar) + publicação (Codemagic p/ iOS).
 > 5. Melhorias de design conforme análise (itens 1-5 acima).
