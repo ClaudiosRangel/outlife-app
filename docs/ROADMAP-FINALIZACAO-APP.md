@@ -5,7 +5,54 @@
 > `.kiro/steering/roadmap-outvitar.md`). **Mantenha-o atualizado** ao
 > concluir qualquer tarefa/bloco: marque status, data e resumo.
 
-**Última atualização:** 24/09/2026 (🟩 Export de VÍDEO real do percurso compartilhável — complemento da FILA #2)
+**Última atualização:** 25/09/2026 (🟩 RODADA BETA #1 — age gate 13+ + compartilhamento de vídeo A/B/C)
+
+> **🟩 RODADA BETA #1 (25/09/2026) — CONCLUÍDA (APK 10:36, 9,97 MB):**
+> Ajustes pré-beta (feedback do usuário nos prints) + bloqueador de loja.
+> **Age gate 13+ (OBRIGATÓRIO para publicar):**
+> - Migration `20260925120000_profile-birthdate-gender.sql` (2× + reload):
+>   `profiles.birth_date` (date) + `profiles.gender` (CHECK male/female/other/
+>   undisclosed) + função `age_years(date)`. Ambos nullable (perfis existentes
+>   intactos); trigger de trust fields NÃO cobre estes campos.
+> - `src/lib/age-gate.ts` (puro, 10 testes): `ageFromBirthDate`,
+>   `validateBirthDate` (reason missing/invalid/future/too_young/too_old),
+>   `toISODate`, MIN_AGE=13.
+> - Tela `/completar-perfil` (`completar-perfil.tsx`, rota flat no routeTree
+>   manual): nome/gênero/data de nascimento (selects dia/mês/ano), idade ao
+>   vivo, bloqueio <13. `birth_date`/`gender` adicionados à allowlist de
+>   `updateMyProfile`.
+> - **Gate**: cadastro (com sessão) → `/completar-perfil`; Home redireciona
+>   para lá se o usuário logado não tem `birth_date`. i18n pt-BR/en
+>   (`completeProfile.*`, `months.*`).
+> **Compartilhamento de vídeo (itens A/B/C do usuário):**
+> - **B (bug: vídeo parava antes do fim)** — `activity-video-export.ts`: o loop
+>   passou a ser dirigido por CONTAGEM DE FRAMES (não `performance.now()`, que o
+>   WebView throttla e cortava o percurso) + HOLD de ~1,5s no fim com o percurso
+>   completo + `recorder.start(250)` (timeslice força chunks finais) + stop com
+>   delay maior. Agora grava 100% do trajeto.
+> - **C (Vídeo com métricas agora compartilha)** — nova
+>   `generateVideoWithOverlay(video, path, metrics)`: compõe o vídeo do usuário
+>   + métricas + mini-mapa laranja num canvas e regrava (MediaRecorder),
+>   gerando arquivo compartilhável. Botão "Compartilhar" no `ActivityVideoOverlay`
+>   (com % de progresso) → `shareContent` (folha nativa).
+> - **A (Assistir tela cheia)** — `ActivityReplayCinematic` ganhou botão
+>   "Compartilhar" no header (via `onShareVideo` = mesmo `handleExportVideo` do B).
+> Como o Android não posta direto em cada rede, todos os 3 abrem a folha nativa
+> de compartilhamento (WhatsApp/Instagram/Facebook). Diagnostics limpos; commit
+> `a6ed0af` na main.
+>
+> **📌 PLANO BETA acordado (25/09) — próximas rodadas:**
+> - **Rodada 2**: Ranking por TIPO de atividade (abas por modalidade, por
+>   usuário — sem grupos/clãs) + Explorar Rotas melhorado (como chegar/voltar +
+>   altimetria + import GPX).
+>   **DECISÃO:** NÃO pegar rotas do concorrente via login/senha (viola ToS,
+>   reprova nas lojas, frágil). Caminho legal: OSM (já importamos), GPX do
+>   usuário, Wikiloc/Komoot/Strava via export/API oficial, ICMBio, conteúdo
+>   próprio (Criar rota/segmentos).
+> - **Rodada 3** (design da Análise): tela de atividade concluída comemorativa
+>   + streak; feed com like animado + selos.
+
+**Anterior:** 24/09/2026 (🟩 Export de VÍDEO real do percurso compartilhável — complemento da FILA #2)
 
 > **🟩 EXPORT DE VÍDEO REAL do percurso (24/09/2026) — CONCLUÍDO (APK 15:35, 9,97 MB):**
 > A pedido do usuário ("como faço para compartilhar?" → quer vídeo pronto, não
