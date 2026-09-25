@@ -51,7 +51,12 @@ type DrawableTile = HTMLImageElement | ImageBitmap;
  * viramos Blob LOCAL e decodificamos — blob local nunca tainta.
  */
 async function loadTile(url: string): Promise<DrawableTile> {
-  const res = await fetch(url, { mode: "cors", cache: "reload" });
+  // `credentials: "omit"` + cache-buster garantem uma resposta CORS "fresca":
+  // no WebView Android, reaproveitar uma entrada de cache que o Leaflet já
+  // baixou SEM CORS devolvia uma resposta opaca que tainta o canvas. Forçar
+  // uma URL única (bust) evita o hit de cache; `no-store` não reutiliza nada.
+  const bust = url + (url.includes("?") ? "&" : "?") + "_v=" + Date.now();
+  const res = await fetch(bust, { mode: "cors", cache: "no-store", credentials: "omit" });
   if (!res.ok) throw new Error(`tile ${res.status}`);
   const blob = await res.blob();
   if (typeof createImageBitmap === "function") {

@@ -9,7 +9,7 @@
 // acumulados) animam no topo; marca OUTVITAR fixa.
 
 import { haversineMeters } from "@/lib/haversine";
-import { drawMapBackground, type MapProjector } from "@/lib/map-canvas";
+import { drawMapBackground, isCanvasTainted, type MapProjector } from "@/lib/map-canvas";
 
 export type ExportLatLng = { lat: number; lng: number };
 export type ExportMetricStatic = { label: string; value: string };
@@ -141,11 +141,36 @@ export function generateActivityVideo(input: VideoExportInput): Promise<Blob> {
     // A geração começa DEPOIS que o mapa de fundo terminou de baixar/desenhar.
     // `padding` reserva espaço superior/inferior para as métricas.
     drawMapBackground(bgCtx, path, W, H, "satellite", 90)
-      .then((projector) => startRecording(projector))
+      .then((projector) => {
+        // GARANTIA CRÍTICA: se, apesar de tudo, algum tile taintou o canvas de
+        // fundo (WebView Android ainda propaga taint em certos casos, mesmo
+        // com fetch->blob), o MediaRecorder produziria um vídeo VAZIO e o
+        // compartilhamento falharia silenciosamente. Nesse caso descartamos o
+        // mapa: limpamos o bgCanvas para um fundo neutro (nunca tainta) e
+        // usamos a projeção do bbox. O vídeo SEMPRE sai (com traçado+métricas),
+        // com ou sem mapa — nunca falha por causa do mapa.
+        if (isCanvasTainted(bgCanvas)) {
+          bgCtx.clearRect(0, 0, W, H);
+          drawNeutralBackground(bgCtx);
+          startRecording(fallbackProjector());
+        } else {
+          startRecording(projector);
+        }
+      })
       .catch(() => {
         // Falha no mapa: usa o próprio bgCtx (fundo neutro) + projeção do bbox.
+        drawNeutralBackground(bgCtx);
         startRecording(fallbackProjector());
       });
+
+    // Fundo neutro (gradiente escuro) para quando o mapa não puder ser usado.
+    function drawNeutralBackground(c: CanvasRenderingContext2D) {
+      const g = c.createLinearGradient(0, 0, 0, H);
+      g.addColorStop(0, "#0f172a");
+      g.addColorStop(1, "#1e293b");
+      c.fillStyle = g;
+      c.fillRect(0, 0, W, H);
+    }
 
     // Projeção de fallback (fit do bbox no canvas) caso o mapa não carregue.
     function fallbackProjector(): MapProjector {
@@ -297,6 +322,15 @@ export function generateActivityVideo(input: VideoExportInput): Promise<Blob> {
 
     // Desenha o 1º frame antes de iniciar (garante conteúdo no stream).
     drawFrame(0);
+
+    // Salvaguarda FINAL: se o canvas de captura ficou tainted (não deveria,
+    // já tratamos o bgCanvas), aborta a gravação e rejeita com mensagem clara
+    // em vez de gerar um vídeo vazio silencioso.
+    if (isCanvasTainted(canvas)) {
+      try { recorder.stop(); } catch { /* ignore */ }
+      reject(new Error("Canvas contaminado (CORS) — não é possível gravar o vídeo."));
+      return;
+    }
 
     let rafId: number | null = null;
 
