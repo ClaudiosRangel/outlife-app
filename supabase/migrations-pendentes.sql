@@ -1159,3 +1159,12 @@ alter table public.profile_contacts
 --     args) antes do CREATE. Mesma lógica de escopo/métrica/período; filtra
 --     ua.activity_type quando informado. (idempotente)
 -- ############################################################################
+
+-- ############################################################################
+-- 48) 20260925160000_activity-streak.sql
+--     Streak de atividade: RPC my_activity_streak() (SECURITY DEFINER, lê só do
+--     próprio auth.uid()) = dias consecutivos (fuso America/Sao_Paulo) com
+--     atividade concluída, contando a partir de hoje OU ontem (não quebra só
+--     porque hoje ainda não teve). Alimenta a tela comemorativa de atividade
+--     concluída. (idempotente)
+-- ############################################################################

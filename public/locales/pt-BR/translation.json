@@ -715,6 +715,14 @@
     "refunded": "Reembolsado",
     "pending": "Aguardando"
   },
+  "activityDone": {
+    "title": "Atividade concluída!",
+    "streak_one": "{{count}} dia seguido",
+    "streak_other": "{{count}} dias seguidos",
+    "share": "Compartilhar conquista",
+    "view": "Ver atividade",
+    "home": "Voltar ao início"
+  },
   "referral": {
     "title": "Convide amigos e ganhe",
     "subtitle": "A cada amigo que se cadastrar pelo seu convite, você ganha um cupom de desconto para usar nas lojas dos parceiros.",

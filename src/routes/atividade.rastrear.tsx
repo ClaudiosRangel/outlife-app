@@ -404,7 +404,8 @@ function TrackActivityPage() {
         setReviewDestinationId(a.destination_id);
         setReviewOpen(true);
       } else {
-        navigate({ to: "/atividade/$activityId", params: { activityId: a.id } });
+        // Tela comemorativa de atividade concluída (Rodada 3).
+        navigate({ to: "/atividade/concluida/$activityId", params: { activityId: a.id } });
       }
     },
     onError: (e: Error) => {
@@ -888,7 +889,7 @@ function TrackActivityPage() {
               const id = savedActivityId;
               setSavedActivityId(null);
               setReviewDestinationId(null);
-              navigate({ to: "/atividade/$activityId", params: { activityId: id } });
+              navigate({ to: "/atividade/concluida/$activityId", params: { activityId: id } });
             }
           }}
           targetId={reviewDestinationId}

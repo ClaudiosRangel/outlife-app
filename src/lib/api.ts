@@ -3609,3 +3609,15 @@ export async function fetchMyReferralStats(): Promise<ReferralStats> {
     rewarded: Number(row?.rewarded ?? 0),
   };
 }
+
+
+// ============================================================================
+// Streak de atividade (dias consecutivos) — tela comemorativa / gamificação
+// ============================================================================
+
+/** Dias consecutivos com atividade concluída (a partir de hoje ou ontem). */
+export async function fetchMyActivityStreak(): Promise<number> {
+  const { data, error } = await supabase.rpc("my_activity_streak" as never, {} as never);
+  if (error) throw error;
+  return Number(data ?? 0);
+}

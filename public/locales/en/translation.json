@@ -715,6 +715,14 @@
     "refunded": "Refunded",
     "pending": "Pending"
   },
+  "activityDone": {
+    "title": "Activity complete!",
+    "streak_one": "{{count}} day streak",
+    "streak_other": "{{count}} day streak",
+    "share": "Share achievement",
+    "view": "View activity",
+    "home": "Back to home"
+  },
   "referral": {
     "title": "Invite friends and earn",
     "subtitle": "For every friend who signs up through your invite, you earn a discount coupon to use at partner stores.",

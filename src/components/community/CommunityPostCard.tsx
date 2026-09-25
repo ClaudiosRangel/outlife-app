@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router";
+import { useState } from "react";
 import { Heart, MessageCircle, Share2, MapPin, Trash2, Trophy, type LucideIcon } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { SafeImage } from "@/components/SafeImage";
@@ -109,6 +110,17 @@ export function CommunityPostCard({
   const { t } = useTranslation();
   const act = post.activity ?? null;
   const isActivity = !!post.activityId && !!act;
+
+  // Microrrecompensa: anima o coração (pop + partículas) só ao CURTIR (não ao
+  // descurtir). `burst` dispara a animação e se limpa sozinho.
+  const [burst, setBurst] = useState(false);
+  const handleLikeClick = () => {
+    if (!post.liked) {
+      setBurst(true);
+      window.setTimeout(() => setBurst(false), 700);
+    }
+    onToggleLike(post.id);
+  };
 
   // Ícone do topo: por tipo de atividade (post de atividade) ou por categoria.
   const iconKey = isActivity
@@ -225,10 +237,28 @@ export function CommunityPostCard({
         {/* Ações (mantidas como hoje) */}
         <div className="flex items-center gap-4 text-foreground">
           <button
-            onClick={() => onToggleLike(post.id)}
+            onClick={handleLikeClick}
             className={`flex items-center gap-1.5 text-sm transition-colors ${post.liked ? "text-red-500" : ""}`}
           >
-            <Heart size={20} fill={post.liked ? "currentColor" : "none"} />
+            <span className="relative inline-grid place-items-center">
+              <Heart
+                size={20}
+                fill={post.liked ? "currentColor" : "none"}
+                className={burst ? "animate-[ov-heart-pop_0.5s_ease-out]" : ""}
+              />
+              {/* Partículas do "burst" ao curtir */}
+              {burst && (
+                <span className="pointer-events-none absolute inset-0">
+                  {[0, 60, 120, 180, 240, 300].map((deg) => (
+                    <span
+                      key={deg}
+                      className="absolute left-1/2 top-1/2 h-1 w-1 rounded-full bg-red-500"
+                      style={{ animation: `ov-heart-particle 0.6s ease-out forwards`, ["--ov-angle" as string]: `${deg}deg` }}
+                    />
+                  ))}
+                </span>
+              )}
+            </span>
             <span className="font-medium">{post.likes}</span>
           </button>
           <button onClick={() => onToggleComments(post.id)} className="flex items-center gap-1.5 text-sm">

@@ -47,6 +47,7 @@ import { Route as ChecklistChecklistIdRouteImport } from './routes/checklist.$ch
 import { Route as ChatUserIdRouteImport } from './routes/chat.$userId'
 import { Route as AtividadeRastrearRouteImport } from './routes/atividade.rastrear'
 import { Route as AtividadeActivityIdRouteImport } from './routes/atividade.$activityId'
+import { Route as AtividadeConcluidaActivityIdRouteImport } from './routes/atividade.concluida.$activityId'
 import { Route as ApiNotifyAdminsRouteImport } from './routes/api.notify-admins'
 import { Route as AdminTrilhasRouteImport } from './routes/admin.trilhas'
 import { Route as AdminPublicarRouteImport } from './routes/admin.publicar'
@@ -260,6 +261,11 @@ const AtividadeActivityIdRoute = AtividadeActivityIdRouteImport.update({
   path: '/atividade/$activityId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AtividadeConcluidaActivityIdRoute = AtividadeConcluidaActivityIdRouteImport.update({
+  id: '/atividade/concluida/$activityId',
+  path: '/atividade/concluida/$activityId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiNotifyAdminsRoute = ApiNotifyAdminsRouteImport.update({
   id: '/api/notify-admins',
   path: '/api/notify-admins',
@@ -408,6 +414,7 @@ export interface FileRoutesByFullPath {
   '/admin/trilhas': typeof AdminTrilhasRoute
   '/api/notify-admins': typeof ApiNotifyAdminsRoute
   '/atividade/$activityId': typeof AtividadeActivityIdRoute
+  '/atividade/concluida/$activityId': typeof AtividadeConcluidaActivityIdRoute
   '/atividade/rastrear': typeof AtividadeRastrearRoute
   '/chat/$userId': typeof ChatUserIdRoute
   '/checklist/$checklistId': typeof ChecklistChecklistIdRoute
@@ -470,6 +477,7 @@ export interface FileRoutesByTo {
   '/admin/trilhas': typeof AdminTrilhasRoute
   '/api/notify-admins': typeof ApiNotifyAdminsRoute
   '/atividade/$activityId': typeof AtividadeActivityIdRoute
+  '/atividade/concluida/$activityId': typeof AtividadeConcluidaActivityIdRoute
   '/atividade/rastrear': typeof AtividadeRastrearRoute
   '/chat/$userId': typeof ChatUserIdRoute
   '/checklist/$checklistId': typeof ChecklistChecklistIdRoute
@@ -533,6 +541,7 @@ export interface FileRoutesById {
   '/admin/trilhas': typeof AdminTrilhasRoute
   '/api/notify-admins': typeof ApiNotifyAdminsRoute
   '/atividade/$activityId': typeof AtividadeActivityIdRoute
+  '/atividade/concluida/$activityId': typeof AtividadeConcluidaActivityIdRoute
   '/atividade/rastrear': typeof AtividadeRastrearRoute
   '/chat/$userId': typeof ChatUserIdRoute
   '/checklist/$checklistId': typeof ChecklistChecklistIdRoute
@@ -597,6 +606,7 @@ export interface FileRouteTypes {
     | '/admin/trilhas'
     | '/api/notify-admins'
     | '/atividade/$activityId'
+    | '/atividade/concluida/$activityId'
     | '/atividade/rastrear'
     | '/chat/$userId'
     | '/checklist/$checklistId'
@@ -659,6 +669,7 @@ export interface FileRouteTypes {
     | '/admin/trilhas'
     | '/api/notify-admins'
     | '/atividade/$activityId'
+    | '/atividade/concluida/$activityId'
     | '/atividade/rastrear'
     | '/chat/$userId'
     | '/checklist/$checklistId'
@@ -721,6 +732,7 @@ export interface FileRouteTypes {
     | '/admin/trilhas'
     | '/api/notify-admins'
     | '/atividade/$activityId'
+    | '/atividade/concluida/$activityId'
     | '/atividade/rastrear'
     | '/chat/$userId'
     | '/checklist/$checklistId'
@@ -784,6 +796,7 @@ export interface RootRouteChildren {
   AdminTrilhasRoute: typeof AdminTrilhasRoute
   ApiNotifyAdminsRoute: typeof ApiNotifyAdminsRoute
   AtividadeActivityIdRoute: typeof AtividadeActivityIdRoute
+  AtividadeConcluidaActivityIdRoute: typeof AtividadeConcluidaActivityIdRoute
   AtividadeRastrearRoute: typeof AtividadeRastrearRoute
   ChatUserIdRoute: typeof ChatUserIdRoute
   ChecklistChecklistIdRoute: typeof ChecklistChecklistIdRoute
@@ -1077,6 +1090,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AtividadeActivityIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/atividade/concluida/$activityId': {
+      id: '/atividade/concluida/$activityId'
+      path: '/atividade/concluida/$activityId'
+      fullPath: '/atividade/concluida/$activityId'
+      preLoaderRoute: typeof AtividadeConcluidaActivityIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/notify-admins': {
       id: '/api/notify-admins'
       path: '/api/notify-admins'
@@ -1282,6 +1302,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminTrilhasRoute: AdminTrilhasRoute,
   ApiNotifyAdminsRoute: ApiNotifyAdminsRoute,
   AtividadeActivityIdRoute: AtividadeActivityIdRoute,
+  AtividadeConcluidaActivityIdRoute: AtividadeConcluidaActivityIdRoute,
   AtividadeRastrearRoute: AtividadeRastrearRoute,
   ChatUserIdRoute: ChatUserIdRoute,
   ChecklistChecklistIdRoute: ChecklistChecklistIdRoute,
