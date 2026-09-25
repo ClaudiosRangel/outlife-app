@@ -134,6 +134,8 @@
     "featuredPartners": "Featured partners",
     "storeTitle": "Virtual Store",
     "market": "Market",
+    "rankingTitle": "Ranking & Stats",
+    "rankingSubtitle": "See your position by activity and period",
     "slogan": "“Life is not only hiking.\nLiving is different\nfrom being alive.”",
     "stats": {
       "destinations": "destinations",
@@ -777,7 +779,8 @@
     "empty": "No activities in the ranking yet.",
     "loadError": "Couldn't load the ranking. Please try again.",
     "position": "Position",
-    "byDestination": "Ranking at this destination"
+    "byDestination": "Ranking at this destination",
+    "allTypes": "All"
   },
   "activity": {
     "trackTitle": "Track activity",

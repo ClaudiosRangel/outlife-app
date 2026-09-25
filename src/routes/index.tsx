@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { Bell, MapPin, Search, Sparkles, ArrowRight, Calendar, Users } from "lucide-react";
+import { Bell, MapPin, Search, Sparkles, ArrowRight, Calendar, Users, Trophy, BarChart3 } from "lucide-react";
 import { BrandLogo } from "@/components/BrandLogo";
 import hero from "@/assets/hero-mountain.jpg";
 import seloCadastur from "@/assets/selo-cadastur.jpg";
@@ -219,6 +219,32 @@ function Home() {
 
       {/* Eventos — grid de cards com imagem */}
       <EventosHomeSection />
+
+      {/* Ranking & Estatísticas — atalho de destaque (Rodada 2, opção A).
+          Só para usuário logado; leva à tela de ranking (abas por tipo). */}
+      {user && (
+        <section className="mt-6 px-5">
+          <Link
+            to="/ranking"
+            className="flex items-center gap-3 overflow-hidden rounded-3xl bg-gradient-forest p-4 text-white shadow-float active:scale-[0.99]"
+          >
+            <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-white/15 backdrop-blur">
+              <Trophy size={22} />
+            </span>
+            <div className="min-w-0 flex-1">
+              <div className="font-display text-lg font-semibold leading-tight">
+                {t("home.rankingTitle", "Ranking & Estatísticas")}
+              </div>
+              <div className="text-xs text-white/80">
+                {t("home.rankingSubtitle", "Veja sua posição por modalidade e período")}
+              </div>
+            </div>
+            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white/15">
+              <BarChart3 size={18} />
+            </span>
+          </Link>
+        </section>
+      )}
 
       {/* Loja Virtual — carrossel de ofertas/publicações dos parceiros */}
       <HomeStoreSection />

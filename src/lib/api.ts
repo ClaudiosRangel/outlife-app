@@ -987,6 +987,8 @@ export async function fetchActivityRanking(params: {
   scope: RankingScope;
   period: RankingPeriod;
   destinationId?: string | null;
+  /** Tipo de atividade (code do catálogo) para filtrar; null/undefined = todos. */
+  activityType?: string | null;
   limit?: number;
   now?: Date;
 }): Promise<RankingRow[]> {
@@ -997,6 +999,7 @@ export async function fetchActivityRanking(params: {
     _since: since,
     _destination_id: params.destinationId ?? null,
     _limit: params.limit ?? 50,
+    _activity_type: params.activityType ?? null,
   } as never);
   if (error) throw error;
 

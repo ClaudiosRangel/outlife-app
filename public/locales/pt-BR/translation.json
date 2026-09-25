@@ -134,6 +134,8 @@
     "featuredPartners": "Parceiros em destaque",
     "storeTitle": "Loja Virtual",
     "market": "Mercado",
+    "rankingTitle": "Ranking & Estatísticas",
+    "rankingSubtitle": "Veja sua posição por modalidade e período",
     "slogan": "“A vida não é só trilhar.\nViver é diferente\nde estar vivo.”",
     "stats": {
       "destinations": "destinos",
@@ -777,7 +779,8 @@
     "empty": "Nenhuma atividade no ranking ainda.",
     "loadError": "Não foi possível carregar o ranking. Tente novamente.",
     "position": "Posição",
-    "byDestination": "Ranking neste destino"
+    "byDestination": "Ranking neste destino",
+    "allTypes": "Todos"
   },
   "activity": {
     "trackTitle": "Rastrear atividade",

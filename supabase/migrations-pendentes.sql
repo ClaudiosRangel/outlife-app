@@ -1150,3 +1150,12 @@ alter table public.profile_contacts
 --     A tela "Complete seu Perfil" pós-cadastro preenche e bloqueia <13.
 --     (idempotente)
 -- ############################################################################
+
+-- ############################################################################
+-- 47) 20260925140000_ranking-by-activity-type.sql
+--     Ranking por TIPO de atividade. Recria fetch_activity_ranking com novo
+--     parâmetro final _activity_type text default null (NULL = todos os tipos,
+--     comportamento anterior). DROP das assinaturas antiga (5 args) e nova (6
+--     args) antes do CREATE. Mesma lógica de escopo/métrica/período; filtra
+--     ua.activity_type quando informado. (idempotente)
+-- ############################################################################

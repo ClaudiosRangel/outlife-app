@@ -7,7 +7,7 @@ import { StatusBar } from "@/components/StatusBar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SafeImage } from "@/components/SafeImage";
 import { useAuth } from "@/hooks/use-auth";
-import { fetchActivityRanking, resolveAsset } from "@/lib/api";
+import { fetchActivityRanking, fetchActivityTypes, resolveAsset } from "@/lib/api";
 import { formatRankingValue, type RankingMetric, type RankingScope, type RankingPeriod } from "@/lib/ranking-format";
 import avatarFallback from "@/assets/avatar-rafael.jpg";
 
@@ -34,10 +34,19 @@ function RankingScreen() {
   const [metric, setMetric] = useState<RankingMetric>("distancia");
   const [scope, setScope] = useState<RankingScope>("global");
   const [period, setPeriod] = useState<RankingPeriod>("sempre");
+  // Aba por tipo de atividade: null = Todos (Rodada 2, por usuário e tipo).
+  const [activityType, setActivityType] = useState<string | null>(null);
+
+  // Catálogo de tipos ATIVOS para gerar as abas (Todos + cada modalidade).
+  const { data: activityTypes = [] } = useQuery({
+    queryKey: ["activity-types"],
+    queryFn: fetchActivityTypes,
+    staleTime: 5 * 60 * 1000,
+  });
 
   const { data: rows = [], isLoading, isError } = useQuery({
-    queryKey: ["activity-ranking", metric, scope, period],
-    queryFn: () => fetchActivityRanking({ metric, scope, period }),
+    queryKey: ["activity-ranking", metric, scope, period, activityType],
+    queryFn: () => fetchActivityRanking({ metric, scope, period, activityType }),
   });
 
   return (
@@ -56,8 +65,31 @@ function RankingScreen() {
         <p className="mt-2 text-center text-xs text-white/70">{t("ranking.subtitle")}</p>
       </div>
 
-      {/* Seletor de métrica */}
+      {/* Abas por TIPO de atividade (Todos + cada modalidade do catálogo) */}
       <div className="mt-4 flex gap-2 overflow-x-auto scrollbar-hide px-5">
+        <button
+          onClick={() => setActivityType(null)}
+          className={`whitespace-nowrap rounded-full px-4 py-1.5 text-xs font-semibold transition-base ${
+            activityType === null ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground"
+          }`}
+        >
+          {t("ranking.allTypes", { defaultValue: "Todos" })}
+        </button>
+        {activityTypes.map((tp) => (
+          <button
+            key={tp.code}
+            onClick={() => setActivityType(tp.code)}
+            className={`whitespace-nowrap rounded-full px-4 py-1.5 text-xs font-semibold transition-base ${
+              activityType === tp.code ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground"
+            }`}
+          >
+            {t(`activity.activityTypes.${tp.code}`, { defaultValue: tp.name })}
+          </button>
+        ))}
+      </div>
+
+      {/* Seletor de métrica */}
+      <div className="mt-3 flex gap-2 overflow-x-auto scrollbar-hide px-5">
         {METRICS.map((m) => (
           <button
             key={m}
