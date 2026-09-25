@@ -41,14 +41,35 @@ function pickZoom(path: LatLng[], w: number, h: number, paddingPx: number): numb
   return 2;
 }
 
-function loadTile(url: string): Promise<HTMLImageElement> {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.crossOrigin = "anonymous";
-    img.onload = () => resolve(img);
-    img.onerror = () => reject(new Error("tile"));
-    img.src = url;
-  });
+type DrawableTile = HTMLImageElement | ImageBitmap;
+
+/**
+ * Carrega um tile de forma que NÃO "suje" (taint) o canvas — essencial para o
+ * canvas poder ser capturado pelo MediaRecorder (o vídeo). Em vez de
+ * `<img crossOrigin>` (que pode reusar uma entrada de cache SEM headers CORS,
+ * deixada pelo Leaflet, e tainta o canvas), buscamos via `fetch` (CORS),
+ * viramos Blob LOCAL e decodificamos — blob local nunca tainta.
+ */
+async function loadTile(url: string): Promise<DrawableTile> {
+  const res = await fetch(url, { mode: "cors", cache: "reload" });
+  if (!res.ok) throw new Error(`tile ${res.status}`);
+  const blob = await res.blob();
+  if (typeof createImageBitmap === "function") {
+    return await createImageBitmap(blob);
+  }
+  // Fallback: objectURL (também local → não tainta).
+  const objectUrl = URL.createObjectURL(blob);
+  try {
+    return await new Promise<HTMLImageElement>((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = () => reject(new Error("tile decode"));
+      img.src = objectUrl;
+    });
+  } finally {
+    // Revoga depois de um tick para garantir que o decode terminou.
+    setTimeout(() => URL.revokeObjectURL(objectUrl), 5000);
+  }
 }
 
 export type MapProjector = {
@@ -104,6 +125,9 @@ export async function drawMapBackground(
   const tileMaxY = Math.floor((originY + h) / TILE);
   const maxTileIndex = Math.pow(2, z) - 1;
 
+  // Baixa TODOS os tiles primeiro (blobs locais), depois desenha em ordem —
+  // evita desenhar parcialmente e garante que nada tainte o canvas.
+  const tiles: Array<{ img: DrawableTile; dx: number; dy: number }> = [];
   const jobs: Promise<void>[] = [];
   for (let tx = tileMinX; tx <= tileMaxX; tx++) {
     for (let ty = tileMinY; ty <= tileMaxY; ty++) {
@@ -113,11 +137,32 @@ export async function drawMapBackground(
       const dy = ty * TILE - originY;
       jobs.push(
         loadTile(url)
-          .then((img) => { ctx.drawImage(img, dx, dy, TILE, TILE); })
-          .catch(() => { /* tile faltando: fundo neutro aparece */ }),
+          .then((img) => { tiles.push({ img, dx, dy }); })
+          .catch(() => { /* tile faltando: fundo neutro aparece nessa área */ }),
       );
     }
   }
   await Promise.all(jobs);
+  for (const t of tiles) {
+    try {
+      ctx.drawImage(t.img, t.dx, t.dy, TILE, TILE);
+    } catch { /* ignore */ }
+    if (typeof ImageBitmap !== "undefined" && t.img instanceof ImageBitmap) t.img.close();
+  }
   return { project, zoom: z };
+}
+
+/**
+ * Diagnóstico: true se o canvas está "tainted" (não pode ser lido/capturado).
+ * Usado pelo export de vídeo para saber se o mapa entrará ou não no vídeo.
+ */
+export function isCanvasTainted(canvas: HTMLCanvasElement): boolean {
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return true;
+  try {
+    ctx.getImageData(0, 0, 1, 1);
+    return false;
+  } catch {
+    return true;
+  }
 }
