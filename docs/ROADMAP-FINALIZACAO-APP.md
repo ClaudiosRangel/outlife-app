@@ -5,7 +5,31 @@
 > `.kiro/steering/roadmap-outvitar.md`). **Mantenha-o atualizado** ao
 > concluir qualquer tarefa/bloco: marque status, data e resumo.
 
-**Última atualização:** 25/09/2026 (🟩 RODADA BETA #2 (parte 2) — Explorar Rotas: como chegar ao início)
+**Última atualização:** 25/09/2026 (🟩 RODADA BETA #3 (design) — atividade concluída comemorativa + streak + like animado)
+
+> **🟩 RODADA BETA #3 — design (25/09/2026) — CONCLUÍDA (APK 14:08, 9,98 MB):**
+> Itens de maior impacto da Análise de Design (retenção/"viciar"):
+> - **Tela de atividade concluída comemorativa** — rota flat
+>   `/atividade/concluida/$activityId` (`atividade.concluida.$activityId.tsx`,
+>   routeTree manual): full-screen com confete (CSS puro), troféu, métricas
+>   grandes (distância/tempo/vel/elevação), **streak** (dias seguidos) e ações
+>   (Compartilhar conquista via story 9:16 / Ver atividade / Voltar). Ao SALVAR
+>   uma atividade, `atividade.rastrear.tsx` passou a navegar para essa tela (nos
+>   dois caminhos: direto e após o review de destino), em vez de ir direto ao
+>   detalhe. i18n `activityDone.*`.
+> - **Streak**: migration `20260925160000_activity-streak.sql` (2× + reload) —
+>   RPC `my_activity_streak()` (dias consecutivos com atividade concluída, fuso
+>   America/Sao_Paulo, conta a partir de hoje OU ontem). API `fetchMyActivityStreak`.
+> - **Like animado no feed** (microrrecompensa) — `CommunityPostCard.tsx`: ao
+>   CURTIR (não ao descurtir), o coração faz "pop" + solta partículas em 6
+>   direções. Keyframes `ov-heart-pop`/`ov-heart-particle` em `styles.css`.
+> Sem quebra de navegação (barra do rodapé mantida). Diagnostics limpos; commit
+> `978c96b` na main.
+> **Falta da Análise (fase futura, não bloqueia beta):** onboarding 3-4 telas,
+> selos de conquista no card do feed, transições entre telas, estados vazios
+> ilustrados, design system/tokens unificados.
+
+**Anterior:** 25/09/2026 (🟩 RODADA BETA #2 (parte 2) — Explorar Rotas: como chegar ao início)
 
 > **🟩 RODADA BETA #2 — parte 2 (25/09/2026) — CONCLUÍDA (APK 13:26, 9,97 MB):**
 > "Explorar Rotas" melhorado (opção 1/enxuto — sem tabela nova, reusando o que
