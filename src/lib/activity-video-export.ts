@@ -9,6 +9,7 @@
 // acumulados) animam no topo; marca OUTVITAR fixa.
 
 import { haversineMeters } from "@/lib/haversine";
+import { drawMapBackground, type MapProjector } from "@/lib/map-canvas";
 
 export type ExportLatLng = { lat: number; lng: number };
 export type ExportMetricStatic = { label: string; value: string };
@@ -114,83 +115,141 @@ export function generateActivityVideo(input: VideoExportInput): Promise<Blob> {
       return;
     }
 
-    const captureStream = (canvas as HTMLCanvasElement & { captureStream: (fps?: number) => MediaStream }).captureStream;
-    const stream = captureStream.call(canvas, FPS);
-
-    let recorder: MediaRecorder;
-    try {
-      recorder = new MediaRecorder(stream, { mimeType, videoBitsPerSecond: 6_000_000 });
-    } catch (e) {
-      reject(e instanceof Error ? e : new Error(String(e)));
+    // Fundo do MAPA (satélite) desenhado UMA vez num canvas offscreen — idêntico
+    // ao "Assistir percurso". A cada frame copiamos esse fundo e desenhamos o
+    // traçado por cima (mesma projeção do mapa, via `projector`).
+    const bgCanvas = document.createElement("canvas");
+    bgCanvas.width = W;
+    bgCanvas.height = H;
+    const bgCtx = bgCanvas.getContext("2d");
+    if (!bgCtx) {
+      reject(new Error("Contexto 2D indisponível."));
       return;
     }
 
-    const chunks: BlobPart[] = [];
-    recorder.ondataavailable = (ev) => {
-      if (ev.data && ev.data.size > 0) chunks.push(ev.data);
-    };
-    recorder.onerror = () => reject(new Error("Falha na gravação do vídeo."));
-    recorder.onstop = () => {
-      const blob = new Blob(chunks, { type: mimeType.split(";")[0] });
-      if (blob.size === 0) reject(new Error("Vídeo vazio."));
-      else resolve(blob);
-    };
-
-    // Pré-calcula projeção e caixa de desenho do trajeto.
-    const pts = path.map((p) => project(p.lat, p.lng));
-    let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
-    for (const p of pts) {
-      minX = Math.min(minX, p.x); maxX = Math.max(maxX, p.x);
-      minY = Math.min(minY, p.y); maxY = Math.max(maxY, p.y);
-    }
-    const spanX = maxX - minX || 1e-9;
-    const spanY = maxY - minY || 1e-9;
-    const boxX = 90, boxY = 360, boxW = W - 180, boxH = 980;
-    const scale = Math.min(boxW / spanX, boxH / spanY);
-    const drawW = spanX * scale, drawH = spanY * scale;
-    const offX = boxX + (boxW - drawW) / 2;
-    const offY = boxY + (boxH - drawH) / 2;
-    const toXY = (p: { x: number; y: number }) => ({ x: offX + (p.x - minX) * scale, y: offY + (p.y - minY) * scale });
-    const xyPts = pts.map(toXY);
+    const durationSeconds = input.durationSeconds ?? 0;
+    const activityName = input.activityName ?? null;
+    const extraMetrics = input.extraMetrics ?? [];
+    const videoSeconds = Math.min(20, Math.max(6, input.videoSeconds ?? 12));
+    const totalFrames = Math.round(videoSeconds * FPS);
+    let frame = 0;
 
     // Distância total.
     let totalDist = 0;
     for (let i = 1; i < path.length; i++) totalDist += haversineMeters(path[i - 1], path[i]);
 
-    const durationSeconds = input.durationSeconds ?? 0;
-    const activityName = input.activityName ?? null;
-    const extraMetrics = input.extraMetrics ?? [];
+    // A geração começa DEPOIS que o mapa de fundo terminou de baixar/desenhar.
+    // `padding` reserva espaço superior/inferior para as métricas.
+    drawMapBackground(bgCtx, path, W, H, "satellite", 90)
+      .then((projector) => startRecording(projector))
+      .catch(() => {
+        // Falha no mapa: usa o próprio bgCtx (fundo neutro) + projeção do bbox.
+        startRecording(fallbackProjector());
+      });
 
-    const videoSeconds = Math.min(20, Math.max(6, input.videoSeconds ?? 12));
-    const totalFrames = Math.round(videoSeconds * FPS);
-    let frame = 0;
+    // Projeção de fallback (fit do bbox no canvas) caso o mapa não carregue.
+    function fallbackProjector(): MapProjector {
+      const pts = path.map((p) => ({
+        x: (p.lng + 180) / 360,
+        y: 0.5 - Math.log((1 + Math.sin((p.lat * Math.PI) / 180)) / (1 - Math.sin((p.lat * Math.PI) / 180))) / (4 * Math.PI),
+      }));
+      let mnX = Infinity, mxX = -Infinity, mnY = Infinity, mxY = -Infinity;
+      for (const p of pts) { mnX = Math.min(mnX, p.x); mxX = Math.max(mxX, p.x); mnY = Math.min(mnY, p.y); mxY = Math.max(mxY, p.y); }
+      const spanX = mxX - mnX || 1e-9, spanY = mxY - mnY || 1e-9;
+      const boxX = 90, boxY = 360, boxW = W - 180, boxH = 980;
+      const scale = Math.min(boxW / spanX, boxH / spanY);
+      const offX = boxX + (boxW - spanX * scale) / 2, offY = boxY + (boxH - spanY * scale) / 2;
+      return {
+        zoom: 0,
+        project: (lat: number, lng: number) => {
+          const x = (lng + 180) / 360;
+          const s = Math.sin((lat * Math.PI) / 180);
+          const y = 0.5 - Math.log((1 + s) / (1 - s)) / (4 * Math.PI);
+          return { x: offX + (x - mnX) * scale, y: offY + (y - mnY) * scale };
+        },
+      };
+    }
+
+    function startRecording(projector: MapProjector) {
+      const xyPts = path.map((p) => projector.project(p.lat, p.lng));
+
+      const captureStream = (canvas as HTMLCanvasElement & { captureStream: (fps?: number) => MediaStream }).captureStream;
+      const stream = captureStream.call(canvas, FPS);
+
+      let recorder: MediaRecorder;
+      try {
+        recorder = new MediaRecorder(stream, { mimeType, videoBitsPerSecond: 6_000_000 });
+      } catch (e) {
+        reject(e instanceof Error ? e : new Error(String(e)));
+        return;
+      }
+
+      const chunks: BlobPart[] = [];
+      recorder.ondataavailable = (ev) => { if (ev.data && ev.data.size > 0) chunks.push(ev.data); };
+      recorder.onerror = () => reject(new Error("Falha na gravação do vídeo."));
+      recorder.onstop = () => {
+        const blob = new Blob(chunks, { type: mimeType.split(";")[0] });
+        blob.size === 0 ? reject(new Error("Vídeo vazio.")) : resolve(blob);
+      };
 
     const drawFrame = (progress: number) => {
-      // Fundo gradiente.
-      const g = ctx.createLinearGradient(0, 0, 0, H);
-      g.addColorStop(0, "#0b3d2e");
-      g.addColorStop(0.55, "#0f172a");
-      g.addColorStop(1, "#020617");
-      ctx.fillStyle = g;
-      ctx.fillRect(0, 0, W, H);
+      // Fundo = mapa satélite (offscreen) + leve escurecimento no topo/base
+      // para legibilidade das métricas.
+      ctx.drawImage(bgCanvas, 0, 0);
+      // Escurecimento no topo para legibilidade da marca + métricas (as
+      // métricas agora ficam no topo, como no "Assistir percurso").
+      const gTop = ctx.createLinearGradient(0, 0, 0, 380);
+      gTop.addColorStop(0, "rgba(0,0,0,0.6)");
+      gTop.addColorStop(1, "rgba(0,0,0,0)");
+      ctx.fillStyle = gTop;
+      ctx.fillRect(0, 0, W, 380);
 
-      // Marca no topo.
+      // Marca no topo esquerdo (OUTVITAR + tipo) — idêntico ao "Assistir
+      // percurso" (nome da modalidade em laranja logo abaixo da marca).
       ctx.save();
-      ctx.shadowColor = "rgba(0,0,0,0.5)";
-      ctx.shadowBlur = 12;
+      ctx.shadowColor = "rgba(0,0,0,0.6)";
+      ctx.shadowBlur = 10;
       ctx.textBaseline = "alphabetic";
       ctx.textAlign = "left";
       ctx.fillStyle = TEXT;
-      ctx.font = "800 60px sans-serif";
-      ctx.fillText("OUTVITAR", 90, 150);
-      ctx.font = "600 30px sans-serif";
-      ctx.fillStyle = "rgba(248,250,252,0.8)";
-      ctx.fillText("VIVER É DIFERENTE DE ESTAR VIVO", 90, 196);
+      ctx.font = "700 40px sans-serif";
+      ctx.fillText("OUTVITAR", 60, 70);
       if (activityName) {
-        ctx.textAlign = "right";
         ctx.fillStyle = ACCENT;
-        ctx.font = "700 38px sans-serif";
-        ctx.fillText(activityName.toUpperCase(), W - 90, 150);
+        ctx.font = "800 44px sans-serif";
+        ctx.fillText(activityName.toUpperCase(), 60, 120);
+      }
+      ctx.restore();
+
+      // Métricas grandes NO TOPO (distância / tempo grandes; vel. média /
+      // elevação menores abaixo) — mesmo layout do "Assistir percurso".
+      ctx.save();
+      ctx.shadowColor = "rgba(0,0,0,0.6)";
+      ctx.shadowBlur = 12;
+      ctx.textBaseline = "alphabetic";
+      ctx.textAlign = "left";
+      const topY = 210;
+      ctx.fillStyle = TEXT;
+      ctx.font = "800 92px sans-serif";
+      ctx.fillText(`${((progress * totalDist) / 1000).toFixed(2)}`, 60, topY);
+      if (durationSeconds > 0) {
+        ctx.fillText(fmtDuration(progress * durationSeconds), 60 + 340, topY);
+      }
+      ctx.fillStyle = "rgba(255,255,255,0.75)";
+      ctx.font = "600 26px sans-serif";
+      ctx.fillText("KM", 60, topY + 34);
+      if (durationSeconds > 0) ctx.fillText("TEMPO", 60 + 340, topY + 34);
+      // Linha de contexto (vel. média / elevação), estáticas.
+      let cx = 60;
+      const cY = topY + 88;
+      for (const m of extraMetrics.slice(0, 2)) {
+        ctx.fillStyle = TEXT;
+        ctx.font = "700 40px sans-serif";
+        ctx.fillText(m.value, cx, cY);
+        ctx.fillStyle = "rgba(255,255,255,0.7)";
+        ctx.font = "600 24px sans-serif";
+        ctx.fillText(m.label.toUpperCase(), cx, cY + 30);
+        cx += 320;
       }
       ctx.restore();
 
@@ -219,8 +278,9 @@ export function generateActivityVideo(input: VideoExportInput): Promise<Blob> {
         const q = xyPts[i];
         i ? ctx.lineTo(q.x, q.y) : ctx.moveTo(q.x, q.y);
       }
-      // Ponto interpolado atual.
-      const cur = toXY(project(posAt(path, progress).lat, posAt(path, progress).lng));
+      // Ponto interpolado atual (mesma projeção do mapa de fundo).
+      const curLL = posAt(path, progress);
+      const cur = projector.project(curLL.lat, curLL.lng);
       ctx.lineTo(cur.x, cur.y);
       ctx.stroke();
       ctx.restore();
@@ -233,42 +293,6 @@ export function generateActivityVideo(input: VideoExportInput): Promise<Blob> {
       ctx.fillStyle = ACCENT;
       ctx.beginPath(); ctx.arc(cur.x, cur.y, 9, 0, Math.PI * 2); ctx.fill();
 
-      // Métricas animando na base.
-      ctx.save();
-      ctx.shadowColor = "rgba(0,0,0,0.5)";
-      ctx.shadowBlur = 10;
-      ctx.textBaseline = "alphabetic";
-      ctx.textAlign = "left";
-      const baseY = 1520;
-      // Distância percorrida.
-      ctx.fillStyle = ACCENT;
-      ctx.font = "700 30px sans-serif";
-      ctx.fillText("DISTÂNCIA", 90, baseY);
-      ctx.fillStyle = TEXT;
-      ctx.font = "800 84px sans-serif";
-      ctx.fillText(`${((progress * totalDist) / 1000).toFixed(2)} km`, 90, baseY + 84);
-      // Tempo decorrido.
-      if (durationSeconds > 0) {
-        ctx.fillStyle = ACCENT;
-        ctx.font = "700 30px sans-serif";
-        ctx.fillText("TEMPO", W / 2 + 20, baseY);
-        ctx.fillStyle = TEXT;
-        ctx.font = "800 84px sans-serif";
-        ctx.fillText(fmtDuration(progress * durationSeconds), W / 2 + 20, baseY + 84);
-      }
-      // Extras (vel. média / elevação) em uma linha abaixo.
-      let ex = 90;
-      const exY = baseY + 200;
-      for (const m of extraMetrics.slice(0, 2)) {
-        ctx.fillStyle = ACCENT;
-        ctx.font = "700 26px sans-serif";
-        ctx.fillText(m.label.toUpperCase(), ex, exY);
-        ctx.fillStyle = TEXT;
-        ctx.font = "800 56px sans-serif";
-        ctx.fillText(m.value, ex, exY + 60);
-        ex = W / 2 + 20;
-      }
-      ctx.restore();
     };
 
     // Desenha o 1º frame antes de iniciar (garante conteúdo no stream).
@@ -310,6 +334,7 @@ export function generateActivityVideo(input: VideoExportInput): Promise<Blob> {
       if (rafId) cancelAnimationFrame(rafId);
       reject(e instanceof Error ? e : new Error(String(e)));
     }
+    } // fim startRecording
   });
 }
 

@@ -47,7 +47,6 @@ import { Route as ChecklistChecklistIdRouteImport } from './routes/checklist.$ch
 import { Route as ChatUserIdRouteImport } from './routes/chat.$userId'
 import { Route as AtividadeRastrearRouteImport } from './routes/atividade.rastrear'
 import { Route as AtividadeActivityIdRouteImport } from './routes/atividade.$activityId'
-import { Route as AtividadeConcluidaActivityIdRouteImport } from './routes/atividade.concluida.$activityId'
 import { Route as ApiNotifyAdminsRouteImport } from './routes/api.notify-admins'
 import { Route as AdminTrilhasRouteImport } from './routes/admin.trilhas'
 import { Route as AdminPublicarRouteImport } from './routes/admin.publicar'
@@ -63,6 +62,7 @@ import { Route as AdminAtividadesRouteImport } from './routes/admin.atividades'
 import { Route as AActivityIdRouteImport } from './routes/a.$activityId'
 import { Route as SegmentoIrSegmentIdRouteImport } from './routes/segmento.ir.$segmentId'
 import { Route as SegmentoEditarSegmentIdRouteImport } from './routes/segmento.editar.$segmentId'
+import { Route as AtividadeConcluidaActivityIdRouteImport } from './routes/atividade.concluida.$activityId'
 import { Route as ApiPushSendFcmRouteImport } from './routes/api.push.send-fcm'
 import { Route as ApiPushRegisterWebRouteImport } from './routes/api.push.register-web'
 import { Route as ApiPushRegisterNativeRouteImport } from './routes/api.push.register-native'
@@ -261,11 +261,6 @@ const AtividadeActivityIdRoute = AtividadeActivityIdRouteImport.update({
   path: '/atividade/$activityId',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AtividadeConcluidaActivityIdRoute = AtividadeConcluidaActivityIdRouteImport.update({
-  id: '/atividade/concluida/$activityId',
-  path: '/atividade/concluida/$activityId',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ApiNotifyAdminsRoute = ApiNotifyAdminsRouteImport.update({
   id: '/api/notify-admins',
   path: '/api/notify-admins',
@@ -341,6 +336,12 @@ const SegmentoEditarSegmentIdRoute = SegmentoEditarSegmentIdRouteImport.update({
   path: '/segmento/editar/$segmentId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AtividadeConcluidaActivityIdRoute =
+  AtividadeConcluidaActivityIdRouteImport.update({
+    id: '/atividade/concluida/$activityId',
+    path: '/atividade/concluida/$activityId',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPushSendFcmRoute = ApiPushSendFcmRouteImport.update({
   id: '/api/push/send-fcm',
   path: '/api/push/send-fcm',
@@ -414,7 +415,6 @@ export interface FileRoutesByFullPath {
   '/admin/trilhas': typeof AdminTrilhasRoute
   '/api/notify-admins': typeof ApiNotifyAdminsRoute
   '/atividade/$activityId': typeof AtividadeActivityIdRoute
-  '/atividade/concluida/$activityId': typeof AtividadeConcluidaActivityIdRoute
   '/atividade/rastrear': typeof AtividadeRastrearRoute
   '/chat/$userId': typeof ChatUserIdRoute
   '/checklist/$checklistId': typeof ChecklistChecklistIdRoute
@@ -437,6 +437,7 @@ export interface FileRoutesByFullPath {
   '/api/push/register-native': typeof ApiPushRegisterNativeRoute
   '/api/push/register-web': typeof ApiPushRegisterWebRoute
   '/api/push/send-fcm': typeof ApiPushSendFcmRoute
+  '/atividade/concluida/$activityId': typeof AtividadeConcluidaActivityIdRoute
   '/segmento/editar/$segmentId': typeof SegmentoEditarSegmentIdRoute
   '/segmento/ir/$segmentId': typeof SegmentoIrSegmentIdRoute
 }
@@ -477,7 +478,6 @@ export interface FileRoutesByTo {
   '/admin/trilhas': typeof AdminTrilhasRoute
   '/api/notify-admins': typeof ApiNotifyAdminsRoute
   '/atividade/$activityId': typeof AtividadeActivityIdRoute
-  '/atividade/concluida/$activityId': typeof AtividadeConcluidaActivityIdRoute
   '/atividade/rastrear': typeof AtividadeRastrearRoute
   '/chat/$userId': typeof ChatUserIdRoute
   '/checklist/$checklistId': typeof ChecklistChecklistIdRoute
@@ -500,6 +500,7 @@ export interface FileRoutesByTo {
   '/api/push/register-native': typeof ApiPushRegisterNativeRoute
   '/api/push/register-web': typeof ApiPushRegisterWebRoute
   '/api/push/send-fcm': typeof ApiPushSendFcmRoute
+  '/atividade/concluida/$activityId': typeof AtividadeConcluidaActivityIdRoute
   '/segmento/editar/$segmentId': typeof SegmentoEditarSegmentIdRoute
   '/segmento/ir/$segmentId': typeof SegmentoIrSegmentIdRoute
 }
@@ -541,7 +542,6 @@ export interface FileRoutesById {
   '/admin/trilhas': typeof AdminTrilhasRoute
   '/api/notify-admins': typeof ApiNotifyAdminsRoute
   '/atividade/$activityId': typeof AtividadeActivityIdRoute
-  '/atividade/concluida/$activityId': typeof AtividadeConcluidaActivityIdRoute
   '/atividade/rastrear': typeof AtividadeRastrearRoute
   '/chat/$userId': typeof ChatUserIdRoute
   '/checklist/$checklistId': typeof ChecklistChecklistIdRoute
@@ -564,6 +564,7 @@ export interface FileRoutesById {
   '/api/push/register-native': typeof ApiPushRegisterNativeRoute
   '/api/push/register-web': typeof ApiPushRegisterWebRoute
   '/api/push/send-fcm': typeof ApiPushSendFcmRoute
+  '/atividade/concluida/$activityId': typeof AtividadeConcluidaActivityIdRoute
   '/segmento/editar/$segmentId': typeof SegmentoEditarSegmentIdRoute
   '/segmento/ir/$segmentId': typeof SegmentoIrSegmentIdRoute
 }
@@ -606,7 +607,6 @@ export interface FileRouteTypes {
     | '/admin/trilhas'
     | '/api/notify-admins'
     | '/atividade/$activityId'
-    | '/atividade/concluida/$activityId'
     | '/atividade/rastrear'
     | '/chat/$userId'
     | '/checklist/$checklistId'
@@ -629,6 +629,7 @@ export interface FileRouteTypes {
     | '/api/push/register-native'
     | '/api/push/register-web'
     | '/api/push/send-fcm'
+    | '/atividade/concluida/$activityId'
     | '/segmento/editar/$segmentId'
     | '/segmento/ir/$segmentId'
   fileRoutesByTo: FileRoutesByTo
@@ -669,7 +670,6 @@ export interface FileRouteTypes {
     | '/admin/trilhas'
     | '/api/notify-admins'
     | '/atividade/$activityId'
-    | '/atividade/concluida/$activityId'
     | '/atividade/rastrear'
     | '/chat/$userId'
     | '/checklist/$checklistId'
@@ -692,6 +692,7 @@ export interface FileRouteTypes {
     | '/api/push/register-native'
     | '/api/push/register-web'
     | '/api/push/send-fcm'
+    | '/atividade/concluida/$activityId'
     | '/segmento/editar/$segmentId'
     | '/segmento/ir/$segmentId'
   id:
@@ -732,7 +733,6 @@ export interface FileRouteTypes {
     | '/admin/trilhas'
     | '/api/notify-admins'
     | '/atividade/$activityId'
-    | '/atividade/concluida/$activityId'
     | '/atividade/rastrear'
     | '/chat/$userId'
     | '/checklist/$checklistId'
@@ -755,6 +755,7 @@ export interface FileRouteTypes {
     | '/api/push/register-native'
     | '/api/push/register-web'
     | '/api/push/send-fcm'
+    | '/atividade/concluida/$activityId'
     | '/segmento/editar/$segmentId'
     | '/segmento/ir/$segmentId'
   fileRoutesById: FileRoutesById
@@ -796,7 +797,6 @@ export interface RootRouteChildren {
   AdminTrilhasRoute: typeof AdminTrilhasRoute
   ApiNotifyAdminsRoute: typeof ApiNotifyAdminsRoute
   AtividadeActivityIdRoute: typeof AtividadeActivityIdRoute
-  AtividadeConcluidaActivityIdRoute: typeof AtividadeConcluidaActivityIdRoute
   AtividadeRastrearRoute: typeof AtividadeRastrearRoute
   ChatUserIdRoute: typeof ChatUserIdRoute
   ChecklistChecklistIdRoute: typeof ChecklistChecklistIdRoute
@@ -818,6 +818,7 @@ export interface RootRouteChildren {
   ApiPushRegisterNativeRoute: typeof ApiPushRegisterNativeRoute
   ApiPushRegisterWebRoute: typeof ApiPushRegisterWebRoute
   ApiPushSendFcmRoute: typeof ApiPushSendFcmRoute
+  AtividadeConcluidaActivityIdRoute: typeof AtividadeConcluidaActivityIdRoute
   SegmentoEditarSegmentIdRoute: typeof SegmentoEditarSegmentIdRoute
   SegmentoIrSegmentIdRoute: typeof SegmentoIrSegmentIdRoute
 }
@@ -1090,13 +1091,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AtividadeActivityIdRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/atividade/concluida/$activityId': {
-      id: '/atividade/concluida/$activityId'
-      path: '/atividade/concluida/$activityId'
-      fullPath: '/atividade/concluida/$activityId'
-      preLoaderRoute: typeof AtividadeConcluidaActivityIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/api/notify-admins': {
       id: '/api/notify-admins'
       path: '/api/notify-admins'
@@ -1202,6 +1196,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SegmentoEditarSegmentIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/atividade/concluida/$activityId': {
+      id: '/atividade/concluida/$activityId'
+      path: '/atividade/concluida/$activityId'
+      fullPath: '/atividade/concluida/$activityId'
+      preLoaderRoute: typeof AtividadeConcluidaActivityIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/push/send-fcm': {
       id: '/api/push/send-fcm'
       path: '/api/push/send-fcm'
@@ -1302,7 +1303,6 @@ const rootRouteChildren: RootRouteChildren = {
   AdminTrilhasRoute: AdminTrilhasRoute,
   ApiNotifyAdminsRoute: ApiNotifyAdminsRoute,
   AtividadeActivityIdRoute: AtividadeActivityIdRoute,
-  AtividadeConcluidaActivityIdRoute: AtividadeConcluidaActivityIdRoute,
   AtividadeRastrearRoute: AtividadeRastrearRoute,
   ChatUserIdRoute: ChatUserIdRoute,
   ChecklistChecklistIdRoute: ChecklistChecklistIdRoute,
@@ -1324,6 +1324,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPushRegisterNativeRoute: ApiPushRegisterNativeRoute,
   ApiPushRegisterWebRoute: ApiPushRegisterWebRoute,
   ApiPushSendFcmRoute: ApiPushSendFcmRoute,
+  AtividadeConcluidaActivityIdRoute: AtividadeConcluidaActivityIdRoute,
   SegmentoEditarSegmentIdRoute: SegmentoEditarSegmentIdRoute,
   SegmentoIrSegmentIdRoute: SegmentoIrSegmentIdRoute,
 }
