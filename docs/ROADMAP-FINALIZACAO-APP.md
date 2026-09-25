@@ -5,7 +5,30 @@
 > `.kiro/steering/roadmap-outvitar.md`). **Mantenha-o atualizado** ao
 > concluir qualquer tarefa/bloco: marque status, data e resumo.
 
-**Última atualização:** 25/09/2026 (🟩 Vídeo compartilhado IDÊNTICO ao "Assistir percurso" — mapa satélite real)
+**Última atualização:** 25/09/2026 (🟩 FIX vídeo compartilhado — nunca mais falha silenciosamente por causa do mapa)
+
+> **🟩 FIX VÍDEO COMPARTILHÁVEL (25/09/2026) — CONCLUÍDO (APK 20:36, 9,98 MB):**
+> O usuário reportou que o botão "Compartilhar" da tela cheia ("Assistir
+> percurso") continuava sem compartilhar o vídeo. Diagnóstico: mesmo após o fix
+> anterior (fetch→blob→createImageBitmap), o WebView Android ainda podia
+> "taintar" (contaminar por CORS) o canvas ao desenhar os tiles do mapa — e como
+> o `MediaRecorder` só grava canvas limpo, ele produzia um **Blob vazio** e o
+> `shareContent` caía no `catch` do toast de erro (falha silenciosa, sem vídeo).
+> Além disso, a função `isCanvasTainted` existia mas **nunca era chamada**.
+> **Correção (garante que o vídeo SEMPRE sai, com ou sem mapa):**
+> - `activity-video-export.ts`: após `drawMapBackground`, checa
+>   `isCanvasTainted(bgCanvas)`. Se contaminou, **descarta o mapa**: limpa o
+>   fundo para um gradiente neutro (nunca tainta) e usa a projeção do bbox
+>   (`fallbackProjector`). Assim o vídeo é gerado com traçado + métricas mesmo
+>   que o mapa não possa entrar. Salvaguarda final: se o canvas de captura ainda
+>   estiver tainted no 1º frame, aborta com erro CLARO em vez de Blob vazio.
+> - `map-canvas.ts` `loadTile`: fetch com `credentials: "omit"` + `cache:
+>   "no-store"` + cache-buster (`_v=Date.now()`) para forçar resposta CORS
+>   "fresca" (evita reusar entrada de cache sem CORS deixada pelo Leaflet, que
+>   era o que taintava). Quando o CORS funciona, o mapa entra normalmente.
+> Resultado: se o dispositivo/rede permitir CORS nos tiles, o vídeo sai COM o
+> mapa satélite; se não, sai com fundo neutro + traçado — nunca mais falha.
+> 4 testes da lib passando; diagnostics limpos; commit `78692d3` na main.
 
 > **🟩 VÍDEO com MAPA REAL (25/09/2026) — CONCLUÍDO (APK 14:56, 9,98 MB):**
 > Pedido do usuário: o vídeo gerado por "Gerar e compartilhar vídeo" ficava com
