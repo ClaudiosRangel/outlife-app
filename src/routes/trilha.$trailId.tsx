@@ -4,11 +4,14 @@
  * elevação), descrição, link do mapa e atribuição da fonte (OSM/ODbL).
  */
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { ChevronLeft, MapPin, Route as RouteIcon, Mountain, Gauge, ExternalLink, Map as MapIcon } from "lucide-react";
+import { ChevronLeft, MapPin, Route as RouteIcon, Mountain, Gauge, ExternalLink, Map as MapIcon, Navigation, Car } from "lucide-react";
 import { fetchImportedTrailById, resolveAsset } from "@/lib/api";
 import { StatusBar } from "@/components/StatusBar";
 import { Skeleton } from "@/components/ui/skeleton";
+import { haversineMeters } from "@/lib/haversine";
+import { buildDirectionsUrl, buildMapSearchUrl, formatDistanceBR } from "@/lib/navigation-to";
 import trailFallback from "@/assets/dest-trail.jpg";
 
 export const Route = createFileRoute("/trilha/$trailId")({
@@ -29,6 +32,23 @@ function TrailDetailPage() {
     queryKey: ["imported-trail", trailId],
     queryFn: () => fetchImportedTrailById(trailId),
   });
+
+  // Posição atual (leitura única) para estimar "como chegar ao início".
+  // Uma leitura única basta — usa a Web Geolocation API (disponível também no
+  // WebView nativo). Se negar/indisponível, o card mostra "como chegar" sem a
+  // distância estimada. Não interfere no tracker de atividade.
+  const [userPos, setUserPos] = useState<{ lat: number; lng: number } | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    if (typeof navigator !== "undefined" && "geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => { if (!cancelled) setUserPos({ lat: pos.coords.latitude, lng: pos.coords.longitude }); },
+        () => { /* permissão negada / indisponível: segue sem distância */ },
+        { enableHighAccuracy: false, maximumAge: 60000, timeout: 8000 },
+      );
+    }
+    return () => { cancelled = true; };
+  }, []);
 
   if (isLoading) {
     return (
@@ -59,7 +79,12 @@ function TrailDetailPage() {
   }
 
   const hasCoords = trail.lat != null && trail.lng != null;
-  const mapsUrl = hasCoords ? `https://www.google.com/maps/search/?api=1&query=${trail.lat},${trail.lng}` : null;
+  const dest = hasCoords ? { lat: trail.lat as number, lng: trail.lng as number } : null;
+  const mapsUrl = dest ? buildMapSearchUrl(dest) : null;
+  // "Como chegar ao início": distância em linha reta (quando há posição) e
+  // rota de carro delegada ao app de mapas nativo (padrão de mercado).
+  const distanceToStart = dest && userPos ? haversineMeters(userPos, dest) : null;
+  const drivingUrl = dest ? buildDirectionsUrl(dest, userPos, "driving") : null;
 
   return (
     <div className="animate-float-up pb-24">
@@ -107,6 +132,31 @@ function TrailDetailPage() {
           <div className="text-[10px] text-muted-foreground">Elevação</div>
         </div>
       </div>
+
+      {/* Como chegar ao início — distância de carro + navegação (item 1) */}
+      {drivingUrl && (
+        <div className="px-5 mt-4">
+          <a
+            href={drivingUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="flex items-center gap-3 rounded-2xl bg-gradient-forest p-4 text-white shadow-card active:scale-[0.99]"
+          >
+            <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-white/15 backdrop-blur">
+              <Car size={20} />
+            </span>
+            <div className="min-w-0 flex-1">
+              <div className="font-display text-base font-semibold leading-tight">Como chegar ao início</div>
+              <div className="text-xs text-white/80">
+                {distanceToStart != null
+                  ? `~${formatDistanceBR(distanceToStart)} até o ponto inicial · rota de carro`
+                  : "Abrir rota de carro até o ponto inicial"}
+              </div>
+            </div>
+            <Navigation size={18} className="shrink-0" />
+          </a>
+        </div>
+      )}
 
       {/* Ações */}
       <div className="px-5 mt-4 space-y-2">

@@ -1,6 +1,8 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { ChevronLeft, MapPin, Search, SlidersHorizontal, WifiOff } from "lucide-react";
+import { ChevronLeft, MapPin, Search, SlidersHorizontal, WifiOff, Car } from "lucide-react";
+import { haversineMeters } from "@/lib/haversine";
+import { formatDistanceBR } from "@/lib/navigation-to";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -599,7 +601,14 @@ function Explore() {
             {t("explore.trailsTitle", "Trilhas")}
           </h2>
           <div className="mt-2 grid grid-cols-2 gap-3">
-            {importedTrails.map((trail) => (
+            {importedTrails.map((trail) => {
+              const tlat = (trail as { latitude?: number | null }).latitude;
+              const tlng = (trail as { longitude?: number | null }).longitude;
+              const toStart =
+                mapCenter && tlat != null && tlng != null
+                  ? haversineMeters(mapCenter, { lat: Number(tlat), lng: Number(tlng) })
+                  : null;
+              return (
               <Link
                 to="/trilha/$trailId"
                 params={{ trailId: trail.id }}
@@ -619,6 +628,12 @@ function Explore() {
                   <div className="mt-1 flex items-center gap-1 text-[10px] text-muted-foreground">
                     <MapPin size={10} /> {trail.region ?? t("explore.trailsSource", "Trilha importada")}
                   </div>
+                  {/* Como chegar: distância aproximada (linha reta) até o início */}
+                  {toStart != null && (
+                    <div className="mt-1 flex items-center gap-1 text-[10px] font-medium text-primary">
+                      <Car size={11} /> ~{formatDistanceBR(toStart)} {t("explore.toStart", "até o início")}
+                    </div>
+                  )}
                   {(trail.difficulty || trail.distance_km != null) && (
                     <div className="mt-1 flex flex-wrap gap-1">
                       {trail.difficulty && (
@@ -631,7 +646,8 @@ function Explore() {
                   )}
                 </div>
               </Link>
-            ))}
+              );
+            })}
           </div>
           {importedTrails.some((tr) => tr.external_source === "osm") && (
             <p className="mt-2 text-[10px] text-muted-foreground/80">
