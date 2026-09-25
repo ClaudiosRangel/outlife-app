@@ -5,7 +5,32 @@
 > `.kiro/steering/roadmap-outvitar.md`). **Mantenha-o atualizado** ao
 > concluir qualquer tarefa/bloco: marque status, data e resumo.
 
-**Última atualização:** 25/09/2026 (🟩 RODADA BETA #2 (parte 1) — Ranking por tipo de atividade + atalho na Home)
+**Última atualização:** 25/09/2026 (🟩 RODADA BETA #2 (parte 2) — Explorar Rotas: como chegar ao início)
+
+> **🟩 RODADA BETA #2 — parte 2 (25/09/2026) — CONCLUÍDA (APK 13:26, 9,97 MB):**
+> "Explorar Rotas" melhorado (opção 1/enxuto — sem tabela nova, reusando o que
+> existe; import GPX fica para depois):
+> - **lib `navigation-to.ts`** (pura, 8 testes): `buildDirectionsUrl` (URL de
+>   direções do Google Maps até o ponto, travelmode driving/walking/bicycling,
+>   com origin opcional), `buildMapSearchUrl`, `formatDistanceBR`.
+> - **Tela da trilha** (`trilha.$trailId.tsx`): card "Como chegar ao início" —
+>   lê a posição atual (Web Geolocation, leitura única) e mostra a distância
+>   aproximada (linha reta) + botão que abre a ROTA DE CARRO até o ponto inicial
+>   no app de mapas nativo (padrão de mercado; turn-by-turn próprio no WebView
+>   não é viável).
+> - **Card do Explorar**: mostra "~X km até o início" (linha reta a partir do
+>   centro do mapa/região) com ícone de carro, como o concorrente.
+> i18n `explore.toStart`. Sem migration, sem rota nova. Diagnostics limpos;
+> commit `1a35918` na main.
+> **REafirmado:** rotas de terceiros só por vias legais (OSM já importado, GPX
+> do usuário, APIs/export oficiais). Import GPX = próxima frente opcional.
+>
+> **✅ RODADA BETA #2 concluída** (ranking por tipo + atalho Home + Explorar
+> Rotas "como chegar"). Próximo: **Rodada 3 (design)** — tela de atividade
+> concluída comemorativa + streak; feed com like animado + selos. Ou testar a
+> beta e priorizar.
+
+**Anterior:** 25/09/2026 (🟩 RODADA BETA #2 (parte 1) — Ranking por tipo de atividade + atalho na Home)
 
 > **🟩 RODADA BETA #2 — parte 1 (25/09/2026) — CONCLUÍDA (APK 11:15, 9,97 MB):**
 > Decisão do usuário: **barra do rodapé MANTIDA** (opção A) — Início/Explorar/
