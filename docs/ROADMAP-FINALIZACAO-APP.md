@@ -5,7 +5,28 @@
 > `.kiro/steering/roadmap-outvitar.md`). **Mantenha-o atualizado** ao
 > concluir qualquer tarefa/bloco: marque status, data e resumo.
 
-**Última atualização:** 25/09/2026 (🟩 RODADA BETA #1 — age gate 13+ + compartilhamento de vídeo A/B/C)
+**Última atualização:** 25/09/2026 (🟩 RODADA BETA #2 (parte 1) — Ranking por tipo de atividade + atalho na Home)
+
+> **🟩 RODADA BETA #2 — parte 1 (25/09/2026) — CONCLUÍDA (APK 11:15, 9,97 MB):**
+> Decisão do usuário: **barra do rodapé MANTIDA** (opção A) — Início/Explorar/
+> Gravar/Comunidade/Você. Em vez de mexer na navegação, o Ranking ganhou
+> destaque e segmentação por modalidade.
+> - **Ranking por TIPO de atividade** (por usuário, sem grupos/clãs): migration
+>   `20260925140000_ranking-by-activity-type.sql` (2× + reload) recria
+>   `fetch_activity_ranking` com novo parâmetro final `_activity_type` (NULL =
+>   todos). Tela `/ranking` ganhou faixa de abas no topo (Todos + cada tipo
+>   ATIVO do catálogo `activity_types`), acima de métrica/escopo/período.
+>   `fetchActivityRanking` aceita `activityType`.
+> - **Atalho na Home**: card "Ranking & Estatísticas" (gradiente floresta,
+>   troféu) entre Eventos e Loja Virtual, só para logado, leva a `/ranking`.
+>   i18n `home.rankingTitle/rankingSubtitle`, `ranking.allTypes`.
+> Sem rota nova. Diagnostics limpos; commit `8613204` na main.
+> **Falta da Rodada 2 (parte 2 — a combinar escopo):** Explorar Rotas melhorado
+> (como chegar/voltar + altimetria + import GPX legal). Muito já existe
+> (segmentos, navegação "me leve até lá", trilhas OSM); o import GPX é a maior
+> frente nova. Aguardando alinhamento de escopo com o usuário.
+
+**Anterior:** 25/09/2026 (🟩 RODADA BETA #1 — age gate 13+ + compartilhamento de vídeo A/B/C)
 
 > **🟩 RODADA BETA #1 (25/09/2026) — CONCLUÍDA (APK 10:36, 9,97 MB):**
 > Ajustes pré-beta (feedback do usuário nos prints) + bloqueador de loja.
