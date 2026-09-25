@@ -5,7 +5,28 @@
 > `.kiro/steering/roadmap-outvitar.md`). **Mantenha-o atualizado** ao
 > concluir qualquer tarefa/bloco: marque status, data e resumo.
 
-**Última atualização:** 25/09/2026 (🟩 RODADA BETA #3 (design) — atividade concluída comemorativa + streak + like animado)
+**Última atualização:** 25/09/2026 (🟩 Vídeo compartilhado IDÊNTICO ao "Assistir percurso" — mapa satélite real)
+
+> **🟩 VÍDEO com MAPA REAL (25/09/2026) — CONCLUÍDO (APK 14:56, 9,98 MB):**
+> Pedido do usuário: o vídeo gerado por "Gerar e compartilhar vídeo" ficava com
+> fundo escuro (só o traçado), diferente do "Assistir percurso" (mapa satélite
+> real). Agora o vídeo é **idêntico** à tela de assistir.
+> - **`src/lib/map-canvas.ts`** (novo): renderiza os TILES raster do Mapbox
+>   (satélite) direto num `<canvas>` — o `MediaRecorder` só grava canvas e o
+>   Leaflet não é gravável, então baixamos os tiles da região do trajeto
+>   (mesma fonte/token do Leaflet) e desenhamos como fundo. `drawMapBackground`
+>   escolhe o zoom que faz o bbox caber, baixa os tiles e devolve um `projector`
+>   (Web Mercator) para plotar o traçado por cima na MESMA geometria. Fallback
+>   para fundo neutro + fit do bbox se não houver token/tiles.
+> - **`activity-video-export.ts`**: fundo = mapa satélite (offscreen, desenhado
+>   1×) copiado a cada frame; traçado laranja (halo + percorrido) e ponto atual
+>   usando o `projector` do mapa; MÉTRICAS MOVIDAS PARA O TOPO (marca OUTVITAR +
+>   tipo em laranja + distância/tempo grandes + vel. média/elevação), igual ao
+>   "Assistir percurso". Gradiente escuro só no topo para legibilidade.
+> Sem migration, sem rota nova. 4 testes da lib passando. Diagnostics limpos;
+> commit `e30b52a` na main.
+
+**Anterior:** 25/09/2026 (🟩 RODADA BETA #3 (design) — atividade concluída comemorativa + streak + like animado)
 
 > **🟩 RODADA BETA #3 — design (25/09/2026) — CONCLUÍDA (APK 14:08, 9,98 MB):**
 > Itens de maior impacto da Análise de Design (retenção/"viciar"):
