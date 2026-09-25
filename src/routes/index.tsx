@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
@@ -71,6 +71,7 @@ export const Route = createFileRoute("/")({
 function Home() {
   const { t } = useTranslation();
   const { user } = useAuth();
+  const navigate = useNavigate();
   const { data: destinations = [] } = useQuery({ queryKey: ["destinations"], queryFn: fetchDestinations });
   const { data: partners = [] } = useQuery({ queryKey: ["partners"], queryFn: fetchPartners });
   // Conteúdo editável pelo admin (slogan/ecossistema da Home). Cai no texto
@@ -113,6 +114,14 @@ function Home() {
   });
   const displayName = profile?.full_name?.split(" ")[0] || user?.email?.split("@")[0] || "";
   const greetingKey = greetingKeyForHour(new Date().getHours());
+
+  // Age gate (13+): usuário logado sem data de nascimento precisa completar o
+  // perfil antes de usar o app. Redireciona uma vez que o profile carregou.
+  useEffect(() => {
+    if (user && profile && !(profile as { birth_date?: string | null }).birth_date) {
+      navigate({ to: "/completar-perfil" });
+    }
+  }, [user, profile, navigate]);
 
   const [category, setCategory] = useState<HomeCategory | null>(null);
   const filteredDestinations = useMemo(

@@ -12,7 +12,7 @@ import L from "leaflet";
 import markerIcon from "leaflet/dist/images/marker-icon.png";
 import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
 import markerShadow from "leaflet/dist/images/marker-shadow.png";
-import { Play, Pause, RotateCcw, X } from "lucide-react";
+import { Play, Pause, RotateCcw, X, Share2, Loader2 } from "lucide-react";
 import type { MapLayerKey } from "@/lib/map-config";
 import { MapTileLayer } from "@/components/map-layers";
 import { haversineMeters } from "@/lib/haversine";
@@ -40,6 +40,9 @@ export default function ActivityReplayCinematic({
   elevationLabel,
   activityName,
   onClose,
+  onShareVideo,
+  sharingVideo = false,
+  shareProgress = 0,
 }: {
   path: LatLng[];
   durationSeconds?: number;
@@ -47,6 +50,10 @@ export default function ActivityReplayCinematic({
   elevationLabel?: string | null;
   activityName?: string | null;
   onClose: () => void;
+  /** Se fornecido, mostra um botão para gerar/compartilhar o vídeo do percurso. */
+  onShareVideo?: () => void;
+  sharingVideo?: boolean;
+  shareProgress?: number;
 }) {
   const [layer] = useState<MapLayerKey>("satellite");
   const [playing, setPlaying] = useState(true);
@@ -126,13 +133,34 @@ export default function ActivityReplayCinematic({
               <div className="text-sm font-semibold text-[#f97316]">{activityName.toUpperCase()}</div>
             )}
           </div>
-          <button
-            onClick={onClose}
-            className="pointer-events-auto grid h-10 w-10 place-items-center rounded-full bg-white/15 text-white backdrop-blur active:scale-95"
-            aria-label="Fechar"
-          >
-            <X size={18} />
-          </button>
+          <div className="pointer-events-auto flex items-center gap-2">
+            {onShareVideo && (
+              <button
+                onClick={onShareVideo}
+                disabled={sharingVideo}
+                className="flex items-center gap-2 rounded-full bg-[#f97316] px-4 py-2 text-sm font-semibold text-white shadow-lg active:scale-95 disabled:opacity-70"
+                aria-label="Compartilhar vídeo"
+              >
+                {sharingVideo ? (
+                  <>
+                    <Loader2 size={16} className="animate-spin" />
+                    {Math.round(shareProgress * 100)}%
+                  </>
+                ) : (
+                  <>
+                    <Share2 size={16} /> Compartilhar
+                  </>
+                )}
+              </button>
+            )}
+            <button
+              onClick={onClose}
+              className="grid h-10 w-10 place-items-center rounded-full bg-white/15 text-white backdrop-blur active:scale-95"
+              aria-label="Fechar"
+            >
+              <X size={18} />
+            </button>
+          </div>
         </div>
 
         <div className="mt-4 flex gap-6">

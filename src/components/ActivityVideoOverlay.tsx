@@ -7,8 +7,12 @@
 // O mini-mapa é desenhado num <canvas> (mesma projeção do story-generator),
 // sem depender de tiles — confiável e leve sobre o vídeo.
 
-import { useEffect, useRef } from "react";
-import { X } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { X, Share2, Loader2 } from "lucide-react";
+import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
+import { generateVideoWithOverlay, canExportVideo } from "@/lib/activity-video-export";
+import { shareContent } from "@/lib/share";
 
 export type LatLng = { lat: number; lng: number };
 
@@ -75,20 +79,56 @@ export default function ActivityVideoOverlay({
   activityName?: string | null;
   onClose: () => void;
 }) {
+  const { t } = useTranslation();
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [sharing, setSharing] = useState(false);
+  const [shareProgress, setShareProgress] = useState(0);
 
   useEffect(() => {
     if (canvasRef.current) drawMiniRoute(canvasRef.current, path);
   }, [path]);
 
+  const handleShare = async () => {
+    const video = videoRef.current;
+    if (!video) return;
+    setSharing(true);
+    setShareProgress(0);
+    try {
+      // Pausa a reprodução visível; a composição controla o vídeo internamente.
+      video.pause();
+      const blob = await generateVideoWithOverlay({
+        video,
+        path,
+        metrics,
+        activityName,
+        onProgress: setShareProgress,
+      });
+      const ext = blob.type.includes("mp4") ? "mp4" : "webm";
+      await shareContent({
+        file: blob,
+        fileName: `outvitar-video.${ext}`,
+        title: t("activity.shareBannerTitle", { defaultValue: "Minha atividade OutVitar" }),
+        text: t("activity.shareBannerText", { defaultValue: "Confira minha atividade no OutVitar!" }),
+      });
+    } catch {
+      toast.error(t("activity.videoExportError", { defaultValue: "Não foi possível gerar o vídeo." }));
+    } finally {
+      setSharing(false);
+      setShareProgress(0);
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-[3000] bg-black">
       <video
+        ref={videoRef}
         src={videoUrl}
         className="h-full w-full object-contain"
         autoPlay
         controls
         playsInline
+        crossOrigin="anonymous"
       />
 
       {/* Marca + fechar */}
@@ -105,6 +145,26 @@ export default function ActivityVideoOverlay({
           <X size={18} />
         </button>
       </div>
+
+      {/* Botão Compartilhar (grava vídeo + overlay e abre a folha nativa) */}
+      {canExportVideo() && (
+        <button
+          onClick={handleShare}
+          disabled={sharing}
+          className="absolute right-5 top-[calc(env(safe-area-inset-top,20px)+64px)] z-[3200] flex items-center gap-2 rounded-full bg-[#f97316] px-4 py-2.5 text-sm font-semibold text-white shadow-lg active:scale-95 disabled:opacity-70"
+        >
+          {sharing ? (
+            <>
+              <Loader2 size={16} className="animate-spin" />
+              {Math.round(shareProgress * 100)}%
+            </>
+          ) : (
+            <>
+              <Share2 size={16} /> {t("common.share", { defaultValue: "Compartilhar" })}
+            </>
+          )}
+        </button>
+      )}
 
       {/* Métricas + mini-mapa sobrepostos na base */}
       <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[3100] flex items-end justify-between gap-4 bg-gradient-to-t from-black/80 to-transparent px-5 pb-[calc(env(safe-area-inset-bottom,16px)+16px)] pt-12">

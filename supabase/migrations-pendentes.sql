@@ -1138,3 +1138,15 @@ alter table public.profile_contacts
 --     tipo 'referral_reward'; idempotente, 1x), my_referral_stats() (código,
 --     total indicados, total recompensados). (idempotente)
 -- ############################################################################
+
+-- ############################################################################
+-- 46) 20260925120000_profile-birthdate-gender.sql
+--     Age gate 13+ (exigência das lojas) + demografia: colunas
+--     profiles.birth_date (date) e profiles.gender (text, CHECK
+--     male/female/other/undisclosed ou NULL). Ambos nullable (perfis
+--     existentes intactos); o trigger protect_profile_trust_fields NÃO cobre
+--     estes campos (o dono atualiza pela policy normal). Função
+--     age_years(date) IMMUTABLE (idade em anos) para validação/segmentação.
+--     A tela "Complete seu Perfil" pós-cadastro preenche e bloqueia <13.
+--     (idempotente)
+-- ############################################################################

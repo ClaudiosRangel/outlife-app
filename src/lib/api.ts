@@ -287,6 +287,9 @@ const PROFILE_EDITABLE_FIELDS = [
   "gallery",
   "latitude",
   "longitude",
+  // Age gate 13+ / demografia (tela "Complete seu Perfil").
+  "birth_date",
+  "gender",
   // Cadastro completo (item 13): tipo de pessoa + endereço estruturado. Não são
   // dados sensíveis de contato (documento/telefone vão para profile_contacts).
   "person_type",

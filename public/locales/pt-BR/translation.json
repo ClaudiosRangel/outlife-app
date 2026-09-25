@@ -91,6 +91,33 @@
     "alreadyHave": "Já tem conta? Entrar",
     "yourName": "Seu nome"
   },
+  "completeProfile": {
+    "title": "Complete seu perfil",
+    "subtitle": "Escolha como quer ser chamado, seu gênero e confirme sua idade para usar o app.",
+    "gender": "Gênero",
+    "selectGender": "Selecione",
+    "male": "Homem",
+    "female": "Mulher",
+    "other": "Outro",
+    "undisclosed": "Prefiro não dizer",
+    "birthDate": "Data de nascimento",
+    "day": "Dia",
+    "month": "Mês",
+    "year": "Ano",
+    "ageLabel": "{{age}} anos",
+    "tooYoungShort": "Mínimo {{min}} anos",
+    "tooYoung": "Você precisa ter pelo menos {{min}} anos para usar o OutVitar.",
+    "nameRequired": "Informe como quer ser chamado.",
+    "genderRequired": "Selecione seu gênero.",
+    "birthRequired": "Informe uma data de nascimento válida.",
+    "saved": "Perfil completo! Bem-vindo ao OutVitar.",
+    "submit": "Confirmar e continuar"
+  },
+  "months": {
+    "jan": "janeiro", "feb": "fevereiro", "mar": "março", "apr": "abril",
+    "may": "maio", "jun": "junho", "jul": "julho", "aug": "agosto",
+    "sep": "setembro", "oct": "outubro", "nov": "novembro", "dec": "dezembro"
+  },
   "home": {
     "goodMorning": "Bom dia",
     "goodMorningName": "Bom dia, {{name}}",

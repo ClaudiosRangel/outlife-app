@@ -26,6 +26,7 @@ import { Route as EventosRouteImport } from './routes/eventos'
 import { Route as ConfiguracoesRouteImport } from './routes/configuracoes'
 import { Route as ComunidadeRouteImport } from './routes/comunidade'
 import { Route as ComplianceRouteImport } from './routes/compliance'
+import { Route as CompletarPerfilRouteImport } from './routes/completar-perfil'
 import { Route as CadastroRouteImport } from './routes/cadastro'
 import { Route as BuscaRouteImport } from './routes/busca'
 import { Route as AmigosRouteImport } from './routes/amigos'
@@ -152,6 +153,11 @@ const ComunidadeRoute = ComunidadeRouteImport.update({
 const ComplianceRoute = ComplianceRouteImport.update({
   id: '/compliance',
   path: '/compliance',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CompletarPerfilRoute = CompletarPerfilRouteImport.update({
+  id: '/completar-perfil',
+  path: '/completar-perfil',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CadastroRoute = CadastroRouteImport.update({
@@ -370,6 +376,7 @@ export interface FileRoutesByFullPath {
   '/amigos': typeof AmigosRoute
   '/busca': typeof BuscaRoute
   '/cadastro': typeof CadastroRoute
+  '/completar-perfil': typeof CompletarPerfilRoute
   '/compliance': typeof ComplianceRoute
   '/comunidade': typeof ComunidadeRoute
   '/configuracoes': typeof ConfiguracoesRoute
@@ -431,6 +438,7 @@ export interface FileRoutesByTo {
   '/amigos': typeof AmigosRoute
   '/busca': typeof BuscaRoute
   '/cadastro': typeof CadastroRoute
+  '/completar-perfil': typeof CompletarPerfilRoute
   '/compliance': typeof ComplianceRoute
   '/comunidade': typeof ComunidadeRoute
   '/configuracoes': typeof ConfiguracoesRoute
@@ -493,6 +501,7 @@ export interface FileRoutesById {
   '/amigos': typeof AmigosRoute
   '/busca': typeof BuscaRoute
   '/cadastro': typeof CadastroRoute
+  '/completar-perfil': typeof CompletarPerfilRoute
   '/compliance': typeof ComplianceRoute
   '/comunidade': typeof ComunidadeRoute
   '/configuracoes': typeof ConfiguracoesRoute
@@ -556,6 +565,7 @@ export interface FileRouteTypes {
     | '/amigos'
     | '/busca'
     | '/cadastro'
+    | '/completar-perfil'
     | '/compliance'
     | '/comunidade'
     | '/configuracoes'
@@ -617,6 +627,7 @@ export interface FileRouteTypes {
     | '/amigos'
     | '/busca'
     | '/cadastro'
+    | '/completar-perfil'
     | '/compliance'
     | '/comunidade'
     | '/configuracoes'
@@ -678,6 +689,7 @@ export interface FileRouteTypes {
     | '/amigos'
     | '/busca'
     | '/cadastro'
+    | '/completar-perfil'
     | '/compliance'
     | '/comunidade'
     | '/configuracoes'
@@ -740,6 +752,7 @@ export interface RootRouteChildren {
   AmigosRoute: typeof AmigosRoute
   BuscaRoute: typeof BuscaRoute
   CadastroRoute: typeof CadastroRoute
+  CompletarPerfilRoute: typeof CompletarPerfilRoute
   ComplianceRoute: typeof ComplianceRoute
   ComunidadeRoute: typeof ComunidadeRoute
   ConfiguracoesRoute: typeof ConfiguracoesRoute
@@ -915,6 +928,13 @@ declare module '@tanstack/react-router' {
       path: '/compliance'
       fullPath: '/compliance'
       preLoaderRoute: typeof ComplianceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/completar-perfil': {
+      id: '/completar-perfil'
+      path: '/completar-perfil'
+      fullPath: '/completar-perfil'
+      preLoaderRoute: typeof CompletarPerfilRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/cadastro': {
@@ -1230,6 +1250,7 @@ const rootRouteChildren: RootRouteChildren = {
   AmigosRoute: AmigosRoute,
   BuscaRoute: BuscaRoute,
   CadastroRoute: CadastroRoute,
+  CompletarPerfilRoute: CompletarPerfilRoute,
   ComplianceRoute: ComplianceRoute,
   ComunidadeRoute: ComunidadeRoute,
   ConfiguracoesRoute: ConfiguracoesRoute,

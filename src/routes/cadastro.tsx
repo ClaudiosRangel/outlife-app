@@ -100,6 +100,11 @@ function Cadastro() {
     // indicação agora. Caso contrário, fica pendente e é aplicada no 1º login.
     if (data.session) {
       await redeemPendingReferral();
+      // Age gate: leva a completar o perfil (nome/gênero/data de nascimento,
+      // bloqueio 13+) antes de usar o app.
+      toast.success(t("auth.signupSuccess"));
+      navigate({ to: "/completar-perfil" });
+      return true;
     }
     toast.success(t("auth.signupSuccess"));
     navigate({ to: "/perfil" });

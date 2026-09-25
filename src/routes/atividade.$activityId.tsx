@@ -571,6 +571,9 @@ function ActivityDetailPage() {
             elevationLabel={elevLabel}
             activityName={activityName}
             onClose={() => setCinematicOpen(false)}
+            onShareVideo={canExportVideo() ? handleExportVideo : undefined}
+            sharingVideo={exportingVideo}
+            shareProgress={videoProgress}
           />
         </Suspense>
       )}

@@ -275,30 +275,244 @@ export function generateActivityVideo(input: VideoExportInput): Promise<Blob> {
     drawFrame(0);
 
     let rafId: number | null = null;
-    const startTs = performance.now();
 
-    const loop = (now: number) => {
-      const elapsed = (now - startTs) / 1000;
-      const progress = Math.min(1, elapsed / videoSeconds);
+    // Animação dirigida por CONTAGEM DE FRAMES (determinística), não por
+    // performance.now(): no WebView Android o rAF é throttled e a gravação em
+    // tempo real do MediaRecorder cortava o percurso antes do fim. Aqui cada
+    // frame do trajeto é efetivamente desenhado e entra no stream.
+    // + HOLD_FRAMES no fim: segura o percurso COMPLETO por ~1,5s antes de parar.
+    const HOLD_FRAMES = Math.round(1.5 * FPS);
+    const animFrames = totalFrames; // frames até progress=1
+    const grandTotal = animFrames + HOLD_FRAMES;
+
+    const loop = () => {
+      // progress 0..1 ao longo de animFrames; depois fica em 1 (hold).
+      const progress = Math.min(1, frame / animFrames);
       drawFrame(progress);
+      input.onProgress?.(Math.min(1, frame / grandTotal));
       frame++;
-      input.onProgress?.(progress);
-      if (progress >= 1 || frame > totalFrames + FPS) {
-        // Garante alguns frames finais estáticos e para.
+      if (frame > grandTotal) {
+        // Dá tempo ao stream capturar os últimos frames antes de encerrar.
         setTimeout(() => {
           try { recorder.stop(); } catch { /* ignore */ }
-        }, 200);
+        }, 400);
         return;
       }
       rafId = requestAnimationFrame(loop);
     };
 
     try {
-      recorder.start();
+      // timeslice curto força ondataavailable periódico → chunks finais não
+      // se perdem ao parar (bug do vídeo incompleto).
+      recorder.start(250);
       rafId = requestAnimationFrame(loop);
     } catch (e) {
       if (rafId) cancelAnimationFrame(rafId);
       reject(e instanceof Error ? e : new Error(String(e)));
+    }
+  });
+}
+
+
+// ============================================================================
+// Vídeo do USUÁRIO + métricas/mini-mapa sobrepostos (item C) — compõe o vídeo
+// escolhido pelo usuário com as métricas da atividade e o traçado, gerando um
+// arquivo compartilhável. Grava enquanto o vídeo toca, no ritmo real dele.
+// ============================================================================
+
+export type OverlayVideoInput = {
+  /** Elemento <video> já com o src do usuário (será tocado do início). */
+  video: HTMLVideoElement;
+  path: ExportLatLng[];
+  metrics: ExportMetricStatic[];
+  activityName?: string | null;
+  onProgress?: (p: number) => void;
+};
+
+/** Desenha o mini-mapa do trajeto (laranja) num retângulo do canvas. */
+function drawMiniRouteRect(
+  ctx: CanvasRenderingContext2D,
+  path: ExportLatLng[],
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+) {
+  if (path.length < 2) return;
+  const pts = path.map((p) => project(p.lat, p.lng));
+  let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+  for (const p of pts) {
+    minX = Math.min(minX, p.x); maxX = Math.max(maxX, p.x);
+    minY = Math.min(minY, p.y); maxY = Math.max(maxY, p.y);
+  }
+  const spanX = maxX - minX || 1e-9;
+  const spanY = maxY - minY || 1e-9;
+  const pad = 18;
+  const scale = Math.min((w - pad * 2) / spanX, (h - pad * 2) / spanY);
+  const dw = spanX * scale, dh = spanY * scale;
+  const offX = x + (w - dw) / 2, offY = y + (h - dh) / 2;
+  const xy = (p: { x: number; y: number }) => ({ x: offX + (p.x - minX) * scale, y: offY + (p.y - minY) * scale });
+
+  // Fundo arredondado semitransparente.
+  ctx.save();
+  ctx.fillStyle = "rgba(2,6,23,0.45)";
+  ctx.beginPath();
+  const r = 24;
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.fill();
+
+  ctx.lineJoin = "round"; ctx.lineCap = "round";
+  ctx.strokeStyle = "rgba(0,0,0,0.5)"; ctx.lineWidth = 8;
+  ctx.beginPath();
+  pts.forEach((p, i) => { const q = xy(p); i ? ctx.lineTo(q.x, q.y) : ctx.moveTo(q.x, q.y); });
+  ctx.stroke();
+  ctx.strokeStyle = ACCENT; ctx.lineWidth = 5;
+  ctx.beginPath();
+  pts.forEach((p, i) => { const q = xy(p); i ? ctx.lineTo(q.x, q.y) : ctx.moveTo(q.x, q.y); });
+  ctx.stroke();
+  const s = xy(pts[0]), e = xy(pts[pts.length - 1]);
+  ctx.fillStyle = "#22c55e"; ctx.beginPath(); ctx.arc(s.x, s.y, 7, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = "#ffffff"; ctx.beginPath(); ctx.arc(e.x, e.y, 7, 0, Math.PI * 2); ctx.fill();
+  ctx.restore();
+}
+
+/**
+ * Compõe o vídeo do usuário com as métricas e o mini-mapa e grava um novo
+ * vídeo (webm/mp4). Rejeita se não houver suporte a MediaRecorder.
+ * O canvas segue a proporção do vídeo do usuário (até 1080 de largura).
+ */
+export function generateVideoWithOverlay(input: OverlayVideoInput): Promise<Blob> {
+  return new Promise((resolve, reject) => {
+    const { video, path, metrics } = input;
+    const mimeType = pickVideoMimeType();
+    if (mimeType == null || typeof MediaRecorder === "undefined") {
+      reject(new Error("Gravação de vídeo não suportada neste dispositivo."));
+      return;
+    }
+
+    const run = () => {
+      const vw = video.videoWidth || 720;
+      const vh = video.videoHeight || 1280;
+      // Escala para no máximo 1080 de largura, mantendo proporção.
+      const scale = Math.min(1, 1080 / vw);
+      const cw = Math.round(vw * scale);
+      const ch = Math.round(vh * scale);
+
+      const canvas = document.createElement("canvas");
+      canvas.width = cw;
+      canvas.height = ch;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) { reject(new Error("Contexto 2D indisponível.")); return; }
+
+      const captureStream = (canvas as HTMLCanvasElement & { captureStream: (fps?: number) => MediaStream }).captureStream;
+      const stream = captureStream.call(canvas, FPS);
+
+      let recorder: MediaRecorder;
+      try {
+        recorder = new MediaRecorder(stream, { mimeType, videoBitsPerSecond: 8_000_000 });
+      } catch (e) { reject(e instanceof Error ? e : new Error(String(e))); return; }
+
+      const chunks: BlobPart[] = [];
+      recorder.ondataavailable = (ev) => { if (ev.data && ev.data.size > 0) chunks.push(ev.data); };
+      recorder.onerror = () => reject(new Error("Falha na gravação do vídeo."));
+      recorder.onstop = () => {
+        const blob = new Blob(chunks, { type: mimeType.split(";")[0] });
+        blob.size === 0 ? reject(new Error("Vídeo vazio.")) : resolve(blob);
+      };
+
+      const duration = Number.isFinite(video.duration) && video.duration > 0 ? video.duration : 0;
+      let rafId: number | null = null;
+
+      const drawFrame = () => {
+        // Frame do vídeo.
+        try { ctx.drawImage(video, 0, 0, cw, ch); } catch { /* frame ainda não pronto */ }
+
+        // Gradiente na base para legibilidade.
+        const g = ctx.createLinearGradient(0, ch - ch * 0.4, 0, ch);
+        g.addColorStop(0, "rgba(0,0,0,0)");
+        g.addColorStop(1, "rgba(0,0,0,0.75)");
+        ctx.fillStyle = g;
+        ctx.fillRect(0, ch - ch * 0.4, cw, ch * 0.4);
+
+        // Marca no topo.
+        ctx.save();
+        ctx.shadowColor = "rgba(0,0,0,0.6)"; ctx.shadowBlur = 8;
+        ctx.textBaseline = "top"; ctx.textAlign = "left";
+        ctx.fillStyle = TEXT; ctx.font = `800 ${Math.round(cw * 0.05)}px sans-serif`;
+        ctx.fillText("OUTVITAR", 24, 24);
+        if (input.activityName) {
+          ctx.fillStyle = ACCENT; ctx.font = `700 ${Math.round(cw * 0.032)}px sans-serif`;
+          ctx.fillText(input.activityName.toUpperCase(), 24, 24 + Math.round(cw * 0.055));
+        }
+        ctx.restore();
+
+        // Métricas na base esquerda (2 colunas x 2 linhas).
+        ctx.save();
+        ctx.shadowColor = "rgba(0,0,0,0.6)"; ctx.shadowBlur = 6;
+        ctx.textBaseline = "alphabetic"; ctx.textAlign = "left";
+        const mBottom = ch - 28;
+        const colW = (cw - 48) / 2 - 70; // espaço p/ mini-mapa à direita
+        metrics.slice(0, 4).forEach((m, i) => {
+          const col = i % 2, row = Math.floor(i / 2);
+          const mx = 24 + col * colW;
+          const my = mBottom - (1 - row) * Math.round(cw * 0.14);
+          ctx.fillStyle = TEXT; ctx.font = `800 ${Math.round(cw * 0.06)}px sans-serif`;
+          ctx.fillText(m.value, mx, my);
+          ctx.fillStyle = ACCENT; ctx.font = `700 ${Math.round(cw * 0.026)}px sans-serif`;
+          ctx.fillText(m.label.toUpperCase(), mx, my - Math.round(cw * 0.062));
+        });
+        ctx.restore();
+
+        // Mini-mapa no canto inferior direito.
+        const mapSize = Math.round(cw * 0.26);
+        drawMiniRouteRect(ctx, path, cw - mapSize - 20, ch - mapSize - 20, mapSize, mapSize);
+
+        if (duration > 0) input.onProgress?.(Math.min(1, video.currentTime / duration));
+
+        if (video.ended || video.paused) {
+          setTimeout(() => { try { recorder.stop(); } catch { /* ignore */ } }, 300);
+          return;
+        }
+        rafId = requestAnimationFrame(drawFrame);
+      };
+
+      const onEnded = () => {
+        if (rafId) cancelAnimationFrame(rafId);
+        setTimeout(() => { try { recorder.stop(); } catch { /* ignore */ } }, 300);
+      };
+      video.addEventListener("ended", onEnded, { once: true });
+
+      // Limite de segurança: não grava mais que 60s.
+      const safety = setTimeout(() => {
+        try { video.pause(); } catch { /* ignore */ }
+      }, 60_000);
+      recorder.onstop = () => {
+        clearTimeout(safety);
+        const blob = new Blob(chunks, { type: mimeType.split(";")[0] });
+        blob.size === 0 ? reject(new Error("Vídeo vazio.")) : resolve(blob);
+      };
+
+      try {
+        video.currentTime = 0;
+        video.muted = false;
+        recorder.start(250);
+        video.play().then(() => {
+          rafId = requestAnimationFrame(drawFrame);
+        }).catch((e) => reject(e instanceof Error ? e : new Error(String(e))));
+      } catch (e) {
+        reject(e instanceof Error ? e : new Error(String(e)));
+      }
+    };
+
+    if (video.readyState >= 2 && video.videoWidth > 0) {
+      run();
+    } else {
+      video.addEventListener("loadeddata", run, { once: true });
+      video.addEventListener("error", () => reject(new Error("Não foi possível carregar o vídeo.")), { once: true });
     }
   });
 }
