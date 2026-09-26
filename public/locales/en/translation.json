@@ -867,6 +867,8 @@
     "shareVideo": "Generate & share video",
     "videoExporting": "Generating video…",
     "videoExportError": "Couldn't generate the video. Try the 9:16 Story.",
+    "movingTime": "Moving time",
+    "elapsedTime": "Total time",
     "shareBannerTitle": "My OutVitar activity",
     "shareBannerText": "Check out my activity on OutVitar!",
     "shareBannerError": "Couldn't generate the image to share. Please try again.",

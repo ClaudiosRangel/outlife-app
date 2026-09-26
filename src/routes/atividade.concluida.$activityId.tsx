@@ -192,7 +192,9 @@ function AtividadeConcluida() {
               <div className="mt-1 font-display text-2xl font-bold tabular-nums">
                 {fmtDuration(activity?.duration_seconds ?? null)}
               </div>
-              <div className="text-[10px] uppercase tracking-widest text-white/60">{t("activity.metrics.duration")}</div>
+              <div className="text-[10px] uppercase tracking-widest text-white/60">
+                {t("activity.movingTime", { defaultValue: "Em movimento" })}
+              </div>
             </div>
             <div className="rounded-2xl bg-white/10 p-4 text-center backdrop-blur">
               <div className="mt-1 font-display text-2xl font-bold tabular-nums">
@@ -205,6 +207,18 @@ function AtividadeConcluida() {
               <div className="mt-1 font-display text-2xl font-bold tabular-nums">{elevLabel}</div>
               <div className="text-[10px] uppercase tracking-widest text-white/60">{t("activity.metrics.elevation")}</div>
             </div>
+            {/* Tempo total (informativo) — só quando persistido. */}
+            {activity?.elapsed_seconds != null && (
+              <div className="col-span-2 rounded-2xl bg-white/10 p-4 text-center backdrop-blur">
+                <Clock size={16} className="mx-auto text-white/70" />
+                <div className="mt-1 font-display text-2xl font-bold tabular-nums">
+                  {fmtDuration(activity.elapsed_seconds)}
+                </div>
+                <div className="text-[10px] uppercase tracking-widest text-white/60">
+                  {t("activity.elapsedTime", { defaultValue: "Tempo total" })}
+                </div>
+              </div>
+            )}
           </div>
         </div>
 

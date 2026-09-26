@@ -21,7 +21,7 @@ import {
   pushElevationSample,
   type ElevationGainState,
 } from "@/lib/elevation-gain";
-import { elapsedFromPoints } from "@/lib/activity-duration";
+import { elapsedFromPoints, elapsedTotalSeconds } from "@/lib/activity-duration";
 import {
   loadActive,
   saveActive,
@@ -50,6 +50,11 @@ export function useActivityTracker() {
   // com o estado para sobreviver à navegação entre telas.
   const activityIdRef = useRef<string | null>(null);
   const activityTypeRef = useRef<string | null>(null);
+  // Epoch (ms) do início da atividade — base do Tempo Total (Elapsed_Time),
+  // imune à suspensão do timer. Preservado por todo o ciclo (não zera em
+  // pause/resume). Persistido/reidratado; ausência (registros antigos) →
+  // deriva do span dos pontos.
+  const startedAtRef = useRef<number | null>(null);
   const [currentPos, setCurrentPos] = useState<TrackPoint | null>(null);
   const [permissionDenied, setPermissionDenied] = useState(false);
 
@@ -105,6 +110,7 @@ export function useActivityTracker() {
       updatedAt: Date.now(),
       activityId: activityIdRef.current,
       activityType: activityTypeRef.current,
+      startedAt: startedAtRef.current,
     };
     void saveActive(payload);
   }, []);
@@ -341,6 +347,11 @@ export function useActivityTracker() {
         }
         activityIdRef.current = p.activityId ?? null;
         activityTypeRef.current = p.activityType ?? null;
+        // Reidrata o início da atividade (Tempo Total). Registros antigos sem
+        // `startedAt` derivam do timestamp do 1º ponto; se nem isso houver,
+        // fica null e o cálculo cai no span dos pontos.
+        startedAtRef.current =
+          (p as { startedAt?: number | null }).startedAt ?? p.points[0]?.ts ?? null;
         // Reidrata a referência de validação do último ponto persistido (só
         // Accepted_Points), evitando salto artificial ao retomar (Req 7.4/7.5).
         const lastPt = p.points[p.points.length - 1];
@@ -403,6 +414,7 @@ export function useActivityTracker() {
     lastCheckpointTsRef.current = Date.now();
     lastCheckpointDistanceRef.current = 0;
     lastMovementTsRef.current = Date.now();
+    startedAtRef.current = Date.now();
     autoPausedRef.current = false;
     setAutoPaused(false);
     // Reset da filtragem/velocidade/sinal (spec rastreamento-preciso-gps).
@@ -455,6 +467,7 @@ export function useActivityTracker() {
     distanceRef.current = 0;
     durationRef.current = 0;
     elevationGainRef.current = 0;
+    startedAtRef.current = null;
     elevationStateRef.current = createElevationGainState();
     lastAcceptedRef.current = null;
     speedWindowRef.current = [];
@@ -506,10 +519,17 @@ export function useActivityTracker() {
     // segundo plano (timer suspenso) e a distância acumulou sem o tempo —
     // antes isso inflava a velocidade média (ex.: 47 km/h numa pedalada).
     const durationFinal = Math.max(durationRef.current, elapsedFromPoints(pointsRef.current));
+    // Tempo Total (Elapsed_Time): relógio do início ao fim, contando paradas.
+    // Sempre >= Moving_Time (Math.max) — invariante do spec.
+    const elapsedFinal = Math.max(
+      elapsedTotalSeconds(startedAtRef.current, Date.now(), pointsRef.current),
+      durationFinal,
+    );
     return {
       route,
       distance: distanceRef.current,
       duration: durationFinal,
+      elapsed: elapsedFinal,
       points: pointsRef.current,
       elevationGain: elevationGainRef.current,
     };
@@ -520,6 +540,7 @@ export function useActivityTracker() {
     distanceRef.current = 0;
     durationRef.current = 0;
     elevationGainRef.current = 0;
+    startedAtRef.current = null;
     elevationStateRef.current = createElevationGainState();
     lastAcceptedRef.current = null;
     speedWindowRef.current = [];

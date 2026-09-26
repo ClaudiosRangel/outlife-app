@@ -49,6 +49,12 @@ export type ActivePersisted = {
   activityId?: string | null;
   /** Tipo de atividade selecionado */
   activityType?: string | null;
+  /**
+   * Epoch (ms) do início da atividade, para o Tempo Total (Elapsed_Time),
+   * imune à suspensão do timer. Opcional para retrocompatibilidade: registros
+   * antigos sem o campo derivam o total do span dos pontos.
+   */
+  startedAt?: number | null;
 };
 
 /**
@@ -142,6 +148,8 @@ export type QueuedActivity = {
   endTime: string;
   distance_meters: number;
   duration_seconds: number;
+  /** Tempo total (início→fim, com paradas), preservado no fluxo offline. */
+  elapsed_seconds?: number | null;
   route_geojson: GeoJSON.LineString;
   /** Tipo da atividade, preservado para o fluxo offline (Requirement 2.1). */
   activity_type?: ActivityType | null;
@@ -230,6 +238,7 @@ export async function flushQueue(): Promise<{ synced: number; failed: number }> 
         finishActivity(remoteId!, {
           distance_meters: item.distance_meters,
           duration_seconds: item.duration_seconds,
+          elapsed_seconds: item.elapsed_seconds ?? null,
           route_geojson: item.route_geojson,
           activity_type: item.activity_type ?? null, // Req 2.3
           elevation_gain: item.elevation_gain ?? null, // Req 1.4

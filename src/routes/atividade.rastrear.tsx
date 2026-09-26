@@ -344,6 +344,7 @@ function TrackActivityPage() {
         const finished = await finishActivity(activityId, {
           distance_meters: result.distance,
           duration_seconds: result.duration,
+          elapsed_seconds: result.elapsed,
           route_geojson: result.route,
           description: skipExtras ? undefined : description.trim() || undefined,
           image_url,
@@ -377,10 +378,11 @@ function TrackActivityPage() {
         await enqueueActivity({
           localId: crypto.randomUUID(),
           remoteId: activityId,
-          startTime: new Date(Date.now() - result.duration * 1000).toISOString(),
+          startTime: new Date(Date.now() - result.elapsed * 1000).toISOString(),
           endTime: new Date().toISOString(),
           distance_meters: result.distance,
           duration_seconds: result.duration,
+          elapsed_seconds: result.elapsed,
           route_geojson: result.route,
           activity_type: activityType ?? null,
           elevation_gain: result.elevationGain,
@@ -512,7 +514,7 @@ function TrackActivityPage() {
       {(isTracking || isPaused) && (
         <div className="mx-5 mt-5 text-center">
           <div className="text-[11px] uppercase tracking-widest text-muted-foreground">
-            {t("activity.metrics.duration")}
+            {t("activity.movingTime", { defaultValue: "Em movimento" })}
           </div>
           <div className="font-display text-6xl font-bold tabular-nums leading-none">
             {formatDuration(tracker.durationSeconds)}

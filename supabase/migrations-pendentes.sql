@@ -1168,3 +1168,12 @@ alter table public.profile_contacts
 --     porque hoje ainda não teve). Alimenta a tela comemorativa de atividade
 --     concluída. (idempotente)
 -- ############################################################################
+
+-- ############################################################################
+-- 45. 20260926120000_activity-elapsed-seconds.sql
+--     Tempo TOTAL (Elapsed_Time) da atividade: coluna
+--     user_activities.elapsed_seconds (integer, nullable) + finish_user_activity
+--     estendida com _elapsed (11º arg, DEFAULT NULL, retrocompatível). Distinto
+--     de duration_seconds (Tempo em Movimento). Spec atividade-tempo-movimento.
+--     (idempotente: ADD COLUMN IF NOT EXISTS + CREATE OR REPLACE FUNCTION)
+-- ############################################################################

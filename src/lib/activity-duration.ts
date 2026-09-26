@@ -19,3 +19,33 @@ export function elapsedFromPoints(points: { ts: number }[]): number {
   const sec = Math.round((last - first) / 1000);
   return sec > 0 ? sec : 0;
 }
+
+/**
+ * Tempo TOTAL (segundos) da atividade: do início ao fim, contando TODAS as
+ * paradas (pausa manual e auto-pausa). Usa timestamps de RELÓGIO
+ * (`startedAtMs`/`endMs`), portanto é imune à suspensão do contador do timer
+ * quando o app vai a segundo plano — ao contrário do Moving_Time, que congela
+ * nas paradas.
+ *
+ * - `startedAtMs`: epoch ms do início da atividade (Date.now() no start).
+ *   Quando null/inválido (ex.: atividade restaurada de versão antiga sem esse
+ *   campo), cai para o span dos pontos (`elapsedFromPoints`).
+ * - `endMs`: epoch ms do fim (default = agora).
+ * - `points`: pontos aceitos (para o piso pelo span e para o fallback).
+ *
+ * Garante: inteiro `>= 0`, nunca NaN/Infinity, e sempre `>= elapsedFromPoints`.
+ */
+export function elapsedTotalSeconds(
+  startedAtMs: number | null,
+  endMs: number,
+  points: { ts: number }[],
+): number {
+  const spanFloor = elapsedFromPoints(points);
+  if (startedAtMs == null || !Number.isFinite(startedAtMs) || !Number.isFinite(endMs)) {
+    return spanFloor;
+  }
+  const sec = Math.round((endMs - startedAtMs) / 1000);
+  const total = sec > 0 ? sec : 0;
+  // O total nunca pode ser menor que o intervalo entre 1º e último ponto.
+  return Math.max(total, spanFloor);
+}

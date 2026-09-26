@@ -714,6 +714,8 @@ export type UserActivity = {
   start_time: string;
   end_time: string | null;
   duration_seconds: number | null;
+  /** Tempo total (início→fim, com paradas). NULL para atividades anteriores à feature. */
+  elapsed_seconds: number | null;
   distance_meters: number | null;
   route_geojson: GeoJSON.LineString | null;
   status: "in_progress" | "completed";
@@ -785,6 +787,7 @@ export async function finishActivity(
   payload: {
     distance_meters: number;
     duration_seconds: number;
+    elapsed_seconds?: number | null;
     route_geojson: GeoJSON.LineString;
     description?: string | null;
     image_url?: string | null;
@@ -802,6 +805,7 @@ export async function finishActivity(
     _geojson: payload.route_geojson as never,
     _distance: payload.distance_meters,
     _duration: payload.duration_seconds,
+    _elapsed: payload.elapsed_seconds ?? null,
     _description: payload.description ?? null,
     _image_url: payload.image_url ?? null,
     _activity_type: payload.activity_type ?? null,

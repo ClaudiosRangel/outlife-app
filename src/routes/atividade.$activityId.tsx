@@ -347,7 +347,9 @@ function ActivityDetailPage() {
           <div className="mt-1 font-display text-base font-semibold tabular-nums">
             {formatDuration(activity?.duration_seconds ?? null)}
           </div>
-          <div className="text-[10px] text-muted-foreground">{t("activity.metrics.duration")}</div>
+          <div className="text-[10px] text-muted-foreground">
+            {t("activity.movingTime", { defaultValue: "Em movimento" })}
+          </div>
         </div>
         <div className="rounded-2xl bg-card p-3 shadow-card text-center">
           <RouteIcon size={16} className="mx-auto text-primary" />
@@ -396,6 +398,19 @@ function ActivityDetailPage() {
               {elevLabel}
             </div>
           </div>
+          {/* Tempo total (Elapsed_Time), informativo — só quando persistido
+              (atividades anteriores à feature têm elapsed_seconds null). */}
+          {activity.elapsed_seconds != null && (
+            <div className="col-span-2 rounded-2xl bg-card p-3 shadow-card text-center">
+              <Clock size={16} className="mx-auto text-primary" />
+              <div className="mt-1 text-[11px] uppercase tracking-widest text-muted-foreground">
+                {t("activity.elapsedTime", { defaultValue: "Tempo total" })}
+              </div>
+              <div className="mt-1 font-display text-lg font-semibold text-primary tabular-nums">
+                {formatDuration(activity.elapsed_seconds)}
+              </div>
+            </div>
+          )}
         </div>
       )}
 
