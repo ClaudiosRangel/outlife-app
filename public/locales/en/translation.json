@@ -814,6 +814,17 @@
     "earned": "Earned",
     "toEarn": "To earn"
   },
+  "destination": {
+    "notFound": "Destination not found.",
+    "save": "Save",
+    "paid": "Paid",
+    "free": "Free",
+    "routeMap": "Route map",
+    "about": "About the trail",
+    "safetyTitle": "Practice safely",
+    "safetyText": "Trails may change due to weather and external factors. Use is the user's responsibility, who assumes the risks involved.",
+    "startNav": "Start navigation"
+  },
   "activity": {
     "trackTitle": "Track activity",
     "detailTitle": "Activity details",

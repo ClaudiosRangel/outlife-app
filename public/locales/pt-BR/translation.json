@@ -814,6 +814,17 @@
     "earned": "Conquistadas",
     "toEarn": "A conquistar"
   },
+  "destination": {
+    "notFound": "Destino não encontrado.",
+    "save": "Favoritar",
+    "paid": "Pago",
+    "free": "Gratuito",
+    "routeMap": "Mapa da rota",
+    "about": "Sobre a trilha",
+    "safetyTitle": "Pratique com segurança",
+    "safetyText": "Trilhas podem sofrer alterações por condições climáticas e fatores externos. A decisão de utilização é de responsabilidade do usuário, que assume os riscos envolvidos.",
+    "startNav": "Iniciar navegação"
+  },
   "activity": {
     "trackTitle": "Rastrear atividade",
     "detailTitle": "Detalhes da atividade",

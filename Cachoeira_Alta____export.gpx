@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="Trivlock" xmlns="http://www.topografix.com/GPX/1/1">
+  <metadata>
+    <name>Cachoeira Alta</name>
+    <desc>A Cachoeira Alta é uma das quedas d’água mais impressionantes da região, com cerca de 100 metros de altura e águas cristalinas que convidam para um banho refrescante em meio à natureza. Cercada por vegetação exuberante, ela encanta quem visita com sua paisagem natural preservada e tranquilidade. É um ponto ideal para curtir um dia ao ar livre, fazer piqueniques, relaxar nas áreas sombreadas e aproveitar a conexão com o meio ambiente em um dos destinos mais belos do sul capixaba. Está aberta para visitantes nos finais de semana e feriados, das 8h às 17h. A cachoeira fica em uma propriedade particular e a entrada custa R$ 10,00 por pessoa.</desc>
+  </metadata>
+  <trk>
+    <name>Cachoeira Alta</name>
+    <trkseg>
+      <trkpt lat="-20.70304" lon="-41.092004"/>
+      <trkpt lat="-20.70306" lon="-41.092024"/>
+      <trkpt lat="-20.703309" lon="-41.091616"/>
+      <trkpt lat="-20.70336" lon="-41.091498"/>
+      <trkpt lat="-20.703368" lon="-41.091359"/>
+      <trkpt lat="-20.703355" lon="-41.091193"/>
+      <trkpt lat="-20.703219" lon="-41.090798"/>
+      <trkpt lat="-20.703191" lon="-41.090666"/>
+      <trkpt lat="-20.703189" lon="-41.090566"/>
+      <trkpt lat="-20.703208" lon="-41.090447"/>
+      <trkpt lat="-20.70321" lon="-41.090325"/>
+      <trkpt lat="-20.703189" lon="-41.09015"/>
+      <trkpt lat="-20.70315" lon="-41.090033"/>
+      <trkpt lat="-20.703104" lon="-41.089925"/>
+      <trkpt lat="-20.703022" lon="-41.089761"/>
+      <trkpt lat="-20.702946" lon="-41.089588"/>
+      <trkpt lat="-20.702923" lon="-41.089464"/>
+      <trkpt lat="-20.702931" lon="-41.08931"/>
+      <trkpt lat="-20.703039" lon="-41.088836"/>
+      <trkpt lat="-20.703065" lon="-41.088656"/>
+      <trkpt lat="-20.703086" lon="-41.088324"/>
+      <trkpt lat="-20.703152" lon="-41.088024"/>
+      <trkpt lat="-20.703148" lon="-41.087907"/>
+      <trkpt lat="-20.703065" lon="-41.087668"/>
+      <trkpt lat="-20.703029" lon="-41.087374"/>
+      <trkpt lat="-20.702975" lon="-41.087238"/>
+      <trkpt lat="-20.702747" lon="-41.086933"/>
+      <trkpt lat="-20.70261" lon="-41.086772"/>
+      <trkpt lat="-20.702443" lon="-41.086599"/>
+      <trkpt lat="-20.702122" lon="-41.086291"/>
+      <trkpt lat="-20.701977" lon="-41.086209"/>
+      <trkpt lat="-20.701826" lon="-41.086137"/>
+      <trkpt lat="-20.701737" lon="-41.086056"/>
+      <trkpt lat="-20.701638" lon="-41.085943"/>
+      <trkpt lat="-20.70146" lon="-41.085776"/>
+      <trkpt lat="-20.701339" lon="-41.085695"/>
+    </trkseg>
+  </trk>
+</gpx>

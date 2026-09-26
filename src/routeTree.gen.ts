@@ -13,7 +13,6 @@ import { Route as TermosRouteImport } from './routes/termos'
 import { Route as SugerirDestinoRouteImport } from './routes/sugerir-destino'
 import { Route as RedefinirSenhaRouteImport } from './routes/redefinir-senha'
 import { Route as RankingRouteImport } from './routes/ranking'
-import { Route as ConquistasRouteImport } from './routes/conquistas'
 import { Route as PrivacidadeRouteImport } from './routes/privacidade'
 import { Route as PerfilRouteImport } from './routes/perfil'
 import { Route as PedidosRouteImport } from './routes/pedidos'
@@ -24,6 +23,7 @@ import { Route as MarketplaceRouteImport } from './routes/marketplace'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ExplorarRouteImport } from './routes/explorar'
 import { Route as EventosRouteImport } from './routes/eventos'
+import { Route as ConquistasRouteImport } from './routes/conquistas'
 import { Route as ConfiguracoesRouteImport } from './routes/configuracoes'
 import { Route as ComunidadeRouteImport } from './routes/comunidade'
 import { Route as ComplianceRouteImport } from './routes/compliance'
@@ -87,11 +87,6 @@ const RedefinirSenhaRoute = RedefinirSenhaRouteImport.update({
   path: '/redefinir-senha',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ConquistasRoute = ConquistasRouteImport.update({
-  id: '/conquistas',
-  path: '/conquistas',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const RankingRoute = RankingRouteImport.update({
   id: '/ranking',
   path: '/ranking',
@@ -145,6 +140,11 @@ const ExplorarRoute = ExplorarRouteImport.update({
 const EventosRoute = EventosRouteImport.update({
   id: '/eventos',
   path: '/eventos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ConquistasRoute = ConquistasRouteImport.update({
+  id: '/conquistas',
+  path: '/conquistas',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ConfiguracoesRoute = ConfiguracoesRouteImport.update({
@@ -393,6 +393,7 @@ export interface FileRoutesByFullPath {
   '/compliance': typeof ComplianceRoute
   '/comunidade': typeof ComunidadeRoute
   '/configuracoes': typeof ConfiguracoesRoute
+  '/conquistas': typeof ConquistasRoute
   '/eventos': typeof EventosRouteWithChildren
   '/explorar': typeof ExplorarRoute
   '/login': typeof LoginRoute
@@ -403,7 +404,6 @@ export interface FileRoutesByFullPath {
   '/pedidos': typeof PedidosRoute
   '/perfil': typeof PerfilRoute
   '/privacidade': typeof PrivacidadeRoute
-  '/conquistas': typeof ConquistasRoute
   '/ranking': typeof RankingRoute
   '/redefinir-senha': typeof RedefinirSenhaRoute
   '/sugerir-destino': typeof SugerirDestinoRoute
@@ -457,6 +457,7 @@ export interface FileRoutesByTo {
   '/compliance': typeof ComplianceRoute
   '/comunidade': typeof ComunidadeRoute
   '/configuracoes': typeof ConfiguracoesRoute
+  '/conquistas': typeof ConquistasRoute
   '/eventos': typeof EventosRouteWithChildren
   '/explorar': typeof ExplorarRoute
   '/login': typeof LoginRoute
@@ -467,7 +468,6 @@ export interface FileRoutesByTo {
   '/pedidos': typeof PedidosRoute
   '/perfil': typeof PerfilRoute
   '/privacidade': typeof PrivacidadeRoute
-  '/conquistas': typeof ConquistasRoute
   '/ranking': typeof RankingRoute
   '/redefinir-senha': typeof RedefinirSenhaRoute
   '/sugerir-destino': typeof SugerirDestinoRoute
@@ -522,6 +522,7 @@ export interface FileRoutesById {
   '/compliance': typeof ComplianceRoute
   '/comunidade': typeof ComunidadeRoute
   '/configuracoes': typeof ConfiguracoesRoute
+  '/conquistas': typeof ConquistasRoute
   '/eventos': typeof EventosRouteWithChildren
   '/explorar': typeof ExplorarRoute
   '/login': typeof LoginRoute
@@ -532,7 +533,6 @@ export interface FileRoutesById {
   '/pedidos': typeof PedidosRoute
   '/perfil': typeof PerfilRoute
   '/privacidade': typeof PrivacidadeRoute
-  '/conquistas': typeof ConquistasRoute
   '/ranking': typeof RankingRoute
   '/redefinir-senha': typeof RedefinirSenhaRoute
   '/sugerir-destino': typeof SugerirDestinoRoute
@@ -588,6 +588,7 @@ export interface FileRouteTypes {
     | '/compliance'
     | '/comunidade'
     | '/configuracoes'
+    | '/conquistas'
     | '/eventos'
     | '/explorar'
     | '/login'
@@ -598,7 +599,6 @@ export interface FileRouteTypes {
     | '/pedidos'
     | '/perfil'
     | '/privacidade'
-    | '/conquistas'
     | '/ranking'
     | '/redefinir-senha'
     | '/sugerir-destino'
@@ -652,6 +652,7 @@ export interface FileRouteTypes {
     | '/compliance'
     | '/comunidade'
     | '/configuracoes'
+    | '/conquistas'
     | '/eventos'
     | '/explorar'
     | '/login'
@@ -662,7 +663,6 @@ export interface FileRouteTypes {
     | '/pedidos'
     | '/perfil'
     | '/privacidade'
-    | '/conquistas'
     | '/ranking'
     | '/redefinir-senha'
     | '/sugerir-destino'
@@ -716,6 +716,7 @@ export interface FileRouteTypes {
     | '/compliance'
     | '/comunidade'
     | '/configuracoes'
+    | '/conquistas'
     | '/eventos'
     | '/explorar'
     | '/login'
@@ -726,7 +727,6 @@ export interface FileRouteTypes {
     | '/pedidos'
     | '/perfil'
     | '/privacidade'
-    | '/conquistas'
     | '/ranking'
     | '/redefinir-senha'
     | '/sugerir-destino'
@@ -781,6 +781,7 @@ export interface RootRouteChildren {
   ComplianceRoute: typeof ComplianceRoute
   ComunidadeRoute: typeof ComunidadeRoute
   ConfiguracoesRoute: typeof ConfiguracoesRoute
+  ConquistasRoute: typeof ConquistasRoute
   EventosRoute: typeof EventosRouteWithChildren
   ExplorarRoute: typeof ExplorarRoute
   LoginRoute: typeof LoginRoute
@@ -791,7 +792,6 @@ export interface RootRouteChildren {
   PedidosRoute: typeof PedidosRoute
   PerfilRoute: typeof PerfilRoute
   PrivacidadeRoute: typeof PrivacidadeRoute
-  ConquistasRoute: typeof ConquistasRoute
   RankingRoute: typeof RankingRoute
   RedefinirSenhaRoute: typeof RedefinirSenhaRoute
   SugerirDestinoRoute: typeof SugerirDestinoRoute
@@ -857,13 +857,6 @@ declare module '@tanstack/react-router' {
       path: '/redefinir-senha'
       fullPath: '/redefinir-senha'
       preLoaderRoute: typeof RedefinirSenhaRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/conquistas': {
-      id: '/conquistas'
-      path: '/conquistas'
-      fullPath: '/conquistas'
-      preLoaderRoute: typeof ConquistasRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/ranking': {
@@ -941,6 +934,13 @@ declare module '@tanstack/react-router' {
       path: '/eventos'
       fullPath: '/eventos'
       preLoaderRoute: typeof EventosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/conquistas': {
+      id: '/conquistas'
+      path: '/conquistas'
+      fullPath: '/conquistas'
+      preLoaderRoute: typeof ConquistasRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/configuracoes': {
@@ -1295,6 +1295,7 @@ const rootRouteChildren: RootRouteChildren = {
   ComplianceRoute: ComplianceRoute,
   ComunidadeRoute: ComunidadeRoute,
   ConfiguracoesRoute: ConfiguracoesRoute,
+  ConquistasRoute: ConquistasRoute,
   EventosRoute: EventosRouteWithChildren,
   ExplorarRoute: ExplorarRoute,
   LoginRoute: LoginRoute,
@@ -1305,7 +1306,6 @@ const rootRouteChildren: RootRouteChildren = {
   PedidosRoute: PedidosRoute,
   PerfilRoute: PerfilRoute,
   PrivacidadeRoute: PrivacidadeRoute,
-  ConquistasRoute: ConquistasRoute,
   RankingRoute: RankingRoute,
   RedefinirSenhaRoute: RedefinirSenhaRoute,
   SugerirDestinoRoute: SugerirDestinoRoute,

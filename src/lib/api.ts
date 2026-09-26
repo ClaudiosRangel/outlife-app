@@ -120,6 +120,21 @@ export type DestinationDetail = {
   type: string;
   status: "pending" | "approved" | "rejected";
   created_by: string | null;
+  // Campos ricos (Bloco 3) — nullable (retrocompat com destinos antigos).
+  latitude: number | null;
+  longitude: number | null;
+  region: string | null;
+  state: string | null;
+  routeGeojson: GeoJSON.LineString | null;
+  elevationProfile: { d: number; e: number }[] | null;
+  distanceKm: number | null;
+  category: string | null;
+  isPaid: boolean | null;
+  priceText: string | null;
+  openingHours: string | null;
+  petFriendly: boolean | null;
+  startLat: number | null;
+  startLng: number | null;
 };
 
 // Busca um destino por id sem filtrar por status: a política de RLS de
@@ -135,6 +150,7 @@ export async function fetchDestinationById(id: string): Promise<DestinationDetai
     .maybeSingle();
   if (error) throw error;
   if (!data) return null;
+  const d = data as Record<string, unknown>;
   return {
     id: data.id,
     name: data.name,
@@ -147,6 +163,20 @@ export async function fetchDestinationById(id: string): Promise<DestinationDetai
     type: data.type ?? "",
     status: data.status,
     created_by: data.created_by,
+    latitude: d.latitude != null ? Number(d.latitude) : null,
+    longitude: d.longitude != null ? Number(d.longitude) : null,
+    region: (d.region as string) ?? null,
+    state: (d.state as string) ?? null,
+    routeGeojson: (d.route_geojson as GeoJSON.LineString) ?? null,
+    elevationProfile: (d.elevation_profile as { d: number; e: number }[]) ?? null,
+    distanceKm: d.distance_km != null ? Number(d.distance_km) : null,
+    category: (d.category as string) ?? null,
+    isPaid: (d.is_paid as boolean) ?? null,
+    priceText: (d.price_text as string) ?? null,
+    openingHours: (d.opening_hours as string) ?? null,
+    petFriendly: (d.pet_friendly as boolean) ?? null,
+    startLat: d.start_lat != null ? Number(d.start_lat) : null,
+    startLng: d.start_lng != null ? Number(d.start_lng) : null,
   };
 }
 

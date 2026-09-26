@@ -1194,3 +1194,13 @@ alter table public.profile_contacts
 --     pedalada_10/corrida_10/trilha_10) + list_my_badges() retornando catálogo
 --     com earned + progress (0..1) para a tela /conquistas. (idempotente)
 -- ############################################################################
+
+-- ############################################################################
+-- 48. 20260926180000_destinations-rich-route.sql
+--     Destinos ricos (Bloco 3, Fase A): colunas nullable em destinations
+--     (route_geojson, route_geog geography(LineString), elevation_profile,
+--     distance_km, category, is_paid, price_text, opening_hours, pet_friendly,
+--     start_lat/lng) + índice GIST route_geog + trigger sync_destination_geog
+--     estendido para popular route_geog de route_geojson. Base do import GPX.
+--     (idempotente)
+-- ############################################################################
