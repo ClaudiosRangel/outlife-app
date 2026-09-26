@@ -63,26 +63,32 @@ function pickZoomFractional(path: LatLng[], w: number, h: number, paddingPx: num
 type Drawable = HTMLImageElement | ImageBitmap;
 
 /**
- * Baixa uma imagem por fetch->blob->createImageBitmap (blob LOCAL nunca tainta
- * o canvas). `credentials: "omit"` + `no-store` garantem resposta CORS limpa.
+ * Motivo do resultado do desenho do mapa, para diagnóstico visível na UI.
+ * `lastMapDiag` guarda o último motivo (lido pelo export para o toast).
  */
-async function loadImage(url: string): Promise<Drawable> {
+export let lastMapDiag = "";
+
+/**
+ * Baixa uma imagem via `<img>` + objectURL (blob LOCAL nunca tainta o canvas).
+ * Usamos `<img>` em vez de `createImageBitmap` porque este último, em alguns
+ * WebViews/navegadores, falha silenciosamente ao decodificar JPEG da Static API
+ * (a `<img>` decodifica qualquer formato que o browser exibe). O objectURL é
+ * local, então o canvas NÃO fica tainted.
+ */
+async function loadImageEl(url: string): Promise<HTMLImageElement> {
   const res = await fetch(url, { mode: "cors", cache: "no-store", credentials: "omit" });
-  if (!res.ok) throw new Error(`img ${res.status}`);
+  if (!res.ok) throw new Error(`http ${res.status}`);
   const blob = await res.blob();
-  if (typeof createImageBitmap === "function") {
-    return await createImageBitmap(blob);
-  }
   const objectUrl = URL.createObjectURL(blob);
   try {
     return await new Promise<HTMLImageElement>((resolve, reject) => {
       const img = new Image();
       img.onload = () => resolve(img);
-      img.onerror = () => reject(new Error("img decode"));
+      img.onerror = () => reject(new Error("decode"));
       img.src = objectUrl;
     });
   } finally {
-    setTimeout(() => URL.revokeObjectURL(objectUrl), 5000);
+    setTimeout(() => URL.revokeObjectURL(objectUrl), 8000);
   }
 }
 
@@ -139,16 +145,16 @@ export async function drawMapBackground(
   ctx.fillStyle = gbg;
   ctx.fillRect(0, 0, w, h);
 
-  if (!token) return { project, zoom: z };
+  if (!token) { lastMapDiag = "sem token"; return { project, zoom: z }; }
 
   const style = MAP_LAYERS.find((l) => l.key === layer)?.style ?? "satellite-streets-v12";
 
-  // A Static API limita a 1280px por lado. Pedimos numa resolução proporcional
-  // (respeitando 1280) e desenhamos escalado para WxH — o zoom/centro casam.
+  // A Static API limita a 1280px por lado. Pedimos na MESMA proporção do canvas
+  // (para desenhar 1:1 sem distorcer) respeitando 1280 no maior lado.
   const maxSide = 1280;
-  const scale = Math.min(1, maxSide / Math.max(w, h));
-  const reqW = Math.max(1, Math.round(w * scale));
-  const reqH = Math.max(1, Math.round(h * scale));
+  const ratio = Math.min(1, maxSide / Math.max(w, h));
+  const reqW = Math.max(1, Math.round(w * ratio));
+  const reqH = Math.max(1, Math.round(h * ratio));
 
   // Overlay GeoJSON: o TRAÇADO já renderizado na imagem pelo servidor (linha
   // laranja). Assim o mapa vem com a linha mesmo antes de plotarmos a animação.
@@ -172,11 +178,14 @@ export async function drawMapBackground(
     `${reqW}x${reqH}?access_token=${token}&attribution=false&logo=false`;
 
   try {
-    const img = await loadImage(url);
+    const img = await loadImageEl(url);
+    // Desenha cobrindo todo o canvas (a imagem tem a mesma proporção do canvas,
+    // então 0,0,w,h preenche 1:1 sem distorcer).
     ctx.drawImage(img, 0, 0, w, h);
-    if (typeof ImageBitmap !== "undefined" && img instanceof ImageBitmap) img.close();
-  } catch {
+    lastMapDiag = "ok";
+  } catch (e) {
     // Sem imagem: fundo neutro já está pintado; o traçado será plotado por cima.
+    lastMapDiag = "falha: " + (e instanceof Error ? e.message : String(e));
   }
   return { project, zoom: z };
 }
