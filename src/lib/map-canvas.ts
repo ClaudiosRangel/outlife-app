@@ -1,16 +1,27 @@
-// Renderização do MAPA (tiles raster Mapbox) direto num <canvas>, para compor
-// o fundo do vídeo de export idêntico ao "Assistir percurso" (que usa Leaflet
-// + satélite). O MediaRecorder só grava canvas — o Leaflet não pode ser
-// gravado — então baixamos os tiles da região do trajeto e os desenhamos aqui,
-// com a MESMA projeção Web Mercator usada para plotar o traçado por cima.
+// Renderização do MAPA para compor o fundo do vídeo de export (idêntico ao
+// "Assistir percurso"). O MediaRecorder só grava canvas, e o Leaflet não é
+// gravável. As 3 tentativas anteriores baixavam DEZENAS de tiles raster e os
+// desenhavam no canvas — no WebView Android/produção isso "taintava" o canvas
+// (CORS), o vídeo saía vazio ou sem mapa (só o traçado, fundo escuro).
+//
+// ABORDAGEM DEFINITIVA: usar a **Mapbox Static Images API**, que retorna UMA
+// ÚNICA imagem PNG já renderizada da região (satélite), servida com CORS
+// correto (é uma API pensada justamente para isso, diferente do endpoint de
+// tiles). Uma imagem única buscada via fetch->blob->createImageBitmap não sofre
+// da interferência do cache de tiles do Leaflet. Ainda pedimos o TRAÇADO já
+// desenhado na própria imagem (overlay GeoJSON path na URL) — então mesmo que
+// algo falhe ao plotar por cima, o mapa já vem com a linha laranja pronta.
 
 import { getMapboxToken, MAP_LAYERS, type MapLayerKey } from "@/lib/map-config";
 
 export type LatLng = { lat: number; lng: number };
 
-const TILE = 256; // tamanho lógico do tile na projeção (px por tile no zoom Z)
+const TILE = 256; // px por tile na projeção Web Mercator no zoom 0
 
-/** Projeção Web Mercator → pixel global (no nível de zoom `z`). */
+/**
+ * Projeção Web Mercator → pixel global, com zoom FRACIONÁRIO (a Static API usa
+ * zoom fracionário; a projeção matemática suporta perfeitamente).
+ */
 function lngLatToPixel(lat: number, lng: number, z: number): { x: number; y: number } {
   const scale = TILE * Math.pow(2, z);
   const x = ((lng + 180) / 360) * scale;
@@ -28,51 +39,49 @@ function bounds(path: LatLng[]) {
   return { minLat, maxLat, minLng, maxLng };
 }
 
-/** Escolhe o maior zoom em que o bbox (com padding) cabe no canvas WxH. */
-function pickZoom(path: LatLng[], w: number, h: number, paddingPx: number): number {
+/**
+ * Escolhe o zoom FRACIONÁRIO em que o bbox (com padding) cabe no canvas WxH.
+ * A Static API aceita zoom com casas decimais, então não arredondamos — o
+ * traçado fica com o maior tamanho possível dentro da margem.
+ */
+function pickZoomFractional(path: LatLng[], w: number, h: number, paddingPx: number): number {
   const b = bounds(path);
-  for (let z = 18; z >= 2; z--) {
-    const a = lngLatToPixel(b.minLat, b.minLng, z);
-    const c = lngLatToPixel(b.maxLat, b.maxLng, z);
-    const spanX = Math.abs(c.x - a.x);
-    const spanY = Math.abs(c.y - a.y);
-    if (spanX <= w - paddingPx * 2 && spanY <= h - paddingPx * 2) return z;
-  }
-  return 2;
+  // Span do bbox no zoom 0 (px). Evita divisão por zero para trajetos minúsculos.
+  const a0 = lngLatToPixel(b.minLat, b.minLng, 0);
+  const c0 = lngLatToPixel(b.maxLat, b.maxLng, 0);
+  const spanX0 = Math.max(1e-6, Math.abs(c0.x - a0.x));
+  const spanY0 = Math.max(1e-6, Math.abs(c0.y - a0.y));
+  const availW = Math.max(1, w - paddingPx * 2);
+  const availH = Math.max(1, h - paddingPx * 2);
+  // 2^z * span0 <= avail  ->  z <= log2(avail / span0). Pega o menor dos eixos.
+  const zX = Math.log2(availW / spanX0);
+  const zY = Math.log2(availH / spanY0);
+  const z = Math.min(zX, zY);
+  return Math.max(1, Math.min(19, z));
 }
 
-type DrawableTile = HTMLImageElement | ImageBitmap;
+type Drawable = HTMLImageElement | ImageBitmap;
 
 /**
- * Carrega um tile de forma que NÃO "suje" (taint) o canvas — essencial para o
- * canvas poder ser capturado pelo MediaRecorder (o vídeo). Em vez de
- * `<img crossOrigin>` (que pode reusar uma entrada de cache SEM headers CORS,
- * deixada pelo Leaflet, e tainta o canvas), buscamos via `fetch` (CORS),
- * viramos Blob LOCAL e decodificamos — blob local nunca tainta.
+ * Baixa uma imagem por fetch->blob->createImageBitmap (blob LOCAL nunca tainta
+ * o canvas). `credentials: "omit"` + `no-store` garantem resposta CORS limpa.
  */
-async function loadTile(url: string): Promise<DrawableTile> {
-  // `credentials: "omit"` + cache-buster garantem uma resposta CORS "fresca":
-  // no WebView Android, reaproveitar uma entrada de cache que o Leaflet já
-  // baixou SEM CORS devolvia uma resposta opaca que tainta o canvas. Forçar
-  // uma URL única (bust) evita o hit de cache; `no-store` não reutiliza nada.
-  const bust = url + (url.includes("?") ? "&" : "?") + "_v=" + Date.now();
-  const res = await fetch(bust, { mode: "cors", cache: "no-store", credentials: "omit" });
-  if (!res.ok) throw new Error(`tile ${res.status}`);
+async function loadImage(url: string): Promise<Drawable> {
+  const res = await fetch(url, { mode: "cors", cache: "no-store", credentials: "omit" });
+  if (!res.ok) throw new Error(`img ${res.status}`);
   const blob = await res.blob();
   if (typeof createImageBitmap === "function") {
     return await createImageBitmap(blob);
   }
-  // Fallback: objectURL (também local → não tainta).
   const objectUrl = URL.createObjectURL(blob);
   try {
     return await new Promise<HTMLImageElement>((resolve, reject) => {
       const img = new Image();
       img.onload = () => resolve(img);
-      img.onerror = () => reject(new Error("tile decode"));
+      img.onerror = () => reject(new Error("img decode"));
       img.src = objectUrl;
     });
   } finally {
-    // Revoga depois de um tick para garantir que o decode terminou.
     setTimeout(() => URL.revokeObjectURL(objectUrl), 5000);
   }
 }
@@ -83,13 +92,21 @@ export type MapProjector = {
   zoom: number;
 };
 
+/** Simplifica o path (Douglas-Peucker leve por amostragem) para caber na URL. */
+function samplePath(path: LatLng[], maxPoints: number): LatLng[] {
+  if (path.length <= maxPoints) return path;
+  const step = (path.length - 1) / (maxPoints - 1);
+  const out: LatLng[] = [];
+  for (let i = 0; i < maxPoints; i++) out.push(path[Math.round(i * step)]);
+  return out;
+}
+
 /**
- * Desenha o mapa (tiles da `layer`) cobrindo o canvas WxH, centralizado no
- * trajeto `path`. Retorna um projetor para plotar o traçado por cima na mesma
- * geometria. Se não houver token/tiles falharem, desenha um fundo neutro e
- * ainda assim retorna um projetor válido (fit do bbox), para o traçado aparecer.
- *
- * `padding` deixa margem para o traçado não colar nas bordas.
+ * Desenha o mapa (Static Images API do Mapbox) cobrindo o canvas WxH,
+ * centralizado no trajeto. Retorna o projetor para plotar o traçado animado por
+ * cima na MESMA geometria. Se não houver token ou a imagem falhar, desenha um
+ * fundo neutro e retorna um projetor válido (mesmo centro/zoom) — o traçado
+ * ainda aparece.
  */
 export async function drawMapBackground(
   ctx: CanvasRenderingContext2D,
@@ -100,59 +117,66 @@ export async function drawMapBackground(
   padding = 80,
 ): Promise<MapProjector> {
   const token = getMapboxToken();
-  const z = pickZoom(path, w, h, padding);
+  const z = pickZoomFractional(path, w, h, padding);
   const b = bounds(path);
-
-  // Centro do bbox em pixel global; origem do canvas = centro - metade do canvas.
   const centerLat = (b.minLat + b.maxLat) / 2;
   const centerLng = (b.minLng + b.maxLng) / 2;
+
+  // Origem do canvas em pixels globais (no zoom fracionário z): o centro do
+  // canvas corresponde ao centro do bbox — igual ao enquadramento da Static API.
   const center = lngLatToPixel(centerLat, centerLng, z);
   const originX = center.x - w / 2;
   const originY = center.y - h / 2;
-
   const project = (lat: number, lng: number) => {
     const p = lngLatToPixel(lat, lng, z);
     return { x: p.x - originX, y: p.y - originY };
   };
 
   // Fundo neutro (fallback) sempre desenhado primeiro.
-  ctx.fillStyle = "#1f2937";
+  const gbg = ctx.createLinearGradient(0, 0, 0, h);
+  gbg.addColorStop(0, "#0f172a");
+  gbg.addColorStop(1, "#1e293b");
+  ctx.fillStyle = gbg;
   ctx.fillRect(0, 0, w, h);
 
   if (!token) return { project, zoom: z };
 
   const style = MAP_LAYERS.find((l) => l.key === layer)?.style ?? "satellite-streets-v12";
 
-  // Tiles que interceptam a viewport [originX..originX+w] x [originY..originY+h].
-  const tileMinX = Math.floor(originX / TILE);
-  const tileMaxX = Math.floor((originX + w) / TILE);
-  const tileMinY = Math.floor(originY / TILE);
-  const tileMaxY = Math.floor((originY + h) / TILE);
-  const maxTileIndex = Math.pow(2, z) - 1;
+  // A Static API limita a 1280px por lado. Pedimos numa resolução proporcional
+  // (respeitando 1280) e desenhamos escalado para WxH — o zoom/centro casam.
+  const maxSide = 1280;
+  const scale = Math.min(1, maxSide / Math.max(w, h));
+  const reqW = Math.max(1, Math.round(w * scale));
+  const reqH = Math.max(1, Math.round(h * scale));
 
-  // Baixa TODOS os tiles primeiro (blobs locais), depois desenha em ordem —
-  // evita desenhar parcialmente e garante que nada tainte o canvas.
-  const tiles: Array<{ img: DrawableTile; dx: number; dy: number }> = [];
-  const jobs: Promise<void>[] = [];
-  for (let tx = tileMinX; tx <= tileMaxX; tx++) {
-    for (let ty = tileMinY; ty <= tileMaxY; ty++) {
-      if (tx < 0 || ty < 0 || tx > maxTileIndex || ty > maxTileIndex) continue;
-      const url = `https://api.mapbox.com/styles/v1/mapbox/${style}/tiles/256/${z}/${tx}/${ty}?access_token=${token}`;
-      const dx = tx * TILE - originX;
-      const dy = ty * TILE - originY;
-      jobs.push(
-        loadTile(url)
-          .then((img) => { tiles.push({ img, dx, dy }); })
-          .catch(() => { /* tile faltando: fundo neutro aparece nessa área */ }),
-      );
-    }
-  }
-  await Promise.all(jobs);
-  for (const t of tiles) {
-    try {
-      ctx.drawImage(t.img, t.dx, t.dy, TILE, TILE);
-    } catch { /* ignore */ }
-    if (typeof ImageBitmap !== "undefined" && t.img instanceof ImageBitmap) t.img.close();
+  // Overlay GeoJSON: o TRAÇADO já renderizado na imagem pelo servidor (linha
+  // laranja). Assim o mapa vem com a linha mesmo antes de plotarmos a animação.
+  const geojson = {
+    type: "Feature",
+    properties: { stroke: "#f97316", "stroke-width": 5, "stroke-opacity": 0.9 },
+    geometry: {
+      type: "LineString",
+      coordinates: samplePath(path, 90).map((p) => [
+        Number(p.lng.toFixed(5)),
+        Number(p.lat.toFixed(5)),
+      ]),
+    },
+  };
+  const overlay = `geojson(${encodeURIComponent(JSON.stringify(geojson))})`;
+
+  // /static/{overlay}/{lon},{lat},{zoom}/{w}x{h}
+  const url =
+    `https://api.mapbox.com/styles/v1/mapbox/${style}/static/` +
+    `${overlay}/${centerLng.toFixed(6)},${centerLat.toFixed(6)},${z.toFixed(2)}/` +
+    `${reqW}x${reqH}?access_token=${token}&attribution=false&logo=false`;
+
+  try {
+    const img = await loadImage(url);
+    ctx.drawImage(img, 0, 0, w, h);
+    if (typeof ImageBitmap !== "undefined" && img instanceof ImageBitmap) img.close();
+  } catch {
+    // Sem imagem: fundo neutro já está pintado; o traçado será plotado por cima.
   }
   return { project, zoom: z };
 }
