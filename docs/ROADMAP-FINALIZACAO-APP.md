@@ -5,7 +5,33 @@
 > `.kiro/steering/roadmap-outvitar.md`). **Mantenha-o atualizado** ao
 > concluir qualquer tarefa/bloco: marque status, data e resumo.
 
-**Última atualização:** 25/09/2026 (🟩 SOLUÇÃO DEFINITIVA — mapa no vídeo via Static Images API)
+**Última atualização:** 25/09/2026 (✅ RESOLVIDO — mapa no vídeo compartilhado. Causa: sem token Mapbox → fallback OSM)
+
+> **✅ MAPA NO VÍDEO — RESOLVIDO DE VEZ (25/09/2026) — CONFIRMADO PELO USUÁRIO (APK 22:38, 9,98 MB):**
+> Depois de 4 tentativas atacando "CORS/WebView", a CAUSA RAIZ era outra e foi
+> revelada por um TOAST de diagnóstico temporário que mostrou **`mapa: sem
+> token`**. O `VITE_MAPBOX_TOKEN` NÃO está configurado no build da **Vercel**
+> (web). Por isso:
+> - O Leaflet ("Assistir percurso") mostrava mapa porque, sem token, ele cai
+>   automaticamente em **OpenStreetMap** (o mapa CLARO de ruas dos prints — não
+>   era o satélite Mapbox, como eu presumia ao comparar as duas telas).
+> - Minha `drawMapBackground` EXIGIA token → sem token → fundo neutro escuro.
+>   Eu estava comparando duas fontes de mapa diferentes sem perceber.
+> **Correção:** quando não há token Mapbox, o fundo do vídeo agora desenha
+> **tiles do OpenStreetMap** no canvas (`drawOsmTiles` em `map-canvas.ts`),
+> alinhados à mesma projeção Web Mercator do traçado. OSM serve com
+> `access-control-allow-origin: *` (validado), então NÃO tainta o canvas. Com
+> token, segue usando o satélite via Static Images API. **Usuário confirmou:
+> "funcionou".** Diagnóstico temporário (toast/lastVideoDiag) removido; salvaguarda
+> `isCanvasTainted` mantida. Commits `658f674` (fix OSM) + `dc21af8` (remove diag).
+> **Método que destravou:** em vez de continuar chutando a causa, instrumentei o
+> código para reportar o motivo real (toast) — 1 teste do usuário revelou o
+> problema que 4 tentativas às cegas não acharam. Lição registrada.
+> **💡 Opcional (não bloqueia):** configurar `VITE_MAPBOX_TOKEN` nas env vars da
+> Vercel faz o vídeo web sair com SATÉLITE (o APK já tem o token embutido, então
+> no app o vídeo já usa satélite; só a web usa OSM hoje).
+
+**Anterior:** 25/09/2026 (🟩 SOLUÇÃO "DEFINITIVA" — mapa no vídeo via Static Images API [não era a causa raiz])
 
 > **🟩 MAPA NO VÍDEO — SOLUÇÃO DEFINITIVA (25/09/2026) — CONCLUÍDO (APK 22:07, 9,98 MB):**
 > Após 3 tentativas, o vídeo continuava saindo com FUNDO ESCURO (só o traçado),
