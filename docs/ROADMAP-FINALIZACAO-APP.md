@@ -5,7 +5,32 @@
 > `.kiro/steering/roadmap-outvitar.md`). **Mantenha-o atualizado** ao
 > concluir qualquer tarefa/bloco: marque status, data e resumo.
 
-**Última atualização:** 25/09/2026 (✅ RESOLVIDO — mapa no vídeo compartilhado. Causa: sem token Mapbox → fallback OSM)
+**Última atualização:** 26/09/2026 (🟩 BLOCO 1 pré-lojas — Atividade: Tempo em Movimento vs Tempo Total)
+
+> **🟩 BLOCO 1 — Tempo em Movimento vs Tempo Total (26/09/2026) — CONCLUÍDO (APK 12:31, 9,98 MB):**
+> Primeiro de 3 blocos pré-lojas pedidos pelo usuário (trabalhados um a um,
+> documentado+testado). Spec `atividade-tempo-movimento` (requirements→design→tasks).
+> - **Descoberta:** o cronômetro atual (`durationSeconds`) já É o Tempo em
+>   Movimento — já congela na pausa manual e na auto-pausa por inatividade (15s).
+>   Trabalho ficou incremental.
+> - **Durante a gravação:** mostra só "Em movimento" (rótulo `activity.movingTime`);
+>   o Tempo Total NÃO aparece.
+> - **Tempo Total (Elapsed_Time):** relógio início→fim contando paradas, imune à
+>   suspensão do timer em 2º plano (usa `startedAtRef`, não o contador). Sempre
+>   >= Moving_Time. Nova lib pura `elapsedTotalSeconds` (`activity-duration.ts`)
+>   + 11 testes (fast-check).
+> - **Persistência:** migration `20260926120000_activity-elapsed-seconds.sql`
+>   (coluna `user_activities.elapsed_seconds` + RPC `finish_user_activity` com
+>   `_elapsed`, 11º arg DEFAULT NULL retrocompatível). Aplicada 2× + reload;
+>   refletida em `migrations-pendentes.sql` (item 45).
+> - **Exibição:** "Em movimento" + "Tempo total" no detalhe e na tela de
+>   atividade concluída (total só quando `elapsed_seconds` != null → retrocompat).
+> - Estende `useActivityTracker` (não reescreve); velocidade média segue no
+>   Moving_Time. Diagnostics limpos; commit `de62409` na main.
+> **Próximo:** BLOCO 2 (Ranking estilo Strava por tipo de atividade) — em
+> andamento nesta sessão.
+
+**Anterior:** 25/09/2026 (✅ RESOLVIDO — mapa no vídeo compartilhado. Causa: sem token Mapbox → fallback OSM)
 
 > **✅ MAPA NO VÍDEO — RESOLVIDO DE VEZ (25/09/2026) — CONFIRMADO PELO USUÁRIO (APK 22:38, 9,98 MB):**
 > Depois de 4 tentativas atacando "CORS/WebView", a CAUSA RAIZ era outra e foi
