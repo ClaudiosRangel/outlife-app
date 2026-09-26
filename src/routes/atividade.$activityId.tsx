@@ -13,7 +13,6 @@ import { computeByMetricForm, type MetricForm } from "@/lib/metric-forms";
 import { generateActivityBanner, type ActivityBannerMetric, type ActivityBannerVariant } from "@/lib/banner-generator";
 import { generateActivityStory, type StoryMetric } from "@/lib/story-generator";
 import { generateActivityVideo, canExportVideo } from "@/lib/activity-video-export";
-import * as mapCanvas from "@/lib/map-canvas";
 import { shareContent } from "@/lib/share";
 import { useAuth } from "@/hooks/use-auth";
 import { Film, Video, Sparkles, Clapperboard } from "lucide-react";
@@ -299,9 +298,6 @@ function ActivityDetailPage() {
       });
       const ext = blob.type.includes("mp4") ? "mp4" : "webm";
       const deepLink = `${window.location.origin}/a/${activityId}`;
-      // Diagnóstico temporário do mapa no vídeo (para achar por que o mapa não
-      // entra). Remover quando confirmado que o mapa aparece.
-      toast.info(`mapa: ${mapCanvas.lastMapDiag || "?"}`);
       await shareContent({
         file: blob,
         fileName: `outvitar-percurso.${ext}`,

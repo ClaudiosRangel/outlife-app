@@ -142,13 +142,9 @@ export function generateActivityVideo(input: VideoExportInput): Promise<Blob> {
     // `padding` reserva espaço superior/inferior para as métricas.
     drawMapBackground(bgCtx, path, W, H, "satellite", 90)
       .then((projector) => {
-        // GARANTIA CRÍTICA: se, apesar de tudo, algum tile taintou o canvas de
-        // fundo (WebView Android ainda propaga taint em certos casos, mesmo
-        // com fetch->blob), o MediaRecorder produziria um vídeo VAZIO e o
-        // compartilhamento falharia silenciosamente. Nesse caso descartamos o
-        // mapa: limpamos o bgCanvas para um fundo neutro (nunca tainta) e
-        // usamos a projeção do bbox. O vídeo SEMPRE sai (com traçado+métricas),
-        // com ou sem mapa — nunca falha por causa do mapa.
+        // GARANTIA CRÍTICA: se, apesar de tudo, o canvas de fundo taintou
+        // (o MediaRecorder produziria um vídeo VAZIO), descartamos o mapa e
+        // usamos fundo neutro + projeção do bbox. O vídeo SEMPRE sai.
         if (isCanvasTainted(bgCanvas)) {
           bgCtx.clearRect(0, 0, W, H);
           drawNeutralBackground(bgCtx);
@@ -158,7 +154,6 @@ export function generateActivityVideo(input: VideoExportInput): Promise<Blob> {
         }
       })
       .catch(() => {
-        // Falha no mapa: usa o próprio bgCtx (fundo neutro) + projeção do bbox.
         drawNeutralBackground(bgCtx);
         startRecording(fallbackProjector());
       });
