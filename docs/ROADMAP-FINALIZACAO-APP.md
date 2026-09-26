@@ -5,7 +5,40 @@
 > `.kiro/steering/roadmap-outvitar.md`). **Mantenha-o atualizado** ao
 > concluir qualquer tarefa/bloco: marque status, data e resumo.
 
-**Última atualização:** 26/09/2026 (🟩 BLOCO 1 pré-lojas — Atividade: Tempo em Movimento vs Tempo Total)
+**Última atualização:** 26/09/2026 (🟩 BLOCO 2 pré-lojas — Ranking: Ligas semanais + Conquistas)
+
+> **🟩 BLOCO 2 — Ranking: Ligas semanais + Conquistas (26/09/2026) — CONCLUÍDO (APK 15:27, 9,98 MB):**
+> Segundo dos 3 blocos pré-lojas. Spec `ranking-ligas-badges`. Escopo recortado
+> (Ligas + Badges; KOM/QOM por segmento e desafios ficam para depois).
+> - **Ligas semanais** (estilo Duolingo, por tipo de atividade): divisões
+>   Bronze→Prata→Ouro→Diamante. Pontos da semana DERIVADOS das atividades
+>   concluídas (1 pt/100m + 1 pt/m de elevação; lib pura `league-points.ts` +
+>   6 testes). Só a DIVISÃO é estado persistido, evoluída por rollover
+>   idempotente ao virar a semana (seg→dom America/Sao_Paulo): top 3 sobem,
+>   bottom 3 descem (só se divisão tiver ≥8 ativos). Migrations
+>   `20260926140000_league-weekly` + `20260926150000_fix-geral-key` (sentinela
+>   `''` para a liga "geral", pois NULL não compõe PK — bug pego em teste no
+>   banco). RPCs `fetch_league_standings`/`process_league_rollover` SECURITY
+>   DEFINER; rollover disparado sob demanda na abertura (sem cron). Aplicadas
+>   2× + reload.
+> - **Aba "Liga" no /ranking**: alternador Ranking|Liga, card da divisão, lista
+>   da minha divisão com destaque "Você", zonas de promoção (verde)/rebaixamento
+>   (vermelho), contador de dias para fechar a semana. Respeita a aba de tipo.
+>   Ranking clássico intacto; barra inferior mantida.
+> - **Tela /conquistas** (rota flat, routeTree manual em 8 pontos — verificada
+>   pós-build): badges obtidas x a obter com barra de progresso.
+>   `list_my_badges()` retorna catálogo + earned + progress.
+>   `grant_pending_achievements` ampliado (streak_7/30, pedalada_10/corrida_10/
+>   trilha_10) reusando `achievement_records` existente. Atalho no Perfil e no
+>   Ranking. Migration `20260926160000_badges-catalog` (2× + reload).
+> - i18n pt-BR/en (`league.*`, `achievements.*`, `ranking.tabClassic/tabLeague`).
+> Diagnostics limpos; commit `9412553` na main. Migrations refletidas em
+> `migrations-pendentes.sql` (itens 46-47).
+> **Próximo:** BLOCO 3 (Explorar repaginado + destinos ricos com GPX, clima
+> Open-Meteo, amigos/parceiros na trilha) — o maior. Usuário vai passar os GPX/
+> fotos das trilhas default.
+
+**Anterior:** 26/09/2026 (🟩 BLOCO 1 pré-lojas — Atividade: Tempo em Movimento vs Tempo Total)
 
 > **🟩 BLOCO 1 — Tempo em Movimento vs Tempo Total (26/09/2026) — CONCLUÍDO (APK 12:31, 9,98 MB):**
 > Primeiro de 3 blocos pré-lojas pedidos pelo usuário (trabalhados um a um,
