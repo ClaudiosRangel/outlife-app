@@ -5,7 +5,42 @@
 > `.kiro/steering/roadmap-outvitar.md`). **Mantenha-o atualizado** ao
 > concluir qualquer tarefa/bloco: marque status, data e resumo.
 
-**Última atualização:** 26/09/2026 (🟩 BLOCO 2 pré-lojas — Ranking: Ligas semanais + Conquistas)
+**Última atualização:** 26/09/2026 (🟩 BLOCO 3 Fase A — Destinos ricos com rota real (GPX): Cachoeira Alta no ar)
+
+> **🟩 BLOCO 3 — Fase A (26/09/2026) — CONCLUÍDA (APK 16:46, 9,98 MB):**
+> Terceiro e maior bloco pré-lojas (Explorar + destinos ricos). Spec
+> `explorar-destinos-ricos` (faseado A→D). A Fase A já coloca o 1º destino real
+> no ar, navegável, com rota do GPX.
+> - **Import de GPX** (`src/lib/gpx-import.ts`, puro, 9 testes incl. fixture real):
+>   `parseGpx` extrai nome/desc/pontos(ele?)/distância haversine/start/bounds/
+>   GeoJSON LineString; valida (>=2 pts, coords válidas, aceita notação científica).
+> - **Schema** (`20260926180000_destinations-rich-route.sql`, 2× + reload):
+>   colunas nullable em `destinations` (route_geojson, route_geog
+>   geography(LineString) + índice GIST, elevation_profile, distance_km,
+>   category, is_paid, price_text, opening_hours, pet_friendly, start_lat/lng);
+>   trigger `sync_destination_geog` estendido para popular route_geog.
+> - **Seed Cachoeira Alta** (`scripts/seed-cachoeira-alta.mjs`, idempotente,
+>   VERSIONADO): parseia o GPX do repo, busca elevação via **Open-Meteo Elevation
+>   API** (grátis), insere APROVADO com dados reais — 0,77 km, 36 pontos, ganho
+>   ~46 m (bate com o print do concorrente), R$ 10/pessoa, fins de semana e
+>   feriados 8h–17h, categoria cachoeira, dificuldade Fácil, São Vicente/
+>   Cachoeiro de Itapemirim-ES. Rodar: `node scripts/seed-cachoeira-alta.mjs`.
+> - **Tela `/destino/$destinationId`** (rota flat auto-gerada): hero, badges
+>   (dificuldade/categoria/pago/pet), local, distância/duração/elevação, horário/
+>   preço, mapa da rota (`DestinationRouteMap` — Leaflet + tiles + traçado laranja
+>   + início/fim), "Sobre a trilha", aviso de segurança, favoritar
+>   (saved_destinations) e CTA "Iniciar navegação". O Explorar JÁ navegava para
+>   essa rota (card/busca/marcadores) — só faltava a tela existir.
+> - `DestinationDetail` estendido na API com os campos ricos. i18n `destination.*`.
+> Diagnostics limpos; commit `31825be` na main; migration refletida em
+> `migrations-pendentes.sql` (item 48).
+> **Falta do Bloco 3 (Fases B/C/D, próximas rodadas):** clima Open-Meteo +
+> alertas na tela de destino (6), perfil de elevação em gráfico (8), amigos na
+> trilha + parceiros na região (11), filtros do Explorar (7) + Explorar
+> repaginado com "Criar rota" (9), form de admin com upload GPX (10). O usuário
+> vai passar mais trilhas (GPX+fotos) para popular os destinos default.
+
+**Anterior:** 26/09/2026 (🟩 BLOCO 2 pré-lojas — Ranking: Ligas semanais + Conquistas)
 
 > **🟩 BLOCO 2 — Ranking: Ligas semanais + Conquistas (26/09/2026) — CONCLUÍDO (APK 15:27, 9,98 MB):**
 > Segundo dos 3 blocos pré-lojas. Spec `ranking-ligas-badges`. Escopo recortado
