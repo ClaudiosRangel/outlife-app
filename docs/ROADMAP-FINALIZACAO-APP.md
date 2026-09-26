@@ -5,7 +5,37 @@
 > `.kiro/steering/roadmap-outvitar.md`). **Mantenha-o atualizado** ao
 > concluir qualquer tarefa/bloco: marque status, data e resumo.
 
-**Última atualização:** 25/09/2026 (🟩 FIX vídeo compartilhado — nunca mais falha silenciosamente por causa do mapa)
+**Última atualização:** 25/09/2026 (🟩 SOLUÇÃO DEFINITIVA — mapa no vídeo via Static Images API)
+
+> **🟩 MAPA NO VÍDEO — SOLUÇÃO DEFINITIVA (25/09/2026) — CONCLUÍDO (APK 22:07, 9,98 MB):**
+> Após 3 tentativas, o vídeo continuava saindo com FUNDO ESCURO (só o traçado),
+> sem o mapa satélite — enquanto o "Assistir percurso" mostrava o mapa lindo. O
+> print do usuário confirmou: o vídeo ERA gerado e compartilhado (sucesso), mas
+> o mapa nunca entrava (o `isCanvasTainted` descartava sempre).
+> **Causa raiz real:** o endpoint de TILES do Mapbox (`/tiles/{z}/{x}/{y}`), no
+> WebView/produção, não devolvia CORS utilizável para pintar canvas — e as
+> dezenas de tiles + cache do Leaflet tornavam isso irrecuperável. Insistir no
+> fetch dos tiles era o erro das 3 tentativas.
+> **Correção (troca de abordagem):** `map-canvas.ts` `drawMapBackground` agora
+> usa a **Mapbox Static Images API** (`/static/...`), que retorna **UMA imagem
+> PNG/JPEG única** já renderizada da região — e crucialmente servida com header
+> **`access-control-allow-origin: *`** (validado por script temporário: status
+> 200, CORS *, ~438 KB). Uma imagem única via fetch->blob->createImageBitmap NÃO
+> tainta o canvas. Detalhes:
+> - Zoom FRACIONÁRIO calculado para o bbox caber (a Static API aceita decimais);
+>   a projeção Web Mercator do traçado animado usa o MESMO centro+zoom → alinha
+>   perfeitamente com a imagem.
+> - O traçado também vai **renderizado no servidor** via overlay `geojson(...)`
+>   na URL (linha laranja), então o mapa já vem com a linha mesmo antes da
+>   animação por cima. Path amostrado para ≤90 pontos (caber na URL).
+> - Respeita o limite de 1280px/lado da Static API (desenha escalado p/ 1080×1920).
+> - Salvaguarda `isCanvasTainted` mantida como rede de segurança (não deve mais
+>   disparar). Fallback de fundo neutro + bbox se não houver token/imagem.
+> Resultado: o vídeo agora sai COM o mapa satélite + traçado, idêntico ao
+> "Assistir percurso". 4 testes da lib passando; diagnostics limpos; commit
+> `44e1242` na main.
+
+**Anterior:** 25/09/2026 (🟩 FIX vídeo compartilhado — nunca mais falha silenciosamente por causa do mapa)
 
 > **🟩 FIX VÍDEO COMPARTILHÁVEL (25/09/2026) — CONCLUÍDO (APK 20:36, 9,98 MB):**
 > O usuário reportou que o botão "Compartilhar" da tela cheia ("Assistir
