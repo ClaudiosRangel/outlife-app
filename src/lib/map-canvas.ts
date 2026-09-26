@@ -145,7 +145,14 @@ export async function drawMapBackground(
   ctx.fillStyle = gbg;
   ctx.fillRect(0, 0, w, h);
 
-  if (!token) { lastMapDiag = "sem token"; return { project, zoom: z }; }
+  if (!token) {
+    // SEM token Mapbox: usa tiles do OpenStreetMap (não exige token e serve com
+    // CORS *), igual ao que o Leaflet faz nesse caso. Desenha os tiles cobrindo
+    // o canvas na MESMA projeção (usando o zoom arredondado do OSM).
+    const okOsm = await drawOsmTiles(ctx, centerLat, centerLng, z, w, h, project);
+    lastMapDiag = okOsm ? "ok(osm)" : "sem token, osm falhou";
+    return { project, zoom: z };
+  }
 
   const style = MAP_LAYERS.find((l) => l.key === layer)?.style ?? "satellite-streets-v12";
 
@@ -188,6 +195,73 @@ export async function drawMapBackground(
     lastMapDiag = "falha: " + (e instanceof Error ? e.message : String(e));
   }
   return { project, zoom: z };
+}
+
+/**
+ * Desenha tiles do OpenStreetMap cobrindo o canvas, alinhados à projeção
+ * `project` (que usa zoom fracionário `zFrac`). Os tiles OSM são em zoom
+ * INTEIRO `zi`; cada tile de 256px é desenhado no tamanho `256 * 2^(zFrac-zi)`
+ * na posição dada pela projeção do seu canto superior-esquerdo. Retorna true se
+ * pelo menos um tile foi desenhado.
+ */
+async function drawOsmTiles(
+  ctx: CanvasRenderingContext2D,
+  centerLat: number,
+  centerLng: number,
+  zFrac: number,
+  w: number,
+  h: number,
+  project: (lat: number, lng: number) => { x: number; y: number },
+): Promise<boolean> {
+  const zi = Math.round(zFrac);
+  const tileScreen = TILE * Math.pow(2, zFrac - zi); // tamanho do tile no canvas
+  const maxIdx = Math.pow(2, zi) - 1;
+
+  // Converte lat/lng do centro em índice de tile (fracionário) no zoom zi.
+  const centerPx = lngLatToPixel(centerLat, centerLng, zi); // px globais no zi
+  const centerTileX = centerPx.x / TILE;
+  const centerTileY = centerPx.y / TILE;
+
+  // Quantos tiles cabem em cada direção a partir do centro (+2 de folga).
+  const tilesX = Math.ceil(w / tileScreen / 2) + 2;
+  const tilesY = Math.ceil(h / tileScreen / 2) + 2;
+  const minTX = Math.floor(centerTileX - tilesX);
+  const maxTX = Math.ceil(centerTileX + tilesX);
+  const minTY = Math.floor(centerTileY - tilesY);
+  const maxTY = Math.ceil(centerTileY + tilesY);
+
+  // lng/lat do canto NW de um tile (inverso da projeção de tiles).
+  const tileNW = (tx: number, ty: number) => {
+    const lng = (tx / Math.pow(2, zi)) * 360 - 180;
+    const n = Math.PI - (2 * Math.PI * ty) / Math.pow(2, zi);
+    const lat = (180 / Math.PI) * Math.atan(0.5 * (Math.exp(n) - Math.exp(-n)));
+    return { lat, lng };
+  };
+
+  const jobs: Promise<{ img: HTMLImageElement; dx: number; dy: number } | null>[] = [];
+  for (let tx = minTX; tx <= maxTX; tx++) {
+    for (let ty = minTY; ty <= maxTY; ty++) {
+      if (tx < 0 || ty < 0 || tx > maxIdx || ty > maxIdx) continue;
+      const nw = tileNW(tx, ty);
+      const pos = project(nw.lat, nw.lng); // canto NW do tile em px do canvas
+      const url = `https://tile.openstreetmap.org/${zi}/${tx}/${ty}.png`;
+      jobs.push(
+        loadImageEl(url)
+          .then((img) => ({ img, dx: pos.x, dy: pos.y }))
+          .catch(() => null),
+      );
+    }
+  }
+  const results = await Promise.all(jobs);
+  let drew = 0;
+  for (const r of results) {
+    if (!r) continue;
+    try {
+      ctx.drawImage(r.img, r.dx, r.dy, tileScreen + 1, tileScreen + 1);
+      drew++;
+    } catch { /* ignore */ }
+  }
+  return drew > 0;
 }
 
 /**
