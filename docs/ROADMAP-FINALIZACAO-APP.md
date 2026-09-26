@@ -5,7 +5,32 @@
 > `.kiro/steering/roadmap-outvitar.md`). **Mantenha-o atualizado** ao
 > concluir qualquer tarefa/bloco: marque status, data e resumo.
 
-**Última atualização:** 26/09/2026 (🟩 BLOCO 3 Fase A — Destinos ricos com rota real (GPX): Cachoeira Alta no ar)
+**Última atualização:** 26/09/2026 (🟩 BLOCO 3 Fase B — Tela de destino rica: clima + elevação + amigos/parceiros)
+
+> **🟩 BLOCO 3 — Fase B (26/09/2026) — CONCLUÍDA (APK 17:52, 9,98 MB):**
+> Enriquece a tela `/destino/$id` (Fase A já tinha hero/mapa/descrição/favoritar).
+> - **Clima (Open-Meteo)**: `src/lib/weather-forecast.ts` (`fetchDestinationWeather`
+>   — atual + horária + UV + nascer/pôr do sol) + `DestinationWeather.tsx` (card
+>   gradiente azul estilo do print, previsão horária). **Alertas "situações
+>   agravantes"**: `src/lib/weather-alerts.ts` (PURO, 7 testes fast-check) —
+>   tempestade/chuva forte/prob. alta/UV alto/vento forte → badge "Atenção".
+> - **Perfil de elevação**: `ElevationChart.tsx` (SVG puro) a partir do
+>   `elevation_profile` (buscado no seed via Open-Meteo) + métricas min/máx/ganho.
+> - **Amigos na trilha**: RPC `fetch_friends_on_destination` (SECURITY DEFINER,
+>   ST_DWithin do route/geog do destino com o `route` das atividades de amigos)
+>   — migration `20260926200000` (2× + reload). **Parceiros na região**: por
+>   proximidade (haversine ≤30km) no cliente. Ambas com estado vazio discreto.
+> - **⚠️ Bug pego no build e corrigido:** eu havia SOBRESCRITO o `weather.ts`
+>   existente (usado pelo painel do Explorar — `fetchWeatherNow`/`fetchAirQuality`/
+>   `outdoorVerdict`/`moonPhase`), quebrando o build. Restaurado via git; o clima
+>   da tela de destino ficou em `weather-forecast.ts` separado. **Lição: checar se
+>   o arquivo já existe antes de fs_write.**
+> Diagnostics limpos; commit `e4428cc` na main; migration refletida (item 49).
+> **Falta do Bloco 3 (Fases C/D):** filtros do Explorar (7) + Explorar repaginado
+> com "Criar rota" (9); form de admin com upload GPX (10) para cadastrar destinos
+> sem script. Usuário vai passar mais trilhas (GPX+fotos).
+
+**Anterior:** 26/09/2026 (🟩 BLOCO 3 Fase A — Destinos ricos com rota real (GPX): Cachoeira Alta no ar)
 
 > **🟩 BLOCO 3 — Fase A (26/09/2026) — CONCLUÍDA (APK 16:46, 9,98 MB):**
 > Terceiro e maior bloco pré-lojas (Explorar + destinos ricos). Spec
