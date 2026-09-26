@@ -83,7 +83,7 @@ flowchart TD
   - Card de destino no Explorar passa a navegar para `/destino/$id`.
   - _Requisitos: 2.1, 2.4, 2.6_
 
-- [ ] 6. (Fase B) Weather_Panel (Open-Meteo) + alertas
+- [x] 6. (Fase B) Weather_Panel (Open-Meteo) + alertas
   - `src/lib/weather.ts` (fetch) + `src/lib/weather-alerts.ts` (puro) + testes
     (Property 4). Card de clima na tela de destino (estilo do print).
   - _Requisitos: 2.2; Property 4_
@@ -94,7 +94,7 @@ flowchart TD
     categoria/pet/pago/offline/curtidas/localização.
   - _Requisitos: 3.1; Property 3_
 
-- [ ] 8. (Fase B) Elevation_Profile
+- [x] 8. (Fase B) Elevation_Profile
   - `ElevationChart.tsx` (SVG) + preencher `elevation_profile` no seed/import via
     Open-Meteo Elevation quando o GPX não traz `<ele>`. Métricas (min/max/ganho).
   - _Requisitos: 1.3, 2.3_
@@ -109,7 +109,7 @@ flowchart TD
     approved; aprovação de pending de usuários (reuso notify).
   - _Requisitos: 1.1, 1.2, 1.5, 4.2_
 
-- [ ] 11. (Fase B) Friends_On_Trail + Partners_Nearby
+- [x] 11. (Fase B) Friends_On_Trail + Partners_Nearby
   - RPC `fetch_friends_on_destination` (SECURITY DEFINER, ST_DWithin) + seção na
     tela; parceiros próximos por proximidade (cliente). Estados vazios.
   - _Requisitos: 2.5, 2.7_

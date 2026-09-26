@@ -823,7 +823,18 @@
     "about": "About the trail",
     "safetyTitle": "Practice safely",
     "safetyText": "Trails may change due to weather and external factors. Use is the user's responsibility, who assumes the risks involved.",
-    "startNav": "Start navigation"
+    "startNav": "Start navigation",
+    "elevationProfile": "Elevation profile",
+    "elevMin": "Min. alt.",
+    "elevMax": "Max. alt.",
+    "elevGain": "Total climb",
+    "friendsOnTrail": "Friends on this trail",
+    "partnersNearby": "Partners nearby"
+  },
+  "weather": {
+    "attention": "Attention",
+    "feelsLike": "Feels like",
+    "now": "Now"
   },
   "activity": {
     "trackTitle": "Track activity",

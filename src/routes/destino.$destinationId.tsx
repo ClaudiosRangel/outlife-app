@@ -18,10 +18,18 @@ import {
   fetchSavedDestinations,
   saveDestination,
   unsaveDestination,
+  fetchFriendsOnDestination,
+  fetchPartners,
+  resolveAsset,
 } from "@/lib/api";
+import { haversineMeters } from "@/lib/haversine";
+import { SafeImage as Avatar } from "@/components/SafeImage";
 import waterfall from "@/assets/cachoeira_do_tabuleiro.jpg";
+import avatarFallback from "@/assets/avatar-rafael.jpg";
 
 const DestinationRouteMap = lazy(() => import("@/components/DestinationRouteMap"));
+const DestinationWeather = lazy(() => import("@/components/DestinationWeather"));
+const ElevationChart = lazy(() => import("@/components/ElevationChart"));
 
 export const Route = createFileRoute("/destino/$destinationId")({
   component: DestinationScreen,
@@ -58,7 +66,21 @@ function DestinationScreen() {
     queryFn: () => fetchSavedDestinations(),
     enabled: !!user,
   });
-  const isSaved = saved.some((s) => s.destination_id === destinationId);
+  const isSaved = saved.some((s) => s.id === destinationId);
+
+  // Amigos que estão/estiveram na trilha (Fase B).
+  const { data: friends = [] } = useQuery({
+    queryKey: ["friends-on-destination", destinationId],
+    queryFn: () => fetchFriendsOnDestination(destinationId),
+    enabled: !!user,
+  });
+
+  // Parceiros próximos do destino (por proximidade, cliente).
+  const { data: allPartners = [] } = useQuery({
+    queryKey: ["partners"],
+    queryFn: fetchPartners,
+    staleTime: 5 * 60 * 1000,
+  });
 
   const [savingFav, setSavingFav] = useState(false);
   const favMut = useMutation({
@@ -95,6 +117,21 @@ function DestinationScreen() {
   const diffColor = DIFFICULTY_COLOR[dest.difficulty] ?? "#64748b";
   const coords = dest.routeGeojson?.coordinates?.map((c) => ({ lat: c[1], lng: c[0] })) ?? [];
   const hasRoute = coords.length >= 2;
+
+  // Coordenada de referência do destino (start da rota ou lat/lng).
+  const destLat = dest.startLat ?? dest.latitude ?? coords[0]?.lat ?? null;
+  const destLng = dest.startLng ?? dest.longitude ?? coords[0]?.lng ?? null;
+
+  // Parceiros num raio de ~30 km do destino.
+  const nearbyPartners = destLat != null && destLng != null
+    ? allPartners
+        .filter((p) => p.coords != null)
+        .map((p) => ({ p, dist: haversineMeters({ lat: destLat, lng: destLng }, p.coords!) }))
+        .filter((x) => x.dist <= 30000)
+        .sort((a, b) => a.dist - b.dist)
+        .slice(0, 8)
+        .map((x) => x.p)
+    : [];
 
   return (
     <div className="pb-28">
@@ -187,6 +224,20 @@ function DestinationScreen() {
         </div>
       )}
 
+      {/* Clima (Open-Meteo) — silencioso se não carregar. */}
+      {destLat != null && destLng != null && (
+        <Suspense fallback={null}>
+          <DestinationWeather lat={destLat} lng={destLng} />
+        </Suspense>
+      )}
+
+      {/* Perfil de elevação (silencioso se não houver dados). */}
+      {dest.elevationProfile && dest.elevationProfile.length >= 2 && (
+        <Suspense fallback={null}>
+          <ElevationChart points={dest.elevationProfile} />
+        </Suspense>
+      )}
+
       {/* Mapa da rota */}
       {hasRoute && (
         <div className="mx-5 mt-3">
@@ -204,6 +255,47 @@ function DestinationScreen() {
         <div className="mx-5 mt-3 rounded-2xl bg-card p-4 shadow-card">
           <div className="mb-1 text-sm font-semibold">{t("destination.about", { defaultValue: "Sobre a trilha" })}</div>
           <p className="text-sm leading-relaxed text-foreground/90">{dest.description}</p>
+        </div>
+      )}
+
+      {/* Amigos na trilha */}
+      {friends.length > 0 && (
+        <div className="mx-5 mt-3 rounded-2xl bg-card p-4 shadow-card">
+          <div className="mb-2 text-sm font-semibold">
+            {t("destination.friendsOnTrail", { defaultValue: "Amigos nesta trilha" })}
+          </div>
+          <div className="flex gap-3 overflow-x-auto scrollbar-hide">
+            {friends.map((f) => (
+              <Link key={f.userId} to="/u/$userId" params={{ userId: f.userId }} className="flex shrink-0 flex-col items-center gap-1" style={{ width: 56 }}>
+                <div className="h-12 w-12 overflow-hidden rounded-full ring-2 ring-primary/30">
+                  <Avatar src={resolveAsset(f.avatarUrl, avatarFallback)} alt={f.fullName ?? ""} aspectClassName="aspect-square" fallbackSrc={avatarFallback} />
+                </div>
+                <span className="w-full truncate text-center text-[10px] text-muted-foreground">
+                  {f.fullName?.split(" ")[0] ?? (f.username ? `@${f.username}` : "")}
+                </span>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Parceiros na região */}
+      {nearbyPartners.length > 0 && (
+        <div className="mx-5 mt-3 rounded-2xl bg-card p-4 shadow-card">
+          <div className="mb-2 text-sm font-semibold">
+            {t("destination.partnersNearby", { defaultValue: "Parceiros na região" })}
+          </div>
+          <div className="flex gap-3 overflow-x-auto scrollbar-hide">
+            {nearbyPartners.map((p) => (
+              <Link key={p.id} to="/parceiro/$partnerId" params={{ partnerId: p.id }} className="w-36 shrink-0">
+                <div className="h-20 w-full overflow-hidden rounded-xl">
+                  <Avatar src={resolveAsset(p.img, avatarFallback)} alt={p.name} aspectClassName="h-20 w-full" fallbackSrc={avatarFallback} />
+                </div>
+                <div className="mt-1 truncate text-xs font-semibold">{p.name}</div>
+                <div className="truncate text-[10px] text-muted-foreground">{p.category}</div>
+              </Link>
+            ))}
+          </div>
         </div>
       )}
 

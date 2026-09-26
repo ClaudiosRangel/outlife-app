@@ -1134,6 +1134,33 @@ export async function fetchSavedDestinations(_userId?: string): Promise<SavedDes
   }));
 }
 
+// Amigos que estão/estiveram na trilha deste destino (Bloco 3, Fase B).
+export type FriendOnTrail = {
+  userId: string;
+  fullName: string | null;
+  username: string | null;
+  avatarUrl: string | null;
+  lastActivityAt: string | null;
+};
+
+export async function fetchFriendsOnDestination(destinationId: string): Promise<FriendOnTrail[]> {
+  const { data, error } = await supabase.rpc("fetch_friends_on_destination" as never, {
+    _destination_id: destinationId,
+  } as never);
+  if (error) throw error;
+  const rows = (data as unknown as Array<{
+    user_id: string; full_name: string | null; username: string | null;
+    avatar_url: string | null; last_activity_at: string | null;
+  }>) ?? [];
+  return rows.map((r) => ({
+    userId: r.user_id,
+    fullName: r.full_name,
+    username: r.username,
+    avatarUrl: r.avatar_url,
+    lastActivityAt: r.last_activity_at,
+  }));
+}
+
 export async function favoritePartner(partnerId: string): Promise<void> {
   const { data: userData } = await supabase.auth.getUser();
   if (!userData.user) throw new Error("Não autenticado");

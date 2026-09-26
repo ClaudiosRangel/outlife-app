@@ -823,7 +823,18 @@
     "about": "Sobre a trilha",
     "safetyTitle": "Pratique com segurança",
     "safetyText": "Trilhas podem sofrer alterações por condições climáticas e fatores externos. A decisão de utilização é de responsabilidade do usuário, que assume os riscos envolvidos.",
-    "startNav": "Iniciar navegação"
+    "startNav": "Iniciar navegação",
+    "elevationProfile": "Perfil de elevação",
+    "elevMin": "Alt. mínima",
+    "elevMax": "Alt. máxima",
+    "elevGain": "Subida acum.",
+    "friendsOnTrail": "Amigos nesta trilha",
+    "partnersNearby": "Parceiros na região"
+  },
+  "weather": {
+    "attention": "Atenção",
+    "feelsLike": "Sensação",
+    "now": "Agora"
   },
   "activity": {
     "trackTitle": "Rastrear atividade",

@@ -1204,3 +1204,11 @@ alter table public.profile_contacts
 --     estendido para popular route_geog de route_geojson. Base do import GPX.
 --     (idempotente)
 -- ############################################################################
+
+-- ############################################################################
+-- 49. 20260926200000_friends-on-destination.sql
+--     Amigos na trilha (Bloco 3, Fase B): fetch_friends_on_destination
+--     (SECURITY DEFINER) — amigos accepted/following do solicitante que
+--     concluíram atividade cujo route passou perto (ST_DWithin) da rota/ponto
+--     do destino. (idempotente)
+-- ############################################################################
