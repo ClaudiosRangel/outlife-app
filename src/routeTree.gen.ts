@@ -13,6 +13,7 @@ import { Route as TermosRouteImport } from './routes/termos'
 import { Route as SugerirDestinoRouteImport } from './routes/sugerir-destino'
 import { Route as RedefinirSenhaRouteImport } from './routes/redefinir-senha'
 import { Route as RankingRouteImport } from './routes/ranking'
+import { Route as ConquistasRouteImport } from './routes/conquistas'
 import { Route as PrivacidadeRouteImport } from './routes/privacidade'
 import { Route as PerfilRouteImport } from './routes/perfil'
 import { Route as PedidosRouteImport } from './routes/pedidos'
@@ -84,6 +85,11 @@ const SugerirDestinoRoute = SugerirDestinoRouteImport.update({
 const RedefinirSenhaRoute = RedefinirSenhaRouteImport.update({
   id: '/redefinir-senha',
   path: '/redefinir-senha',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ConquistasRoute = ConquistasRouteImport.update({
+  id: '/conquistas',
+  path: '/conquistas',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RankingRoute = RankingRouteImport.update({
@@ -397,6 +403,7 @@ export interface FileRoutesByFullPath {
   '/pedidos': typeof PedidosRoute
   '/perfil': typeof PerfilRoute
   '/privacidade': typeof PrivacidadeRoute
+  '/conquistas': typeof ConquistasRoute
   '/ranking': typeof RankingRoute
   '/redefinir-senha': typeof RedefinirSenhaRoute
   '/sugerir-destino': typeof SugerirDestinoRoute
@@ -460,6 +467,7 @@ export interface FileRoutesByTo {
   '/pedidos': typeof PedidosRoute
   '/perfil': typeof PerfilRoute
   '/privacidade': typeof PrivacidadeRoute
+  '/conquistas': typeof ConquistasRoute
   '/ranking': typeof RankingRoute
   '/redefinir-senha': typeof RedefinirSenhaRoute
   '/sugerir-destino': typeof SugerirDestinoRoute
@@ -524,6 +532,7 @@ export interface FileRoutesById {
   '/pedidos': typeof PedidosRoute
   '/perfil': typeof PerfilRoute
   '/privacidade': typeof PrivacidadeRoute
+  '/conquistas': typeof ConquistasRoute
   '/ranking': typeof RankingRoute
   '/redefinir-senha': typeof RedefinirSenhaRoute
   '/sugerir-destino': typeof SugerirDestinoRoute
@@ -589,6 +598,7 @@ export interface FileRouteTypes {
     | '/pedidos'
     | '/perfil'
     | '/privacidade'
+    | '/conquistas'
     | '/ranking'
     | '/redefinir-senha'
     | '/sugerir-destino'
@@ -652,6 +662,7 @@ export interface FileRouteTypes {
     | '/pedidos'
     | '/perfil'
     | '/privacidade'
+    | '/conquistas'
     | '/ranking'
     | '/redefinir-senha'
     | '/sugerir-destino'
@@ -715,6 +726,7 @@ export interface FileRouteTypes {
     | '/pedidos'
     | '/perfil'
     | '/privacidade'
+    | '/conquistas'
     | '/ranking'
     | '/redefinir-senha'
     | '/sugerir-destino'
@@ -779,6 +791,7 @@ export interface RootRouteChildren {
   PedidosRoute: typeof PedidosRoute
   PerfilRoute: typeof PerfilRoute
   PrivacidadeRoute: typeof PrivacidadeRoute
+  ConquistasRoute: typeof ConquistasRoute
   RankingRoute: typeof RankingRoute
   RedefinirSenhaRoute: typeof RedefinirSenhaRoute
   SugerirDestinoRoute: typeof SugerirDestinoRoute
@@ -844,6 +857,13 @@ declare module '@tanstack/react-router' {
       path: '/redefinir-senha'
       fullPath: '/redefinir-senha'
       preLoaderRoute: typeof RedefinirSenhaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/conquistas': {
+      id: '/conquistas'
+      path: '/conquistas'
+      fullPath: '/conquistas'
+      preLoaderRoute: typeof ConquistasRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/ranking': {
@@ -1285,6 +1305,7 @@ const rootRouteChildren: RootRouteChildren = {
   PedidosRoute: PedidosRoute,
   PerfilRoute: PerfilRoute,
   PrivacidadeRoute: PrivacidadeRoute,
+  ConquistasRoute: ConquistasRoute,
   RankingRoute: RankingRoute,
   RedefinirSenhaRoute: RedefinirSenhaRoute,
   SugerirDestinoRoute: SugerirDestinoRoute,

@@ -649,6 +649,17 @@ function Profile() {
                 </span>
                 <span className="text-primary">{t("common.open")}</span>
               </Link>
+
+              {/* Atalho para as Conquistas (Bloco 2). */}
+              <Link
+                to="/conquistas"
+                className="mt-2 flex items-center justify-between rounded-xl bg-secondary/60 px-3 py-2 text-xs font-semibold text-foreground transition-base active:scale-[0.99]"
+              >
+                <span className="flex items-center gap-2">
+                  <Award size={14} className="text-primary" /> {t("achievements.title", { defaultValue: "Conquistas" })}
+                </span>
+                <span className="text-primary">{t("common.open")}</span>
+              </Link>
             </div>
           );
         })()}

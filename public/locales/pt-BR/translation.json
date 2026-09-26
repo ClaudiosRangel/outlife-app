@@ -789,7 +789,30 @@
     "loadError": "Não foi possível carregar o ranking. Tente novamente.",
     "position": "Posição",
     "byDestination": "Ranking neste destino",
-    "allTypes": "Todos"
+    "allTypes": "Todos",
+    "tabClassic": "Ranking",
+    "tabLeague": "Liga"
+  },
+  "league": {
+    "yourDivision": "Sua divisão",
+    "untilReset": "para fechar",
+    "lastDay": "Último dia",
+    "empty": "Grave uma atividade nesta semana para entrar na liga!",
+    "promotionZone": "Zona de promoção",
+    "relegationZone": "Zona de rebaixamento",
+    "pts": "pts",
+    "division": {
+      "bronze": "Bronze",
+      "prata": "Prata",
+      "ouro": "Ouro",
+      "diamante": "Diamante"
+    }
+  },
+  "achievements": {
+    "title": "Conquistas",
+    "summary": "{{earned}} de {{total}} conquistadas",
+    "earned": "Conquistadas",
+    "toEarn": "A conquistar"
   },
   "activity": {
     "trackTitle": "Rastrear atividade",

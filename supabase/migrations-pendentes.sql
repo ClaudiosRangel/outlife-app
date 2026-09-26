@@ -1177,3 +1177,20 @@ alter table public.profile_contacts
 --     de duration_seconds (Tempo em Movimento). Spec atividade-tempo-movimento.
 --     (idempotente: ADD COLUMN IF NOT EXISTS + CREATE OR REPLACE FUNCTION)
 -- ############################################################################
+
+-- ############################################################################
+-- 46. 20260926140000_league-weekly.sql (+ 20260926150000 fix geral-key)
+--     Ligas semanais (Bloco 2): tabelas user_league_divisions + league_rollover_log
+--     (RLS), league_points_expr / league_week_start, RPCs fetch_league_standings
+--     e process_league_rollover (SECURITY DEFINER). Divisões Bronze→Diamante por
+--     tipo (sentinela '' = geral), promoção/rebaixamento idempotente ao virar a
+--     semana (seg→dom America/Sao_Paulo). Fix: activity_type NOT NULL DEFAULT ''
+--     (NULL não compõe PK). (idempotente)
+-- ############################################################################
+
+-- ############################################################################
+-- 47. 20260926160000_badges-catalog.sql
+--     Badges (Bloco 2): grant_pending_achievements ampliado (streak_7/30,
+--     pedalada_10/corrida_10/trilha_10) + list_my_badges() retornando catálogo
+--     com earned + progress (0..1) para a tela /conquistas. (idempotente)
+-- ############################################################################

@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { lazy, Suspense, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Trophy } from "lucide-react";
+import { ArrowLeft, Trophy, Medal, Award } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { StatusBar } from "@/components/StatusBar";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -10,6 +10,10 @@ import { useAuth } from "@/hooks/use-auth";
 import { fetchActivityRanking, fetchActivityTypes, resolveAsset } from "@/lib/api";
 import { formatRankingValue, type RankingMetric, type RankingScope, type RankingPeriod } from "@/lib/ranking-format";
 import avatarFallback from "@/assets/avatar-rafael.jpg";
+
+const LeagueTab = lazy(() => import("@/components/LeagueTab"));
+
+type RankingMode = "classic" | "league";
 
 export const Route = createFileRoute("/ranking")({
   component: RankingScreen,
@@ -31,6 +35,7 @@ function RankingScreen() {
   const { t } = useTranslation();
   const { user } = useAuth();
 
+  const [mode, setMode] = useState<RankingMode>("classic");
   const [metric, setMetric] = useState<RankingMetric>("distancia");
   const [scope, setScope] = useState<RankingScope>("global");
   const [period, setPeriod] = useState<RankingPeriod>("sempre");
@@ -65,6 +70,35 @@ function RankingScreen() {
         <p className="mt-2 text-center text-xs text-white/70">{t("ranking.subtitle")}</p>
       </div>
 
+      {/* Alternador Clássico | Liga + atalho Conquistas */}
+      <div className="mt-4 flex items-center gap-2 px-5">
+        <div className="flex flex-1 rounded-full bg-secondary p-1">
+          <button
+            onClick={() => setMode("classic")}
+            className={`flex flex-1 items-center justify-center gap-1.5 rounded-full py-1.5 text-xs font-semibold transition-base ${
+              mode === "classic" ? "bg-primary text-primary-foreground" : "text-secondary-foreground"
+            }`}
+          >
+            <Trophy size={14} /> {t("ranking.tabClassic", { defaultValue: "Ranking" })}
+          </button>
+          <button
+            onClick={() => setMode("league")}
+            className={`flex flex-1 items-center justify-center gap-1.5 rounded-full py-1.5 text-xs font-semibold transition-base ${
+              mode === "league" ? "bg-primary text-primary-foreground" : "text-secondary-foreground"
+            }`}
+          >
+            <Medal size={14} /> {t("ranking.tabLeague", { defaultValue: "Liga" })}
+          </button>
+        </div>
+        <Link
+          to="/conquistas"
+          className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-secondary text-secondary-foreground"
+          aria-label={t("achievements.title", { defaultValue: "Conquistas" })}
+        >
+          <Award size={16} />
+        </Link>
+      </div>
+
       {/* Abas por TIPO de atividade (Todos + cada modalidade do catálogo) */}
       <div className="mt-4 flex gap-2 overflow-x-auto scrollbar-hide px-5">
         <button
@@ -88,6 +122,14 @@ function RankingScreen() {
         ))}
       </div>
 
+      {mode === "league" && (
+        <Suspense fallback={<div className="mt-4 px-5"><Skeleton className="h-40 w-full rounded-2xl" /></div>}>
+          <LeagueTab activityType={activityType} />
+        </Suspense>
+      )}
+
+      {mode === "classic" && (
+      <>
       {/* Seletor de métrica */}
       <div className="mt-3 flex gap-2 overflow-x-auto scrollbar-hide px-5">
         {METRICS.map((m) => (
@@ -186,6 +228,8 @@ function RankingScreen() {
           })
         )}
       </div>
+      </>
+      )}
     </div>
   );
 }

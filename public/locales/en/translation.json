@@ -789,7 +789,30 @@
     "loadError": "Couldn't load the ranking. Please try again.",
     "position": "Position",
     "byDestination": "Ranking at this destination",
-    "allTypes": "All"
+    "allTypes": "All",
+    "tabClassic": "Ranking",
+    "tabLeague": "League"
+  },
+  "league": {
+    "yourDivision": "Your division",
+    "untilReset": "to close",
+    "lastDay": "Last day",
+    "empty": "Log an activity this week to join the league!",
+    "promotionZone": "Promotion zone",
+    "relegationZone": "Relegation zone",
+    "pts": "pts",
+    "division": {
+      "bronze": "Bronze",
+      "prata": "Silver",
+      "ouro": "Gold",
+      "diamante": "Diamond"
+    }
+  },
+  "achievements": {
+    "title": "Achievements",
+    "summary": "{{earned}} of {{total}} earned",
+    "earned": "Earned",
+    "toEarn": "To earn"
   },
   "activity": {
     "trackTitle": "Track activity",
