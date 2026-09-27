@@ -5,7 +5,38 @@
 > `.kiro/steering/roadmap-outvitar.md`). **Mantenha-o atualizado** ao
 > concluir qualquer tarefa/bloco: marque status, data e resumo.
 
-**Última atualização:** 26/09/2026 (🎉 BLOCO 3 COMPLETO (Fases C+D) — os 3 blocos pré-lojas concluídos)
+**Última atualização:** 27/09/2026 (🔧 Fixes tela de destino + navegação inteligente; plano de navegação em grupo)
+
+> **🔧 FIXES + NAVEGAÇÃO INTELIGENTE (27/09/2026) — APK 08:04, 9,99 MB:**
+> Rodada de correções e melhorias pedidas pelo usuário (prints da tela de
+> destino + Explorar + ranking). Ver detalhes em
+> `docs/PLANO-NAVEGACAO-GRUPO-E-GRAVACAO-DESTINO.md`.
+> - **1A** imagem do hero sobre as badges (Fácil/Cachoeira/Pago) → card de
+>   cabeçalho ganhou `relative z-10`.
+> - **1B** botão "Iniciar navegação" ficava fora da tela (era `fixed bottom-0`
+>   colidindo com a BottomNav sticky) → agora é bloco no fluxo, acima da barra.
+> - **2** "Iniciar navegação" INTELIGENTE (como concorrente): lê a posição atual;
+>   se está a >300m do início, abre sheet com a distância + "Como chegar (Google
+>   Maps)" (`buildDirectionsUrl`) + "Iniciar mesmo assim"; se perto, vai gravar.
+>   Sem geolocalização/erro → segue para gravar (não bloqueia).
+> - **3** destinos SEM rota ocultados (`scripts/hide-destinations-without-route.mjs`
+>   — marca status→rejected, REVERSÍVEL; 11 ocultados). Só **Cachoeira Alta**
+>   (com rota GPX) fica no Explorar. Usuário vai passar novos GPX.
+> - **6** ranking "Não foi possível carregar" → era schema cache do PostgREST;
+>   recarregado (`reload-postgrest-schema`). As RPCs de liga existem e rodam.
+> Diagnostics limpos; commit `278c26a` na main. Sem migration nesta rodada.
+> **📋 GRANDES (spec futuro, documentados):**
+> - **Item 4** — gravar rota pelo Explorar (calibração GPS + contagem regressiva
+>   + código de compartilhamento) → finalizar → enviar como destino `pending`
+>   para aprovação admin (substitui "Sugerir"). Reaproveita rastreamento +
+>   `/admin/destino-novo`.
+> - **Item 5** — navegação em grupo AO VIVO (ver amigos na rota, distância entre
+>   membros, recados rápidos), estilo Google Maps "compartilhar localização".
+>   Já temos base (`live-activity-friends`); falta sessão/grupo + privacidade +
+>   UX de mapa ao vivo. O maior/mais complexo — por último, atenção à LGPD/lojas.
+> - **Item 1C** — comentários/avaliações no destino (engajamento).
+
+**Anterior:** 26/09/2026 (🎉 BLOCO 3 COMPLETO (Fases C+D) — os 3 blocos pré-lojas concluídos)
 
 > **🎉 BLOCO 3 — Fases C+D (26/09/2026) — CONCLUÍDO (APK 22:16, 9,99 MB):**
 > Fecha o Bloco 3 (Explorar + destinos) e, com ele, **os 3 blocos pré-lojas
