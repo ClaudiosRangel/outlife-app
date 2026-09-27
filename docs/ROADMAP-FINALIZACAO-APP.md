@@ -5,7 +5,40 @@
 > `.kiro/steering/roadmap-outvitar.md`). **Mantenha-o atualizado** ao
 > concluir qualquer tarefa/bloco: marque status, data e resumo.
 
-**Última atualização:** 26/09/2026 (🟩 BLOCO 3 Fase B — Tela de destino rica: clima + elevação + amigos/parceiros)
+**Última atualização:** 26/09/2026 (🎉 BLOCO 3 COMPLETO (Fases C+D) — os 3 blocos pré-lojas concluídos)
+
+> **🎉 BLOCO 3 — Fases C+D (26/09/2026) — CONCLUÍDO (APK 22:16, 9,99 MB):**
+> Fecha o Bloco 3 (Explorar + destinos) e, com ele, **os 3 blocos pré-lojas
+> pedidos pelo usuário** (tempo em movimento, ranking/ligas, explorar/destinos).
+> - **Fase C — Filtros + Explorar repaginado**: `src/lib/explore-filters.ts`
+>   (PURO, 8 testes, Property 3 = resultado é subconjunto + idempotente) +
+>   `ExploreFilters.tsx` (bottom sheet: região/dificuldade/categoria/pet/pago/
+>   grátis/"rotas que curti"). Botão de filtros (com destaque quando ativo) ao
+>   lado da busca + botão **"Criar rota"** (→ criar segmento no mapa).
+>   `fetchDestinations`/`Destination` estendidos com category/is_paid/
+>   pet_friendly/lat-lng/state para alimentar os filtros.
+> - **Fase D — Admin com GPX**: rota `/admin/destino-novo` (registrada
+>   manualmente no routeTree, sobreviveu ao build): upload de **GPX** → parse
+>   local (`parseGpx`) + elevação via Open-Meteo + **preview do traçado no mapa**
+>   + foto + campos (nome/descrição/região/UF/dificuldade/categoria/pago-valor/
+>   horário/pet) → `createDestinationFull` grava APROVADO. Atalho "Novo destino
+>   (GPX)" na tela de moderação `/admin/destinos`. `buildElevationProfile`/
+>   `elevationGain` puros no gpx-import; `fetchElevations` no weather-forecast.
+> Diagnostics limpos; commit `3e35643` na main. Sem migration nova nesta fase.
+> **Agora o usuário consegue cadastrar destinos sozinho pelo admin** (upload de
+> GPX+foto), sem depender de script.
+>
+> **✅ RESUMO — 3 BLOCOS PRÉ-LOJAS CONCLUÍDOS:**
+> 1. Atividade: tempo em movimento vs tempo total.
+> 2. Ranking: ligas semanais + conquistas (por tipo).
+> 3. Explorar repaginado + destinos ricos com rota GPX (clima/elevação/amigos/
+>    parceiros/filtros/criar rota/admin GPX). Cachoeira Alta no ar como 1º real.
+> **Próximo (fila pré-lançamento):** usuário passar mais trilhas (GPX+fotos) para
+> popular o Explorar; depois rebranding técnico (appId → OutVitar) + publicação
+> nas lojas (Codemagic p/ iOS). Itens da Análise de Design ainda em aberto:
+> onboarding, design system/tokens, selos no feed.
+
+**Anterior:** 26/09/2026 (🟩 BLOCO 3 Fase B — Tela de destino rica: clima + elevação + amigos/parceiros)
 
 > **🟩 BLOCO 3 — Fase B (26/09/2026) — CONCLUÍDA (APK 17:52, 9,98 MB):**
 > Enriquece a tela `/destino/$id` (Fase A já tinha hero/mapa/descrição/favoritar).
