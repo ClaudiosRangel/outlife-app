@@ -64,8 +64,8 @@ function DestinationScreen() {
   });
 
   const { data: saved = [] } = useQuery({
-    queryKey: ["saved-destinations"],
-    queryFn: () => fetchSavedDestinations(),
+    queryKey: ["saved-destinations", user?.id],
+    queryFn: () => fetchSavedDestinations(user?.id),
     enabled: !!user,
   });
   const isSaved = saved.some((s) => s.id === destinationId);
@@ -91,7 +91,13 @@ function DestinationScreen() {
       if (isSaved) await unsaveDestination(destinationId);
       else await saveDestination(destinationId);
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["saved-destinations"] }),
+    onSuccess: () => {
+      // Invalida tanto a key deste componente quanto a do perfil (com user.id).
+      qc.invalidateQueries({ queryKey: ["saved-destinations"] });
+      toast.success(isSaved
+        ? t("destination.unsaved", { defaultValue: "Removido dos salvos" })
+        : t("destination.saved", { defaultValue: "Salvo! Veja em Perfil → Salvos" }));
+    },
     onError: (e: Error) => toast.error(e.message),
     onSettled: () => setSavingFav(false),
   });
@@ -203,7 +209,7 @@ function DestinationScreen() {
             onClick={() => favMut.mutate()}
             disabled={savingFav || !user}
             className="grid h-10 w-10 place-items-center rounded-full bg-black/40 text-white backdrop-blur active:scale-95 disabled:opacity-60"
-            aria-label={t("destination.save", { defaultValue: "Favoritar" })}
+            aria-label={t("destination.save", { defaultValue: "Salvar" })}
           >
             {isSaved ? <BookmarkCheck size={18} className="text-[#f97316]" /> : <Bookmark size={18} />}
           </button>

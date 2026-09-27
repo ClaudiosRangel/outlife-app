@@ -33,23 +33,25 @@ export async function fetchLeagueStandings(activityType: string | null): Promise
     _limit: 100,
   } as never);
   if (error) throw error;
+  // A RPC devolve colunas com prefixo o_ (para evitar ambiguidade com colunas
+  // de tabela dentro da função — ver migration 20260927110000).
   const rows = (data as unknown as Array<{
-    user_id: string;
-    full_name: string | null;
-    username: string | null;
-    avatar_url: string | null;
-    points: number;
-    division: LeagueDivision;
-    is_me: boolean;
+    o_user_id: string;
+    o_full_name: string | null;
+    o_username: string | null;
+    o_avatar_url: string | null;
+    o_points: number;
+    o_division: LeagueDivision;
+    o_is_me: boolean;
   }>) ?? [];
   return rows.map((r) => ({
-    userId: r.user_id,
-    fullName: r.full_name,
-    username: r.username,
-    avatarUrl: r.avatar_url,
-    points: Number(r.points ?? 0),
-    division: r.division,
-    isMe: !!r.is_me,
+    userId: r.o_user_id,
+    fullName: r.o_full_name,
+    username: r.o_username,
+    avatarUrl: r.o_avatar_url,
+    points: Number(r.o_points ?? 0),
+    division: r.o_division,
+    isMe: !!r.o_is_me,
   }));
 }
 

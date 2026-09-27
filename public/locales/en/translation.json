@@ -818,6 +818,8 @@
   "destination": {
     "notFound": "Destination not found.",
     "save": "Save",
+    "saved": "Saved! See it in Profile → Saved",
+    "unsaved": "Removed from saved",
     "paid": "Paid",
     "free": "Free",
     "routeMap": "Route map",
