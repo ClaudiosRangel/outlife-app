@@ -830,7 +830,11 @@
     "elevMax": "Max. alt.",
     "elevGain": "Total climb",
     "friendsOnTrail": "Friends on this trail",
-    "partnersNearby": "Partners nearby"
+    "partnersNearby": "Partners nearby",
+    "farTitle": "You are far from the start",
+    "farText": "The trail start is ~{{dist}} away from you. Want us to take you there?",
+    "howToArrive": "How to get there (Google Maps)",
+    "startAnyway": "Start anyway"
   },
   "weather": {
     "attention": "Attention",

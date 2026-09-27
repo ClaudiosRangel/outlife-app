@@ -830,7 +830,11 @@
     "elevMax": "Alt. máxima",
     "elevGain": "Subida acum.",
     "friendsOnTrail": "Amigos nesta trilha",
-    "partnersNearby": "Parceiros na região"
+    "partnersNearby": "Parceiros na região",
+    "farTitle": "Você está longe do início",
+    "farText": "O início desta trilha está a ~{{dist}} de você. Quer que a gente te leve até lá?",
+    "howToArrive": "Como chegar (Google Maps)",
+    "startAnyway": "Iniciar mesmo assim"
   },
   "weather": {
     "attention": "Atenção",

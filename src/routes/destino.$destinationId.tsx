@@ -6,7 +6,9 @@
 import { lazy, Suspense, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, MapPin, Route as RouteIcon, Bookmark, BookmarkCheck, Navigation, AlertTriangle, PawPrint, DollarSign, Clock } from "lucide-react";
+import { ArrowLeft, MapPin, Route as RouteIcon, Bookmark, BookmarkCheck, Navigation, AlertTriangle, PawPrint, DollarSign, Clock, Loader2, Car } from "lucide-react";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { buildDirectionsUrl, formatDistanceBR } from "@/lib/navigation-to";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { StatusBar } from "@/components/StatusBar";
@@ -94,6 +96,53 @@ function DestinationScreen() {
     onSettled: () => setSavingFav(false),
   });
 
+  // Item 2: "Iniciar navegação" inteligente. Se o usuário está LONGE do início
+  // da trilha, oferece rota de carro até lá (Google Maps); se perto, vai gravar.
+  const NEAR_THRESHOLD_M = 300; // dentro disso = considera "no início".
+  const [checkingLocation, setCheckingLocation] = useState(false);
+  const [farSheet, setFarSheet] = useState<{ distanceM: number } | null>(null);
+
+  const handleStartNav = () => {
+    setCheckingLocation(true);
+    if (typeof navigator === "undefined" || !navigator.geolocation) {
+      // Sem geolocalização → segue para gravar (não bloqueia).
+      setCheckingLocation(false);
+      navigate({ to: "/atividade/rastrear" });
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setCheckingLocation(false);
+        const me = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        const startLat2 = dest?.startLat ?? dest?.latitude ?? coords[0]?.lat ?? null;
+        const startLng2 = dest?.startLng ?? dest?.longitude ?? coords[0]?.lng ?? null;
+        if (startLat2 == null || startLng2 == null) {
+          navigate({ to: "/atividade/rastrear" });
+          return;
+        }
+        const dist = haversineMeters(me, { lat: startLat2, lng: startLng2 });
+        if (dist > NEAR_THRESHOLD_M) {
+          setFarSheet({ distanceM: dist }); // longe → oferece "como chegar"
+        } else {
+          navigate({ to: "/atividade/rastrear" }); // perto → grava
+        }
+      },
+      () => {
+        // Erro/negado → não bloqueia, segue para gravar.
+        setCheckingLocation(false);
+        navigate({ to: "/atividade/rastrear" });
+      },
+      { enableHighAccuracy: true, timeout: 8000, maximumAge: 30000 },
+    );
+  };
+
+  const openDirections = () => {
+    const sLat = dest?.startLat ?? dest?.latitude ?? coords[0]?.lat ?? null;
+    const sLng = dest?.startLng ?? dest?.longitude ?? coords[0]?.lng ?? null;
+    if (sLat == null || sLng == null) return;
+    window.open(buildDirectionsUrl({ lat: sLat, lng: sLng }, null, "driving"), "_blank");
+  };
+
   if (isLoading) {
     return (
       <div className="pb-10">
@@ -134,7 +183,7 @@ function DestinationScreen() {
     : [];
 
   return (
-    <div className="pb-28">
+    <div className="pb-8">
       {/* Hero */}
       <div className="relative h-64 w-full overflow-hidden">
         <SafeImage src={dest.img || waterfall} alt={dest.name} aspectClassName="h-64 w-full" fallbackSrc={waterfall} />
@@ -161,8 +210,8 @@ function DestinationScreen() {
         </div>
       </div>
 
-      {/* Cabeçalho: badges + nome + local */}
-      <div className="mx-5 -mt-6 rounded-3xl bg-card p-4 shadow-card">
+      {/* Cabeçalho: badges + nome + local — z-10 para ficar ACIMA do hero. */}
+      <div className="relative z-10 mx-5 -mt-6 rounded-3xl bg-card p-4 shadow-card">
         <div className="flex flex-wrap gap-2">
           {dest.difficulty && (
             <span className="rounded-full px-2.5 py-1 text-[11px] font-semibold text-white" style={{ backgroundColor: diffColor }}>
@@ -311,15 +360,49 @@ function DestinationScreen() {
         </p>
       </div>
 
-      {/* CTA fixo: Iniciar navegação */}
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 p-4 pb-[calc(env(safe-area-inset-bottom,12px)+12px)] backdrop-blur">
+      {/* CTA: Iniciar navegação — no fluxo (acima da barra inferior sticky). */}
+      <div className="mx-5 mt-4">
         <button
-          onClick={() => navigate({ to: "/atividade/rastrear" })}
-          className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#f97316] py-3.5 text-sm font-bold text-white active:scale-[0.98]"
+          onClick={handleStartNav}
+          disabled={checkingLocation}
+          className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#f97316] py-4 text-base font-bold text-white shadow-lg active:scale-[0.98] disabled:opacity-70"
         >
-          <Navigation size={18} /> {t("destination.startNav", { defaultValue: "Iniciar navegação" })}
+          {checkingLocation ? <Loader2 size={18} className="animate-spin" /> : <Navigation size={18} />}
+          {t("destination.startNav", { defaultValue: "Iniciar navegação" })}
         </button>
       </div>
+
+      {/* Sheet: usuário longe do início → como chegar (Google Maps). */}
+      <Sheet open={!!farSheet} onOpenChange={(v) => !v && setFarSheet(null)}>
+        <SheetContent side="bottom" className="rounded-t-3xl">
+          <SheetHeader>
+            <SheetTitle className="font-display flex items-center gap-2">
+              <Car size={18} className="text-[#f97316]" />
+              {t("destination.farTitle", { defaultValue: "Você está longe do início" })}
+            </SheetTitle>
+          </SheetHeader>
+          <div className="mt-2 space-y-3">
+            <p className="text-sm text-muted-foreground">
+              {t("destination.farText", {
+                defaultValue: "O início desta trilha está a ~{{dist}} de você. Quer que a gente te leve até lá?",
+                dist: farSheet ? formatDistanceBR(farSheet.distanceM) : "",
+              })}
+            </p>
+            <button
+              onClick={() => { openDirections(); setFarSheet(null); }}
+              className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#f97316] py-3.5 text-sm font-bold text-white active:scale-[0.98]"
+            >
+              <Car size={18} /> {t("destination.howToArrive", { defaultValue: "Como chegar (Google Maps)" })}
+            </button>
+            <button
+              onClick={() => { setFarSheet(null); navigate({ to: "/atividade/rastrear" }); }}
+              className="flex w-full items-center justify-center gap-2 rounded-2xl border border-border bg-card py-3 text-sm font-semibold active:scale-[0.98]"
+            >
+              {t("destination.startAnyway", { defaultValue: "Iniciar mesmo assim" })}
+            </button>
+          </div>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }
