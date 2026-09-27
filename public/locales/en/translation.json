@@ -408,6 +408,10 @@
     "gaveKudos_one": "{{value}} like",
     "gaveKudos_other": "{{value}} likes",
     "activityCompleted": "Activity completed",
+    "segmentKom": "KOM earned!",
+    "segmentTrophy": "Top {{rank}} on segment",
+    "segmentMoreTrophies_one": "+{{count}} trophy",
+    "segmentMoreTrophies_other": "+{{count}} trophies",
     "showComments": "View {{count}} comments",
     "hideComments": "Hide comments",
     "commentPlaceholder": "Write a comment...",
@@ -1150,6 +1154,7 @@
   "segments": {
     "notFound": "Segment not found",
     "leaderboardTitle": "Leaderboard — top 10 times",
+    "rankingBySpeedTitle": "Leaderboard — average speed (KOM on top)",
     "empty": "No one has ridden this segment yet. Be the first!",
     "createFromActivity": "Create segment from this route",
     "createOnMap": "Create segment on the map",
@@ -1195,6 +1200,35 @@
       "public": "Public",
       "friends": "Friends",
       "private": "Only me"
+    }
+  },
+  "destinationRecord": {
+    "tooShort": "Route too short to become a destination.",
+    "nameRequired": "Give the destination a name.",
+    "sentForApproval": "Route sent for admin approval. You'll be notified when it's published.",
+    "error": "Couldn't submit the route.",
+    "calibrating": {
+      "title": "Calibrating GPS",
+      "description": "Wait for a stable signal for an accurate track.",
+      "good": "Good signal",
+      "start": "Start",
+      "startAnyway": "Start anyway"
+    },
+    "countdown": {
+      "getReady": "Get ready"
+    },
+    "sheet": {
+      "title": "Submit route as destination",
+      "description": "Fill in the details. Admins will review it before it appears in Explore.",
+      "name": "Destination name",
+      "namePlaceholder": "e.g. Valley Waterfall",
+      "desc": "Description",
+      "descPlaceholder": "Describe the trail, what to see, safety tips...",
+      "difficulty": "Difficulty",
+      "category": "Category",
+      "photo": "Photo (optional)",
+      "addPhoto": "Add photo",
+      "submit": "Submit for approval"
     }
   },
   "legal": {

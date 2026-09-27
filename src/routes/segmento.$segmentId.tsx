@@ -2,15 +2,15 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { lazy, Suspense } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { ChevronLeft, Trophy, Route as RouteIcon, Medal, Navigation, Pencil, Globe, Users, Lock } from "lucide-react";
+import { ChevronLeft, Crown, Route as RouteIcon, Medal, Navigation, Pencil, Globe, Users, Lock } from "lucide-react";
 import { StatusBar } from "@/components/StatusBar";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   fetchSegmentById,
-  fetchSegmentLeaderboard,
   resolveAsset,
   type SegmentVisibility,
 } from "@/lib/api";
+import { fetchSegmentRanking } from "@/lib/league";
 import { useAuth } from "@/hooks/use-auth";
 import avatarFallback from "@/assets/avatar-rafael.jpg";
 
@@ -51,9 +51,12 @@ function SegmentDetailPage() {
     queryFn: () => fetchSegmentById(segmentId),
   });
 
+  // Ranking por VELOCIDADE MÉDIA (estilo Strava): rank 1 = KOM/QOM. Como a
+  // distância do segmento é fixa, ranquear por maior velocidade média equivale
+  // a menor tempo — mas aqui exibimos a velocidade média explicitamente.
   const { data: leaderboard = [] } = useQuery({
-    queryKey: ["segment-leaderboard", segmentId],
-    queryFn: () => fetchSegmentLeaderboard(segmentId, 10),
+    queryKey: ["segment-ranking", segmentId],
+    queryFn: () => fetchSegmentRanking(segmentId, 10),
   });
 
   if (isLoading) {
@@ -109,7 +112,7 @@ function SegmentDetailPage() {
           })()}
         </div>
         <div className="mt-1 text-xs text-white/70">
-          {t("segments.leaderboardTitle", "Ranking — 10 melhores tempos")}
+          {t("segments.rankingBySpeedTitle", "Ranking — velocidade média (KOM no topo)")}
         </div>
       </div>
 
@@ -153,17 +156,22 @@ function SegmentDetailPage() {
             {t("segments.empty", "Ninguém percorreu este segmento ainda. Seja o primeiro!")}
           </div>
         ) : (
-          leaderboard.map((row, i) => {
-            const isMe = row.userId === user?.id;
+          leaderboard.map((row) => {
+            const isMe = row.isMe;
+            const isKing = row.rank === 1;
             return (
               <div
                 key={row.userId}
                 className={`flex items-center gap-3 rounded-2xl p-3 shadow-card ${
-                  isMe ? "bg-primary/10 ring-1 ring-primary" : "bg-card"
+                  isKing
+                    ? "bg-gradient-to-r from-amber-400/15 to-yellow-500/5 ring-1 ring-amber-400/40"
+                    : isMe
+                      ? "bg-primary/10 ring-1 ring-primary"
+                      : "bg-card"
                 }`}
               >
                 <div className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-secondary text-xs font-bold">
-                  {i === 0 ? <Trophy size={14} className="text-[var(--sun)]" /> : i + 1}
+                  {isKing ? <Crown size={14} className="text-amber-500" /> : row.rank}
                 </div>
                 <Link to="/u/$userId" params={{ userId: row.userId }} className="flex min-w-0 flex-1 items-center gap-2">
                   <img
@@ -176,10 +184,13 @@ function SegmentDetailPage() {
                     {row.fullName ?? t("friends.placeholderName", "Aventureiro")}
                   </span>
                 </Link>
-                <span className="flex items-center gap-1 text-sm font-bold">
-                  {i < 3 && <Medal size={13} className="text-[var(--sun)]" />}
-                  {fmtTime(row.bestSeconds)}
-                </span>
+                <div className="flex flex-col items-end">
+                  <span className="flex items-center gap-1 text-sm font-bold">
+                    {!isKing && row.rank <= 3 && <Medal size={13} className="text-[var(--sun)]" />}
+                    {row.avgSpeedKmh > 0 ? `${row.avgSpeedKmh.toFixed(1)} km/h` : "—"}
+                  </span>
+                  <span className="text-[11px] text-muted-foreground">{fmtTime(row.bestSeconds)}</span>
+                </div>
               </div>
             );
           })

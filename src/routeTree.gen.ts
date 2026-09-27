@@ -303,14 +303,14 @@ const AdminLojaRoute = AdminLojaRouteImport.update({
   path: '/admin/loja',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AdminDestinoNovoRoute = AdminDestinoNovoRouteImport.update({
-  id: '/admin/destino-novo',
-  path: '/admin/destino-novo',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const AdminDestinosRoute = AdminDestinosRouteImport.update({
   id: '/admin/destinos',
   path: '/admin/destinos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminDestinoNovoRoute = AdminDestinoNovoRouteImport.update({
+  id: '/admin/destino-novo',
+  path: '/admin/destino-novo',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminDashboardRoute = AdminDashboardRouteImport.update({

@@ -70,6 +70,7 @@ import {
   type CommunityCardPost,
 } from "@/components/community/CommunityPostCard";
 import { useAuth } from "@/hooks/use-auth";
+import { fetchActivitySegmentAchievements } from "@/lib/league";
 import { shareContent } from "@/lib/share";
 import { generatePostBanner, generateActivityBanner, type ActivityBannerMetric } from "@/lib/banner-generator";
 import { computeByMetricForm, type MetricForm } from "@/lib/metric-forms";
@@ -280,6 +281,19 @@ function Community() {
       name: tp.name ?? tp.code,
     });
   }
+
+  // Troféus de segmento (KOM/top-10) por atividade dos posts visíveis, em lote
+  // (sem N+1) — para o selo estilo Strava no card. Só posts que são atividade.
+  const visibleActivityIds = visiblePosts
+    .map((p) => p.activityId)
+    .filter((id): id is string => !!id);
+  const trophyKey = visibleActivityIds.join(",");
+  const { data: segmentTrophies } = useQuery({
+    queryKey: ["activity-segment-trophies", trophyKey],
+    queryFn: () => fetchActivitySegmentAchievements(visibleActivityIds, 10),
+    enabled: visibleActivityIds.length > 0,
+    staleTime: 60_000,
+  });
 
   const [isOpen, setIsOpen] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
@@ -678,7 +692,10 @@ function Community() {
           : visiblePosts.map((p) => (
               <CommunityPostCard
                 key={p.id}
-                post={p as unknown as CommunityCardPost}
+                post={{
+                  ...(p as unknown as CommunityCardPost),
+                  segmentTrophy: p.activityId ? segmentTrophies?.get(p.activityId) ?? null : null,
+                }}
                 currentUserId={user?.id}
                 likeAvatars={likeAvatarsMap[p.id] ?? []}
                 activityMeta={

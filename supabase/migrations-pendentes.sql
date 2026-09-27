@@ -1222,3 +1222,21 @@ alter table public.profile_contacts
 --     (o_user_id/o_full_name/.../o_is_me); league.ts mapeia os novos nomes.
 --     (idempotente; a 2ª migration faz DROP+CREATE pois a assinatura muda)
 -- ############################################################################
+
+-- ############################################################################
+-- 51. 20260927120000_segment-kom-avg-speed.sql
+--     KOM/troféus por segmento (velocidade média, estilo Strava): RPC
+--     segment_ranking(_segment_id,_limit) — top N por velocidade média
+--     (dist/tempo; rank 1 = KOM/QOM), colunas o_*; my_segment_trophies recriada
+--     com avg_speed_kmh. Velocidade média = equivalente a menor tempo (distância
+--     do segmento é fixa). (idempotente)
+-- ############################################################################
+
+-- ############################################################################
+-- 52. 20260927130000_activity-segment-achievements.sql
+--     Selo de KOM/troféu de segmento no CARD da comunidade (estilo Strava):
+--     RPC activity_segment_achievements(_activity_ids uuid[], _max_rank) —
+--     para cada atividade da lista, o MELHOR troféu que ela rendeu ao autor
+--     (menor rank; 1 = KOM), nome do segmento, velocidade média e total de
+--     troféus. Busca em lote (sem N+1 no feed). Colunas o_*. (idempotente)
+-- ############################################################################

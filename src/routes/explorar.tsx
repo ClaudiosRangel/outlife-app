@@ -453,9 +453,10 @@ function Explore() {
               </button>
             </div>
 
-            {/* Botão "Criar rota" (Bloco 3, Fase C) → criar segmento no mapa. */}
+            {/* Botão "Criar rota" (item 4) → grava a trilha indo até lá; ao
+                finalizar, vira destino pendente para aprovação. */}
             <button
-              onClick={() => navigate({ to: "/segmento/criar" })}
+              onClick={() => navigate({ to: "/atividade/rastrear", search: { mode: "destino" } })}
               className="mt-3 flex w-full items-center justify-center gap-2 rounded-2xl bg-[#f97316] py-3 text-sm font-bold text-white active:scale-[0.98]"
             >
               <MapPin size={16} /> {t("explore.createRoute", { defaultValue: "Criar rota" })}
@@ -701,15 +702,19 @@ function Explore() {
         </div>
       )}
 
-      {/* CTA sugerir destino */}
+      {/* CTA: gravar trilha para virar destino (substitui o antigo "Sugerir";
+          item 4). Grava a rota real indo até lá → aprovação do admin. */}
       <div className="px-5 pb-6 mt-4">
-        <Link to="/sugerir-destino" className="flex items-center justify-between rounded-2xl border border-dashed border-primary/40 bg-primary/5 p-4">
+        <button
+          onClick={() => navigate({ to: "/atividade/rastrear", search: { mode: "destino" } })}
+          className="flex w-full items-center justify-between rounded-2xl border border-dashed border-primary/40 bg-primary/5 p-4 text-left active:scale-[0.99]"
+        >
           <div>
-            <span className="text-sm font-semibold text-primary">Conhece um destino incrível?</span>
-            <p className="text-xs text-muted-foreground mt-0.5">Envie para aprovação e ele aparecerá para todos</p>
+            <span className="text-sm font-semibold text-primary">{t("explore.recordDestTitle", { defaultValue: "Conhece uma trilha incrível?" })}</span>
+            <p className="text-xs text-muted-foreground mt-0.5">{t("explore.recordDestSubtitle", { defaultValue: "Grave a rota indo até lá e envie para aprovação" })}</p>
           </div>
-          <span className="text-xs font-medium text-primary">Sugerir →</span>
-        </Link>
+          <span className="text-xs font-medium text-primary">{t("explore.createRoute", { defaultValue: "Criar rota" })} →</span>
+        </button>
       </div>
         </>
       )}

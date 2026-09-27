@@ -408,6 +408,10 @@
     "gaveKudos_one": "{{value}} curtida",
     "gaveKudos_other": "{{value}} curtidas",
     "activityCompleted": "Atividade concluída",
+    "segmentKom": "KOM conquistado!",
+    "segmentTrophy": "Top {{rank}} no segmento",
+    "segmentMoreTrophies_one": "+{{count}} troféu",
+    "segmentMoreTrophies_other": "+{{count}} troféus",
     "showComments": "Ver os {{count}} comentários",
     "hideComments": "Ocultar comentários",
     "commentPlaceholder": "Escreva um comentário...",
@@ -1150,6 +1154,7 @@
   "segments": {
     "notFound": "Segmento não encontrado",
     "leaderboardTitle": "Ranking — 10 melhores tempos",
+    "rankingBySpeedTitle": "Ranking — velocidade média (KOM no topo)",
     "empty": "Ninguém percorreu este segmento ainda. Seja o primeiro!",
     "createFromActivity": "Criar segmento deste trajeto",
     "createOnMap": "Criar segmento no mapa",
@@ -1195,6 +1200,35 @@
       "public": "Público",
       "friends": "Amigos",
       "private": "Só eu"
+    }
+  },
+  "destinationRecord": {
+    "tooShort": "Trajeto muito curto para virar um destino.",
+    "nameRequired": "Dê um nome ao destino.",
+    "sentForApproval": "Rota enviada para aprovação dos administradores. Você será avisado quando for publicada.",
+    "error": "Não foi possível enviar a rota.",
+    "calibrating": {
+      "title": "Calibrando GPS",
+      "description": "Aguarde um sinal estável para um traçado preciso.",
+      "good": "Sinal bom",
+      "start": "Iniciar",
+      "startAnyway": "Iniciar mesmo assim"
+    },
+    "countdown": {
+      "getReady": "Prepare-se"
+    },
+    "sheet": {
+      "title": "Enviar rota como destino",
+      "description": "Preencha os dados. Será revisado pelos administradores antes de aparecer no Explorar.",
+      "name": "Nome do destino",
+      "namePlaceholder": "Ex.: Cachoeira do Vale",
+      "desc": "Descrição",
+      "descPlaceholder": "Conte como é o trajeto, o que ver, cuidados...",
+      "difficulty": "Dificuldade",
+      "category": "Categoria",
+      "photo": "Foto (opcional)",
+      "addPhoto": "Adicionar foto",
+      "submit": "Enviar para aprovação"
     }
   },
   "legal": {

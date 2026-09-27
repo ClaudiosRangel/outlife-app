@@ -5,7 +5,47 @@
 > `.kiro/steering/roadmap-outvitar.md`). **Mantenha-o atualizado** ao
 > concluir qualquer tarefa/bloco: marque status, data e resumo.
 
-**Última atualização:** 27/09/2026 (🔧 Fixes tela de destino + navegação inteligente; plano de navegação em grupo)
+**Última atualização:** 27/09/2026 (✅ CONCLUÍDO — Item 4 gravar-rota-como-destino + KOM por segmento no card da comunidade)
+
+> **✅ ITEM 4 (GRAVAR ROTA COMO DESTINO) + KOM POR SEGMENTO (27/09/2026) — APK 18:22, 9,99 MB:**
+> Spec `gravar-rota-como-destino` concluído + KOM/troféus por segmento
+> (velocidade média, estilo Strava) integrados ao **card da comunidade** e à
+> **tela do segmento**. 4 testes puros passando; build:native + cap sync + APK OK.
+>
+> **Gravar rota como destino (item 4):**
+> - `/atividade/rastrear?mode=destino` (via `validateSearch`): ao iniciar,
+>   **calibração de GPS** (overlay mostrando `tracker.gpsSignalState`; "Iniciar"
+>   quando bom, ou "Iniciar mesmo assim") → **contagem regressiva 3-2-1** →
+>   começa a gravar. Ao **Finalizar** no modo destino, abre um **sheet de destino**
+>   (nome, descrição, dificuldade em chips, categoria em chips, foto opcional via
+>   `uploadTrailImage`) → `createDestinationFull({status:'pending', routeGeojson,
+>   distanceKm, startLat/Lng, elevation, ...})` a partir de `buildDestinationDraft`
+>   (`src/lib/route-to-destination.ts`, puro). Toast "enviado para aprovação" →
+>   volta ao Explorar. **Não** salva atividade no feed nesse modo; descartar/fechar
+>   não cria nada. Substitui o antigo "Sugerir" (moderação segue `/admin/destinos`).
+> - `explorar.tsx`: botão "Criar rota" e card (ex-"Sugerir") apontam para o modo destino.
+>
+> **KOM/troféu por segmento (velocidade média, 1º–10º, estilo Strava):**
+> - Migration `20260927120000_segment-kom-avg-speed.sql` (RPC `segment_ranking`
+>   + `my_segment_trophies` com `avg_speed_kmh`) — aplicada em sessão anterior.
+> - **NOVA migration `20260927130000_activity-segment-achievements.sql`** (aplicada
+>   2×+reload): RPC `activity_segment_achievements(_activity_ids uuid[], _max_rank)`
+>   — em lote, retorna o MELHOR troféu que cada atividade rendeu ao autor (menor
+>   rank; 1 = KOM), nome do segmento, velocidade média e total de troféus.
+> - `src/lib/league.ts`: `fetchSegmentRanking` + `fetchActivitySegmentAchievements`.
+> - **`CommunityPostCard.tsx`**: novo campo `segmentTrophy`; selo estilo Strava no
+>   slot de conquista — **KOM** com coroa dourada (ring âmbar) ou **Top N** com
+>   medalha, mostrando segmento + km/h + "+N troféus"; clicável → `/segmento/$id`.
+>   `comunidade.tsx` busca os troféus em lote (sem N+1) e injeta em cada post.
+> - **`/segmento/$segmentId`**: ranking trocado de "melhores tempos" para
+>   **velocidade média** (`fetchSegmentRanking`); 1º lugar = KOM com coroa e
+>   destaque âmbar; exibe km/h + tempo.
+> - i18n pt-BR/en: `community.segmentKom/segmentTrophy/segmentMoreTrophies_*`,
+>   `segments.rankingBySpeedTitle`, bloco `destinationRecord.*`.
+>
+> Migrations refletidas em `migrations-pendentes.sql` até **item 52**.
+
+**Anterior:** 27/09/2026 (🔧 Fixes tela de destino + navegação inteligente; plano de navegação em grupo)
 
 > **🔧 FIXES + NAVEGAÇÃO INTELIGENTE (27/09/2026) — APK 08:04, 9,99 MB:**
 > Rodada de correções e melhorias pedidas pelo usuário (prints da tela de

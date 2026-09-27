@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { Heart, MessageCircle, Share2, MapPin, Trash2, Trophy, type LucideIcon } from "lucide-react";
+import { Heart, MessageCircle, Share2, MapPin, Trash2, Trophy, Crown, Medal, type LucideIcon } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { SafeImage } from "@/components/SafeImage";
 import { MediaCarousel } from "@/components/community/MediaCarousel";
@@ -67,6 +67,14 @@ export type CommunityCardPost = {
   following?: boolean;
   activityId?: string | null;
   activity?: CardActivity | null;
+  /** Troféu de segmento conquistado nesta atividade (KOM/top-10, estilo Strava). */
+  segmentTrophy?: {
+    bestRank: number;
+    segmentId: string;
+    segmentName: string | null;
+    avgSpeedKmh: number;
+    trophyCount: number;
+  } | null;
 };
 
 /** Métrica resolvida do tipo de atividade (metric_form + nome legível). */
@@ -277,15 +285,50 @@ export function CommunityPostCard({
           </div>
         )}
 
-        {/* Slot de conquista/nível (Req 4). Hoje mostra o selo de atividade
-            concluída; a "conquista de segmento" entra aqui quando a frente de
-            Segmentos existir. */}
-        {isActivity && (
+        {/* Slot de conquista/nível (Req 4). Selo de KOM/troféu de segmento
+            (estilo Strava) quando a atividade conquistou top-10 num segmento;
+            caso contrário, o selo de "Atividade concluída". */}
+        {isActivity && post.segmentTrophy && post.segmentTrophy.bestRank <= 10 ? (
+          (() => {
+            const tr = post.segmentTrophy!;
+            const isKing = tr.bestRank === 1;
+            return (
+              <Link
+                to="/segmento/$segmentId"
+                params={{ segmentId: tr.segmentId }}
+                className={`mt-3 flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-xs transition-base active:scale-[0.98] ${
+                  isKing
+                    ? "bg-gradient-to-r from-amber-400/20 to-yellow-500/10 text-amber-600 ring-1 ring-amber-400/40"
+                    : "bg-[var(--sun)]/10 text-[var(--sun)]"
+                }`}
+              >
+                {isKing ? <Crown size={16} className="shrink-0" /> : <Medal size={15} className="shrink-0" />}
+                <div className="min-w-0 flex-1">
+                  <div className="font-semibold leading-tight">
+                    {isKing
+                      ? t("community.segmentKom", { defaultValue: "KOM conquistado!" })
+                      : t("community.segmentTrophy", { rank: tr.bestRank, defaultValue: `Top ${tr.bestRank} no segmento` })}
+                  </div>
+                  {tr.segmentName && (
+                    <div className="truncate text-[11px] opacity-80">
+                      {tr.segmentName}
+                      {tr.avgSpeedKmh > 0 ? ` · ${tr.avgSpeedKmh.toFixed(1)} km/h` : ""}
+                      {tr.trophyCount > 1
+                        ? ` · ${t("community.segmentMoreTrophies", { count: tr.trophyCount - 1, defaultValue: `+${tr.trophyCount - 1} troféu(s)` })}`
+                        : ""}
+                    </div>
+                  )}
+                </div>
+                <Trophy size={13} className="shrink-0 opacity-60" />
+              </Link>
+            );
+          })()
+        ) : isActivity ? (
           <div className="mt-3 flex items-center gap-2 rounded-xl bg-[var(--sun)]/10 px-3 py-2 text-xs text-[var(--sun)]">
             <Trophy size={14} />
             <span className="font-medium">{t("community.activityCompleted", "Atividade concluída")}</span>
           </div>
-        )}
+        ) : null}
 
         {/* Categoria (mantida) */}
         <span className="mt-3 inline-block rounded-full bg-secondary px-2.5 py-0.5 text-[11px] font-medium text-secondary-foreground">
