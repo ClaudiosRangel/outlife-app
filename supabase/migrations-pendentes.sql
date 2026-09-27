@@ -1212,3 +1212,13 @@ alter table public.profile_contacts
 --     concluíram atividade cujo route passou perto (ST_DWithin) da rota/ponto
 --     do destino. (idempotente)
 -- ############################################################################
+
+-- ############################################################################
+-- 50. 20260927100000 + 20260927110000_fix-league-standings-ambiguous(2).sql
+--     FIX: fetch_league_standings dava "column reference user_id is ambiguous"
+--     (as OUT columns user_id/division do RETURNS TABLE colidiam com colunas de
+--     tabela no INSERT ... ON CONFLICT (user_id, activity_type)). Só aparecia
+--     com auth.uid() presente. Correção final: OUT columns renomeadas para o_*
+--     (o_user_id/o_full_name/.../o_is_me); league.ts mapeia os novos nomes.
+--     (idempotente; a 2ª migration faz DROP+CREATE pois a assinatura muda)
+-- ############################################################################
