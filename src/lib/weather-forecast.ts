@@ -80,3 +80,27 @@ export async function fetchDestinationWeather(lat: number, lng: number): Promise
     hourly,
   };
 }
+
+
+// Elevação dos pontos via Open-Meteo Elevation API (grátis, sem chave). Usada
+// no cadastro admin de destino quando o GPX não traz <ele>. Best-effort:
+// retorna null nos pontos que falharem, sem lançar.
+export async function fetchElevations(points: { lat: number; lng: number }[]): Promise<(number | null)[]> {
+  const out: (number | null)[] = new Array(points.length).fill(null);
+  for (let i = 0; i < points.length; i += 100) {
+    const batch = points.slice(i, i + 100);
+    const lat = batch.map((p) => p.lat.toFixed(6)).join(",");
+    const lng = batch.map((p) => p.lng.toFixed(6)).join(",");
+    try {
+      const res = await fetch(`https://api.open-meteo.com/v1/elevation?latitude=${lat}&longitude=${lng}`);
+      if (!res.ok) continue;
+      const j = await res.json();
+      (j.elevation ?? []).forEach((e: number, k: number) => {
+        out[i + k] = Number.isFinite(e) ? e : null;
+      });
+    } catch {
+      /* mantém null nesse lote */
+    }
+  }
+  return out;
+}

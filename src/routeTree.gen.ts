@@ -56,6 +56,7 @@ import { Route as AdminModeracaoRouteImport } from './routes/admin.moderacao'
 import { Route as AdminMelhoriasRouteImport } from './routes/admin.melhorias'
 import { Route as AdminLojaRouteImport } from './routes/admin.loja'
 import { Route as AdminDestinosRouteImport } from './routes/admin.destinos'
+import { Route as AdminDestinoNovoRouteImport } from './routes/admin.destino-novo'
 import { Route as AdminDashboardRouteImport } from './routes/admin.dashboard'
 import { Route as AdminConteudoRouteImport } from './routes/admin.conteudo'
 import { Route as AdminComplianceRouteImport } from './routes/admin.compliance'
@@ -302,6 +303,11 @@ const AdminLojaRoute = AdminLojaRouteImport.update({
   path: '/admin/loja',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminDestinoNovoRoute = AdminDestinoNovoRouteImport.update({
+  id: '/admin/destino-novo',
+  path: '/admin/destino-novo',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminDestinosRoute = AdminDestinosRouteImport.update({
   id: '/admin/destinos',
   path: '/admin/destinos',
@@ -413,6 +419,7 @@ export interface FileRoutesByFullPath {
   '/admin/compliance': typeof AdminComplianceRoute
   '/admin/conteudo': typeof AdminConteudoRoute
   '/admin/dashboard': typeof AdminDashboardRoute
+  '/admin/destino-novo': typeof AdminDestinoNovoRoute
   '/admin/destinos': typeof AdminDestinosRoute
   '/admin/loja': typeof AdminLojaRoute
   '/admin/melhorias': typeof AdminMelhoriasRoute
@@ -477,6 +484,7 @@ export interface FileRoutesByTo {
   '/admin/compliance': typeof AdminComplianceRoute
   '/admin/conteudo': typeof AdminConteudoRoute
   '/admin/dashboard': typeof AdminDashboardRoute
+  '/admin/destino-novo': typeof AdminDestinoNovoRoute
   '/admin/destinos': typeof AdminDestinosRoute
   '/admin/loja': typeof AdminLojaRoute
   '/admin/melhorias': typeof AdminMelhoriasRoute
@@ -542,6 +550,7 @@ export interface FileRoutesById {
   '/admin/compliance': typeof AdminComplianceRoute
   '/admin/conteudo': typeof AdminConteudoRoute
   '/admin/dashboard': typeof AdminDashboardRoute
+  '/admin/destino-novo': typeof AdminDestinoNovoRoute
   '/admin/destinos': typeof AdminDestinosRoute
   '/admin/loja': typeof AdminLojaRoute
   '/admin/melhorias': typeof AdminMelhoriasRoute
@@ -608,6 +617,7 @@ export interface FileRouteTypes {
     | '/admin/compliance'
     | '/admin/conteudo'
     | '/admin/dashboard'
+    | '/admin/destino-novo'
     | '/admin/destinos'
     | '/admin/loja'
     | '/admin/melhorias'
@@ -672,6 +682,7 @@ export interface FileRouteTypes {
     | '/admin/compliance'
     | '/admin/conteudo'
     | '/admin/dashboard'
+    | '/admin/destino-novo'
     | '/admin/destinos'
     | '/admin/loja'
     | '/admin/melhorias'
@@ -736,6 +747,7 @@ export interface FileRouteTypes {
     | '/admin/compliance'
     | '/admin/conteudo'
     | '/admin/dashboard'
+    | '/admin/destino-novo'
     | '/admin/destinos'
     | '/admin/loja'
     | '/admin/melhorias'
@@ -801,6 +813,7 @@ export interface RootRouteChildren {
   AdminComplianceRoute: typeof AdminComplianceRoute
   AdminConteudoRoute: typeof AdminConteudoRoute
   AdminDashboardRoute: typeof AdminDashboardRoute
+  AdminDestinoNovoRoute: typeof AdminDestinoNovoRoute
   AdminDestinosRoute: typeof AdminDestinosRoute
   AdminLojaRoute: typeof AdminLojaRoute
   AdminMelhoriasRoute: typeof AdminMelhoriasRoute
@@ -1167,6 +1180,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminDestinosRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/destino-novo': {
+      id: '/admin/destino-novo'
+      path: '/admin/destino-novo'
+      fullPath: '/admin/destino-novo'
+      preLoaderRoute: typeof AdminDestinoNovoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/dashboard': {
       id: '/admin/dashboard'
       path: '/admin/dashboard'
@@ -1315,6 +1335,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminComplianceRoute: AdminComplianceRoute,
   AdminConteudoRoute: AdminConteudoRoute,
   AdminDashboardRoute: AdminDashboardRoute,
+  AdminDestinoNovoRoute: AdminDestinoNovoRoute,
   AdminDestinosRoute: AdminDestinosRoute,
   AdminLojaRoute: AdminLojaRoute,
   AdminMelhoriasRoute: AdminMelhoriasRoute,

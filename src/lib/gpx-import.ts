@@ -103,3 +103,38 @@ export function parseGpx(xml: string): GpxRoute {
     hasElevation: points.some((p) => p.ele != null),
   };
 }
+
+
+/**
+ * Monta o elevation_profile [{d, e}] (distância acumulada em metros + elevação)
+ * a partir dos pontos e de um array de elevações (na mesma ordem). Retorna null
+ * quando não há ao menos 2 elevações válidas. PURO.
+ */
+export function buildElevationProfile(
+  points: GpxPoint[],
+  elevations: (number | null)[],
+): { d: number; e: number | null }[] | null {
+  if (points.length < 2) return null;
+  const valid = elevations.filter((e) => e != null && Number.isFinite(e));
+  if (valid.length < 2) return null;
+  const profile: { d: number; e: number | null }[] = [];
+  let cum = 0;
+  for (let i = 0; i < points.length; i++) {
+    if (i > 0) cum += haversineMeters(points[i - 1], points[i]);
+    const e = elevations[i];
+    profile.push({ d: Math.round(cum), e: e != null && Number.isFinite(e) ? Math.round(e) : null });
+  }
+  return profile;
+}
+
+/** Ganho de elevação acumulado (m) a partir de um array de elevações. PURO. */
+export function elevationGain(elevations: (number | null)[]): number {
+  let gain = 0;
+  let prev: number | null = null;
+  for (const e of elevations) {
+    if (e == null || !Number.isFinite(e)) continue;
+    if (prev != null && e > prev) gain += e - prev;
+    prev = e;
+  }
+  return Math.round(gain);
+}

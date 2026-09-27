@@ -37,6 +37,13 @@ export type Destination = {
   duration: string;
   type: string;
   trailType: string;
+  // Campos ricos (Bloco 3) para filtros do Explorar — nullable/retrocompat.
+  category: string | null;
+  isPaid: boolean | null;
+  petFriendly: boolean | null;
+  latitude: number | null;
+  longitude: number | null;
+  state: string | null;
 };
 
 // Chaves de filtro exibidas como chips em /explorar (exclui "all", que representa "sem filtro").
@@ -93,19 +100,28 @@ export async function fetchDestinations(): Promise<Destination[]> {
     .eq("status", "approved")
     .order("created_at", { ascending: true });
   if (error) throw error;
-  return (data ?? []).map((d) => ({
-    id: d.id,
-    name: d.name,
-    region: d.region ?? "",
-    difficulty: d.difficulty ?? "",
-    img: resolveAsset(d.main_image_url, waterfall),
-    rating: Number(d.rating ?? 0),
-    distance: d.distance ?? "",
-    elevation: Number(String(d.elevation ?? "0").replace(/[^0-9]/g, "")) || 0,
-    duration: d.duration ?? "",
-    type: d.type ?? "",
-    trailType: d.trail_type ?? "",
-  }));
+  return (data ?? []).map((raw) => {
+    const d = raw as Record<string, unknown>;
+    return {
+      id: raw.id,
+      name: raw.name,
+      region: raw.region ?? "",
+      difficulty: raw.difficulty ?? "",
+      img: resolveAsset(raw.main_image_url, waterfall),
+      rating: Number(raw.rating ?? 0),
+      distance: raw.distance ?? "",
+      elevation: Number(String(raw.elevation ?? "0").replace(/[^0-9]/g, "")) || 0,
+      duration: raw.duration ?? "",
+      type: raw.type ?? "",
+      trailType: raw.trail_type ?? "",
+      category: (d.category as string) ?? null,
+      isPaid: (d.is_paid as boolean) ?? null,
+      petFriendly: (d.pet_friendly as boolean) ?? null,
+      latitude: d.latitude != null ? Number(d.latitude) : null,
+      longitude: d.longitude != null ? Number(d.longitude) : null,
+      state: (d.state as string) ?? null,
+    };
+  });
 }
 
 export type DestinationDetail = {
@@ -178,6 +194,72 @@ export async function fetchDestinationById(id: string): Promise<DestinationDetai
     startLat: d.start_lat != null ? Number(d.start_lat) : null,
     startLng: d.start_lng != null ? Number(d.start_lng) : null,
   };
+}
+
+// Cria um destino completo (Bloco 3, Fase D — admin com GPX). Insere com a rota
+// (route_geojson) e campos ricos. `status` default 'pending'; admin pode passar
+// 'approved'. O trigger sync_destination_geog popula geog/route_geog.
+export type CreateDestinationInput = {
+  name: string;
+  description?: string | null;
+  latitude: number;
+  longitude: number;
+  startLat?: number | null;
+  startLng?: number | null;
+  region?: string | null;
+  state?: string | null;
+  difficulty?: string | null;
+  category?: string | null;
+  type?: string | null;
+  distanceKm?: number | null;
+  duration?: string | null;
+  isPaid?: boolean | null;
+  priceText?: string | null;
+  openingHours?: string | null;
+  petFriendly?: boolean | null;
+  mainImageUrl?: string | null;
+  routeGeojson?: GeoJSON.LineString | null;
+  elevationProfile?: { d: number; e: number | null }[] | null;
+  elevation?: string | null;
+  status?: "pending" | "approved";
+};
+
+export async function createDestinationFull(input: CreateDestinationInput): Promise<{ id: string }> {
+  const { data: userData } = await supabase.auth.getUser();
+  if (!userData.user) throw new Error("Não autenticado");
+  const row = {
+    name: input.name,
+    description: input.description ?? null,
+    latitude: input.latitude,
+    longitude: input.longitude,
+    start_lat: input.startLat ?? input.latitude,
+    start_lng: input.startLng ?? input.longitude,
+    region: input.region ?? null,
+    state: input.state ?? null,
+    difficulty: input.difficulty ?? null,
+    category: input.category ?? null,
+    type: input.type ?? null,
+    distance: input.distanceKm != null ? `${input.distanceKm} km` : null,
+    distance_km: input.distanceKm ?? null,
+    duration: input.duration ?? null,
+    is_paid: input.isPaid ?? null,
+    price_text: input.priceText ?? null,
+    opening_hours: input.openingHours ?? null,
+    pet_friendly: input.petFriendly ?? null,
+    main_image_url: input.mainImageUrl ?? null,
+    route_geojson: input.routeGeojson ?? null,
+    elevation_profile: input.elevationProfile ?? null,
+    elevation: input.elevation ?? null,
+    status: input.status ?? "pending",
+    created_by: userData.user.id,
+  };
+  const { data, error } = await supabase
+    .from("destinations")
+    .insert(row as never)
+    .select("id")
+    .single();
+  if (error) throw error;
+  return { id: (data as { id: string }).id };
 }
 
 export type DbDestination = {

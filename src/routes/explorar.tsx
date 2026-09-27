@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { ChevronLeft, MapPin, Search, SlidersHorizontal, WifiOff, Car } from "lucide-react";
 import { haversineMeters } from "@/lib/haversine";
 import { formatDistanceBR } from "@/lib/navigation-to";
@@ -29,7 +29,11 @@ import { buildPanorama } from "@/lib/explore-panorama";
 import { geocodePlace } from "@/lib/geocode";
 import { fetchNearbyEvents } from "@/lib/api";
 import { ExploreSearch } from "@/components/explore/ExploreSearch";
+import { applyDestinationFilters, hasActiveFilters, EMPTY_FILTERS, type ExploreFilters as ExpFilters } from "@/lib/explore-filters";
+import { fetchSavedDestinations } from "@/lib/api";
 import trailFallbackImg from "@/assets/dest-trail.jpg";
+
+const ExploreFilters = lazy(() => import("@/components/explore/ExploreFilters"));
 
 export const Route = createFileRoute("/explorar")({
   component: Explore,
@@ -94,6 +98,9 @@ function Explore() {
     };
   }, []);
   const [difficultyFilter, setDifficultyFilter] = useState<Difficulty | "all">("all");
+  // Filtros avançados (Bloco 3, Fase C).
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [advFilters, setAdvFilters] = useState<ExpFilters>(EMPTY_FILTERS);
   // Aba ativa: Destinos (comportamento atual) ou Parceiros (item 8 — concentra
   // a descoberta de parceiros na Explorar).
   const [exploreTab, setExploreTab] = useState<"destinos" | "parceiros">("destinos");
@@ -184,10 +191,27 @@ function Explore() {
     permissionDenied: false,
   });
 
-  const filteredDestinations = useMemo(
-    () => filterDestinationsByDifficulty(destinations, difficultyFilter),
-    [destinations, difficultyFilter],
-  );
+  // Destinos salvos (para o filtro "rotas que curti").
+  const { data: savedDests = [] } = useQuery({
+    queryKey: ["saved-destinations"],
+    queryFn: () => fetchSavedDestinations(),
+    enabled: !!user,
+  });
+
+  const filteredDestinations = useMemo(() => {
+    // 1) chip de dificuldade legado; 2) painel de filtros avançados.
+    const byChip = filterDestinationsByDifficulty(destinations, difficultyFilter);
+    const savedIds = advFilters.savedIds != null ? savedDests.map((s) => s.id) : null;
+    return applyDestinationFilters(
+      byChip.map((d) => ({
+        id: d.id, name: d.name, region: d.region, difficulty: d.difficulty,
+        category: d.category, isPaid: d.isPaid, petFriendly: d.petFriendly,
+        // devolve o objeto completo depois do filtro
+        _full: d,
+      })),
+      { ...advFilters, savedIds },
+    ).map((x) => (x as unknown as { _full: Destination })._full);
+  }, [destinations, difficultyFilter, advFilters, savedDests]);
 
   // Centro do mapa/panorama: prioriza a REGIÃO BUSCADA (ex.: "Juiz de Fora");
   // senão a minha posição compartilhada.
@@ -393,29 +417,49 @@ function Explore() {
             {/* Busca unificada (fase 3.2): cidades + amigos + parceiros +
                 eventos, com sugestões. Cidade recentra o panorama; os demais
                 navegam. */}
-            <div className="mt-4">
-              <ExploreSearch
-                partners={partners}
-                events={nearbyEvents}
-                destinations={destinations.map((d) => {
-                  const dd = d as unknown as { id: string; name: string; region?: string | null };
-                  return { id: dd.id, name: dd.name, region: dd.region };
-                })}
-                trails={importedTrails.map((tr) => {
-                  const tt = tr as unknown as { id: string; name: string; region?: string | null };
-                  return { id: tt.id, name: tt.name, region: tt.region };
-                })}
-                placeholder={t("explore.placeholder")}
-                onPick={(r) => {
-                  if (r.kind === "region") setSearchedRegion({ name: r.label, lat: r.lat, lng: r.lng });
-                  else if (r.kind === "friend") navigate({ to: "/u/$userId", params: { userId: r.userId } });
-                  else if (r.kind === "partner") navigate({ to: "/parceiro/$partnerId", params: { partnerId: r.partnerId } });
-                  else if (r.kind === "event") navigate({ to: "/eventos" });
-                  else if (r.kind === "destination") navigate({ to: "/destino/$destinationId", params: { destinationId: r.destinationId } });
-                  else if (r.kind === "trail") navigate({ to: "/trilha/$trailId", params: { trailId: r.trailId } });
-                }}
-              />
+            <div className="mt-4 flex items-center gap-2">
+              <div className="flex-1">
+                <ExploreSearch
+                  partners={partners}
+                  events={nearbyEvents}
+                  destinations={destinations.map((d) => {
+                    const dd = d as unknown as { id: string; name: string; region?: string | null };
+                    return { id: dd.id, name: dd.name, region: dd.region };
+                  })}
+                  trails={importedTrails.map((tr) => {
+                    const tt = tr as unknown as { id: string; name: string; region?: string | null };
+                    return { id: tt.id, name: tt.name, region: tt.region };
+                  })}
+                  placeholder={t("explore.placeholder")}
+                  onPick={(r) => {
+                    if (r.kind === "region") setSearchedRegion({ name: r.label, lat: r.lat, lng: r.lng });
+                    else if (r.kind === "friend") navigate({ to: "/u/$userId", params: { userId: r.userId } });
+                    else if (r.kind === "partner") navigate({ to: "/parceiro/$partnerId", params: { partnerId: r.partnerId } });
+                    else if (r.kind === "event") navigate({ to: "/eventos" });
+                    else if (r.kind === "destination") navigate({ to: "/destino/$destinationId", params: { destinationId: r.destinationId } });
+                    else if (r.kind === "trail") navigate({ to: "/trilha/$trailId", params: { trailId: r.trailId } });
+                  }}
+                />
+              </div>
+              {/* Botão de filtros avançados (Bloco 3, Fase C). */}
+              <button
+                onClick={() => setFiltersOpen(true)}
+                className={`grid h-11 w-11 shrink-0 place-items-center rounded-2xl border transition-base active:scale-95 ${
+                  hasActiveFilters(advFilters) ? "border-[#f97316] bg-[#f97316]/10 text-[#f97316]" : "border-border bg-card text-foreground"
+                }`}
+                aria-label={t("exploreFilters.title", { defaultValue: "Filtros" })}
+              >
+                <SlidersHorizontal size={18} />
+              </button>
             </div>
+
+            {/* Botão "Criar rota" (Bloco 3, Fase C) → criar segmento no mapa. */}
+            <button
+              onClick={() => navigate({ to: "/segmento/criar" })}
+              className="mt-3 flex w-full items-center justify-center gap-2 rounded-2xl bg-[#f97316] py-3 text-sm font-bold text-white active:scale-[0.98]"
+            >
+              <MapPin size={16} /> {t("explore.createRoute", { defaultValue: "Criar rota" })}
+            </button>
 
             {/* Chip da região buscada (fase 3): mostra e permite limpar. */}
             {searchedRegion && (
@@ -668,6 +712,19 @@ function Explore() {
         </Link>
       </div>
         </>
+      )}
+
+      {/* Painel de filtros avançados (Bloco 3, Fase C). */}
+      {filtersOpen && (
+        <Suspense fallback={null}>
+          <ExploreFilters
+            open={filtersOpen}
+            onOpenChange={setFiltersOpen}
+            value={advFilters}
+            onChange={setAdvFilters}
+            hasSaved={savedDests.length > 0}
+          />
+        </Suspense>
       )}
     </div>
   );

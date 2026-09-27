@@ -195,6 +195,7 @@
     "trailsTitle": "Trails",
     "trailsSource": "Imported trail",
     "toStart": "to start",
+    "createRoute": "Create route",
     "tabs": {
       "destinos": "Destinations",
       "parceiros": "Partners"
@@ -835,6 +836,19 @@
     "attention": "Attention",
     "feelsLike": "Feels like",
     "now": "Now"
+  },
+  "exploreFilters": {
+    "title": "Trail filters",
+    "region": "Region (City)",
+    "regionPlaceholder": "e.g. Ouro Preto",
+    "difficulty": "Difficulty",
+    "category": "Category",
+    "petFriendly": "Pet Friendly",
+    "free": "Free attraction",
+    "paid": "Paid tour",
+    "saved": "Routes I liked",
+    "clear": "Clear",
+    "apply": "Apply filters"
   },
   "activity": {
     "trackTitle": "Track activity",

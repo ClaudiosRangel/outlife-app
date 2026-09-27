@@ -88,7 +88,7 @@ flowchart TD
     (Property 4). Card de clima na tela de destino (estilo do print).
   - _Requisitos: 2.2; Property 4_
 
-- [ ] 7. (Fase C) Filtros do Explorar (puro + UI)
+- [x] 7. (Fase C) Filtros do Explorar (puro + UI)
   - `src/lib/explore-filters.ts` (`applyDestinationFilters`, puro) + testes
     (Property 3); `ExploreFilters.tsx` (bottom sheet) com região/dificuldade/
     categoria/pet/pago/offline/curtidas/localização.
@@ -99,12 +99,12 @@ flowchart TD
     Open-Meteo Elevation quando o GPX não traz `<ele>`. Métricas (min/max/ganho).
   - _Requisitos: 1.3, 2.3_
 
-- [ ] 9. (Fase C) Explore repaginado + Criar rota
+- [x] 9. (Fase C) Explore repaginado + Criar rota
   - Busca + botão filtros + botão "Criar rota"; cards modernizados (distância até
     início); mantém amigos/panorama/parceiros. Identidade preservada.
   - _Requisitos: 3.2, 3.3, 3.4, 3.5_
 
-- [ ] 10. (Fase D) Admin_Destination_Form (upload GPX)
+- [x] 10. (Fase D) Admin_Destination_Form (upload GPX)
   - Form admin: upload GPX (parseGpx) + preview + campos + foto → cria destino
     approved; aprovação de pending de usuários (reuso notify).
   - _Requisitos: 1.1, 1.2, 1.5, 4.2_
@@ -114,7 +114,7 @@ flowchart TD
     tela; parceiros próximos por proximidade (cliente). Estados vazios.
   - _Requisitos: 2.5, 2.7_
 
-- [ ] 12. Verificação e entrega
+- [x] 12. Verificação e entrega
   - Diagnostics + testes puros; `build:native` + `cap sync` + APK; rotas flat
     verificadas; commit/push main; roadmap atualizado.
   - _Requisitos: 6.3_

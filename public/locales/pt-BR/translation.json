@@ -195,6 +195,7 @@
     "trailsTitle": "Trilhas",
     "trailsSource": "Trilha importada",
     "toStart": "até o início",
+    "createRoute": "Criar rota",
     "tabs": {
       "destinos": "Destinos",
       "parceiros": "Parceiros"
@@ -835,6 +836,19 @@
     "attention": "Atenção",
     "feelsLike": "Sensação",
     "now": "Agora"
+  },
+  "exploreFilters": {
+    "title": "Filtros de Trilha",
+    "region": "Região (Cidade)",
+    "regionPlaceholder": "Ex: Ouro Preto",
+    "difficulty": "Dificuldade",
+    "category": "Categoria",
+    "petFriendly": "Pet Friendly",
+    "free": "Atração gratuita",
+    "paid": "Passeio pago",
+    "saved": "Rotas que eu curti",
+    "clear": "Limpar",
+    "apply": "Aplicar filtros"
   },
   "activity": {
     "trackTitle": "Rastrear atividade",

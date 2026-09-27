@@ -136,6 +136,16 @@ function AdminDestinosPage() {
         </div>
       </div>
 
+      {/* Atalho: criar destino a partir de GPX (Bloco 3, Fase D). */}
+      <div className="px-5 mt-4">
+        <Link
+          to="/admin/destino-novo"
+          className="flex items-center justify-center gap-2 rounded-2xl bg-[#f97316] py-3 text-sm font-bold text-white active:scale-[0.98]"
+        >
+          <MapPin size={16} /> Novo destino (GPX)
+        </Link>
+      </div>
+
       <section className="px-5 mt-4 space-y-3">
         {isLoading && [0, 1, 2].map((i) => (
           <div key={i} className="h-40 rounded-2xl bg-muted animate-pulse" />
