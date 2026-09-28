@@ -453,15 +453,6 @@ function Explore() {
               </button>
             </div>
 
-            {/* Botão "Criar rota" (item 4) → grava a trilha indo até lá; ao
-                finalizar, vira destino pendente para aprovação. */}
-            <button
-              onClick={() => navigate({ to: "/atividade/rastrear", search: { mode: "destino" } })}
-              className="mt-3 flex w-full items-center justify-center gap-2 rounded-2xl bg-[#f97316] py-3 text-sm font-bold text-white active:scale-[0.98]"
-            >
-              <MapPin size={16} /> {t("explore.createRoute", { defaultValue: "Criar rota" })}
-            </button>
-
             {/* Chip da região buscada (fase 3): mostra e permite limpar. */}
             {searchedRegion && (
               <button
@@ -702,21 +693,21 @@ function Explore() {
         </div>
       )}
 
-      {/* CTA: gravar trilha para virar destino (substitui o antigo "Sugerir";
-          item 4). Grava a rota real indo até lá → aprovação do admin. */}
-      <div className="px-5 pb-6 mt-4">
+      {/* Espaçador para o FAB flutuante não cobrir o último conteúdo. */}
+      <div className="h-24" />
+        </>
+      )}
+
+      {/* FAB flutuante "Criar rota" (item 4): grava a trilha indo até lá; ao
+          finalizar, vira destino pendente para aprovação. Fica acima da
+          BottomNav (que é sticky z-40), estilo Strava. Só na aba Destinos. */}
+      {exploreTab === "destinos" && (
         <button
           onClick={() => navigate({ to: "/atividade/rastrear", search: { mode: "destino" } })}
-          className="flex w-full items-center justify-between rounded-2xl border border-dashed border-primary/40 bg-primary/5 p-4 text-left active:scale-[0.99]"
+          className="fixed bottom-24 left-1/2 z-30 flex -translate-x-1/2 items-center gap-2 rounded-full bg-[#f97316] px-6 py-3.5 text-sm font-bold text-white shadow-lg shadow-[#f97316]/30 transition-transform active:scale-95"
         >
-          <div>
-            <span className="text-sm font-semibold text-primary">{t("explore.recordDestTitle", { defaultValue: "Conhece uma trilha incrível?" })}</span>
-            <p className="text-xs text-muted-foreground mt-0.5">{t("explore.recordDestSubtitle", { defaultValue: "Grave a rota indo até lá e envie para aprovação" })}</p>
-          </div>
-          <span className="text-xs font-medium text-primary">{t("explore.createRoute", { defaultValue: "Criar rota" })} →</span>
+          <MapPin size={18} /> {t("explore.createRoute", { defaultValue: "Criar rota" })}
         </button>
-      </div>
-        </>
       )}
 
       {/* Painel de filtros avançados (Bloco 3, Fase C). */}

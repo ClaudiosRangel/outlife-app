@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { Heart, MessageCircle, Share2, MapPin, Trash2, Trophy, Crown, Medal, type LucideIcon } from "lucide-react";
+import { Heart, MessageCircle, Share2, MapPin, Trash2, Trophy, Crown, Medal, Award, type LucideIcon } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { SafeImage } from "@/components/SafeImage";
 import { MediaCarousel } from "@/components/community/MediaCarousel";
@@ -137,8 +137,9 @@ export function CommunityPostCard({
   const { Icon } = getActivityIcon(iconKey);
   const TopIcon = Icon as LucideIcon;
 
-  // Métricas por metric_form (Req 3).
-  const metrics: { label: string; value: string }[] = [];
+  // Métricas por metric_form (Req 3). `trophy` marca a métrica de Conquistas
+  // (KOM/segmentos) para receber o ícone dourado de louros na exibição.
+  const metrics: { label: string; value: string; trophy?: boolean }[] = [];
   if (isActivity) {
     const mf = computeByMetricForm(activityMeta?.metricForm ?? "speed_elevation", {
       distanceMeters: act!.distanceMeters ?? 0,
@@ -156,6 +157,14 @@ export function CommunityPostCard({
     if (mf.primary) metrics.push({ label: mf.primary.label, value: mf.primary.value });
     if (mf.secondary && (activityMeta?.metricForm ?? "speed_elevation") === "speed_elevation") {
       metrics.push({ label: mf.secondary.label, value: mf.secondary.value });
+    }
+    // Conquistas de segmento (KOM/top-10) como métrica destacada, estilo Strava.
+    if (post.segmentTrophy && post.segmentTrophy.trophyCount > 0) {
+      metrics.push({
+        label: t("community.achievementsMetric", { defaultValue: "Conquistas" }),
+        value: String(post.segmentTrophy.trophyCount),
+        trophy: true,
+      });
     }
   }
 
@@ -222,7 +231,10 @@ export function CommunityPostCard({
           {metrics.map((m) => (
             <div key={m.label}>
               <div className="text-[10px] uppercase tracking-wide text-muted-foreground">{m.label}</div>
-              <div className="text-lg font-bold leading-none">{m.value}</div>
+              <div className={`flex items-center gap-1 text-lg font-bold leading-none ${m.trophy ? "text-[var(--sun)]" : ""}`}>
+                {m.trophy && <Award size={16} className="shrink-0" />}
+                {m.value}
+              </div>
             </div>
           ))}
         </div>

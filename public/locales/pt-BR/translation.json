@@ -408,6 +408,7 @@
     "gaveKudos_one": "{{value}} curtida",
     "gaveKudos_other": "{{value}} curtidas",
     "activityCompleted": "Atividade concluída",
+    "achievementsMetric": "Conquistas",
     "segmentKom": "KOM conquistado!",
     "segmentTrophy": "Top {{rank}} no segmento",
     "segmentMoreTrophies_one": "+{{count}} troféu",

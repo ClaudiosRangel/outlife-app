@@ -5,7 +5,23 @@
 > `.kiro/steering/roadmap-outvitar.md`). **Mantenha-o atualizado** ao
 > concluir qualquer tarefa/bloco: marque status, data e resumo.
 
-**Última atualização:** 27/09/2026 (✅ CONCLUÍDO — Item 4 gravar-rota-como-destino + KOM por segmento no card da comunidade)
+**Última atualização:** 27/09/2026 (🔧 Ajustes: métrica "Conquistas" (louros) no card + FAB "Criar rota" flutuante)
+
+> **🔧 AJUSTES PÓS-ITEM 4 (27/09/2026) — APK 21:29, 9,99 MB:**
+> Dois ajustes pedidos pelo usuário (com prints de referência):
+> - **1. Conquistas no card da comunidade:** além do selo KOM/troféu detalhado
+>   (faixa clicável), o card agora exibe uma **métrica "Conquistas"** na linha de
+>   métricas (estilo do print: Distância · Ganho de elev. · Conquistas 🏵️N) com
+>   ícone de louros dourado (`Award`) e o **número de segmentos** conquistados
+>   (`trophyCount`). Vem da RPC `activity_segment_achievements` já existente.
+>   i18n `community.achievementsMetric`.
+> - **2. Botão "Criar rota" flutuante:** removido o botão inline (abaixo da busca)
+>   e o card pontilhado "Conhece uma trilha incrível?". Agora é um **FAB pill
+>   flutuante** (`fixed bottom-24 left-1/2 -translate-x-1/2 z-30`, laranja),
+>   acima da BottomNav, visível só na aba Destinos (mesmo padrão de FAB do
+>   `eventos.tsx`). Espaçador `h-24` evita cobrir o último conteúdo.
+
+**Anterior:** 27/09/2026 (✅ CONCLUÍDO — Item 4 gravar-rota-como-destino + KOM por segmento no card da comunidade)
 
 > **✅ ITEM 4 (GRAVAR ROTA COMO DESTINO) + KOM POR SEGMENTO (27/09/2026) — APK 18:22, 9,99 MB:**
 > Spec `gravar-rota-como-destino` concluído + KOM/troféus por segmento

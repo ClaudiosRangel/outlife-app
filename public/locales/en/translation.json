@@ -408,6 +408,7 @@
     "gaveKudos_one": "{{value}} like",
     "gaveKudos_other": "{{value}} likes",
     "activityCompleted": "Activity completed",
+    "achievementsMetric": "Achievements",
     "segmentKom": "KOM earned!",
     "segmentTrophy": "Top {{rank}} on segment",
     "segmentMoreTrophies_one": "+{{count}} trophy",
