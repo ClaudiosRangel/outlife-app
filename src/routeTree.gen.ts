@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as RotaNovaRouteImport } from './routes/rota-nova'
 import { Route as TermosRouteImport } from './routes/termos'
 import { Route as SugerirDestinoRouteImport } from './routes/sugerir-destino'
 import { Route as RedefinirSenhaRouteImport } from './routes/redefinir-senha'
@@ -313,6 +314,11 @@ const AdminDestinoNovoRoute = AdminDestinoNovoRouteImport.update({
   path: '/admin/destino-novo',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RotaNovaRoute = RotaNovaRouteImport.update({
+  id: '/rota-nova',
+  path: '/rota-nova',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminDashboardRoute = AdminDashboardRouteImport.update({
   id: '/admin/dashboard',
   path: '/admin/dashboard',
@@ -420,6 +426,7 @@ export interface FileRoutesByFullPath {
   '/admin/conteudo': typeof AdminConteudoRoute
   '/admin/dashboard': typeof AdminDashboardRoute
   '/admin/destino-novo': typeof AdminDestinoNovoRoute
+  '/rota-nova': typeof RotaNovaRoute
   '/admin/destinos': typeof AdminDestinosRoute
   '/admin/loja': typeof AdminLojaRoute
   '/admin/melhorias': typeof AdminMelhoriasRoute
@@ -485,6 +492,7 @@ export interface FileRoutesByTo {
   '/admin/conteudo': typeof AdminConteudoRoute
   '/admin/dashboard': typeof AdminDashboardRoute
   '/admin/destino-novo': typeof AdminDestinoNovoRoute
+  '/rota-nova': typeof RotaNovaRoute
   '/admin/destinos': typeof AdminDestinosRoute
   '/admin/loja': typeof AdminLojaRoute
   '/admin/melhorias': typeof AdminMelhoriasRoute
@@ -551,6 +559,7 @@ export interface FileRoutesById {
   '/admin/conteudo': typeof AdminConteudoRoute
   '/admin/dashboard': typeof AdminDashboardRoute
   '/admin/destino-novo': typeof AdminDestinoNovoRoute
+  '/rota-nova': typeof RotaNovaRoute
   '/admin/destinos': typeof AdminDestinosRoute
   '/admin/loja': typeof AdminLojaRoute
   '/admin/melhorias': typeof AdminMelhoriasRoute
@@ -618,6 +627,7 @@ export interface FileRouteTypes {
     | '/admin/conteudo'
     | '/admin/dashboard'
     | '/admin/destino-novo'
+    | '/rota-nova'
     | '/admin/destinos'
     | '/admin/loja'
     | '/admin/melhorias'
@@ -683,6 +693,7 @@ export interface FileRouteTypes {
     | '/admin/conteudo'
     | '/admin/dashboard'
     | '/admin/destino-novo'
+    | '/rota-nova'
     | '/admin/destinos'
     | '/admin/loja'
     | '/admin/melhorias'
@@ -748,6 +759,7 @@ export interface FileRouteTypes {
     | '/admin/conteudo'
     | '/admin/dashboard'
     | '/admin/destino-novo'
+    | '/rota-nova'
     | '/admin/destinos'
     | '/admin/loja'
     | '/admin/melhorias'
@@ -814,6 +826,7 @@ export interface RootRouteChildren {
   AdminConteudoRoute: typeof AdminConteudoRoute
   AdminDashboardRoute: typeof AdminDashboardRoute
   AdminDestinoNovoRoute: typeof AdminDestinoNovoRoute
+  RotaNovaRoute: typeof RotaNovaRoute
   AdminDestinosRoute: typeof AdminDestinosRoute
   AdminLojaRoute: typeof AdminLojaRoute
   AdminMelhoriasRoute: typeof AdminMelhoriasRoute
@@ -1187,6 +1200,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminDestinoNovoRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/rota-nova': {
+      id: '/rota-nova'
+      path: '/rota-nova'
+      fullPath: '/rota-nova'
+      preLoaderRoute: typeof RotaNovaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/dashboard': {
       id: '/admin/dashboard'
       path: '/admin/dashboard'
@@ -1336,6 +1356,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminConteudoRoute: AdminConteudoRoute,
   AdminDashboardRoute: AdminDashboardRoute,
   AdminDestinoNovoRoute: AdminDestinoNovoRoute,
+  RotaNovaRoute: RotaNovaRoute,
   AdminDestinosRoute: AdminDestinosRoute,
   AdminLojaRoute: AdminLojaRoute,
   AdminMelhoriasRoute: AdminMelhoriasRoute,

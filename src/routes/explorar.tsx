@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { lazy, Suspense, useEffect, useMemo, useState } from "react";
-import { ChevronLeft, MapPin, Search, SlidersHorizontal, WifiOff, Car } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { ChevronLeft, MapPin, Search, WifiOff, Car } from "lucide-react";
 import { haversineMeters } from "@/lib/haversine";
 import { formatDistanceBR } from "@/lib/navigation-to";
 import { useQuery } from "@tanstack/react-query";
@@ -29,11 +29,7 @@ import { buildPanorama } from "@/lib/explore-panorama";
 import { geocodePlace } from "@/lib/geocode";
 import { fetchNearbyEvents } from "@/lib/api";
 import { ExploreSearch } from "@/components/explore/ExploreSearch";
-import { applyDestinationFilters, hasActiveFilters, EMPTY_FILTERS, type ExploreFilters as ExpFilters } from "@/lib/explore-filters";
-import { fetchSavedDestinations } from "@/lib/api";
 import trailFallbackImg from "@/assets/dest-trail.jpg";
-
-const ExploreFilters = lazy(() => import("@/components/explore/ExploreFilters"));
 
 export const Route = createFileRoute("/explorar")({
   component: Explore,
@@ -48,8 +44,6 @@ export const Route = createFileRoute("/explorar")({
     links: [{ rel: "canonical", href: "/explorar" }],
   }),
 });
-
-const filterKeys = ["all", "easy", "moderate", "hard", "accessible", "near"] as const;
 
 // Atalhos de CATEGORIA (tipo de lugar) exibidos abaixo da busca. `value` é o
 // que casa com `destinations.category` (e com o filtro completo). Coerente com
@@ -110,9 +104,9 @@ function Explore() {
       window.removeEventListener("offline", off);
     };
   }, []);
-  // Filtros avançados (Bloco 3, Fase C).
-  const [filtersOpen, setFiltersOpen] = useState(false);
-  const [advFilters, setAdvFilters] = useState<ExpFilters>(EMPTY_FILTERS);
+  // Filtro de categoria (chips abaixo da busca). O painel de filtros avançados
+  // foi removido — a descoberta é por busca de texto + chips de categoria.
+  const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
   // Aba ativa: Destinos (comportamento atual) ou Parceiros (item 8 — concentra
   // a descoberta de parceiros na Explorar).
   const [exploreTab, setExploreTab] = useState<"destinos" | "parceiros">("destinos");
@@ -203,27 +197,13 @@ function Explore() {
     permissionDenied: false,
   });
 
-  // Destinos salvos (para o filtro "rotas que curti").
-  const { data: savedDests = [] } = useQuery({
-    queryKey: ["saved-destinations"],
-    queryFn: () => fetchSavedDestinations(),
-    enabled: !!user,
-  });
-
   const filteredDestinations = useMemo(() => {
-    // Filtro único: painel de filtros avançados (a faixa de chips de categoria
-    // alimenta advFilters.category, então não há mais filtro duplicado).
-    const savedIds = advFilters.savedIds != null ? savedDests.map((s) => s.id) : null;
-    return applyDestinationFilters(
-      destinations.map((d) => ({
-        id: d.id, name: d.name, region: d.region, difficulty: d.difficulty,
-        category: d.category, isPaid: d.isPaid, petFriendly: d.petFriendly,
-        // devolve o objeto completo depois do filtro
-        _full: d,
-      })),
-      { ...advFilters, savedIds },
-    ).map((x) => (x as unknown as { _full: Destination })._full);
-  }, [destinations, advFilters, savedDests]);
+    // Filtro só por CATEGORIA (chips). Sem painel avançado.
+    if (categoryFilter == null) return destinations;
+    return destinations.filter(
+      (d) => (d.category ?? "").toLowerCase() === categoryFilter.toLowerCase(),
+    );
+  }, [destinations, categoryFilter]);
 
   // Centro do mapa/panorama: prioriza a REGIÃO BUSCADA (ex.: "Juiz de Fora");
   // senão a minha posição compartilhada.
@@ -453,16 +433,6 @@ function Explore() {
                   }}
                 />
               </div>
-              {/* Botão de filtros avançados (Bloco 3, Fase C). */}
-              <button
-                onClick={() => setFiltersOpen(true)}
-                className={`grid h-11 w-11 shrink-0 place-items-center rounded-2xl border transition-base active:scale-95 ${
-                  hasActiveFilters(advFilters) ? "border-[#f97316] bg-[#f97316]/10 text-[#f97316]" : "border-border bg-card text-foreground"
-                }`}
-                aria-label={t("exploreFilters.title", { defaultValue: "Filtros" })}
-              >
-                <SlidersHorizontal size={18} />
-              </button>
             </div>
 
             {/* Chip da região buscada (fase 3): mostra e permite limpar. */}
@@ -477,16 +447,15 @@ function Explore() {
             )}
 
             {/* Atalho rápido por CATEGORIA (o tipo de lugar), coerente com o
-                título da busca. Sincronizado com o filtro completo
-                (advFilters.category) — sem duplicar a dificuldade, que fica só
-                no painel de filtros. */}
+                título da busca. Única forma de filtro (o painel avançado foi
+                removido). */}
             <div className="mt-4 flex gap-2 overflow-x-auto scrollbar-hide -mx-5 px-5">
               {CATEGORY_CHIPS.map((c) => {
-                const active = c.value === null ? advFilters.category === null : advFilters.category === c.value;
+                const active = categoryFilter === c.value;
                 return (
                   <button
                     key={c.value ?? "all"}
-                    onClick={() => setAdvFilters((f) => ({ ...f, category: c.value }))}
+                    onClick={() => setCategoryFilter(c.value)}
                     className={`whitespace-nowrap rounded-full px-4 py-1.5 text-xs font-medium capitalize transition-base ${active ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground"}`}
                   >
                     {t(`explore.categoryChips.${c.key}`, { defaultValue: c.label })}
@@ -718,29 +687,19 @@ function Explore() {
       )}
 
       {/* FAB flutuante "Criar rota" (item 4): grava a trilha indo até lá; ao
-          finalizar, vira destino pendente para aprovação. Fica acima da
-          BottomNav (que é sticky z-40), estilo Strava. Só na aba Destinos. */}
+          finalizar, vira destino pendente para aprovação. Canto inferior
+          DIREITO (não cobre os cards da lista), acima da BottomNav (sticky
+          z-40) — mesmo padrão do FAB de eventos. Só na aba Destinos. */}
       {exploreTab === "destinos" && (
         <button
-          onClick={() => navigate({ to: "/atividade/rastrear", search: { mode: "destino" } })}
-          className="fixed bottom-24 left-1/2 z-30 flex -translate-x-1/2 items-center gap-2 rounded-full bg-[#f97316] px-6 py-3.5 text-sm font-bold text-white shadow-lg shadow-[#f97316]/30 transition-transform active:scale-95"
+          onClick={() => navigate({ to: "/rota-nova" })}
+          className="fixed bottom-24 right-5 z-30 flex items-center gap-2 rounded-full bg-[#f97316] px-4 py-3 text-sm font-bold text-white shadow-lg shadow-[#f97316]/30 transition-transform active:scale-95"
+          aria-label={t("explore.createRoute", { defaultValue: "Criar rota" })}
         >
           <MapPin size={18} /> {t("explore.createRoute", { defaultValue: "Criar rota" })}
         </button>
       )}
 
-      {/* Painel de filtros avançados (Bloco 3, Fase C). */}
-      {filtersOpen && (
-        <Suspense fallback={null}>
-          <ExploreFilters
-            open={filtersOpen}
-            onOpenChange={setFiltersOpen}
-            value={advFilters}
-            onChange={setAdvFilters}
-            hasSaved={savedDests.length > 0}
-          />
-        </Suspense>
-      )}
     </div>
   );
 }

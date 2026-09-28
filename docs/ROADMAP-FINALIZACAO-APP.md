@@ -5,7 +5,34 @@
 > `.kiro/steering/roadmap-outvitar.md`). **Mantenha-o atualizado** ao
 > concluir qualquer tarefa/bloco: marque status, data e resumo.
 
-**Última atualização:** 28/09/2026 (🔧 Explorar: remove filtro duplicado, chips por CATEGORIA, fluxo Criar rota coerente, tela destino sem sobreposição)
+**Última atualização:** 28/09/2026 (✅ Rota-Destino da comunidade: tela própria `/rota-nova` + FAB canto direito + painel de filtro removido)
+
+> **✅ ROTA-DESTINO DA COMUNIDADE (28/09/2026) — APK 15:56, 10 MB:**
+> Spec `rota-destino-comunidade` (requirements→design→tasks). Separa a
+> "atividade do dia a dia" (caminhada/corrida/pedalada/etc., que gera segmentos/
+> KOM) da "Rota-Destino da comunidade" (aventura/desafio: montanhismo, cachoeira,
+> pico, parque, trilha, travessia, escalada — feita para outros usarem).
+> - **1. FAB "Criar rota"** → canto inferior DIREITO, menor (padrão do FAB de
+>   eventos) — não cobre mais os cards da lista.
+> - **2. Painel de filtro avançado REMOVIDO** (ícone de deslizadores + sheet
+>   "Filtros de Trilha"). Descoberta = busca por texto + chips de categoria.
+>   Removidos `ExploreFilters`, estados `advFilters/filtersOpen`, imports órfãos.
+> - **3. Nova tela `/rota-nova.tsx`** com identidade própria (pegada aventura):
+>   Passo 1 = categoria de aventura (7 chips) + deslocamento (a pé/bike) + modo
+>   de criação; Passo 2a = gravar ao vivo (calibração GPS + contagem 3-2-1,
+>   reusa `useActivityTracker`); Passo 2b = reaproveitar trajeto de uma atividade
+>   já concluída; Passo 3 = formulário rico (nome/descrição/dificuldade/acesso
+>   pago-grátis/horário/pet/foto) → `createDestinationFull(status:'pending')` →
+>   aprovação em `/admin/destinos`. Rota flat registrada MANUALMENTE no
+>   routeTree (8 pontos, sobreviveu ao build).
+> - **Deslocamento → activity_type coerente** (`adventure-route.ts`, puro, 5
+>   testes): bike→"pedalada", a pé→"trilha" (nunca uma categoria-lugar como
+>   activity_type). O `?mode=destino` da tela de rastrear foi REMOVIDO (a
+>   responsabilidade migrou para `/rota-nova`); a atividade diária ficou limpa.
+> - i18n pt-BR/en (`rotaNova.*`). Sem migration (usa `destinations` +
+>   `createDestinationFull`).
+
+**Anterior:** 28/09/2026 (🔧 Explorar: remove filtro duplicado, chips por CATEGORIA, fluxo Criar rota coerente, tela destino sem sobreposição)
 
 > **🔧 EXPLORAR + CRIAR ROTA + TELA DESTINO (28/09/2026) — APK 08:23, 10 MB:**
 > Três ajustes pedidos pelo usuário (com prints):

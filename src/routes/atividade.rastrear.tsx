@@ -19,12 +19,9 @@ import {
   uploadCommunityPostVideo,
   fetchMyProfile,
   fetchActivityTypes,
-  createDestinationFull,
-  uploadTrailImage,
   type ActivityType,
   type LocationSharingMode,
 } from "@/lib/api";
-import { buildDestinationDraft } from "@/lib/route-to-destination";
 import {
   validateVideoFileMeta,
   validateVideoDuration,
@@ -57,12 +54,6 @@ const ActivityMap = lazy(() => import("@/components/ActivityMap"));
 
 export const Route = createFileRoute("/atividade/rastrear")({
   component: TrackActivityPage,
-  // Item 4: modo "destino" — quando iniciado pelo "Criar rota" do Explorar, ao
-  // finalizar a gravação vira um destino pendente para aprovação (não é uma
-  // atividade normal do feed).
-  validateSearch: (search: Record<string, unknown>): { mode?: "destino" } => {
-    return { mode: search.mode === "destino" ? "destino" : undefined };
-  },
   head: () => ({
     meta: [
       { title: "Rastrear atividade — OutVitar" },
@@ -155,25 +146,9 @@ function TrackActivityPage() {
   const lastSyncRef = useRef(0);
   useActivitySync();
 
-  // Item 4: modo destino (via ?mode=destino do Explorar) + calibração/contagem.
-  const { mode } = Route.useSearch();
-  const isDestinationMode = mode === "destino";
   // Etapa pré-início: null (nada), "calibrating" (aguardando GPS), "countdown".
   const [preStart, setPreStart] = useState<null | "calibrating" | "countdown">(null);
   const [countdown, setCountdown] = useState(3);
-  // Sheet de criação de destino ao finalizar (modo destino).
-  const [destSheetOpen, setDestSheetOpen] = useState(false);
-  const [destName, setDestName] = useState("");
-  const [destDesc, setDestDesc] = useState("");
-  const [destDifficulty, setDestDifficulty] = useState("Moderada");
-  const [destCategory, setDestCategory] = useState("trilha");
-  const [savingDest, setSavingDest] = useState(false);
-  const [destImageFile, setDestImageFile] = useState<File | null>(null);
-  const [destImagePreview, setDestImagePreview] = useState<string | null>(null);
-  const destFileRef = useRef<HTMLInputElement>(null);
-  // Guarda o resultado do finalize() do modo destino, para montar o rascunho
-  // ao confirmar no sheet (o tracker é resetado logo após finalizar).
-  const destResultRef = useRef<{ points: { lat: number; lng: number; ts?: number; alt?: number }[] } | null>(null);
 
   // activityId vem do tracker (persistido), não mais de um useState local
   const activityId = tracker.activityId;
@@ -311,20 +286,16 @@ function TrackActivityPage() {
   // válido selecionado; se ausente, bloqueia o início e exibe mensagem
   // obrigatória em vez de chamar startMut.
   const handleStart = () => {
-    // O tipo de atividade (como você se move: corrida/caminhada/trilha/
-    // pedalada/...) é sempre obrigatório — inclusive no modo destino, onde
-    // define o rastreamento e o KOM. A CATEGORIA do destino (o tipo de lugar:
-    // cachoeira/montanha/...) é escolhida à parte, só no sheet ao finalizar.
     if (!activityType) {
       toast.error(t("activity.activityTypeRequired"));
       return;
     }
     // Item 5: em trilha/escalada, lembra o checklist antes de iniciar.
-    if (!isDestinationMode && (activityType === "trilha" || activityType === "escalada")) {
+    if (activityType === "trilha" || activityType === "escalada") {
       setChecklistReminderOpen(true);
       return;
     }
-    // Item 4: calibração de GPS antes de iniciar (contagem vem depois).
+    // Calibração de GPS antes de iniciar (contagem vem depois).
     setPreStart("calibrating");
   };
 
@@ -493,103 +464,6 @@ function TrackActivityPage() {
     toast(t("activity.toasts.discarded"));
   };
 
-  // Clique em "Finalizar": no modo destino captura os pontos e abre o sheet de
-  // criação de destino (não salva atividade no feed). Fora do modo destino,
-  // segue o fluxo normal (sheet de descrição/foto/vídeo da atividade).
-  const handleFinishClick = () => {
-    if (isDestinationMode) {
-      const result = tracker.finalize();
-      const pts = result.points ?? [];
-      if (pts.length < 2) {
-        toast.error(t("destinationRecord.tooShort", { defaultValue: "Trajeto muito curto para virar um destino." }));
-        return;
-      }
-      destResultRef.current = { points: pts };
-      // A categoria do destino (tipo de lugar) é independente do tipo de
-      // atividade — o usuário escolhe no sheet (default "trilha").
-      setDestSheetOpen(true);
-      return;
-    }
-    setFinishSheetOpen(true);
-  };
-
-  const handleDestImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    e.target.value = "";
-    if (!file) return;
-    setDestImageFile(file);
-    const reader = new FileReader();
-    reader.onloadend = () => setDestImagePreview(reader.result as string);
-    reader.readAsDataURL(file);
-  };
-
-  const resetDestForm = () => {
-    setDestName("");
-    setDestDesc("");
-    setDestDifficulty("Moderada");
-    setDestCategory("trilha");
-    setDestImageFile(null);
-    setDestImagePreview(null);
-    destResultRef.current = null;
-  };
-
-  // Confirma a criação do destino pendente a partir da rota gravada.
-  const submitDestination = async () => {
-    const pts = destResultRef.current?.points;
-    if (!pts || pts.length < 2) {
-      toast.error(t("destinationRecord.tooShort", { defaultValue: "Trajeto muito curto para virar um destino." }));
-      return;
-    }
-    if (!destName.trim()) {
-      toast.error(t("destinationRecord.nameRequired", { defaultValue: "Dê um nome ao destino." }));
-      return;
-    }
-    setSavingDest(true);
-    try {
-      const draft = buildDestinationDraft(pts);
-      let mainImageUrl: string | null = null;
-      if (destImageFile) {
-        try {
-          mainImageUrl = await uploadTrailImage(destImageFile);
-        } catch {
-          // Foto é opcional — falha no upload não impede a criação (design).
-        }
-      }
-      await createDestinationFull({
-        name: destName.trim(),
-        description: destDesc.trim() || null,
-        latitude: draft.startLat,
-        longitude: draft.startLng,
-        startLat: draft.startLat,
-        startLng: draft.startLng,
-        difficulty: destDifficulty,
-        category: destCategory,
-        type: destCategory,
-        distanceKm: draft.distanceKm,
-        elevation: draft.elevationGainM > 0 ? `${draft.elevationGainM} m` : null,
-        mainImageUrl,
-        routeGeojson: draft.routeGeojson,
-        status: "pending",
-      });
-      // Descarta a atividade de trabalho (não vai para o feed nesse modo).
-      if (activityId) await discardActivity(activityId).catch(() => {});
-      tracker.reset();
-      tracker.setActivityId(null);
-      setDestSheetOpen(false);
-      resetDestForm();
-      toast.success(
-        t("destinationRecord.sentForApproval", {
-          defaultValue: "Rota enviada para aprovação dos administradores. Você será avisado quando for publicada.",
-        }),
-      );
-      navigate({ to: "/explorar" });
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : t("destinationRecord.error", { defaultValue: "Não foi possível enviar a rota." }));
-    } finally {
-      setSavingDest(false);
-    }
-  };
-
   const isIdle = tracker.status === "idle";
   const isTracking = tracker.status === "tracking";
   const isPaused = tracker.status === "paused";
@@ -604,26 +478,11 @@ function TrackActivityPage() {
             <ArrowLeft size={16} />
           </Link>
           <span className="text-xs font-medium uppercase tracking-widest text-white/70">
-            {isDestinationMode ? t("destinationRecord.mode", { defaultValue: "Criar destino" }) : t("activity.trackTitle")}
+            {t("activity.trackTitle")}
           </span>
           <span className="w-9" />
         </div>
       </div>
-
-      {/* Modo destino: explica o fluxo (escolha a atividade → grave o trajeto →
-          envie para aprovação). A categoria do lugar é definida ao finalizar. */}
-      {isDestinationMode && isIdle && !tracker.hasOrphan && (
-        <div className="mx-5 mt-3 rounded-2xl border border-[#f97316]/30 bg-[#f97316]/10 p-3 text-xs text-[#c2410c] dark:text-[#f97316]">
-          <div className="flex items-center gap-2 font-semibold">
-            <MapPin size={14} /> {t("destinationRecord.banner.title", { defaultValue: "Você está criando um destino" })}
-          </div>
-          <p className="mt-1 leading-relaxed">
-            {t("destinationRecord.banner.text", {
-              defaultValue: "Escolha como vai se deslocar, grave o trajeto real indo até o local e, ao finalizar, envie para aprovação. O tipo de lugar (cachoeira, trilha…) você escolhe no final.",
-            })}
-          </p>
-        </div>
-      )}
 
       {tracker.permissionDenied && (
         <div className="mx-5 mt-3 rounded-2xl border border-destructive/30 bg-destructive/10 p-3 text-xs text-destructive">
@@ -870,7 +729,7 @@ function TrackActivityPage() {
 
             <button
               type="button"
-              onClick={handleFinishClick}
+              onClick={() => setFinishSheetOpen(true)}
               disabled={isSaving}
               aria-label={t("activity.finish")}
               className="grid h-12 w-12 place-items-center rounded-full bg-primary text-primary-foreground shadow-card active:scale-95 disabled:opacity-50"
@@ -1113,150 +972,6 @@ function TrackActivityPage() {
           </div>
         </div>
       )}
-
-      {/* Item 4: sheet de criação de DESTINO ao finalizar em modo destino.
-          A rota gravada vira um destino pendente para aprovação admin. */}
-      <Sheet
-        open={destSheetOpen}
-        onOpenChange={(open) => {
-          if (!open && !savingDest) {
-            // Fechar sem confirmar descarta a atividade de trabalho e reseta.
-            if (activityId) discardActivity(activityId).catch(() => {});
-            tracker.reset();
-            tracker.setActivityId(null);
-            resetDestForm();
-          }
-          setDestSheetOpen(open);
-        }}
-      >
-        <SheetContent side="bottom" className="rounded-t-3xl max-h-[88vh] overflow-y-auto">
-          <SheetHeader>
-            <SheetTitle className="font-display">
-              {t("destinationRecord.sheet.title", { defaultValue: "Enviar rota como destino" })}
-            </SheetTitle>
-            <SheetDescription>
-              {t("destinationRecord.sheet.description", {
-                defaultValue: "Preencha os dados. Será revisado pelos administradores antes de aparecer no Explorar.",
-              })}
-            </SheetDescription>
-          </SheetHeader>
-
-          <div className="space-y-5 py-4">
-            <div>
-              <Label className="mb-2 block text-sm font-medium">
-                {t("destinationRecord.sheet.name", { defaultValue: "Nome do destino" })}
-              </Label>
-              <input
-                value={destName}
-                onChange={(e) => setDestName(e.target.value)}
-                placeholder={t("destinationRecord.sheet.namePlaceholder", { defaultValue: "Ex.: Cachoeira do Vale" })}
-                className="w-full rounded-xl border border-border bg-card p-3.5 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
-              />
-            </div>
-
-            <div>
-              <Label className="mb-2 block text-sm font-medium">
-                {t("destinationRecord.sheet.desc", { defaultValue: "Descrição" })}
-              </Label>
-              <textarea
-                value={destDesc}
-                onChange={(e) => setDestDesc(e.target.value)}
-                placeholder={t("destinationRecord.sheet.descPlaceholder", { defaultValue: "Conte como é o trajeto, o que ver, cuidados..." })}
-                rows={3}
-                className="w-full resize-none rounded-xl border border-border bg-card p-3.5 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
-              />
-            </div>
-
-            <div>
-              <Label className="mb-2 block text-sm font-medium">
-                {t("destinationRecord.sheet.difficulty", { defaultValue: "Dificuldade" })}
-              </Label>
-              <div className="flex flex-wrap gap-2">
-                {["Fácil", "Moderada", "Difícil"].map((d) => (
-                  <button
-                    key={d}
-                    type="button"
-                    onClick={() => setDestDifficulty(d)}
-                    className={`rounded-full px-4 py-2 text-sm font-medium transition-base ${
-                      destDifficulty === d ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground"
-                    }`}
-                  >
-                    {d}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <Label className="mb-2 block text-sm font-medium">
-                {t("destinationRecord.sheet.category", { defaultValue: "Categoria" })}
-              </Label>
-              <div className="flex flex-wrap gap-2">
-                {["trilha", "cachoeira", "montanha", "praia", "ciclismo", "outro"].map((c) => (
-                  <button
-                    key={c}
-                    type="button"
-                    onClick={() => setDestCategory(c)}
-                    className={`rounded-full px-4 py-2 text-sm font-medium capitalize transition-base ${
-                      destCategory === c ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground"
-                    }`}
-                  >
-                    {c}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <Label className="mb-2 block text-sm font-medium">
-                {t("destinationRecord.sheet.photo", { defaultValue: "Foto (opcional)" })}
-              </Label>
-              <button
-                type="button"
-                onClick={() => destFileRef.current?.click()}
-                className="relative flex w-full flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-border bg-secondary/50 p-6 text-muted-foreground transition-colors hover:bg-secondary active:scale-[0.98]"
-              >
-                {destImagePreview ? (
-                  <img src={destImagePreview} alt="Preview" className="h-40 w-full rounded-xl object-cover" />
-                ) : (
-                  <>
-                    <Camera size={28} className="text-muted-foreground" />
-                    <span className="text-sm">{t("destinationRecord.sheet.addPhoto", { defaultValue: "Adicionar foto" })}</span>
-                  </>
-                )}
-                <input
-                  ref={destFileRef}
-                  type="file"
-                  accept="image/jpeg,image/png,image/webp"
-                  className="hidden"
-                  onChange={handleDestImageChange}
-                />
-              </button>
-            </div>
-
-            <div className="flex gap-3 pt-2">
-              <button
-                type="button"
-                onClick={() => setDestSheetOpen(false)}
-                disabled={savingDest}
-                className="flex-1 rounded-xl border border-destructive/30 bg-destructive/10 py-3.5 text-sm font-semibold text-destructive active:scale-[0.98] transition-transform disabled:opacity-50"
-              >
-                <Trash2 size={14} className="inline mr-1 -mt-0.5" />
-                {t("activity.discard")}
-              </button>
-              <button
-                type="button"
-                onClick={submitDestination}
-                disabled={savingDest || !destName.trim()}
-                className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-primary py-3.5 text-sm font-semibold text-primary-foreground shadow-card disabled:opacity-50 disabled:active:scale-100 active:scale-[0.98] transition-transform"
-              >
-                {savingDest ? <Loader2 size={16} className="animate-spin" /> : <MapPin size={16} />}
-                {t("destinationRecord.sheet.submit", { defaultValue: "Enviar para aprovação" })}
-              </button>
-            </div>
-          </div>
-        </SheetContent>
-      </Sheet>
 
       {savedActivityId && reviewDestinationId && (
         <ReviewPromptDialog
