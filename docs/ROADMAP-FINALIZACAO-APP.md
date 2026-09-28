@@ -5,7 +5,24 @@
 > `.kiro/steering/roadmap-outvitar.md`). **Mantenha-o atualizado** ao
 > concluir qualquer tarefa/bloco: marque status, data e resumo.
 
-**Última atualização:** 27/09/2026 (🔧 Ajustes: métrica "Conquistas" (louros) no card + FAB "Criar rota" flutuante)
+**Última atualização:** 27/09/2026 (🔧 KOM: detecção RETROATIVA de esforços de segmento server-side)
+
+> **🔧 KOM APARECENDO — DETECÇÃO RETROATIVA (27/09/2026):**
+> O usuário criou um segmento a partir de um pedal já feito e o KOM não
+> aparecia (ranking "ninguém percorreu"). **Causa raiz:** a detecção de esforço
+> (`detectAndRecordEfforts`, cliente) só roda no FINISH da atividade — segmento
+> criado DEPOIS nunca gerava esforço, nem para o autor. Além disso o matcher do
+> cliente usava raio de 25 m (apertado p/ segmento longo).
+> **Correção:** nova RPC **`detect_segment_efforts(_segment_id)`** (PostGIS,
+> migration `20260927140000`) que cruza a geometria já salva das atividades
+> concluídas (`user_activities.route`) com início/fim do segmento (`ST_DWithin`,
+> raio 60 m) + comprimento compatível (±35%), gravando 1 esforço por atividade
+> (tempo = `duration_seconds`), idempotente. Chamada em `createSegment` e
+> `updateSegment` (best-effort) → o ranking/KOM aparece já na criação. Aplicada
+> em produção e validada: o segmento "Levy x Paraibuna x Morro Grande" passou a
+> ter 2 esforços (os 2 pedais de 28,8/28,9 km) → agora tem KOM.
+
+**Anterior:** 27/09/2026 (🔧 Ajustes: métrica "Conquistas" (louros) no card + FAB "Criar rota" flutuante)
 
 > **🔧 AJUSTES PÓS-ITEM 4 (27/09/2026) — APK 21:29, 9,99 MB:**
 > Dois ajustes pedidos pelo usuário (com prints de referência):

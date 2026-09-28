@@ -1240,3 +1240,15 @@ alter table public.profile_contacts
 --     (menor rank; 1 = KOM), nome do segmento, velocidade média e total de
 --     troféus. Busca em lote (sem N+1 no feed). Colunas o_*. (idempotente)
 -- ############################################################################
+
+-- ############################################################################
+-- 53. 20260927140000_detect-segment-efforts.sql
+--     Detecção RETROATIVA de esforços de segmento no servidor (PostGIS): RPC
+--     detect_segment_efforts(_segment_id, _radius_m=60, _dist_tol=0.35). Cruza
+--     a geometria já persistida (user_activities.route) com início/fim do
+--     segmento (ST_DWithin) e comprimento compatível; grava um segment_effort
+--     por atividade (tempo = duration_seconds), idempotente. Resolve o caso
+--     "criei um segmento a partir do meu pedal já feito" — antes o ranking/KOM
+--     ficava vazio pois a detecção só rodava no finish. Chamada no
+--     createSegment/updateSegment (frontend, best-effort). (idempotente)
+-- ############################################################################

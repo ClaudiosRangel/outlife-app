@@ -3062,7 +3062,25 @@ export async function createSegment(input: {
     .select()
     .single();
   if (error) throw error;
-  return data as unknown as Segment;
+  const seg = data as unknown as Segment;
+  // Detecção retroativa (server-side): cruza a rota das atividades já concluídas
+  // com o novo segmento e grava os esforços — para o ranking/KOM aparecer já na
+  // criação (o caso "criei o segmento a partir do meu pedal"). Best-effort.
+  await detectSegmentEfforts(seg.id).catch(() => {});
+  return seg;
+}
+
+/**
+ * Dispara a detecção de esforços de segmento no servidor (PostGIS), cruzando a
+ * rota das atividades concluídas com o início/fim do segmento. Retroativa e
+ * idempotente. Retorna quantos esforços novos foram gravados.
+ */
+export async function detectSegmentEfforts(segmentId: string): Promise<number> {
+  const { data, error } = await supabase.rpc("detect_segment_efforts" as never, {
+    _segment_id: segmentId,
+  } as never);
+  if (error) throw error;
+  return Number(data ?? 0);
 }
 
 /**
@@ -3103,6 +3121,8 @@ export async function updateSegment(
     .select()
     .single();
   if (error) throw error;
+  // Se o trecho mudou (início/fim/bbox), reprocessa a detecção de esforços.
+  if (patch.polyline != null) await detectSegmentEfforts(id).catch(() => {});
   return data as unknown as Segment;
 }
 
