@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
-import { ChevronLeft, MapPin, Search, WifiOff, Car } from "lucide-react";
+import { lazy, Suspense, useEffect, useMemo, useState } from "react";
+import { ChevronLeft, MapPin, Search, SlidersHorizontal, WifiOff, Car } from "lucide-react";
 import { haversineMeters } from "@/lib/haversine";
 import { formatDistanceBR } from "@/lib/navigation-to";
 import { useQuery } from "@tanstack/react-query";
@@ -29,7 +29,11 @@ import { buildPanorama } from "@/lib/explore-panorama";
 import { geocodePlace } from "@/lib/geocode";
 import { fetchNearbyEvents } from "@/lib/api";
 import { ExploreSearch } from "@/components/explore/ExploreSearch";
+import { applyDestinationFilters, hasActiveFilters, EMPTY_FILTERS, type ExploreFilters as ExpFilters } from "@/lib/explore-filters";
+import { fetchSavedDestinations } from "@/lib/api";
 import trailFallbackImg from "@/assets/dest-trail.jpg";
+
+const ExploreFilters = lazy(() => import("@/components/explore/ExploreFilters"));
 
 export const Route = createFileRoute("/explorar")({
   component: Explore,
@@ -44,19 +48,6 @@ export const Route = createFileRoute("/explorar")({
     links: [{ rel: "canonical", href: "/explorar" }],
   }),
 });
-
-// Atalhos de CATEGORIA (tipo de lugar) exibidos abaixo da busca. `value` é o
-// que casa com `destinations.category` (e com o filtro completo). Coerente com
-// as categorias do painel de filtros e do sheet "Criar rota".
-const CATEGORY_CHIPS: { key: string; value: string | null; label: string }[] = [
-  { key: "all", value: null, label: "Todos" },
-  { key: "trilha", value: "trilha", label: "Trilhas" },
-  { key: "cachoeira", value: "cachoeira", label: "Cachoeiras" },
-  { key: "montanha", value: "montanha", label: "Montanhas" },
-  { key: "praia", value: "praia", label: "Praias" },
-  { key: "pico", value: "pico", label: "Picos" },
-  { key: "parque", value: "parque", label: "Parques" },
-];
 
 // Mapeia as chaves de dificuldade do filtro para os valores em português persistidos em `destinations.difficulty`.
 // "accessible" e "near" não filtram por dificuldade: não há campo de acessibilidade ou proximidade geográfica
@@ -104,9 +95,10 @@ function Explore() {
       window.removeEventListener("offline", off);
     };
   }, []);
-  // Filtro de categoria (chips abaixo da busca). O painel de filtros avançados
-  // foi removido — a descoberta é por busca de texto + chips de categoria.
-  const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
+  // Filtros avançados (painel — ícone ao lado da busca): região, dificuldade,
+  // categoria, pet, pago/grátis, "rotas que curti".
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [advFilters, setAdvFilters] = useState<ExpFilters>(EMPTY_FILTERS);
   // Aba ativa: Destinos (comportamento atual) ou Parceiros (item 8 — concentra
   // a descoberta de parceiros na Explorar).
   const [exploreTab, setExploreTab] = useState<"destinos" | "parceiros">("destinos");
@@ -197,13 +189,24 @@ function Explore() {
     permissionDenied: false,
   });
 
+  // Destinos salvos (para o filtro "rotas que curti" do painel).
+  const { data: savedDests = [] } = useQuery({
+    queryKey: ["saved-destinations"],
+    queryFn: () => fetchSavedDestinations(),
+    enabled: !!user,
+  });
+
   const filteredDestinations = useMemo(() => {
-    // Filtro só por CATEGORIA (chips). Sem painel avançado.
-    if (categoryFilter == null) return destinations;
-    return destinations.filter(
-      (d) => (d.category ?? "").toLowerCase() === categoryFilter.toLowerCase(),
-    );
-  }, [destinations, categoryFilter]);
+    const savedIds = advFilters.savedIds != null ? savedDests.map((s) => s.id) : null;
+    return applyDestinationFilters(
+      destinations.map((d) => ({
+        id: d.id, name: d.name, region: d.region, difficulty: d.difficulty,
+        category: d.category, isPaid: d.isPaid, petFriendly: d.petFriendly,
+        _full: d,
+      })),
+      { ...advFilters, savedIds },
+    ).map((x) => (x as unknown as { _full: Destination })._full);
+  }, [destinations, advFilters, savedDests]);
 
   // Centro do mapa/panorama: prioriza a REGIÃO BUSCADA (ex.: "Juiz de Fora");
   // senão a minha posição compartilhada.
@@ -433,6 +436,16 @@ function Explore() {
                   }}
                 />
               </div>
+              {/* Botão de filtros avançados (painel). Destaca quando há filtro ativo. */}
+              <button
+                onClick={() => setFiltersOpen(true)}
+                className={`grid h-11 w-11 shrink-0 place-items-center rounded-2xl border transition-base active:scale-95 ${
+                  hasActiveFilters(advFilters) ? "border-[#f97316] bg-[#f97316]/10 text-[#f97316]" : "border-border bg-card text-foreground"
+                }`}
+                aria-label={t("exploreFilters.title", { defaultValue: "Filtros" })}
+              >
+                <SlidersHorizontal size={18} />
+              </button>
             </div>
 
             {/* Chip da região buscada (fase 3): mostra e permite limpar. */}
@@ -445,24 +458,6 @@ function Explore() {
                 <span className="ml-1 text-primary/70">✕</span>
               </button>
             )}
-
-            {/* Atalho rápido por CATEGORIA (o tipo de lugar), coerente com o
-                título da busca. Única forma de filtro (o painel avançado foi
-                removido). */}
-            <div className="mt-4 flex gap-2 overflow-x-auto scrollbar-hide -mx-5 px-5">
-              {CATEGORY_CHIPS.map((c) => {
-                const active = categoryFilter === c.value;
-                return (
-                  <button
-                    key={c.value ?? "all"}
-                    onClick={() => setCategoryFilter(c.value)}
-                    className={`whitespace-nowrap rounded-full px-4 py-1.5 text-xs font-medium capitalize transition-base ${active ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground"}`}
-                  >
-                    {t(`explore.categoryChips.${c.key}`, { defaultValue: c.label })}
-                  </button>
-                );
-              })}
-            </div>
           </>
         ) : (
           <div className="mt-4 flex items-center gap-2 rounded-2xl border border-border bg-card p-3">
@@ -700,6 +695,18 @@ function Explore() {
         </button>
       )}
 
+      {/* Painel de filtros avançados (região/dificuldade/categoria/pet/pago/salvos). */}
+      {filtersOpen && (
+        <Suspense fallback={null}>
+          <ExploreFilters
+            open={filtersOpen}
+            onOpenChange={setFiltersOpen}
+            value={advFilters}
+            onChange={setAdvFilters}
+            hasSaved={savedDests.length > 0}
+          />
+        </Suspense>
+      )}
     </div>
   );
 }

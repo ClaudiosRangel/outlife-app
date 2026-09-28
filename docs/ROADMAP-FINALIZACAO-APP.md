@@ -14,9 +14,11 @@
 > pico, parque, trilha, travessia, escalada — feita para outros usarem).
 > - **1. FAB "Criar rota"** → canto inferior DIREITO, menor (padrão do FAB de
 >   eventos) — não cobre mais os cards da lista.
-> - **2. Painel de filtro avançado REMOVIDO** (ícone de deslizadores + sheet
->   "Filtros de Trilha"). Descoberta = busca por texto + chips de categoria.
->   Removidos `ExploreFilters`, estados `advFilters/filtersOpen`, imports órfãos.
+> - **2. Filtro — CORRIGIDO (28/09 17:11):** eu havia entendido errado e
+>   removido o PAINEL avançado mantendo os chips. O usuário queria o OPOSTO.
+>   Agora: **faixa de chips REMOVIDA** (Todos/Trilhas/Cachoeiras/...) e **painel
+>   de filtro avançado RESTAURADO** (ícone de deslizadores ao lado da busca +
+>   sheet "Filtros de Trilha": região/dificuldade/categoria/pet/pago/salvos).
 > - **3. Nova tela `/rota-nova.tsx`** com identidade própria (pegada aventura):
 >   Passo 1 = categoria de aventura (7 chips) + deslocamento (a pé/bike) + modo
 >   de criação; Passo 2a = gravar ao vivo (calibração GPS + contagem 3-2-1,
