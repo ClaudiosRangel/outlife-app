@@ -154,6 +154,16 @@ Este bloco é o "modo de operação" combinado com o usuário. Seguir sempre.
   `payment-create`/`payment-webhook` + `_shared/psp.ts` agnóstico). Falta plugar
   PSP real — guia em `docs/CHECKOUT-ATIVAR-PAGAMENTO.md`.
 
+### ESTA VERSÃO É BETA (decisão 28/09/2026)
+
+A versão que vai para as lojas agora é **BETA**. Ícone/splash, design system,
+onboarding e os polimentos da `docs/ANALISE-DESIGN-OUTVITAR.md` serão
+**caprichados na versão de lançamento** (pós-beta). Na beta: logo atual
+(`src/assets/logo-outvitar.png`) + verde-floresta `#1F3D2B`; `appId` técnico
+MANTIDO `app.outlife.mobile` (invisível ao usuário; trocar quebraria Firebase/
+push/deep links — fica para o lançamento, se desejado). Não buscar perfeição
+visual agora — o foco é subir a beta funcional.
+
 ### Backlog acordado com o usuário (fila, fora do que já foi feito)
 - Estratégia WhatsApp PRO: convite bonito que leva quem não tem o app a
   baixar/cadastrar para participar do evento; + incentivo de INDICAÇÃO (quem

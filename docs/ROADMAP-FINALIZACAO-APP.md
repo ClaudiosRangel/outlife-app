@@ -5,7 +5,24 @@
 > `.kiro/steering/roadmap-outvitar.md`). **Mantenha-o atualizado** ao
 > concluir qualquer tarefa/bloco: marque status, data e resumo.
 
-**Última atualização:** 28/09/2026 (✅ Rota-Destino da comunidade: tela própria `/rota-nova` + FAB canto direito + painel de filtro removido)
+**Última atualização:** 28/09/2026 (🚀 Rebranding visual (ícone/splash) — versão BETA para lojas)
+
+> **📌 DECISÃO REGISTRADA — ESTA É A VERSÃO BETA (28/09/2026):**
+> Esta versão que vai para as lojas é **BETA**. Rebranding visual, design system,
+> ícone/splash "caprichados", onboarding e os polimentos da
+> `docs/ANALISE-DESIGN-OUTVITAR.md` serão **melhorados na versão de lançamento**
+> (pós-beta). Por ora: usar a **logo atual** (`src/assets/logo-outvitar.png`,
+> 512×512, montanha+sol+trilha) e o **verde-floresta** (`#1F3D2B`) como base do
+> ícone/splash — o suficiente para subir a beta. Não perfeccionismo agora.
+
+> **🚀 REBRANDING VISUAL BETA — ÍCONE + SPLASH (28/09/2026):**
+> Rebranding de nome já estava feito (appName "OutVitar" no capacitor.config +
+> Android strings; appId técnico MANTIDO `app.outlife.mobile` — invisível ao
+> usuário, trocar quebraria Firebase/push/deep links). Faltava o ícone do
+> launcher e o splash. Gerados a partir de `logo-outvitar.png` com fundo
+> verde-floresta via `@capacitor/assets`.
+
+**Anterior:** 28/09/2026 (✅ Rota-Destino da comunidade: tela própria `/rota-nova` + FAB canto direito + painel de filtro removido)
 
 > **✅ ROTA-DESTINO DA COMUNIDADE (28/09/2026) — APK 15:56, 10 MB:**
 > Spec `rota-destino-comunidade` (requirements→design→tasks). Separa a
