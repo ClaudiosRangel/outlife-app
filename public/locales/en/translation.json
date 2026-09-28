@@ -209,6 +209,15 @@
       "accessible": "Accessible",
       "near": "Near"
     },
+    "categoryChips": {
+      "all": "All",
+      "trilha": "Trails",
+      "cachoeira": "Waterfalls",
+      "montanha": "Mountains",
+      "praia": "Beaches",
+      "pico": "Peaks",
+      "parque": "Parks"
+    },
     "panorama": {
       "title": "Now in your region",
       "feels": "feels like",
@@ -1204,6 +1213,11 @@
     }
   },
   "destinationRecord": {
+    "mode": "Create destination",
+    "banner": {
+      "title": "You're creating a destination",
+      "text": "Pick how you'll move, record the real route to the place and, when you finish, submit it for approval. The place type (waterfall, trail…) you choose at the end."
+    },
     "tooShort": "Route too short to become a destination.",
     "nameRequired": "Give the destination a name.",
     "sentForApproval": "Route sent for admin approval. You'll be notified when it's published.",

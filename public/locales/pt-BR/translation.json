@@ -209,6 +209,15 @@
       "accessible": "Acessível",
       "near": "Perto"
     },
+    "categoryChips": {
+      "all": "Todos",
+      "trilha": "Trilhas",
+      "cachoeira": "Cachoeiras",
+      "montanha": "Montanhas",
+      "praia": "Praias",
+      "pico": "Picos",
+      "parque": "Parques"
+    },
     "panorama": {
       "title": "Agora na sua região",
       "feels": "sensação",
@@ -1204,6 +1213,11 @@
     }
   },
   "destinationRecord": {
+    "mode": "Criar destino",
+    "banner": {
+      "title": "Você está criando um destino",
+      "text": "Escolha como vai se deslocar, grave o trajeto real indo até o local e, ao finalizar, envie para aprovação. O tipo de lugar (cachoeira, trilha…) você escolhe no final."
+    },
     "tooShort": "Trajeto muito curto para virar um destino.",
     "nameRequired": "Dê um nome ao destino.",
     "sentForApproval": "Rota enviada para aprovação dos administradores. Você será avisado quando for publicada.",

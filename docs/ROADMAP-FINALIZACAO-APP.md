@@ -5,7 +5,30 @@
 > `.kiro/steering/roadmap-outvitar.md`). **Mantenha-o atualizado** ao
 > concluir qualquer tarefa/bloco: marque status, data e resumo.
 
-**Última atualização:** 27/09/2026 (🔧 KOM: detecção RETROATIVA de esforços de segmento server-side)
+**Última atualização:** 28/09/2026 (🔧 Explorar: remove filtro duplicado, chips por CATEGORIA, fluxo Criar rota coerente, tela destino sem sobreposição)
+
+> **🔧 EXPLORAR + CRIAR ROTA + TELA DESTINO (28/09/2026) — APK 08:23, 10 MB:**
+> Três ajustes pedidos pelo usuário (com prints):
+> - **1. Filtro duplicado removido:** havia dois botões de filtro no topo do
+>   Explorar. Removido o **decorativo** do header (ao lado de "Explorar
+>   destinos"); ficou só o funcional na barra de busca.
+> - **2. Chips = CATEGORIA (não dificuldade):** a faixa de chips abaixo da busca
+>   passou de dificuldade (que duplicava o painel e misturava "Acessível") para
+>   **categoria** (Todos/Trilhas/Cachoeiras/Montanhas/Praias/Picos/Parques),
+>   coerente com o placeholder e alimentando `advFilters.category` (fonte única,
+>   sem duplicar). Dificuldade agora só no painel completo. `CATEGORY_CHIPS` +
+>   i18n `explore.categoryChips.*`. Removido o estado legado `difficultyFilter`.
+> - **3. Fluxo "Criar rota" coerente:** separado **tipo de atividade** (como se
+>   move: corrida/caminhada/trilha/pedalada/natação — obrigatório, define KOM) da
+>   **categoria do destino** (tipo de lugar — escolhida só no sheet ao finalizar).
+>   Corrigido bug que gravava `activity_type = "cachoeira"` (quebrava o KOM).
+>   Banner explicativo no topo do modo destino. i18n `destinationRecord.mode/banner`.
+> - **4. Tela de destino:** card de cabeçalho não sobrepõe mais a foto do hero
+>   (era `-mt-6`, agora `mt-4` com folga).
+> - Fluxos completos (Criar rota + tela de Destino) documentados em
+>   `docs/PLANO-NAVEGACAO-GRUPO-E-GRAVACAO-DESTINO.md`.
+
+**Anterior:** 27/09/2026 (🔧 KOM: detecção RETROATIVA de esforços de segmento server-side)
 
 > **🔧 KOM APARECENDO — DETECÇÃO RETROATIVA (27/09/2026):**
 > O usuário criou um segmento a partir de um pedal já feito e o KOM não

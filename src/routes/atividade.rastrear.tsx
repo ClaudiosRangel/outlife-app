@@ -311,15 +311,13 @@ function TrackActivityPage() {
   // válido selecionado; se ausente, bloqueia o início e exibe mensagem
   // obrigatória em vez de chamar startMut.
   const handleStart = () => {
-    // Modo destino: se o usuário não escolheu tipo, assume "trilha" (grava a
-    // trilha indo até lá para virar destino).
+    // O tipo de atividade (como você se move: corrida/caminhada/trilha/
+    // pedalada/...) é sempre obrigatório — inclusive no modo destino, onde
+    // define o rastreamento e o KOM. A CATEGORIA do destino (o tipo de lugar:
+    // cachoeira/montanha/...) é escolhida à parte, só no sheet ao finalizar.
     if (!activityType) {
-      if (isDestinationMode) {
-        setActivityType("trilha");
-      } else {
-        toast.error(t("activity.activityTypeRequired"));
-        return;
-      }
+      toast.error(t("activity.activityTypeRequired"));
+      return;
     }
     // Item 5: em trilha/escalada, lembra o checklist antes de iniciar.
     if (!isDestinationMode && (activityType === "trilha" || activityType === "escalada")) {
@@ -507,8 +505,8 @@ function TrackActivityPage() {
         return;
       }
       destResultRef.current = { points: pts };
-      // Sugere o tipo escolhido como categoria inicial.
-      if (activityType) setDestCategory(activityType);
+      // A categoria do destino (tipo de lugar) é independente do tipo de
+      // atividade — o usuário escolhe no sheet (default "trilha").
       setDestSheetOpen(true);
       return;
     }
@@ -606,11 +604,26 @@ function TrackActivityPage() {
             <ArrowLeft size={16} />
           </Link>
           <span className="text-xs font-medium uppercase tracking-widest text-white/70">
-            {t("activity.trackTitle")}
+            {isDestinationMode ? t("destinationRecord.mode", { defaultValue: "Criar destino" }) : t("activity.trackTitle")}
           </span>
           <span className="w-9" />
         </div>
       </div>
+
+      {/* Modo destino: explica o fluxo (escolha a atividade → grave o trajeto →
+          envie para aprovação). A categoria do lugar é definida ao finalizar. */}
+      {isDestinationMode && isIdle && !tracker.hasOrphan && (
+        <div className="mx-5 mt-3 rounded-2xl border border-[#f97316]/30 bg-[#f97316]/10 p-3 text-xs text-[#c2410c] dark:text-[#f97316]">
+          <div className="flex items-center gap-2 font-semibold">
+            <MapPin size={14} /> {t("destinationRecord.banner.title", { defaultValue: "Você está criando um destino" })}
+          </div>
+          <p className="mt-1 leading-relaxed">
+            {t("destinationRecord.banner.text", {
+              defaultValue: "Escolha como vai se deslocar, grave o trajeto real indo até o local e, ao finalizar, envie para aprovação. O tipo de lugar (cachoeira, trilha…) você escolhe no final.",
+            })}
+          </p>
+        </div>
+      )}
 
       {tracker.permissionDenied && (
         <div className="mx-5 mt-3 rounded-2xl border border-destructive/30 bg-destructive/10 p-3 text-xs text-destructive">

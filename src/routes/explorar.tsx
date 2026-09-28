@@ -51,6 +51,19 @@ export const Route = createFileRoute("/explorar")({
 
 const filterKeys = ["all", "easy", "moderate", "hard", "accessible", "near"] as const;
 
+// Atalhos de CATEGORIA (tipo de lugar) exibidos abaixo da busca. `value` é o
+// que casa com `destinations.category` (e com o filtro completo). Coerente com
+// as categorias do painel de filtros e do sheet "Criar rota".
+const CATEGORY_CHIPS: { key: string; value: string | null; label: string }[] = [
+  { key: "all", value: null, label: "Todos" },
+  { key: "trilha", value: "trilha", label: "Trilhas" },
+  { key: "cachoeira", value: "cachoeira", label: "Cachoeiras" },
+  { key: "montanha", value: "montanha", label: "Montanhas" },
+  { key: "praia", value: "praia", label: "Praias" },
+  { key: "pico", value: "pico", label: "Picos" },
+  { key: "parque", value: "parque", label: "Parques" },
+];
+
 // Mapeia as chaves de dificuldade do filtro para os valores em português persistidos em `destinations.difficulty`.
 // "accessible" e "near" não filtram por dificuldade: não há campo de acessibilidade ou proximidade geográfica
 // disponível em `Destination` hoje, então esses chips permanecem apenas com destaque visual (sem restringir a lista).
@@ -97,7 +110,6 @@ function Explore() {
       window.removeEventListener("offline", off);
     };
   }, []);
-  const [difficultyFilter, setDifficultyFilter] = useState<Difficulty | "all">("all");
   // Filtros avançados (Bloco 3, Fase C).
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [advFilters, setAdvFilters] = useState<ExpFilters>(EMPTY_FILTERS);
@@ -199,11 +211,11 @@ function Explore() {
   });
 
   const filteredDestinations = useMemo(() => {
-    // 1) chip de dificuldade legado; 2) painel de filtros avançados.
-    const byChip = filterDestinationsByDifficulty(destinations, difficultyFilter);
+    // Filtro único: painel de filtros avançados (a faixa de chips de categoria
+    // alimenta advFilters.category, então não há mais filtro duplicado).
     const savedIds = advFilters.savedIds != null ? savedDests.map((s) => s.id) : null;
     return applyDestinationFilters(
-      byChip.map((d) => ({
+      destinations.map((d) => ({
         id: d.id, name: d.name, region: d.region, difficulty: d.difficulty,
         category: d.category, isPaid: d.isPaid, petFriendly: d.petFriendly,
         // devolve o objeto completo depois do filtro
@@ -211,7 +223,7 @@ function Explore() {
       })),
       { ...advFilters, savedIds },
     ).map((x) => (x as unknown as { _full: Destination })._full);
-  }, [destinations, difficultyFilter, advFilters, savedDests]);
+  }, [destinations, advFilters, savedDests]);
 
   // Centro do mapa/panorama: prioriza a REGIÃO BUSCADA (ex.: "Juiz de Fora");
   // senão a minha posição compartilhada.
@@ -389,9 +401,9 @@ function Explore() {
             <ChevronLeft size={18} />
           </Link>
           <span className="text-xs font-medium text-muted-foreground">{t("explore.title")}</span>
-          <button className="grid h-10 w-10 place-items-center rounded-full border border-border bg-card">
-            <SlidersHorizontal size={16} />
-          </button>
+          {/* Espaçador para manter o título centralizado (o filtro fica só na
+              barra de busca — antes havia um segundo botão decorativo aqui). */}
+          <span className="h-10 w-10" />
         </div>
         <h1 className="mt-4 font-display text-3xl font-semibold leading-tight whitespace-pre-line">
           {t("explore.headline")}
@@ -464,16 +476,23 @@ function Explore() {
               </button>
             )}
 
+            {/* Atalho rápido por CATEGORIA (o tipo de lugar), coerente com o
+                título da busca. Sincronizado com o filtro completo
+                (advFilters.category) — sem duplicar a dificuldade, que fica só
+                no painel de filtros. */}
             <div className="mt-4 flex gap-2 overflow-x-auto scrollbar-hide -mx-5 px-5">
-              {filterKeys.map((k) => (
-                <button
-                  key={k}
-                  onClick={() => setDifficultyFilter(k)}
-                  className={`whitespace-nowrap rounded-full px-4 py-1.5 text-xs font-medium transition-base ${difficultyFilter === k ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground"}`}
-                >
-                  {t(`explore.filters.${k}`)}
-                </button>
-              ))}
+              {CATEGORY_CHIPS.map((c) => {
+                const active = c.value === null ? advFilters.category === null : advFilters.category === c.value;
+                return (
+                  <button
+                    key={c.value ?? "all"}
+                    onClick={() => setAdvFilters((f) => ({ ...f, category: c.value }))}
+                    className={`whitespace-nowrap rounded-full px-4 py-1.5 text-xs font-medium capitalize transition-base ${active ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground"}`}
+                  >
+                    {t(`explore.categoryChips.${c.key}`, { defaultValue: c.label })}
+                  </button>
+                );
+              })}
             </div>
           </>
         ) : (

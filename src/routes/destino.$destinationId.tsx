@@ -216,8 +216,9 @@ function DestinationScreen() {
         </div>
       </div>
 
-      {/* Cabeçalho: badges + nome + local — z-10 para ficar ACIMA do hero. */}
-      <div className="relative z-10 mx-5 -mt-6 rounded-3xl bg-card p-4 shadow-card">
+      {/* Cabeçalho: badges + nome + local. Fica logo ABAIXO do hero, com uma
+          folga (mt-4) — antes sobrepunha a foto (-mt-6) e ficava colado. */}
+      <div className="relative z-10 mx-5 mt-4 rounded-3xl bg-card p-4 shadow-card">
         <div className="flex flex-wrap gap-2">
           {dest.difficulty && (
             <span className="rounded-full px-2.5 py-1 text-[11px] font-semibold text-white" style={{ backgroundColor: diffColor }}>
