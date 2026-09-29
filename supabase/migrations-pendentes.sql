@@ -1252,3 +1252,12 @@ alter table public.profile_contacts
 --     ficava vazio pois a detecção só rodava no finish. Chamada no
 --     createSegment/updateSegment (frontend, best-effort). (idempotente)
 -- ############################################################################
+
+-- ############################################################################
+-- 54. 20260928120000_destination-comments-visitors.sql
+--     Frente B (popular Explorar): comentários no destino com avatar do autor
+--     (tabela destination_comments + RLS leitura pública/escrita própria; RPCs
+--     fetch_destination_comments / add_destination_comment) + "quem já esteve"
+--     no destino (RPC fetch_destination_visitors sobre user_destination_visits,
+--     marca amigos). SECURITY DEFINER onde precisa. (idempotente)
+-- ############################################################################

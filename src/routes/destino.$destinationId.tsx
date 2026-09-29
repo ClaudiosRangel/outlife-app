@@ -6,7 +6,7 @@
 import { lazy, Suspense, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, MapPin, Route as RouteIcon, Bookmark, BookmarkCheck, Navigation, AlertTriangle, PawPrint, DollarSign, Clock, Loader2, Car } from "lucide-react";
+import { ArrowLeft, MapPin, Route as RouteIcon, Bookmark, BookmarkCheck, Navigation, AlertTriangle, PawPrint, DollarSign, Clock, Loader2, Car, Users, Send, Trash2, MessageCircle } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { buildDirectionsUrl, formatDistanceBR } from "@/lib/navigation-to";
 import { useTranslation } from "react-i18next";
@@ -21,6 +21,10 @@ import {
   saveDestination,
   unsaveDestination,
   fetchFriendsOnDestination,
+  fetchDestinationVisitors,
+  fetchDestinationComments,
+  addDestinationComment,
+  deleteDestinationComment,
   fetchPartners,
   resolveAsset,
 } from "@/lib/api";
@@ -75,6 +79,32 @@ function DestinationScreen() {
     queryKey: ["friends-on-destination", destinationId],
     queryFn: () => fetchFriendsOnDestination(destinationId),
     enabled: !!user,
+  });
+
+  // Frente B: quem já esteve neste destino (visitantes/amigos, por GPS).
+  const { data: visitors = [] } = useQuery({
+    queryKey: ["destination-visitors", destinationId],
+    queryFn: () => fetchDestinationVisitors(destinationId, 30),
+  });
+
+  // Frente B: comentários do destino (com avatar).
+  const { data: comments = [] } = useQuery({
+    queryKey: ["destination-comments", destinationId],
+    queryFn: () => fetchDestinationComments(destinationId, 100),
+  });
+  const [commentText, setCommentText] = useState("");
+  const addCommentMut = useMutation({
+    mutationFn: (text: string) => addDestinationComment(destinationId, text),
+    onSuccess: () => {
+      setCommentText("");
+      qc.invalidateQueries({ queryKey: ["destination-comments", destinationId] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+  const deleteCommentMut = useMutation({
+    mutationFn: (id: string) => deleteDestinationComment(id),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["destination-comments", destinationId] }),
+    onError: (e: Error) => toast.error(e.message),
   });
 
   // Parceiros próximos do destino (por proximidade, cliente).
@@ -335,6 +365,29 @@ function DestinationScreen() {
         </div>
       )}
 
+      {/* Quem já esteve neste destino (Frente B) — visitantes/amigos por GPS. */}
+      {visitors.length > 0 && (
+        <div className="mx-5 mt-3 rounded-2xl bg-card p-4 shadow-card">
+          <div className="mb-2 flex items-center gap-2 text-sm font-semibold">
+            <Users size={15} className="text-primary" />
+            {t("destination.visitorsTitle", { defaultValue: "Quem já esteve aqui" })}
+            <span className="text-xs font-normal text-muted-foreground">({visitors.length})</span>
+          </div>
+          <div className="flex gap-3 overflow-x-auto scrollbar-hide">
+            {visitors.map((v) => (
+              <Link key={v.userId} to="/u/$userId" params={{ userId: v.userId }} className="flex shrink-0 flex-col items-center gap-1" style={{ width: 56 }}>
+                <div className={`h-12 w-12 overflow-hidden rounded-full ring-2 ${v.isFriend ? "ring-primary" : "ring-border"}`}>
+                  <Avatar src={resolveAsset(v.avatarUrl, avatarFallback)} alt={v.fullName ?? ""} aspectClassName="aspect-square" fallbackSrc={avatarFallback} />
+                </div>
+                <span className="w-full truncate text-center text-[10px] text-muted-foreground">
+                  {v.fullName?.split(" ")[0] ?? (v.username ? `@${v.username}` : "")}
+                </span>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Parceiros na região */}
       {nearbyPartners.length > 0 && (
         <div className="mx-5 mt-3 rounded-2xl bg-card p-4 shadow-card">
@@ -354,6 +407,81 @@ function DestinationScreen() {
           </div>
         </div>
       )}
+
+      {/* Comentários (Frente B) — com avatar de quem comentou. */}
+      <div className="mx-5 mt-3 rounded-2xl bg-card p-4 shadow-card">
+        <div className="mb-3 flex items-center gap-2 text-sm font-semibold">
+          <MessageCircle size={15} className="text-primary" />
+          {t("destination.commentsTitle", { defaultValue: "Comentários" })}
+          <span className="text-xs font-normal text-muted-foreground">({comments.length})</span>
+        </div>
+
+        {/* Campo de comentário (exige login). */}
+        {user ? (
+          <div className="flex items-center gap-2">
+            <input
+              value={commentText}
+              onChange={(e) => setCommentText(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && commentText.trim() && !addCommentMut.isPending) {
+                  addCommentMut.mutate(commentText.trim());
+                }
+              }}
+              placeholder={t("destination.commentPlaceholder", { defaultValue: "Escreva um comentário..." })}
+              maxLength={1000}
+              className="flex-1 rounded-xl border border-border bg-secondary/40 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+            />
+            <button
+              onClick={() => commentText.trim() && addCommentMut.mutate(commentText.trim())}
+              disabled={!commentText.trim() || addCommentMut.isPending}
+              aria-label={t("common.send", { defaultValue: "Enviar" })}
+              className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#f97316] text-white active:scale-95 disabled:opacity-50"
+            >
+              {addCommentMut.isPending ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
+            </button>
+          </div>
+        ) : (
+          <p className="text-xs text-muted-foreground">
+            {t("destination.commentLoginRequired", { defaultValue: "Entre para comentar." })}
+          </p>
+        )}
+
+        {/* Lista de comentários */}
+        <div className="mt-4 space-y-3">
+          {comments.length === 0 ? (
+            <p className="text-center text-xs italic text-muted-foreground">
+              {t("destination.commentsEmpty", { defaultValue: "Seja o primeiro a comentar! ⭐" })}
+            </p>
+          ) : (
+            comments.map((c) => (
+              <div key={c.id} className="flex items-start gap-2.5">
+                <Link to="/u/$userId" params={{ userId: c.userId }} className="shrink-0">
+                  <div className="h-9 w-9 overflow-hidden rounded-full">
+                    <Avatar src={resolveAsset(c.avatarUrl, avatarFallback)} alt={c.fullName ?? ""} aspectClassName="aspect-square" fallbackSrc={avatarFallback} />
+                  </div>
+                </Link>
+                <div className="min-w-0 flex-1 rounded-2xl bg-secondary/40 px-3 py-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="truncate text-xs font-semibold">
+                      {c.fullName ?? (c.username ? `@${c.username}` : t("friends.placeholderName", "Aventureiro"))}
+                    </span>
+                    {c.isMe && (
+                      <button
+                        onClick={() => deleteCommentMut.mutate(c.id)}
+                        aria-label={t("common.delete", { defaultValue: "Excluir" })}
+                        className="shrink-0 text-muted-foreground transition-base hover:text-destructive"
+                      >
+                        <Trash2 size={13} />
+                      </button>
+                    )}
+                  </div>
+                  <p className="mt-0.5 whitespace-pre-wrap break-words text-sm text-foreground/90">{c.text}</p>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
 
       {/* Aviso de segurança */}
       <div className="mx-5 mt-3 rounded-2xl border border-red-200 bg-red-50 p-4 dark:border-red-900/40 dark:bg-red-950/20">

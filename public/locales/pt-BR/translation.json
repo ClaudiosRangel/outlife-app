@@ -68,6 +68,7 @@
     "save": "Salvar",
     "saving": "Salvando…",
     "seeAll": "Ver todos",
+    "send": "Enviar",
     "share": "Compartilhar",
     "shareError": "Não foi possível compartilhar.",
     "shared": "Compartilhado!",
@@ -329,7 +330,12 @@
       "elevation": "Elevação",
       "type": "Tipo"
     },
-    "noDescription": "Este destino ainda não tem descrição."
+    "noDescription": "Este destino ainda não tem descrição.",
+    "visitorsTitle": "Quem já esteve aqui",
+    "commentsTitle": "Comentários",
+    "commentPlaceholder": "Escreva um comentário...",
+    "commentLoginRequired": "Entre para comentar.",
+    "commentsEmpty": "Seja o primeiro a comentar! ⭐"
   },
   "collection": {
     "saveLabel": "Salvar",

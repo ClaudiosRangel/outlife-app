@@ -5,7 +5,40 @@
 > `.kiro/steering/roadmap-outvitar.md`). **Mantenha-o atualizado** ao
 > concluir qualquer tarefa/bloco: marque status, data e resumo.
 
-**Última atualização:** 28/09/2026 (🚀 Rebranding visual (ícone/splash) — versão BETA para lojas)
+**Última atualização:** 28/09/2026 (✅ Frente B: comentários + "quem já esteve" no destino; +1 destino no Explorar)
+
+> **✅ POPULAR EXPLORAR + FRENTE B (28/09/2026) — APK 21:39, 10,77 MB:**
+> - **Destino novo no Explorar:** "Bate volta Cachoeira Ze Carlinhos"
+>   (Delfinópolis/MG, 62,54 km, 309 pts, ganho ~1171m, cachoeira/offroad, grátis)
+>   via GPX. Criado seed GENÉRICO reutilizável `scripts/seed-destino-gpx.mjs`
+>   (args --file/--region/--state/--difficulty/--category/etc.; busca elevação
+>   Open-Meteo). Falta a FOTO (passar depois → `main_image_url`). Meta beta: ~10
+>   destinos; resto entra depois de publicado.
+> - **Frente B — comentários + "quem já esteve" na tela de destino:**
+>   migration `20260928120000_destination-comments-visitors.sql` (item 54):
+>   tabela `destination_comments` (RLS pública leitura/própria escrita) + RPCs
+>   `fetch_destination_comments`/`add_destination_comment`; RPC
+>   `fetch_destination_visitors` (sobre `user_destination_visits`, marca amigos).
+>   API: `fetchDestinationComments/addDestinationComment/deleteDestinationComment/
+>   fetchDestinationVisitors`. UI em `/destino/$id`: seção "Quem já esteve aqui"
+>   (avatares, amigos com anel verde) + "Comentários" (input + lista com avatar,
+>   excluir o próprio). i18n `destination.visitorsTitle/comments*` + `common.send`.
+
+> **📌 FRENTE C — ACESSO/PAYWALL (decidido 28/09, A IMPLEMENTAR — próximo spec `acesso-e-paywall`):**
+> 3 formas de acesso; app bloqueado até ter acesso válido:
+> - **Pix R$ 55** (QR/chave `04466898740`) → acesso **VITALÍCIO**. Confirmação
+>   **MANUAL** (usuário paga, envia comprovante; admin confere no banco e libera).
+> - **7 dias grátis** (trial automático no cadastro).
+> - **Código de convite** → 1 ano. Gerado SÓ por admin (e-mails admin) no menu
+>   de Administração. Sem desconto/indicação por ora (o card "Convide amigos e
+>   ganhe" do concorrente NÃO entra agora).
+> - Plataformas: **Android + iOS**. ⚠️ RISCO REGISTRADO: Pix para desbloquear
+>   conteúdo digital viola a política da App Store (exige IAP). Beta pode passar
+>   em teste fechado; para produção iOS, rever (IAP ou acesso concedido fora do app).
+> - Implementação pragmática: tabela `user_access` (trial/paid/invited + expira),
+>   gate na abertura → tela de paywall com as 3 opções; admin libera Pix/convite.
+
+**Anterior:** 28/09/2026 (🚀 Rebranding visual (ícone/splash) — versão BETA para lojas)
 
 > **📌 DECISÃO REGISTRADA — ESTA É A VERSÃO BETA (28/09/2026):**
 > Esta versão que vai para as lojas é **BETA**. Rebranding visual, design system,

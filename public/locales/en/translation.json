@@ -71,6 +71,7 @@
     "save": "Save",
     "saving": "Saving…",
     "seeAll": "See all",
+    "send": "Send",
     "unavailable": "Unavailable",
     "verified": "Verified"
   },
@@ -329,7 +330,12 @@
       "elevation": "Elevation",
       "type": "Type"
     },
-    "noDescription": "This destination doesn't have a description yet."
+    "noDescription": "This destination doesn't have a description yet.",
+    "visitorsTitle": "Who's been here",
+    "commentsTitle": "Comments",
+    "commentPlaceholder": "Write a comment...",
+    "commentLoginRequired": "Sign in to comment.",
+    "commentsEmpty": "Be the first to comment! ⭐"
   },
   "collection": {
     "saveLabel": "Save",

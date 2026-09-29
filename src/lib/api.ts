@@ -1243,6 +1243,76 @@ export async function fetchFriendsOnDestination(destinationId: string): Promise<
   }));
 }
 
+// ============ Comentários do destino (Frente B) ============
+export type DestinationComment = {
+  id: string;
+  userId: string;
+  fullName: string | null;
+  username: string | null;
+  avatarUrl: string | null;
+  text: string;
+  createdAt: string;
+  isMe: boolean;
+};
+
+function mapDestinationComment(r: {
+  id: string; user_id: string; full_name: string | null; username: string | null;
+  avatar_url: string | null; text: string; created_at: string; is_me: boolean;
+}): DestinationComment {
+  return {
+    id: r.id, userId: r.user_id, fullName: r.full_name, username: r.username,
+    avatarUrl: r.avatar_url, text: r.text, createdAt: r.created_at, isMe: !!r.is_me,
+  };
+}
+
+export async function fetchDestinationComments(destinationId: string, limit = 100): Promise<DestinationComment[]> {
+  const { data, error } = await supabase.rpc("fetch_destination_comments" as never, {
+    _destination_id: destinationId, _limit: limit,
+  } as never);
+  if (error) throw error;
+  return ((data as unknown as Parameters<typeof mapDestinationComment>[0][]) ?? []).map(mapDestinationComment);
+}
+
+export async function addDestinationComment(destinationId: string, text: string): Promise<DestinationComment> {
+  const { data, error } = await supabase.rpc("add_destination_comment" as never, {
+    _destination_id: destinationId, _text: text,
+  } as never);
+  if (error) throw error;
+  const row = (data as unknown as Parameters<typeof mapDestinationComment>[0][])?.[0];
+  if (!row) throw new Error("Falha ao comentar");
+  return mapDestinationComment(row);
+}
+
+export async function deleteDestinationComment(commentId: string): Promise<void> {
+  const { error } = await supabase.from("destination_comments" as never).delete().eq("id" as never, commentId as never);
+  if (error) throw error;
+}
+
+// ============ Quem já esteve no destino (Frente B) ============
+export type DestinationVisitor = {
+  userId: string;
+  fullName: string | null;
+  username: string | null;
+  avatarUrl: string | null;
+  visitedAt: string | null;
+  isFriend: boolean;
+};
+
+export async function fetchDestinationVisitors(destinationId: string, limit = 30): Promise<DestinationVisitor[]> {
+  const { data, error } = await supabase.rpc("fetch_destination_visitors" as never, {
+    _destination_id: destinationId, _limit: limit,
+  } as never);
+  if (error) throw error;
+  const rows = (data as unknown as Array<{
+    user_id: string; full_name: string | null; username: string | null;
+    avatar_url: string | null; visited_at: string | null; is_friend: boolean;
+  }>) ?? [];
+  return rows.map((r) => ({
+    userId: r.user_id, fullName: r.full_name, username: r.username,
+    avatarUrl: r.avatar_url, visitedAt: r.visited_at, isFriend: !!r.is_friend,
+  }));
+}
+
 export async function favoritePartner(partnerId: string): Promise<void> {
   const { data: userData } = await supabase.auth.getUser();
   if (!userData.user) throw new Error("Não autenticado");
