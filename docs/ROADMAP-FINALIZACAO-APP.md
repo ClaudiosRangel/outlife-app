@@ -5,7 +5,26 @@
 > `.kiro/steering/roadmap-outvitar.md`). **Mantenha-o atualizado** ao
 > concluir qualquer tarefa/bloco: marque status, data e resumo.
 
-**Última atualização:** 28/09/2026 (✅ Frente B: comentários + "quem já esteve" no destino; +1 destino no Explorar)
+**Última atualização:** 29/09/2026 (✅ Acesso beta = só cadastro; tela de códigos de convite só-admin; +1 destino c/ foto)
+
+> **✅ ACESSO BETA + CÓDIGOS DE CONVITE (PRÉVIA ADMIN) (29/09/2026) — APK 17:58, 10,77 MB:**
+> Decisão: na beta NÃO há paywall — acesso pela conta (cadastro + confirmar
+> e-mail + completar perfil), como já era. A monetização (Pix/trial/gate) fica
+> para o LANÇAMENTO. Implementado só a PRÉVIA de códigos de convite para admin:
+> - migration `20260929120000_invite-codes-preview.sql` (item 55): tabela
+>   `invite_codes` (RLS só admin) + RPCs `admin_list_invite_codes` /
+>   `admin_generate_invite_code` (OUTV-XXXXXX, grant_type year|lifetime) /
+>   `admin_delete_invite_code`. Aplicada 2×+reload.
+> - Tela **`/admin/convites`** (registrada manual no routeTree, 8 pontos —
+>   gerador não criou; sobreviveu ao build): gerar código (1 ano/vitalício +
+>   nota), listar, copiar, excluir não usados. Só admin. Na beta os códigos
+>   NÃO liberam acesso (prévia). Card "Códigos de convite" no hub `/admin`.
+> - API: `adminListInviteCodes/adminGenerateInviteCode/adminDeleteInviteCode`.
+>   i18n `admin.invitesTitle/Desc` + bloco `adminInvites.*`.
+> - Fotos reais aplicadas: Pico do Gavião (730×728) e Cachoeira Ze Carlinhos.
+>   Cachoeira Alta ainda sem foto real (só fallback).
+
+**Anterior:** 28/09/2026 (✅ Frente B: comentários + "quem já esteve" no destino; +1 destino no Explorar)
 
 > **✅ POPULAR EXPLORAR + FRENTE B (28/09/2026) — APK 21:39, 10,77 MB:**
 > - **Destino novo no Explorar:** "Bate volta Cachoeira Ze Carlinhos"
@@ -24,7 +43,13 @@
 >   (avatares, amigos com anel verde) + "Comentários" (input + lista com avatar,
 >   excluir o próprio). i18n `destination.visitorsTitle/comments*` + `common.send`.
 
-> **📌 FRENTE C — ACESSO/PAYWALL (decidido 28/09, A IMPLEMENTAR — próximo spec `acesso-e-paywall`):**
+> **📌 ACESSO NA BETA = SÓ CADASTRO (decisão 29/09/2026):** NÃO haverá paywall
+> na beta. Acesso é pela conta (cadastro + confirmar e-mail + completar perfil),
+> como já é. A tela de "código de convite" fica visível SÓ para administradores
+> (menu Administração), como prévia. O paywall completo abaixo fica para o
+> LANÇAMENTO (não implementar agora).
+
+> **📌 FRENTE C — ACESSO/PAYWALL (decidido 28/09, PARA O LANÇAMENTO — spec futuro `acesso-e-paywall`):**
 > 3 formas de acesso; app bloqueado até ter acesso válido:
 > - **Pix R$ 55** (QR/chave `04466898740`) → acesso **VITALÍCIO**. Confirmação
 >   **MANUAL** (usuário paga, envia comprovante; admin confere no banco e libera).

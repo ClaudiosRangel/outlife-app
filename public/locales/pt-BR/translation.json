@@ -547,6 +547,8 @@
     "activitiesDesc": "Cadastrar tipos, ícones e forma de métrica.",
     "trailsTitle": "Trilhas e destinos",
     "trailsDesc": "Liberar ou ocultar trilhas importadas (OSM/ICMBio).",
+    "invitesTitle": "Códigos de convite",
+    "invitesDesc": "Prévia da monetização (não libera acesso na beta).",
     "pendingAlert_one": "{{count}} aprovação pendente",
     "pendingAlert_other": "{{count}} aprovações pendentes",
     "openCta": "Área administrativa"
@@ -786,6 +788,19 @@
     "doneOn": "Concluído em {{date}}",
     "confirmDelete": "Excluir este item?",
     "confirmDeleteDescription": "Essa ação não pode ser desfeita."
+  },
+  "adminInvites": {
+    "title": "Códigos de convite",
+    "subtitle": "Prévia da monetização. Na beta os códigos ainda não liberam acesso — o app é liberado pelo cadastro.",
+    "newTitle": "Gerar novo código",
+    "year": "1 ano",
+    "lifetime": "Vitalício",
+    "notePlaceholder": "Observação (opcional): para quem é este código",
+    "generate": "Gerar código",
+    "generated": "Código gerado: {{code}}",
+    "empty": "Nenhum código gerado ainda.",
+    "used": "Usado",
+    "copy": "Copiar"
   },
   "ranking": {
     "title": "Rankings",

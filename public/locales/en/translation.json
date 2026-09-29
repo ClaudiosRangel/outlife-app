@@ -547,6 +547,8 @@
     "activitiesDesc": "Manage types, icons and metric form.",
     "trailsTitle": "Trails and destinations",
     "trailsDesc": "Show or hide imported trails (OSM/ICMBio).",
+    "invitesTitle": "Invite codes",
+    "invitesDesc": "Monetization preview (doesn't grant access in beta).",
     "pendingAlert_one": "{{count}} pending approval",
     "pendingAlert_other": "{{count}} pending approvals",
     "openCta": "Admin area"
@@ -786,6 +788,19 @@
     "doneOn": "Completed on {{date}}",
     "confirmDelete": "Delete this item?",
     "confirmDeleteDescription": "This action cannot be undone."
+  },
+  "adminInvites": {
+    "title": "Invite codes",
+    "subtitle": "Monetization preview. In beta, codes don't grant access yet — the app is unlocked by signing up.",
+    "newTitle": "Generate new code",
+    "year": "1 year",
+    "lifetime": "Lifetime",
+    "notePlaceholder": "Note (optional): who this code is for",
+    "generate": "Generate code",
+    "generated": "Code generated: {{code}}",
+    "empty": "No codes generated yet.",
+    "used": "Used",
+    "copy": "Copy"
   },
   "ranking": {
     "title": "Rankings",

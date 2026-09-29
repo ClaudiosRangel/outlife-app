@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { ArrowLeft, ShieldAlert, ShieldCheck, MapPin, ChevronRight, Lightbulb, LayoutDashboard, Type, Megaphone, MessageSquare, Dumbbell, Mountain, Store } from "lucide-react";
+import { ArrowLeft, ShieldAlert, ShieldCheck, MapPin, ChevronRight, Lightbulb, LayoutDashboard, Type, Megaphone, MessageSquare, Dumbbell, Mountain, Store, Ticket } from "lucide-react";
 import { StatusBar } from "@/components/StatusBar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/hooks/use-auth";
@@ -158,6 +158,13 @@ function AdminHub() {
       icon: Lightbulb,
       title: t("admin.tipsTitle", "Dicas / Melhorias"),
       desc: t("admin.tipsDesc", "Checklist de dicas e melhorias do app."),
+      badge: 0,
+    },
+    {
+      to: "/admin/convites" as const,
+      icon: Ticket,
+      title: t("admin.invitesTitle", "Códigos de convite"),
+      desc: t("admin.invitesDesc", "Prévia da monetização (não libera acesso na beta)."),
       badge: 0,
     },
   ];

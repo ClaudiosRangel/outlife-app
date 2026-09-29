@@ -1261,3 +1261,13 @@ alter table public.profile_contacts
 --     no destino (RPC fetch_destination_visitors sobre user_destination_visits,
 --     marca amigos). SECURITY DEFINER onde precisa. (idempotente)
 -- ############################################################################
+
+-- ############################################################################
+-- 55. 20260929120000_invite-codes-preview.sql
+--     Códigos de convite (PRÉVIA admin — beta, SEM gate/paywall): tabela
+--     invite_codes (RLS só admin) + RPCs admin_list_invite_codes /
+--     admin_generate_invite_code (OUTV-XXXXXX; grant_type year|lifetime) /
+--     admin_delete_invite_code. Tela /admin/convites (só admin). Na beta os
+--     códigos NÃO liberam acesso — preparação da monetização do lançamento.
+--     (idempotente)
+-- ############################################################################

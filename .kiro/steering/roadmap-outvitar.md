@@ -154,6 +154,16 @@ Este bloco é o "modo de operação" combinado com o usuário. Seguir sempre.
   `payment-create`/`payment-webhook` + `_shared/psp.ts` agnóstico). Falta plugar
   PSP real — guia em `docs/CHECKOUT-ATIVAR-PAGAMENTO.md`.
 
+### ACESSO NA BETA = SÓ CADASTRO (decisão 29/09/2026)
+
+Na beta NÃO há paywall/ativação: o acesso é pela conta (cadastro + confirmar
+e-mail + completar perfil), exatamente como já funciona. **NÃO** implementar
+agora Pix R$ 55, trial de 7 dias nem gate de bloqueio. A tela de "código de
+convite" fica visível **somente para administradores** (menu Administração),
+como PRÉVIA/preparação da monetização futura — sem efeito de bloqueio para o
+usuário comum. O paywall completo (Pix vitalício confirmação manual, trial,
+convite 1 ano, gate) fica documentado no roadmap para a versão de lançamento.
+
 ### ESTA VERSÃO É BETA (decisão 28/09/2026)
 
 A versão que vai para as lojas agora é **BETA**. Ícone/splash, design system,

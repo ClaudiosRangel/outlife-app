@@ -60,6 +60,7 @@ import { Route as AdminDestinosRouteImport } from './routes/admin.destinos'
 import { Route as AdminDestinoNovoRouteImport } from './routes/admin.destino-novo'
 import { Route as AdminDashboardRouteImport } from './routes/admin.dashboard'
 import { Route as AdminConteudoRouteImport } from './routes/admin.conteudo'
+import { Route as AdminConvitesRouteImport } from './routes/admin.convites'
 import { Route as AdminComplianceRouteImport } from './routes/admin.compliance'
 import { Route as AdminAtividadesRouteImport } from './routes/admin.atividades'
 import { Route as AActivityIdRouteImport } from './routes/a.$activityId'
@@ -329,6 +330,11 @@ const AdminConteudoRoute = AdminConteudoRouteImport.update({
   path: '/admin/conteudo',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminConvitesRoute = AdminConvitesRouteImport.update({
+  id: '/admin/convites',
+  path: '/admin/convites',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminComplianceRoute = AdminComplianceRouteImport.update({
   id: '/admin/compliance',
   path: '/admin/compliance',
@@ -424,6 +430,7 @@ export interface FileRoutesByFullPath {
   '/admin/atividades': typeof AdminAtividadesRoute
   '/admin/compliance': typeof AdminComplianceRoute
   '/admin/conteudo': typeof AdminConteudoRoute
+  '/admin/convites': typeof AdminConvitesRoute
   '/admin/dashboard': typeof AdminDashboardRoute
   '/admin/destino-novo': typeof AdminDestinoNovoRoute
   '/rota-nova': typeof RotaNovaRoute
@@ -490,6 +497,7 @@ export interface FileRoutesByTo {
   '/admin/atividades': typeof AdminAtividadesRoute
   '/admin/compliance': typeof AdminComplianceRoute
   '/admin/conteudo': typeof AdminConteudoRoute
+  '/admin/convites': typeof AdminConvitesRoute
   '/admin/dashboard': typeof AdminDashboardRoute
   '/admin/destino-novo': typeof AdminDestinoNovoRoute
   '/rota-nova': typeof RotaNovaRoute
@@ -557,6 +565,7 @@ export interface FileRoutesById {
   '/admin/atividades': typeof AdminAtividadesRoute
   '/admin/compliance': typeof AdminComplianceRoute
   '/admin/conteudo': typeof AdminConteudoRoute
+  '/admin/convites': typeof AdminConvitesRoute
   '/admin/dashboard': typeof AdminDashboardRoute
   '/admin/destino-novo': typeof AdminDestinoNovoRoute
   '/rota-nova': typeof RotaNovaRoute
@@ -625,6 +634,7 @@ export interface FileRouteTypes {
     | '/admin/atividades'
     | '/admin/compliance'
     | '/admin/conteudo'
+    | '/admin/convites'
     | '/admin/dashboard'
     | '/admin/destino-novo'
     | '/rota-nova'
@@ -691,6 +701,7 @@ export interface FileRouteTypes {
     | '/admin/atividades'
     | '/admin/compliance'
     | '/admin/conteudo'
+    | '/admin/convites'
     | '/admin/dashboard'
     | '/admin/destino-novo'
     | '/rota-nova'
@@ -757,6 +768,7 @@ export interface FileRouteTypes {
     | '/admin/atividades'
     | '/admin/compliance'
     | '/admin/conteudo'
+    | '/admin/convites'
     | '/admin/dashboard'
     | '/admin/destino-novo'
     | '/rota-nova'
@@ -824,6 +836,7 @@ export interface RootRouteChildren {
   AdminAtividadesRoute: typeof AdminAtividadesRoute
   AdminComplianceRoute: typeof AdminComplianceRoute
   AdminConteudoRoute: typeof AdminConteudoRoute
+  AdminConvitesRoute: typeof AdminConvitesRoute
   AdminDashboardRoute: typeof AdminDashboardRoute
   AdminDestinoNovoRoute: typeof AdminDestinoNovoRoute
   RotaNovaRoute: typeof RotaNovaRoute
@@ -1221,6 +1234,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminConteudoRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/convites': {
+      id: '/admin/convites'
+      path: '/admin/convites'
+      fullPath: '/admin/convites'
+      preLoaderRoute: typeof AdminConvitesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/compliance': {
       id: '/admin/compliance'
       path: '/admin/compliance'
@@ -1354,6 +1374,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminAtividadesRoute: AdminAtividadesRoute,
   AdminComplianceRoute: AdminComplianceRoute,
   AdminConteudoRoute: AdminConteudoRoute,
+  AdminConvitesRoute: AdminConvitesRoute,
   AdminDashboardRoute: AdminDashboardRoute,
   AdminDestinoNovoRoute: AdminDestinoNovoRoute,
   RotaNovaRoute: RotaNovaRoute,

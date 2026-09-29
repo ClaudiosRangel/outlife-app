@@ -2864,6 +2864,49 @@ export async function isCurrentUserAdmin(): Promise<boolean> {
   return Boolean(data);
 }
 
+// ============ Códigos de convite (PRÉVIA admin — beta) ============
+// Na beta não há gate/paywall: estas funções servem só para o admin gerar/
+// listar códigos, preparando a monetização do lançamento. RLS/RPC restritas a
+// admin (is_admin). Ver migration 20260929120000.
+export type InviteCode = {
+  id: string;
+  code: string;
+  grantType: "year" | "lifetime";
+  note: string | null;
+  createdAt: string;
+  createdByName: string | null;
+  usedByName: string | null;
+  usedAt: string | null;
+};
+
+export async function adminListInviteCodes(limit = 200): Promise<InviteCode[]> {
+  const { data, error } = await supabase.rpc("admin_list_invite_codes" as never, { _limit: limit } as never);
+  if (error) throw error;
+  const rows = (data as unknown as Array<{
+    id: string; code: string; grant_type: "year" | "lifetime"; note: string | null;
+    created_at: string; created_by_name: string | null; used_by_name: string | null; used_at: string | null;
+  }>) ?? [];
+  return rows.map((r) => ({
+    id: r.id, code: r.code, grantType: r.grant_type, note: r.note,
+    createdAt: r.created_at, createdByName: r.created_by_name, usedByName: r.used_by_name, usedAt: r.used_at,
+  }));
+}
+
+export async function adminGenerateInviteCode(grantType: "year" | "lifetime", note?: string | null): Promise<InviteCode> {
+  const { data, error } = await supabase.rpc("admin_generate_invite_code" as never, {
+    _grant_type: grantType, _note: note ?? null,
+  } as never);
+  if (error) throw error;
+  const r = (data as unknown as Array<{ id: string; code: string; grant_type: "year" | "lifetime"; note: string | null; created_at: string }>)?.[0];
+  if (!r) throw new Error("Falha ao gerar código");
+  return { id: r.id, code: r.code, grantType: r.grant_type, note: r.note, createdAt: r.created_at, createdByName: null, usedByName: null, usedAt: null };
+}
+
+export async function adminDeleteInviteCode(id: string): Promise<void> {
+  const { error } = await supabase.rpc("admin_delete_invite_code" as never, { _id: id } as never);
+  if (error) throw error;
+}
+
 // ============ Dicas/Melhorias (checklist administrativo) ============
 // Tabela `admin_suggestions` (migration 20260910100000). Cada item é uma
 // dica/melhoria do app; nasce pendente (done=false) e o admin marca como
