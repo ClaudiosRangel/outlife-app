@@ -88,22 +88,22 @@ workflows:
 
       - name: Aplicar certificado + provisioning profile
         script: |
-          # ABORDAGEM: certificado de distribuição e provisioning profile de
-          # App Store são GERADOS UMA VEZ pelo painel do Codemagic
-          # (Settings → Code signing identities → iOS certificates / iOS
-          # provisioning profiles), usando a integração "Apple ASC" já
-          # conectada — não precisa de Mac. O `ios_signing` (bundle_identifier
-          # + distribution_type: app_store, em environment) faz o Codemagic
-          # BAIXAR esses arquivos salvos e disponibilizá-los. Aqui só
-          # inicializamos o keychain, instalamos os certificados baixados e
-          # aplicamos os profiles ao projeto Xcode.
-          #
-          # Por que não criar via API no script: a tentativa de
-          # `app-store-connect certificates create` falhou repetidamente
-          # (a API key é "App Manager"; criar certificado costuma exigir
-          # "Admin"). Gerar pelo painel contorna isso.
+          # O CERTIFICADO de distribuição ("OutVitar Dist.", Apple
+          # Distribution) já foi GERADO no painel do Codemagic (Settings →
+          # Code signing identities → iOS certificates) e fica salvo na conta,
+          # sendo disponibilizado ao build pelo `ios_signing`. Faltava só o
+          # PROVISIONING PROFILE: agora que o certificado existe, o
+          # `fetch-signing-files --create` consegue criar o profile de App
+          # Store para o bundle (antes falhava por não haver certificado).
           keychain initialize
+          # Instala no keychain o(s) certificado(s) de distribuição salvos.
           keychain add-certificates
+          # Cria (se não existir) e baixa o provisioning profile de App Store
+          # para o bundle, casando com o certificado já instalado.
+          app-store-connect fetch-signing-files "$BUNDLE_ID" \
+            --type IOS_APP_STORE \
+            --create
+          # Aplica os profiles baixados ao projeto Xcode.
           xcode-project use-profiles
 
       - name: Definir número de build incremental
