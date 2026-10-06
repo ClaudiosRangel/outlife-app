@@ -37,16 +37,20 @@ workflows:
       node: 20
       xcode: latest
       cocoapods: default
-      # Referência à integração "App Store Connect" criada no painel do
-      # Codemagic (Teams → Integrations → App Store Connect). O NOME abaixo
-      # DEVE ser exatamente o nome que você deu à integração no painel.
-      integrations:
-        app_store_connect: "Apple ASC"
       # Assinatura automática: o Codemagic gera/baixa certificado + perfil de
-      # distribuição usando a integração acima.
+      # distribuição usando a integração referenciada em `integrations` (nível
+      # do workflow, logo abaixo de environment).
       ios_signing:
         distribution_type: app_store
         bundle_identifier: app.outlife.mobile
+
+    # Referência à integração "Apple Developer Portal" criada no painel do
+    # Codemagic (Settings → Integrations → Developer Portal). O NOME abaixo
+    # DEVE ser exatamente o nome dado à integração no painel ("Apple ASC").
+    # Fica no nível do workflow (irmão de environment/scripts), NÃO dentro de
+    # environment.
+    integrations:
+      app_store_connect: "Apple ASC"
 
     triggering:
       # Build manual (clicar "Start new build" no painel). Para disparo
