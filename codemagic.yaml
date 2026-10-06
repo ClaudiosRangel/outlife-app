@@ -86,6 +86,23 @@ workflows:
           cd ios/App
           pod install
 
+      - name: Gerar certificado + provisioning profile (automático)
+        script: |
+          # Usa a integração Apple ASC para BUSCAR OU CRIAR o certificado de
+          # distribuição e o provisioning profile de App Store para o bundle.
+          # Resolve o erro "No matching profiles found ... distribution type
+          # app_store" da 1a build (nada existia ainda na conta Apple).
+          # --create: cria o perfil se não existir.
+          # --type IOS_APP_STORE: perfil de distribuição para App Store/TestFlight.
+          app-store-connect fetch-signing-files "$BUNDLE_ID" \
+            --type IOS_APP_STORE \
+            --create
+          # Instala o certificado no keychain do agente de build e aplica os
+          # perfis baixados no projeto Xcode.
+          keychain initialize
+          keychain add-certificates
+          xcode-project use-profiles
+
       - name: Definir número de build incremental
         script: |
           # Usa o número de build do Codemagic como CFBundleVersion, para
@@ -95,7 +112,6 @@ workflows:
 
       - name: Compilar e arquivar (.ipa)
         script: |
-          xcode-project use-profiles
           xcode-project build-ipa \
             --workspace "$XCODE_WORKSPACE" \
             --scheme "$XCODE_SCHEME"
