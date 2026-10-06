@@ -18,6 +18,14 @@ const config: CapacitorConfig = {
   server: {
     androidScheme: "https",
   },
+  // Nota: a pasta ios/ foi gerada com CocoaPods (via
+  // `npx cap add ios --packagemanager CocoaPods`), e NÃO com o SPM padrão do
+  // Capacitor 8. Motivo: o plugin nativo @outlife/capacitor-location-tracking
+  // fornece integração só via .podspec (CocoaPods), não via Package.swift —
+  // com SPM o rastreamento (função central do app) ficava de fora do build
+  // iOS. Com CocoaPods os 3 plugins (app, push, location-tracking) entram
+  // juntos. O escolha de package manager é feita no `cap add`, não neste
+  // config (não há campo para isso no CapacitorConfig).
 };
 
 export default config;

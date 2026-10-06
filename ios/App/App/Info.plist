@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>en</string>
+	<key>CFBundleDisplayName</key>
+        <string>OutVitar</string>
+	<key>CFBundleExecutable</key>
+	<string>$(EXECUTABLE_NAME)</string>
+	<key>CFBundleIdentifier</key>
+	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>$(PRODUCT_NAME)</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>$(MARKETING_VERSION)</string>
+	<key>CFBundleVersion</key>
+	<string>$(CURRENT_PROJECT_VERSION)</string>
+	<key>LSRequiresIPhoneOS</key>
+	<true/>
+	<key>UILaunchStoryboardName</key>
+	<string>LaunchScreen</string>
+	<key>UIMainStoryboardFile</key>
+	<string>Main</string>
+	<key>UIRequiredDeviceCapabilities</key>
+	<array>
+		<string>armv7</string>
+	</array>
+	<key>UISupportedInterfaceOrientations</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationLandscapeLeft</string>
+		<string>UIInterfaceOrientationLandscapeRight</string>
+	</array>
+	<key>UISupportedInterfaceOrientations~ipad</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationPortraitUpsideDown</string>
+		<string>UIInterfaceOrientationLandscapeLeft</string>
+		<string>UIInterfaceOrientationLandscapeRight</string>
+	</array>
+	<key>UIViewControllerBasedStatusBarAppearance</key>
+	<true/>
+	<!-- Permissões de localização (rastreamento de atividades estilo Strava).
+	     Textos exibidos ao usuário no diálogo de permissão do iOS. A Apple
+	     REJEITA o app se faltar justificativa clara do uso de localização,
+	     especialmente em segundo plano. -->
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>O OutVitar usa sua localização para registrar o trajeto, a distância e a velocidade das suas atividades enquanto o app está aberto.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>O OutVitar precisa da localização em segundo plano para continuar registrando seu trajeto com precisão mesmo com a tela bloqueada ou o app em segundo plano durante a atividade.</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>O OutVitar precisa da localização em segundo plano para continuar registrando seu trajeto com precisão durante a atividade.</string>
+	<!-- Câmera e galeria: foto de perfil, foto de destino/rota e posts da comunidade. -->
+	<key>NSCameraUsageDescription</key>
+	<string>O OutVitar usa a câmera para você adicionar fotos ao seu perfil, às rotas e às publicações da comunidade.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>O OutVitar acessa suas fotos para você escolher imagens de perfil, de rotas e de publicações.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>O OutVitar salva na sua galeria os vídeos e imagens gerados a partir das suas atividades.</string>
+	<!-- Background modes: localização contínua durante a gravação e recebimento
+	     de notificações push (remote-notification). -->
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>location</string>
+		<string>remote-notification</string>
+	</array>
+</dict>
+</plist>

@@ -62,12 +62,12 @@ com `*` são testes opcionais (recomendados). Referências internas técnicas a
     - Firebase/deep links preservados → sem pendência externa; push (FCM) intacto
     - _Requirements: 5.2 (revisado)_
 
-- [~] 6. Assets nativos (ícone/splash) — OPCIONAL, aguarda `assets/logo-outvitar.png`
-  - [ ] 6.1 Verificar/validar `assets/logo-outvitar.png` (1024×1024, sem alpha) e abortar se inválido
+- [x] 6. Assets nativos (ícone/splash)
+  - [x] 6.1 Assets fonte presentes em `assets/` (icon.png, logo.png, splash.png + dark)
+    - Android já gerado em sessão anterior; iOS gerado em 06/10/2026
     - _Requirements: 6.3, 6.4_
-  - [ ] 6.2 Gerar assets com `@capacitor/assets` (ícone + splash, Android/iOS)
-    - `npm i -D @capacitor/assets`; `npx capacitor-assets generate`
-    - Não bloqueia o funcionamento do app; o ícone atual permanece até o logo ser fornecido
+  - [x] 6.2 Gerar assets com `@capacitor/assets` (ícone + splash, Android/iOS)
+    - iOS: `npx capacitor-assets generate --ios` com fundo verde-floresta `#1F3D2B`; 16 arquivos (ícone 1024×1024 + splash claro/escuro). Android já estava feito.
     - _Requirements: 6.1, 6.2_
 
 - [x] 7. Verificação e regressão

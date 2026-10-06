@@ -1,0 +1,106 @@
+# Codemagic CI/CD — build iOS do OutVitar na nuvem (sem precisar de Mac).
+#
+# Este pipeline compila o app iOS (Capacitor) num macOS da nuvem do Codemagic
+# e envia a build para o TestFlight (beta fechada). O tier gratuito do
+# Codemagic oferece 500 minutos/mês de build em macOS M-series — suficiente
+# para várias builds de beta.
+#
+# PRÉ-REQUISITOS no painel do Codemagic (ver docs/GUIA-PUBLICACAO-IOS-APPLE.md):
+#   1. Conectar este repositório Git ao Codemagic.
+#   2. Integração "App Store Connect" configurada (API key da Apple) — o
+#      Codemagic cuida de certificados/perfis via "Automatic code signing".
+#   3. Variáveis de ambiente no grupo "appstore" (ver abaixo).
+#
+# A assinatura (certificados/provisioning) é gerenciada pelo Codemagic via
+# App Store Connect API key — você NÃO precisa gerar certificados à mão.
+
+workflows:
+  ios-testflight:
+    name: OutVitar iOS — TestFlight
+    # Máquina macOS na nuvem (grátis no tier free; M-series).
+    instance_type: mac_mini_m2
+    max_build_duration: 60
+    environment:
+      vars:
+        # Bundle id do app na Apple. DEVE bater com o App ID criado no
+        # Apple Developer e com o appId do capacitor.config.ts.
+        BUNDLE_ID: "app.outlife.mobile"
+        XCODE_WORKSPACE: "ios/App/App.xcworkspace"
+        XCODE_SCHEME: "App"
+        # App Store Connect App ID (número da ficha do app em
+        # App Store Connect → App Information → "Apple ID"). Preencher no
+        # grupo de variáveis "appstore" do Codemagic.
+        APP_STORE_APPLE_ID: $APP_STORE_APPLE_ID
+      groups:
+        # Grupo de variáveis criado no painel do Codemagic (ver guia).
+        - appstore
+      node: 20
+      xcode: latest
+      cocoapods: default
+      # Integração com App Store Connect configurada no painel do Codemagic.
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: app.outlife.mobile
+
+    triggering:
+      # Build manual (clicar "Start new build" no painel). Para disparo
+      # automático por push, descomentar o bloco events/branch abaixo.
+      events: []
+      # events:
+      #   - push
+      # branch_patterns:
+      #   - pattern: main
+      #     include: true
+
+    scripts:
+      - name: Instalar dependências JS
+        script: |
+          npm ci
+
+      - name: Build web nativo (dist/native-spa)
+        script: |
+          npm run build:native
+
+      - name: Garantir plataforma iOS e sincronizar Capacitor
+        script: |
+          # A pasta ios/ já é versionada (CocoaPods). Só recria se faltar,
+          # SEMPRE com --packagemanager CocoaPods (o plugin de location só tem
+          # .podspec; com SPM o rastreamento ficaria de fora do build).
+          if [ ! -d "ios/App" ]; then
+            npx cap add ios --packagemanager CocoaPods
+          fi
+          npx cap sync ios
+
+      - name: Instalar CocoaPods
+        script: |
+          cd ios/App
+          pod install
+
+      - name: Definir número de build incremental
+        script: |
+          # Usa o número de build do Codemagic como CFBundleVersion, para
+          # cada envio ao TestFlight ter um build number único e crescente.
+          cd ios/App
+          agvtool new-version -all $(($PROJECT_BUILD_NUMBER + 1)) || true
+
+      - name: Compilar e arquivar (.ipa)
+        script: |
+          xcode-project use-profiles
+          xcode-project build-ipa \
+            --workspace "$XCODE_WORKSPACE" \
+            --scheme "$XCODE_SCHEME"
+
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+
+    publishing:
+      app_store_connect:
+        # Usa a API key da integração "App Store Connect" do Codemagic.
+        auth: integration
+        # Envia para o TestFlight (beta). NÃO submete para review da App Store
+        # automaticamente — você promove manualmente quando quiser.
+        submit_to_testflight: true
+        # Opcional: distribuir para grupos de teste específicos no TestFlight.
+        # beta_groups:
+        #   - "Testadores OutVitar"

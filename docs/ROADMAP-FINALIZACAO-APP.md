@@ -5,7 +5,50 @@
 > `.kiro/steering/roadmap-outvitar.md`). **Mantenha-o atualizado** ao
 > concluir qualquer tarefa/bloco: marque status, data e resumo.
 
-**Última atualização:** 29/09/2026 (✅ Acesso beta = só cadastro; tela de códigos de convite só-admin; +1 destino c/ foto)
+**Última atualização:** 06/10/2026 (🍎 Projeto iOS gerado (CocoaPods) + Codemagic + guia de publicação App Store/TestFlight)
+
+> **🍎 PUBLICAÇÃO iOS — PROJETO + PIPELINE PRONTOS (06/10/2026):**
+> Decisão: subir a beta para a **App Store (TestFlight)** AGORA, como está
+> (Android não sobe nesta rodada). `appId` técnico MANTIDO `app.outlife.mobile`
+> (beta; trocar p/ `app.outvitar.mobile` fica para o lançamento). Conta Apple
+> Developer do usuário já ativa (Rafael Vieira, outvitar@gmail.com, Enrollment
+> ID J3CXAHA4Y4). Feito nesta rodada (parte de código — build iOS real é na
+> nuvem, o usuário não tem Mac):
+> - **`npm run build:native`** OK (✓ built in 1m41s; travou 2× antes — cache
+>   `.vite` limpo resolveu, conforme armadilha documentada).
+> - **Pasta `ios/` gerada com CocoaPods** (`npx cap add ios --packagemanager
+>   CocoaPods`), NÃO com o SPM padrão do Capacitor 8. MOTIVO CRÍTICO: o plugin
+>   nativo `@outlife/capacitor-location-tracking` (rastreamento, função central)
+>   só tem `.podspec`, não `Package.swift` — com SPM ele ficava FORA do build
+>   iOS (o `Package.swift` gerado só listava app+push, e ainda com caminhos
+>   `..\..\` do Windows que quebram no macOS). Com CocoaPods o `Podfile` inclui
+>   os 3 plugins (app, push, location-tracking). A implementação iOS do plugin
+>   JÁ EXISTIA e está correta (`LocationTrackingPlugin.swift`, CLLocationManager
+>   + background + permissão Always).
+> - **`Info.plist`**: adicionadas as permissões obrigatórias (senão a Apple
+>   rejeita): `NSLocationWhenInUse...`, `NSLocationAlwaysAndWhenInUse...`,
+>   `NSLocationAlways...`, câmera/galeria (3), e `UIBackgroundModes` =
+>   location + remote-notification. `CFBundleDisplayName` já era "OutVitar".
+> - **Ícone/splash iOS** gerados (`capacitor-assets generate --ios`, fundo
+>   `#1F3D2B`): 16 arquivos, incl. ícone 1024×1024 exigido pela Apple.
+> - **`codemagic.yaml`** criado (raiz): workflow `ios-testflight` em macOS da
+>   nuvem (tier free 500min/mês) → `npm ci` → `build:native` → `cap sync ios`
+>   → `pod install` → `xcode-project build-ipa` (workspace `App.xcworkspace`)
+>   → publica no TestFlight via integração App Store Connect (assinatura
+>   automática por API key — sem gerar certificado à mão). Trigger manual.
+> - **`docs/GUIA-PUBLICACAO-IOS-APPLE.md`** — passo a passo completo dos
+>   painéis (o que SÓ o usuário faz): App ID, APNs key (push), ficha no App
+>   Store Connect, API key p/ Codemagic, Firebase iOS (GoogleService-Info.plist),
+>   primeira build, TestFlight, convidar testadores. Inclui checklist de dados
+>   (Team ID, Issuer ID, etc.) e alertas (paywall Pix viola Apple no lançamento;
+>   App Privacy; política de privacidade URL).
+> - ⚠️ PENDENTE DO USUÁRIO (painéis, no guia): criar App ID, APNs key, ficha
+>   ASC, API key, conectar Codemagic, Firebase iOS. Depois: 1ª build no
+>   Codemagic → TestFlight → convidar testadores.
+> - NADA commitado ainda nesta rodada (seguir fluxo: commit quando o usuário
+>   pedir / ao fechar a rodada).
+
+**Anterior:** 29/09/2026 (✅ Acesso beta = só cadastro; tela de códigos de convite só-admin; +1 destino c/ foto)
 
 > **✅ ACESSO BETA + CÓDIGOS DE CONVITE (PRÉVIA ADMIN) (29/09/2026) — APK 17:58, 10,77 MB:**
 > Decisão: na beta NÃO há paywall — acesso pela conta (cadastro + confirmar
