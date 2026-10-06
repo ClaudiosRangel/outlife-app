@@ -86,20 +86,37 @@ workflows:
           cd ios/App
           pod install
 
-      - name: Gerar certificado + provisioning profile (automático)
+      - name: Inicializar keychain
         script: |
-          # Usa a integração Apple ASC para BUSCAR OU CRIAR o certificado de
-          # distribuição e o provisioning profile de App Store para o bundle.
-          # Resolve o erro "No matching profiles found ... distribution type
-          # app_store" da 1a build (nada existia ainda na conta Apple).
-          # --create: cria o perfil se não existir.
-          # --type IOS_APP_STORE: perfil de distribuição para App Store/TestFlight.
+          keychain initialize
+
+      - name: Gerar certificado de distribuição (se não existir) + profile
+        script: |
+          # CAUSA RAIZ da 1a-3a build ("No matching profiles found ...
+          # app_store"): a conta Apple é NOVA e não tinha nenhum certificado de
+          # DISTRIBUIÇÃO iOS. O `fetch-signing-files --create` só cria o
+          # PROFILE; o profile depende de um CERTIFICADO existente. Para criar
+          # o certificado automaticamente, o CLI precisa de uma CHAVE PRIVADA.
+          #
+          # Passo 1: gerar uma chave privada RSA (usada para criar/assinar o
+          # certificado de distribuição na conta Apple via API).
+          CERT_KEY_PATH="/tmp/dist_cert_key.pem"
+          if [ ! -f "$CERT_KEY_PATH" ]; then
+            ssh-keygen -t rsa -b 2048 -m PEM -f "$CERT_KEY_PATH" -q -N ""
+          fi
+          # Passo 2: criar o certificado de distribuição na conta Apple a partir
+          # dessa chave privada, SE ainda não houver um compatível (idempotente).
+          app-store-connect certificates create \
+            --type IOS_DISTRIBUTION \
+            --certificate-key=@file:"$CERT_KEY_PATH" \
+            --save || echo "Certificado já existe ou foi reutilizado — seguindo."
+          # Passo 3: buscar/criar o profile de App Store para o bundle, usando a
+          # chave privada para casar com o certificado recém-criado.
           app-store-connect fetch-signing-files "$BUNDLE_ID" \
             --type IOS_APP_STORE \
+            --certificate-key=@file:"$CERT_KEY_PATH" \
             --create
-          # Instala o certificado no keychain do agente de build e aplica os
-          # perfis baixados no projeto Xcode.
-          keychain initialize
+          # Passo 4: instalar certificados no keychain e aplicar os profiles.
           keychain add-certificates
           xcode-project use-profiles
 
