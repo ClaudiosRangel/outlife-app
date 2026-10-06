@@ -88,22 +88,16 @@ workflows:
 
       - name: Aplicar certificado + provisioning profile
         script: |
-          # O CERTIFICADO de distribuição ("OutVitar Dist.", Apple
-          # Distribution) já foi GERADO no painel do Codemagic (Settings →
-          # Code signing identities → iOS certificates) e fica salvo na conta,
-          # sendo disponibilizado ao build pelo `ios_signing`. Faltava só o
-          # PROVISIONING PROFILE: agora que o certificado existe, o
-          # `fetch-signing-files --create` consegue criar o profile de App
-          # Store para o bundle (antes falhava por não haver certificado).
+          # Certificado de distribuição ("OutVitar Dist.", Apple Distribution)
+          # e provisioning profile de App Store ("OutVitar App Store") já foram
+          # CRIADOS manualmente (certificado no painel do Codemagic; profile no
+          # portal Apple Developer e puxado via "Fetch profiles" no Codemagic).
+          # O `ios_signing` (environment) disponibiliza ambos ao build. Aqui só
+          # instalamos o certificado no keychain e aplicamos o profile ao
+          # projeto Xcode. NÃO usamos mais `fetch-signing-files --create` (que
+          # falhava ao criar o profile via API key App Manager).
           keychain initialize
-          # Instala no keychain o(s) certificado(s) de distribuição salvos.
           keychain add-certificates
-          # Cria (se não existir) e baixa o provisioning profile de App Store
-          # para o bundle, casando com o certificado já instalado.
-          app-store-connect fetch-signing-files "$BUNDLE_ID" \
-            --type IOS_APP_STORE \
-            --create
-          # Aplica os profiles baixados ao projeto Xcode.
           xcode-project use-profiles
 
       - name: Definir número de build incremental
