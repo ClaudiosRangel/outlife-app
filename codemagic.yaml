@@ -146,17 +146,19 @@ workflows:
 
       - name: Publicar no TestFlight
         script: |
-          # O altool não consegue descobrir o Apple ID a partir do bundle
-          # ("Cannot determine the Apple ID from Bundle ID"), e a variável
-          # $APP_STORE_APPLE_ID não expandiu no shell (saiu literal). Como o
-          # Apple ID do app NÃO é segredo (é o número público 6819832049 da
-          # ficha em App Store Connect), passamos ele LITERAL no comando.
+          # BUG CONHECIDO do altool no Xcode 26 (confirmado na doc Codemagic):
+          # para contas com MÚLTIPLOS PROVIDERS, o altool novo não determina o
+          # app pelo bundle. Erro: "Cannot determine the Apple ID from Bundle
+          # ID" (19). O --apple-id do `publish` NÃO é repassado ao altool; é
+          # preciso passá-lo (e o --asc-provider) via a flag correta e
+          # documentada --altool-additional-arguments, que injeta os args
+          # diretamente no `xcrun altool` (provider = Team ID 782BU6WDZ9).
           APP_IPA=$(find build/ios/ipa -name "*.ipa" | head -1)
-          echo "Enviando $APP_IPA para o App Store Connect (Apple ID 6819832049)..."
+          echo "Enviando $APP_IPA para o App Store Connect..."
           app-store-connect publish \
             --path "$APP_IPA" \
-            --apple-id 6819832049 \
-            --testflight
+            --testflight \
+            --altool-additional-arguments="--apple-id 6819832049 --asc-provider 782BU6WDZ9"
 
     artifacts:
       - build/ios/ipa/*.ipa
