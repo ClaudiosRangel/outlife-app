@@ -5,7 +5,53 @@
 > `.kiro/steering/roadmap-outvitar.md`). **Mantenha-o atualizado** ao
 > concluir qualquer tarefa/bloco: marque status, data e resumo.
 
-**Última atualização:** 06/10/2026 (🍎 Projeto iOS gerado (CocoaPods) + Codemagic + guia de publicação App Store/TestFlight)
+**Última atualização:** 07/10/2026 (🎉 OutVitar NO TESTFLIGHT — build iOS enviada, processada e VÁLIDA na App Store Connect via Codemagic)
+
+> **🎉 PUBLICAÇÃO iOS — BUILD NO TESTFLIGHT (07/10/2026):**
+> Após ~40 builds no Codemagic depurando a cadeia de assinatura, o `.ipa` do
+> OutVitar foi compilado, assinado, enviado e **PROCESSADO com sucesso** pela
+> Apple (Processing state: VALID, Version 41, APP_STORE_ELIGIBLE). O app está
+> no App Store Connect / TestFlight. Causas-raiz resolvidas, EM ORDEM (todas no
+> `codemagic.yaml`):
+> 1. **Node 20 → 22**: Capacitor 8 exige NodeJS ≥22; com 20 o `cap sync ios`
+>    abortava ("[fatal] ... exige NodeJS >= 22.0.0"). Era o bloqueador que
+>    disfarçava os demais.
+> 2. **CocoaPods, não SPM**: pasta `ios/` gerada com `--packagemanager
+>    CocoaPods` (o plugin `@outlife/capacitor-location-tracking` só tem
+>    `.podspec`; com SPM o rastreamento ficava fora do build).
+> 3. **Limite de certificado de distribuição**: a conta Apple permite ~2-3
+>    certs; criar um novo a cada build (`fetch-signing-files --create` com
+>    chave efêmera) estourava o limite e alternava sucesso/falha. SOLUÇÃO:
+>    **chave privada PERSISTENTE** — na 1ª build o yaml gera e imprime a chave
+>    RSA no log; salvá-la na env `CERT_PRIVATE_KEY` (grupo appstore) faz as
+>    builds seguintes REUSAREM o mesmo certificado (não estoura mais). Sempre
+>    que o limite estourar: revogar os certs de Distribution em
+>    developer.apple.com → Certificates.
+> 4. **Assinatura do archive (Capacitor)**: a sequência que funcionou é
+>    `keychain initialize` → `fetch-signing-files ... --certificate-key
+>    @file:<chave> --create` → `keychain add-certificates` → `xcode-project
+>    use-profiles` → `xcode-project build-ipa` (SEM forçar flags manuais; o
+>    use-profiles gera o export_options.plist e casa o profile).
+> 5. **Upload altool erro 19 "Cannot determine the Apple ID from Bundle ID"**:
+>    bug do altool do Xcode 26 com contas multi-provider. SOLUÇÃO:
+>    `app-store-connect publish --altool-additional-arguments="--apple-id
+>    6819832049 --asc-provider 782BU6WDZ9"` (passa Apple ID + provider direto
+>    ao altool).
+> 6. **Bundle ID errado na ficha**: a ficha do app em App Store Connect estava
+>    vinculada ao App ID "OutVitar" (bundle `J3CXAHA4Y4`) em vez de
+>    `app.outlife.mobile`. Trocado em Informações do app → ID do pacote →
+>    "app outlife mobile - app.outlife.mobile" (erro 90055 resolvido).
+> 7. **Contratos/DSA pendentes**: aceitar o Acordo de apps gratuitos + concluir
+>    o requisito DSA (status de comerciante UE) em Negócios — senão o upload é
+>    recusado.
+> DADOS DA CONTA: Apple ID do app `6819832049`, Team ID `782BU6WDZ9`, App ID
+> correto `app.outlife.mobile` (94Y6R7P2VL), integração Codemagic "Apple ASC"
+> (Key `RV5FCS265S`, Issuer `e45d1c39-db3e-44f3-bb46-a453ba96b929`).
+> PENDENTE DO USUÁRIO (painel, não é build): preencher Test Information no
+> TestFlight (Feedback Email + contato de review) e responder Export Compliance
+> (app só HTTPS → "sem criptografia proprietária"); depois convidar testadores.
+> PRÓXIMA MELHORIA (estabilidade/custo): salvar a `CERT_PRIVATE_KEY` no grupo
+> appstore do Codemagic para reusar o certificado e não gastar builds à toa.
 
 > **🍎 PUBLICAÇÃO iOS — PROJETO + PIPELINE PRONTOS (06/10/2026):**
 > Decisão: subir a beta para a **App Store (TestFlight)** AGORA, como está
