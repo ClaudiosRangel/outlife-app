@@ -37,19 +37,14 @@ workflows:
       node: 20
       xcode: latest
       cocoapods: default
-      # `ios_signing` com distribution_type + bundle_identifier faz o Codemagic
-      # BUSCAR os arquivos de assinatura JÁ SALVOS em Settings → Code signing
-      # identities que casem com esse bundle + tipo (certificado "OutVitar
-      # Dist." + profile "OutVitar App Store", já salvos e vinculados). Como os
-      # arquivos existem salvos, o Codemagic os usa (não tenta criar via API).
-      # Doc: "To fetch all uploaded signing files matching a distribution type
-      # and bundle identifier, define distribution_type and bundle_identifier."
-      ios_signing:
-        distribution_type: app_store
-        bundle_identifier: app.outlife.mobile
+      # SEM `ios_signing` automático: a validação de pré-build do signing
+      # automático falhava INSTANTANEAMENTE com "No matching profiles" mesmo
+      # com certificado + profile salvos e corretos. Em vez disso, baixamos o
+      # certificado e o profile via API DENTRO do script (fetch-signing-files),
+      # instalamos no keychain e aplicamos — pulando a validação de pré-build.
 
-    # Integração "Apple ASC" — necessária para o `publishing` (upload ao
-    # TestFlight via `auth: integration`).
+    # Integração "Apple ASC" — usada para fetch-signing-files (signing) e para
+    # o `publishing` (upload ao TestFlight via `auth: integration`).
     integrations:
       app_store_connect: "Apple ASC"
 
@@ -87,17 +82,36 @@ workflows:
           cd ios/App
           pod install
 
+      - name: DIAGNOSTICO - listar certificados e profiles visiveis
+        script: |
+          # Passo de diagnóstico: imprime no log tudo que a API Apple enxerga
+          # para esta conta (certificados, bundle ids, profiles). Serve para
+          # entender por que "No matching profiles". A saída deste passo é o
+          # que precisamos ler. (Não falha o build: tudo com || true.)
+          echo "===== BUNDLE IDS NA CONTA ====="
+          app-store-connect bundle-ids list || true
+          echo "===== CERTIFICADOS DE DISTRIBUICAO ====="
+          app-store-connect certificates list --type IOS_DISTRIBUTION || true
+          echo "===== PROFILES ====="
+          app-store-connect profiles list || true
+          echo "===== FIM DIAGNOSTICO ====="
+
       - name: Aplicar certificado + provisioning profile
         script: |
-          # Certificado de distribuição ("OutVitar Dist.", Apple Distribution)
-          # e provisioning profile de App Store ("OutVitar App Store") já foram
-          # CRIADOS manualmente (certificado no painel do Codemagic; profile no
-          # portal Apple Developer e puxado via "Fetch profiles" no Codemagic).
-          # O `ios_signing` (environment) disponibiliza ambos ao build. Aqui só
-          # instalamos o certificado no keychain e aplicamos o profile ao
-          # projeto Xcode. NÃO usamos mais `fetch-signing-files --create` (que
-          # falhava ao criar o profile via API key App Manager).
+          # O certificado de distribuição e o profile "OutVitar App Store" já
+          # EXISTEM na conta Apple (criados manualmente). Aqui, DENTRO do build
+          # (sem a validação de pré-build do ios_signing), buscamos esses
+          # arquivos via API — SEM --create (eles já existem, só baixar).
           keychain initialize
+          # Baixa o certificado de distribuição existente e sua chave.
+          app-store-connect certificates list \
+            --type IOS_DISTRIBUTION \
+            --save || true
+          # Baixa o provisioning profile de App Store existente para o bundle.
+          app-store-connect fetch-signing-files "$BUNDLE_ID" \
+            --type IOS_APP_STORE \
+            --platform IOS || true
+          # Instala os certificados baixados no keychain e aplica os profiles.
           keychain add-certificates
           xcode-project use-profiles
 
