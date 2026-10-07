@@ -138,11 +138,23 @@ workflows:
 
       - name: Compilar e arquivar (.ipa)
         script: |
-          # Com cert+chave no keychain e o profile aplicado pelo use-profiles,
-          # o build-ipa arquiva e assina usando o export_options.plist gerado.
+          # ASSINATURA MANUAL DETERMINÍSTICA: o `use-profiles` sozinho não
+          # grava o profile de forma confiável no target do projeto Capacitor,
+          # causando "App requires a provisioning profile" no archive. Aqui
+          # lemos o profile que o fetch-signing-files BAIXOU (em ~/Library/
+          # MobileDevice/Provisioning Profiles) e passamos o NOME dele +
+          # team + identidade EXPLICITAMENTE ao xcodebuild, sem depender do
+          # pbxproj. Assim o archive manual sempre acha o profile.
+          PROFILE_DIR="$HOME/Library/MobileDevice/Provisioning Profiles"
+          PROFILE_FILE=$(ls -t "$PROFILE_DIR"/*.mobileprovision 2>/dev/null | head -1)
+          echo "Profile encontrado: $PROFILE_FILE"
+          # Extrai o NOME do profile (campo Name do plist dentro do .mobileprovision).
+          PROFILE_NAME=$(security cms -D -i "$PROFILE_FILE" 2>/dev/null | plutil -extract Name raw - 2>/dev/null)
+          echo "Nome do profile: $PROFILE_NAME"
           xcode-project build-ipa \
             --workspace "$XCODE_WORKSPACE" \
-            --scheme "$XCODE_SCHEME"
+            --scheme "$XCODE_SCHEME" \
+            --archive-flags="DEVELOPMENT_TEAM=782BU6WDZ9 CODE_SIGN_STYLE=Manual CODE_SIGN_IDENTITY=\"Apple Distribution\" PROVISIONING_PROFILE_SPECIFIER=\"$PROFILE_NAME\""
 
       - name: Publicar no TestFlight
         script: |
