@@ -126,16 +126,17 @@ workflows:
 
       - name: Compilar e arquivar (.ipa)
         script: |
-          # O projeto gerado pelo Capacitor vem SEM DEVELOPMENT_TEAM, e o
-          # xcodebuild em CODE_SIGN_STYLE=Manual (configurado pelo use-profiles)
-          # exige o team + profile no target, senão: "App requires a
-          # provisioning profile". Passamos o DEVELOPMENT_TEAM da conta Apple
-          # (Team ID 782BU6WDZ9) e o estilo manual via --archive-flags, direto
-          # ao xcodebuild (sem editar o pbxproj).
+          # O target "App" do Capacitor vem com signing vazio, então o
+          # xcodebuild manual não sabia qual profile/team/identidade usar
+          # ("App requires a provisioning profile"). Passamos os 3 parâmetros
+          # de assinatura MANUAL explicitamente ao xcodebuild, pelo nome do
+          # profile criado ("OutVitar App Store"), o Team ID e a identidade de
+          # distribuição. Assim o archive assina sem depender das build
+          # settings do projeto.
           xcode-project build-ipa \
             --workspace "$XCODE_WORKSPACE" \
             --scheme "$XCODE_SCHEME" \
-            --archive-flags="DEVELOPMENT_TEAM=782BU6WDZ9"
+            --archive-flags="DEVELOPMENT_TEAM=782BU6WDZ9 PROVISIONING_PROFILE_SPECIFIER=\"OutVitar App Store\" CODE_SIGN_IDENTITY=\"Apple Distribution\" CODE_SIGN_STYLE=Manual"
 
     artifacts:
       - build/ios/ipa/*.ipa
