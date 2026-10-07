@@ -34,7 +34,9 @@ workflows:
       groups:
         # Grupo de variáveis criado no painel do Codemagic (ver guia).
         - appstore
-      node: 20
+      # Capacitor 8 exige NodeJS >= 22 (com node 20 o `cap sync ios` aborta
+      # com "[fatal] A CLI do Capacitor exige NodeJS >= 22.0.0").
+      node: 22
       xcode: latest
       cocoapods: default
       # SEM `ios_signing` automático: a validação de pré-build do signing
