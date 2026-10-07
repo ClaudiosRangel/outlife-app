@@ -102,13 +102,21 @@ workflows:
 
       - name: Aplicar certificado + provisioning profile
         script: |
-          # Conta Apple LIMPA (certificados de distribuição revogados). Agora
-          # cabe criar 1 certificado novo. Fluxo que compilou e assinou o .ipa
-          # com sucesso (build #23): chave privada RSA + fetch-signing-files
-          # --create (cria certificado + profile COERENTES) + use-profiles
-          # (configura o code signing manual no projeto a partir desses
-          # arquivos). Com a conta limpa, não estoura o limite.
+          # Fluxo que compilou e assinou o .ipa com sucesso (build #23): chave
+          # privada RSA + fetch-signing-files --create (cria certificado +
+          # profile COERENTES) + use-profiles.
           keychain initialize
+          # SALVAGUARDA: revoga TODOS os certificados de distribuição antes de
+          # criar o novo (a cada build o --create gera um; sem revogar, o
+          # limite da conta estoura e a assinatura fica instável). Usa jq
+          # (disponível no macOS do Codemagic) para extrair os IDs do JSON.
+          app-store-connect certificates list --type IOS_DISTRIBUTION --json > /tmp/certs.json 2>/dev/null || echo "[]" > /tmp/certs.json
+          for CID in $(cat /tmp/certs.json | jq -r '.[].id' 2>/dev/null); do
+            echo "Revogando certificado de distribuicao: $CID"
+            app-store-connect certificates delete "$CID" --certificate-key=none 2>/dev/null || app-store-connect certificates delete "$CID" 2>/dev/null || true
+          done
+          # Agora a conta está sem certificados de distribuição: cria 1 novo
+          # coerente (certificado + chave privada + profile).
           CERT_KEY=/tmp/dist_key.pem
           ssh-keygen -t rsa -b 2048 -m PEM -f "$CERT_KEY" -q -N ""
           app-store-connect fetch-signing-files "$BUNDLE_ID" \
