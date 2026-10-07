@@ -125,9 +125,10 @@ workflows:
             --certificate-key=@file:"$CERT_KEY" \
             --create
           keychain add-certificates
-          # use-profiles configura o pbxproj (manual) com o profile recém-criado
-          # e gera o export_options.plist usado pelo build-ipa.
-          xcode-project use-profiles
+          # NÃO usamos use-profiles (forçava Manual e o profile não casava no
+          # target Capacitor). Deixamos a assinatura AUTOMÁTICA do Xcode
+          # resolver o profile no archive (passo seguinte), usando a API key da
+          # integração Apple ASC + o certificado já no keychain.
 
       - name: Definir número de build incremental
         script: |
@@ -136,25 +137,25 @@ workflows:
           cd ios/App
           agvtool new-version -all $(($PROJECT_BUILD_NUMBER + 1)) || true
 
+      - name: Forcar signing automatico no projeto Xcode (pbxproj)
+        script: |
+          # Garante CODE_SIGN_STYLE=Automatic + DEVELOPMENT_TEAM no target App,
+          # para o archive com -allowProvisioningUpdates deixar o Xcode casar o
+          # certificado (keychain) com um profile gerado automaticamente.
+          PBXPROJ="ios/App/App.xcodeproj/project.pbxproj"
+          /usr/bin/sed -i '' 's/CODE_SIGN_STYLE = Manual;/CODE_SIGN_STYLE = Automatic;/g' "$PBXPROJ" || true
+          /usr/bin/sed -i '' 's/PRODUCT_BUNDLE_IDENTIFIER = app.outlife.mobile;/PRODUCT_BUNDLE_IDENTIFIER = app.outlife.mobile;\'$'\n''\t\t\t\tDEVELOPMENT_TEAM = 782BU6WDZ9;\'$'\n''\t\t\t\tCODE_SIGN_STYLE = Automatic;/g' "$PBXPROJ" || true
+
       - name: Compilar e arquivar (.ipa)
         script: |
-          # ASSINATURA MANUAL DETERMINÍSTICA: o `use-profiles` sozinho não
-          # grava o profile de forma confiável no target do projeto Capacitor,
-          # causando "App requires a provisioning profile" no archive. Aqui
-          # lemos o profile que o fetch-signing-files BAIXOU (em ~/Library/
-          # MobileDevice/Provisioning Profiles) e passamos o NOME dele +
-          # team + identidade EXPLICITAMENTE ao xcodebuild, sem depender do
-          # pbxproj. Assim o archive manual sempre acha o profile.
-          PROFILE_DIR="$HOME/Library/MobileDevice/Provisioning Profiles"
-          PROFILE_FILE=$(ls -t "$PROFILE_DIR"/*.mobileprovision 2>/dev/null | head -1)
-          echo "Profile encontrado: $PROFILE_FILE"
-          # Extrai o NOME do profile (campo Name do plist dentro do .mobileprovision).
-          PROFILE_NAME=$(security cms -D -i "$PROFILE_FILE" 2>/dev/null | plutil -extract Name raw - 2>/dev/null)
-          echo "Nome do profile: $PROFILE_NAME"
+          # Assinatura AUTOMÁTICA com -allowProvisioningUpdates: o Xcode usa a
+          # API key da integração Apple ASC (no ambiente) + o certificado no
+          # keychain para gerar/casar o profile na hora do archive. Não depende
+          # de achar o .mobileprovision por caminho (que saía vazio).
           xcode-project build-ipa \
             --workspace "$XCODE_WORKSPACE" \
             --scheme "$XCODE_SCHEME" \
-            --archive-flags="DEVELOPMENT_TEAM=782BU6WDZ9 CODE_SIGN_STYLE=Manual CODE_SIGN_IDENTITY=\"Apple Distribution\" PROVISIONING_PROFILE_SPECIFIER=\"$PROFILE_NAME\""
+            --archive-flags="-allowProvisioningUpdates DEVELOPMENT_TEAM=782BU6WDZ9 CODE_SIGN_STYLE=Automatic"
 
       - name: Publicar no TestFlight
         script: |
