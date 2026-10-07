@@ -102,19 +102,13 @@ workflows:
 
       - name: Aplicar certificado + provisioning profile
         script: |
-          # Fluxo que compilou e assinou o .ipa com sucesso (build #23): gerar
-          # uma chave privada RSA e criar certificado + profile COERENTES
-          # (mesmo par) via fetch-signing-files --create. Para evitar o limite
-          # de certificados da conta Apple (que fazia builds alternarem
-          # sucesso/falha), revogamos os certificados de distribuição antigos
-          # antes de criar o novo.
+          # Conta Apple LIMPA (certificados de distribuição revogados). Agora
+          # cabe criar 1 certificado novo. Fluxo que compilou e assinou o .ipa
+          # com sucesso (build #23): chave privada RSA + fetch-signing-files
+          # --create (cria certificado + profile COERENTES) + use-profiles
+          # (configura o code signing manual no projeto a partir desses
+          # arquivos). Com a conta limpa, não estoura o limite.
           keychain initialize
-          # Revoga certificados de distribuição antigos (evita estourar limite).
-          for CID in $(app-store-connect certificates list --type IOS_DISTRIBUTION --json 2>/dev/null | grep '"id"' | sed 's/.*: *"\([^"]*\)".*/\1/'); do
-            echo "Revogando certificado antigo: $CID"
-            app-store-connect certificates delete "$CID" || true
-          done
-          # Gera chave privada e cria certificado + profile coerentes.
           CERT_KEY=/tmp/dist_key.pem
           ssh-keygen -t rsa -b 2048 -m PEM -f "$CERT_KEY" -q -N ""
           app-store-connect fetch-signing-files "$BUNDLE_ID" \
@@ -122,13 +116,10 @@ workflows:
             --platform IOS \
             --certificate-key=@file:"$CERT_KEY" \
             --create
-          # Instala o certificado (com chave privada) no keychain.
           keychain add-certificates
-          # NÃO rodamos `xcode-project use-profiles` aqui: ele força
-          # CODE_SIGN_STYLE=Manual no archive sem especificar o profile no
-          # target Capacitor, causando "App requires a provisioning profile".
-          # Em vez disso, deixamos a assinatura AUTOMÁTICA do Xcode resolver o
-          # profile no archive (passo seguinte).
+          # use-profiles configura o pbxproj (manual) com o profile recém-criado
+          # e gera o export_options.plist usado pelo build-ipa.
+          xcode-project use-profiles
 
       - name: Definir número de build incremental
         script: |
@@ -137,29 +128,13 @@ workflows:
           cd ios/App
           agvtool new-version -all $(($PROJECT_BUILD_NUMBER + 1)) || true
 
-      - name: Forcar signing automatico no projeto Xcode (pbxproj)
-        script: |
-          # Garante CODE_SIGN_STYLE=Automatic + DEVELOPMENT_TEAM no target App.
-          # Como NÃO rodamos use-profiles, o pbxproj não foi forçado a Manual,
-          # então o archive com -allowProvisioningUpdates deixa o Xcode casar o
-          # certificado (no keychain) com um profile gerado automaticamente.
-          PBXPROJ="ios/App/App.xcodeproj/project.pbxproj"
-          /usr/bin/sed -i '' 's/CODE_SIGN_STYLE = Manual;/CODE_SIGN_STYLE = Automatic;/g' "$PBXPROJ" || true
-          /usr/bin/sed -i '' 's/PRODUCT_BUNDLE_IDENTIFIER = app.outlife.mobile;/PRODUCT_BUNDLE_IDENTIFIER = app.outlife.mobile;\'$'\n''\t\t\t\tDEVELOPMENT_TEAM = 782BU6WDZ9;\'$'\n''\t\t\t\tCODE_SIGN_STYLE = Automatic;/g' "$PBXPROJ" || true
-          echo "----- settings de assinatura no pbxproj -----"
-          grep -n "CODE_SIGN_STYLE\|DEVELOPMENT_TEAM" "$PBXPROJ" || true
-
       - name: Compilar e arquivar (.ipa)
         script: |
-          # Assinatura AUTOMÁTICA com -allowProvisioningUpdates: o Xcode usa a
-          # API key da integração Apple ASC (disponível no ambiente) para
-          # gerar/casar o profile na hora do archive, com o certificado já no
-          # keychain. Forçamos CODE_SIGN_STYLE=Automatic também no comando para
-          # sobrepor qualquer Manual residual.
+          # Com cert+chave no keychain e o profile aplicado pelo use-profiles,
+          # o build-ipa arquiva e assina usando o export_options.plist gerado.
           xcode-project build-ipa \
             --workspace "$XCODE_WORKSPACE" \
-            --scheme "$XCODE_SCHEME" \
-            --archive-flags="-allowProvisioningUpdates DEVELOPMENT_TEAM=782BU6WDZ9 CODE_SIGN_STYLE=Automatic"
+            --scheme "$XCODE_SCHEME"
 
       - name: Publicar no TestFlight
         script: |
