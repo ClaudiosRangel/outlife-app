@@ -65,12 +65,13 @@ workflows:
           CERT_KEY=/tmp/dist_key.pem
           if [ -n "$CERT_PRIVATE_KEY" ]; then
             echo "$CERT_PRIVATE_KEY" > "$CERT_KEY"
-            echo "Usando chave privada persistente da env CERT_PRIVATE_KEY."
+            echo "Usando chave privada persistente da env CERT_PRIVATE_KEY (certificado reutilizado)."
           else
+            # Fallback: gera uma chave nova (só se a env não existir). NÃO
+            # imprime mais a chave no log por segurança — a chave persistente
+            # já está salva na env CERT_PRIVATE_KEY (grupo appstore, Secure).
             ssh-keygen -t rsa -b 2048 -m PEM -f "$CERT_KEY" -q -N ""
-            echo "===== CHAVE PRIVADA GERADA (salve em CERT_PRIVATE_KEY p/ reusar) ====="
-            cat "$CERT_KEY"
-            echo "===== FIM DA CHAVE PRIVADA ====="
+            echo "AVISO: CERT_PRIVATE_KEY nao definida; gerada chave efemera (criara 1 certificado novo)."
           fi
 
           # Busca certificados de distribuição existentes que casem com a chave

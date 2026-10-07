@@ -69,5 +69,10 @@
 		<string>location</string>
 		<string>remote-notification</string>
 	</array>
+	<!-- Export Compliance: o app usa apenas criptografia padrão (HTTPS/TLS),
+	     isenta. Declarar false aqui evita a pergunta de "Export Compliance" no
+	     TestFlight/App Store Connect a cada nova build. -->
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 </dict>
 </plist>
