@@ -39,15 +39,16 @@ workflows:
       node: 22
       xcode: latest
       cocoapods: default
-      # `ios_signing` injeta no build o certificado (.p12 com chave privada) e
-      # o provisioning profile ENVIADOS a Settings → Code signing identities,
-      # que casem com este bundle + tipo. Os comandos keychain/use-profiles
-      # nos scripts então os instalam e aplicam.
-      ios_signing:
-        distribution_type: app_store
-        bundle_identifier: app.outlife.mobile
+      # SEM `ios_signing`: a validação de pré-build dele falha INSTANTANEAMENTE
+      # com "No matching profiles" (ela exige que o profile salvo e o
+      # certificado salvo sejam EXATAMENTE o mesmo par certificado-chave, o que
+      # não conseguimos garantir misturando upload manual + portal). Em vez
+      # disso, geramos tudo coerente DENTRO do build (fetch-signing-files
+      # --create com chave privada), que foi o fluxo que compilou e assinou o
+      # .ipa com sucesso (build #23).
 
-    # Integração "Apple ASC" — usada para o `publishing` (upload ao TestFlight).
+    # Integração "Apple ASC" — usada para fetch-signing-files (signing dentro
+    # do build) e para o upload ao TestFlight.
     integrations:
       app_store_connect: "Apple ASC"
 
@@ -101,14 +102,28 @@ workflows:
 
       - name: Aplicar certificado + provisioning profile
         script: |
-          # ABORDAGEM ESTÁVEL: o certificado de distribuição (.p12, COM a chave
-          # privada) e o provisioning profile foram ENVIADOS uma vez ao
-          # Codemagic em Settings → Code signing identities. O `ios_signing`
-          # (environment) os injeta no build. Aqui instalamos o certificado no
-          # keychain e aplicamos o profile. (Não criamos mais certificado a
-          # cada build — isso estourava o limite da conta e alternava
-          # sucesso/falha.)
+          # Fluxo que compilou e assinou o .ipa com sucesso (build #23): gerar
+          # uma chave privada RSA e criar certificado + profile COERENTES
+          # (mesmo par) via fetch-signing-files --create. Para evitar o limite
+          # de certificados da conta Apple (que fazia builds alternarem
+          # sucesso/falha), revogamos os certificados de distribuição antigos
+          # antes de criar o novo.
           keychain initialize
+          # Revoga certificados de distribuição antigos (evita estourar limite).
+          for CID in $(app-store-connect certificates list --type IOS_DISTRIBUTION --json 2>/dev/null | grep '"id"' | sed 's/.*: *"\([^"]*\)".*/\1/'); do
+            echo "Revogando certificado antigo: $CID"
+            app-store-connect certificates delete "$CID" || true
+          done
+          # Gera chave privada e cria certificado + profile coerentes.
+          CERT_KEY=/tmp/dist_key.pem
+          ssh-keygen -t rsa -b 2048 -m PEM -f "$CERT_KEY" -q -N ""
+          app-store-connect fetch-signing-files "$BUNDLE_ID" \
+            --type IOS_APP_STORE \
+            --platform IOS \
+            --certificate-key=@file:"$CERT_KEY" \
+            --create
+          # Instala o certificado (com chave privada) no keychain e aplica os
+          # profiles ao projeto.
           keychain add-certificates
           xcode-project use-profiles
 
