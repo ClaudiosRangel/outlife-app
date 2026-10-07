@@ -52,6 +52,33 @@
 > (app só HTTPS → "sem criptografia proprietária"); depois convidar testadores.
 > PRÓXIMA MELHORIA (estabilidade/custo): salvar a `CERT_PRIVATE_KEY` no grupo
 > appstore do Codemagic para reusar o certificado e não gastar builds à toa.
+>
+> **ESTADO EM 07/10/2026 (fim da sessão) — ONDE PARAMOS:**
+> - Build **1.0 (41)** está "Pronta para envio" no TestFlight; Export Compliance
+>   respondido (criptografia padrão/HTTPS). `CERT_PRIVATE_KEY` JÁ SALVA no grupo
+>   appstore do Codemagic (Secure) → próximas builds reusam o certificado (não
+>   estoura limite). Commits aplicados: `ITSAppUsesNonExemptEncryption=false` no
+>   `ios/App/App/Info.plist` (não pergunta mais Export Compliance nas PRÓXIMAS
+>   builds — a 41 ainda perguntou) + yaml não imprime mais a chave no log.
+> - FALTA (próxima sessão) para liberar a beta a QUALQUER PESSOA:
+>   1. Criar **grupo EXTERNO** no TestFlight (botão "Criar grupo" no aviso azul
+>      da tela Compilações) → nomear (ex.: "Testadores OutVitar").
+>   2. Associar a build 41 ao grupo + **ativar "Link público"** (gera URL
+>      `testflight.apple.com/join/...` para compartilhar no WhatsApp).
+>   3. Enviar para **Beta App Review** (1a vez do teste externo; review leve).
+>   ⚠️ PRÉ-REQUISITO DO REVIEW: as "Informações de teste" precisam de um LOGIN
+>   DE TESTE válido (o app exige cadastro) — marcar "Início de sessão
+>   obrigatório" e informar e-mail+senha de uma conta real do OutVitar, senão a
+>   Apple REJEITA o Beta Review. CONFIRMAR/preencher isso antes de enviar.
+> - Alternativa imediata (sem review): TESTE INTERNO (menu lateral "TESTES
+>   INTERNOS" +) para você + admins (precisam ser usuários da conta em Usuários
+>   e Acesso); recebem na hora.
+> - DADOS ÚTEIS p/ retomar: Apple ID do app 6819832049, Team 782BU6WDZ9, App ID
+>   `app.outlife.mobile` (94Y6R7P2VL), e-mail da conta Apple outvitar@gmail.com,
+>   e-mail de feedback/contato avidanaoesotrilhar@gmail.com. O `codemagic.yaml`
+>   (branch main) está estável: `npm ci` → `build:native` → `cap sync ios` →
+>   `pod install` → fetch-signing-files (reusa cert via CERT_PRIVATE_KEY) →
+>   use-profiles → build-ipa → publish com `--altool-additional-arguments`.
 
 > **🍎 PUBLICAÇÃO iOS — PROJETO + PIPELINE PRONTOS (06/10/2026):**
 > Decisão: subir a beta para a **App Store (TestFlight)** AGORA, como está
