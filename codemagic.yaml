@@ -126,9 +126,16 @@ workflows:
 
       - name: Compilar e arquivar (.ipa)
         script: |
+          # O projeto gerado pelo Capacitor vem SEM DEVELOPMENT_TEAM, e o
+          # xcodebuild em CODE_SIGN_STYLE=Manual (configurado pelo use-profiles)
+          # exige o team + profile no target, senão: "App requires a
+          # provisioning profile". Passamos o DEVELOPMENT_TEAM da conta Apple
+          # (Team ID 782BU6WDZ9) e o estilo manual via --archive-flags, direto
+          # ao xcodebuild (sem editar o pbxproj).
           xcode-project build-ipa \
             --workspace "$XCODE_WORKSPACE" \
-            --scheme "$XCODE_SCHEME"
+            --scheme "$XCODE_SCHEME" \
+            --archive-flags="DEVELOPMENT_TEAM=782BU6WDZ9"
 
     artifacts:
       - build/ios/ipa/*.ipa
