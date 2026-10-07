@@ -39,14 +39,15 @@ workflows:
       node: 22
       xcode: latest
       cocoapods: default
-      # SEM `ios_signing` automático: a validação de pré-build do signing
-      # automático falhava INSTANTANEAMENTE com "No matching profiles" mesmo
-      # com certificado + profile salvos e corretos. Em vez disso, baixamos o
-      # certificado e o profile via API DENTRO do script (fetch-signing-files),
-      # instalamos no keychain e aplicamos — pulando a validação de pré-build.
+      # `ios_signing` injeta no build o certificado (.p12 com chave privada) e
+      # o provisioning profile ENVIADOS a Settings → Code signing identities,
+      # que casem com este bundle + tipo. Os comandos keychain/use-profiles
+      # nos scripts então os instalam e aplicam.
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: app.outlife.mobile
 
-    # Integração "Apple ASC" — usada para fetch-signing-files (signing) e para
-    # o `publishing` (upload ao TestFlight via `auth: integration`).
+    # Integração "Apple ASC" — usada para o `publishing` (upload ao TestFlight).
     integrations:
       app_store_connect: "Apple ASC"
 
@@ -100,28 +101,14 @@ workflows:
 
       - name: Aplicar certificado + provisioning profile
         script: |
-          # CAUSA RAIZ (revelada pelo DIAGNOSTICO): o build NÃO tem a CHAVE
-          # PRIVADA de nenhum certificado de distribuição ("Cannot save Signing
-          # Certificates without certificate private key"). Sem a chave privada
-          # no keychain, nenhum profile casa e o archive falha.
-          #
-          # Solução (fluxo oficial Codemagic): gerar uma chave privada RSA e
-          # passá-la ao fetch-signing-files com --create. Isso cria um
-          # certificado de distribuição VINCULADO a essa chave privada (que
-          # fica no keychain) + baixa/cria o profile de App Store, deixando o
-          # par certificado+chave+profile completo para o archive assinar.
+          # ABORDAGEM ESTÁVEL: o certificado de distribuição (.p12, COM a chave
+          # privada) e o provisioning profile foram ENVIADOS uma vez ao
+          # Codemagic em Settings → Code signing identities. O `ios_signing`
+          # (environment) os injeta no build. Aqui instalamos o certificado no
+          # keychain e aplicamos o profile. (Não criamos mais certificado a
+          # cada build — isso estourava o limite da conta e alternava
+          # sucesso/falha.)
           keychain initialize
-          CERT_KEY=/tmp/dist_key.pem
-          ssh-keygen -t rsa -b 2048 -m PEM -f "$CERT_KEY" -q -N ""
-          # Cria (ou reutiliza) o certificado de distribuição COM a chave
-          # privada e o profile de App Store para o bundle, tudo de uma vez.
-          app-store-connect fetch-signing-files "$BUNDLE_ID" \
-            --type IOS_APP_STORE \
-            --platform IOS \
-            --certificate-key=@file:"$CERT_KEY" \
-            --create
-          # Instala o certificado (com chave privada) no keychain e aplica os
-          # profiles baixados ao projeto Xcode.
           keychain add-certificates
           xcode-project use-profiles
 
