@@ -1,66 +1,34 @@
 # Codemagic CI/CD — build iOS do OutVitar na nuvem (sem precisar de Mac).
 #
-# Este pipeline compila o app iOS (Capacitor) num macOS da nuvem do Codemagic
-# e envia a build para o TestFlight (beta fechada). O tier gratuito do
-# Codemagic oferece 500 minutos/mês de build em macOS M-series — suficiente
-# para várias builds de beta.
-#
-# PRÉ-REQUISITOS no painel do Codemagic (ver docs/GUIA-PUBLICACAO-IOS-APPLE.md):
-#   1. Conectar este repositório Git ao Codemagic.
-#   2. Integração "App Store Connect" configurada (API key da Apple) — o
-#      Codemagic cuida de certificados/perfis via "Automatic code signing".
-#   3. Variáveis de ambiente no grupo "appstore" (ver abaixo).
-#
-# A assinatura (certificados/provisioning) é gerenciada pelo Codemagic via
-# App Store Connect API key — você NÃO precisa gerar certificados à mão.
+# Compila o app iOS (Capacitor) num macOS da nuvem do Codemagic e envia para o
+# TestFlight (beta). Assinatura via App Store Connect API key (integração
+# "Apple ASC"), REUTILIZANDO o certificado de distribuição existente em vez de
+# criar um novo a cada build (o que estourava o limite da conta Apple).
 
 workflows:
   ios-testflight:
     name: OutVitar iOS — TestFlight
-    # Máquina macOS na nuvem (grátis no tier free; M-series).
     instance_type: mac_mini_m2
     max_build_duration: 60
     environment:
       vars:
-        # Bundle id do app na Apple. DEVE bater com o App ID criado no
-        # Apple Developer e com o appId do capacitor.config.ts.
         BUNDLE_ID: "app.outlife.mobile"
         XCODE_WORKSPACE: "ios/App/App.xcworkspace"
         XCODE_SCHEME: "App"
-        # App Store Connect App ID (número da ficha do app em
-        # App Store Connect → App Information → "Apple ID"). Preencher no
-        # grupo de variáveis "appstore" do Codemagic.
-        APP_STORE_APPLE_ID: $APP_STORE_APPLE_ID
-      groups:
-        # Grupo de variáveis criado no painel do Codemagic (ver guia).
-        - appstore
-      # Capacitor 8 exige NodeJS >= 22 (com node 20 o `cap sync ios` aborta
-      # com "[fatal] A CLI do Capacitor exige NodeJS >= 22.0.0").
+        APP_STORE_APPLE_ID: "6819832049"
+        TEAM_ID: "782BU6WDZ9"
+      # Capacitor 8 exige NodeJS >= 22.
       node: 22
       xcode: latest
       cocoapods: default
-      # SEM `ios_signing`: a validação de pré-build dele falha INSTANTANEAMENTE
-      # com "No matching profiles" (ela exige que o profile salvo e o
-      # certificado salvo sejam EXATAMENTE o mesmo par certificado-chave, o que
-      # não conseguimos garantir misturando upload manual + portal). Em vez
-      # disso, geramos tudo coerente DENTRO do build (fetch-signing-files
-      # --create com chave privada), que foi o fluxo que compilou e assinou o
-      # .ipa com sucesso (build #23).
 
-    # Integração "Apple ASC" — usada para fetch-signing-files (signing dentro
-    # do build) e para o upload ao TestFlight.
+    # Integração "Apple ASC" (App Store Connect API key) — usada para a
+    # assinatura e o upload.
     integrations:
       app_store_connect: "Apple ASC"
 
     triggering:
-      # Build manual (clicar "Start new build" no painel). Para disparo
-      # automático por push, descomentar o bloco events/branch abaixo.
       events: []
-      # events:
-      #   - push
-      # branch_patterns:
-      #   - pattern: main
-      #     include: true
 
     scripts:
       - name: Instalar dependências JS
@@ -73,9 +41,6 @@ workflows:
 
       - name: Garantir plataforma iOS e sincronizar Capacitor
         script: |
-          # A pasta ios/ já é versionada (CocoaPods). Só recria se faltar,
-          # SEMPRE com --packagemanager CocoaPods (o plugin de location só tem
-          # .podspec; com SPM o rastreamento ficaria de fora do build).
           if [ ! -d "ios/App" ]; then
             npx cap add ios --packagemanager CocoaPods
           fi
@@ -86,86 +51,57 @@ workflows:
           cd ios/App
           pod install
 
-      - name: DIAGNOSTICO - listar certificados e profiles visiveis
+      - name: Preparar assinatura (reutiliza certificado existente)
         script: |
-          # Passo de diagnóstico: imprime no log tudo que a API Apple enxerga
-          # para esta conta (certificados, bundle ids, profiles). Serve para
-          # entender por que "No matching profiles". A saída deste passo é o
-          # que precisamos ler. (Não falha o build: tudo com || true.)
-          echo "===== BUNDLE IDS NA CONTA ====="
-          app-store-connect bundle-ids list || true
-          echo "===== CERTIFICADOS DE DISTRIBUICAO ====="
-          app-store-connect certificates list --type IOS_DISTRIBUTION || true
-          echo "===== PROFILES ====="
-          app-store-connect profiles list || true
-          echo "===== FIM DIAGNOSTICO ====="
-
-      - name: Aplicar certificado + provisioning profile
-        script: |
-          # Fluxo que compilou e assinou o .ipa com sucesso (build #23): chave
-          # privada RSA + fetch-signing-files --create (cria certificado +
-          # profile COERENTES) + use-profiles.
+          # Inicializa o keychain do build.
           keychain initialize
-          # SALVAGUARDA: revoga TODOS os certificados de distribuição antes de
-          # criar o novo (a cada build o --create gera um; sem revogar, o
-          # limite da conta estoura e a assinatura fica instável). Usa jq
-          # (disponível no macOS do Codemagic) para extrair os IDs do JSON.
-          app-store-connect certificates list --type IOS_DISTRIBUTION --json > /tmp/certs.json 2>/dev/null || echo "[]" > /tmp/certs.json
-          for CID in $(cat /tmp/certs.json | jq -r '.[].id' 2>/dev/null); do
-            echo "Revogando certificado de distribuicao: $CID"
-            app-store-connect certificates delete "$CID" --certificate-key=none 2>/dev/null || app-store-connect certificates delete "$CID" 2>/dev/null || true
-          done
-          # Agora a conta está sem certificados de distribuição: cria 1 novo
-          # coerente (certificado + chave privada + profile).
+
+          # CHAVE PRIVADA PERSISTENTE: para o certificado de distribuição ser
+          # REUTILIZÁVEL entre builds (sem criar um novo e estourar o limite da
+          # conta), usamos uma chave privada FIXA, salva como variável de
+          # ambiente CERT_PRIVATE_KEY no grupo "appstore" (ou geramos uma na
+          # primeira vez). Se a env não existir, geramos e seguimos (criará 1
+          # certificado nesta build; nas próximas, defina a env para reusar).
           CERT_KEY=/tmp/dist_key.pem
-          ssh-keygen -t rsa -b 2048 -m PEM -f "$CERT_KEY" -q -N ""
+          if [ -n "$CERT_PRIVATE_KEY" ]; then
+            echo "$CERT_PRIVATE_KEY" > "$CERT_KEY"
+            echo "Usando chave privada persistente da env CERT_PRIVATE_KEY."
+          else
+            ssh-keygen -t rsa -b 2048 -m PEM -f "$CERT_KEY" -q -N ""
+            echo "===== CHAVE PRIVADA GERADA (salve em CERT_PRIVATE_KEY p/ reusar) ====="
+            cat "$CERT_KEY"
+            echo "===== FIM DA CHAVE PRIVADA ====="
+          fi
+
+          # Busca certificados de distribuição existentes que casem com a chave
+          # privada; se não houver nenhum compatível, cria UM (só na 1a vez).
+          # fetch-signing-files reutiliza o certificado existente quando a chave
+          # privada corresponde — não estoura limite nas próximas builds.
           app-store-connect fetch-signing-files "$BUNDLE_ID" \
             --type IOS_APP_STORE \
             --platform IOS \
             --certificate-key=@file:"$CERT_KEY" \
             --create
+
+          # Instala certificados no keychain e aplica os profiles ao projeto.
           keychain add-certificates
-          # NÃO usamos use-profiles (forçava Manual e o profile não casava no
-          # target Capacitor). Deixamos a assinatura AUTOMÁTICA do Xcode
-          # resolver o profile no archive (passo seguinte), usando a API key da
-          # integração Apple ASC + o certificado já no keychain.
+          xcode-project use-profiles
 
       - name: Definir número de build incremental
         script: |
-          # Usa o número de build do Codemagic como CFBundleVersion, para
-          # cada envio ao TestFlight ter um build number único e crescente.
           cd ios/App
           agvtool new-version -all $(($PROJECT_BUILD_NUMBER + 1)) || true
 
-      - name: Forcar signing automatico no projeto Xcode (pbxproj)
-        script: |
-          # Garante CODE_SIGN_STYLE=Automatic + DEVELOPMENT_TEAM no target App,
-          # para o archive com -allowProvisioningUpdates deixar o Xcode casar o
-          # certificado (keychain) com um profile gerado automaticamente.
-          PBXPROJ="ios/App/App.xcodeproj/project.pbxproj"
-          /usr/bin/sed -i '' 's/CODE_SIGN_STYLE = Manual;/CODE_SIGN_STYLE = Automatic;/g' "$PBXPROJ" || true
-          /usr/bin/sed -i '' 's/PRODUCT_BUNDLE_IDENTIFIER = app.outlife.mobile;/PRODUCT_BUNDLE_IDENTIFIER = app.outlife.mobile;\'$'\n''\t\t\t\tDEVELOPMENT_TEAM = 782BU6WDZ9;\'$'\n''\t\t\t\tCODE_SIGN_STYLE = Automatic;/g' "$PBXPROJ" || true
-
       - name: Compilar e arquivar (.ipa)
         script: |
-          # Assinatura AUTOMÁTICA com -allowProvisioningUpdates: o Xcode usa a
-          # API key da integração Apple ASC (no ambiente) + o certificado no
-          # keychain para gerar/casar o profile na hora do archive. Não depende
-          # de achar o .mobileprovision por caminho (que saía vazio).
           xcode-project build-ipa \
             --workspace "$XCODE_WORKSPACE" \
-            --scheme "$XCODE_SCHEME" \
-            --archive-flags="-allowProvisioningUpdates DEVELOPMENT_TEAM=782BU6WDZ9 CODE_SIGN_STYLE=Automatic"
+            --scheme "$XCODE_SCHEME"
 
       - name: Publicar no TestFlight
         script: |
-          # BUG CONHECIDO do altool no Xcode 26 (confirmado na doc Codemagic):
-          # para contas com MÚLTIPLOS PROVIDERS, o altool novo não determina o
-          # app pelo bundle. Erro: "Cannot determine the Apple ID from Bundle
-          # ID" (19). O --apple-id do `publish` NÃO é repassado ao altool; é
-          # preciso passá-lo (e o --asc-provider) via a flag correta e
-          # documentada --altool-additional-arguments, que injeta os args
-          # diretamente no `xcrun altool` (provider = Team ID 782BU6WDZ9).
+          # Upload passando Apple ID + asc-provider ao altool (bug Xcode 26
+          # multi-provider: altool não acha o app pelo bundle sem o provider).
           APP_IPA=$(find build/ios/ipa -name "*.ipa" | head -1)
           echo "Enviando $APP_IPA para o App Store Connect..."
           app-store-connect publish \
