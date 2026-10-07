@@ -37,18 +37,19 @@ workflows:
       node: 20
       xcode: latest
       cocoapods: default
-      # Assinatura automática: o Codemagic gera/baixa certificado + perfil de
-      # distribuição usando a integração referenciada em `integrations` (nível
-      # do workflow, logo abaixo de environment).
+      # `ios_signing` com distribution_type + bundle_identifier faz o Codemagic
+      # BUSCAR os arquivos de assinatura JÁ SALVOS em Settings → Code signing
+      # identities que casem com esse bundle + tipo (certificado "OutVitar
+      # Dist." + profile "OutVitar App Store", já salvos e vinculados). Como os
+      # arquivos existem salvos, o Codemagic os usa (não tenta criar via API).
+      # Doc: "To fetch all uploaded signing files matching a distribution type
+      # and bundle identifier, define distribution_type and bundle_identifier."
       ios_signing:
         distribution_type: app_store
         bundle_identifier: app.outlife.mobile
 
-    # Referência à integração "Apple Developer Portal" criada no painel do
-    # Codemagic (Settings → Integrations → Developer Portal). O NOME abaixo
-    # DEVE ser exatamente o nome dado à integração no painel ("Apple ASC").
-    # Fica no nível do workflow (irmão de environment/scripts), NÃO dentro de
-    # environment.
+    # Integração "Apple ASC" — necessária para o `publishing` (upload ao
+    # TestFlight via `auth: integration`).
     integrations:
       app_store_connect: "Apple ASC"
 

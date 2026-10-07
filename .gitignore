@@ -12,6 +12,14 @@ firebase-service-account.json
 android/app/google-services.json
 firebase-service-account.json
 
+# Chaves privadas Apple / certificados (NUNCA commitar — dão acesso à conta Apple)
+*.p8
+*.p12
+*.mobileprovision
+*.cer
+AuthKey_*.p8
+GoogleService-Info.plist
+
 # Build artifacts do plugin nativo
 native/capacitor-location-tracking/android/build/
 native/capacitor-location-tracking/dist/

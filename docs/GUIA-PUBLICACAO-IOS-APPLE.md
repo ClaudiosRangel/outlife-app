@@ -153,7 +153,7 @@ Há **duas grandes etapas**:
 |------|-----------|-------|
 | Team ID | developer.apple.com (topo direito) | ____________ |
 | Bundle ID | definido | `app.outlife.mobile` |
-| App Store Apple ID | App Store Connect → App Information | ____________ |
+| App Store Apple ID | App Store Connect → App Information | `6819832049` |
 | APNs Key ID + `.p8` | Apple Developer → Keys | ____________ |
 | ASC API Issuer ID | App Store Connect → Integrations | `e45d1c39-db3e-44f3-bb46-a453ba96b929` |
 | ASC API Key ID + `.p8` | App Store Connect → Integrations | Key ID `RV5FCS265S` (nome "Codemagic", App Manager) + arquivo `.p8` baixado |
