@@ -143,17 +143,20 @@ workflows:
             --scheme "$XCODE_SCHEME" \
             --archive-flags="DEVELOPMENT_TEAM=782BU6WDZ9"
 
+      - name: Publicar no TestFlight
+        script: |
+          # O `publishing.app_store_connect` automático falhou com "Cannot
+          # determine the Apple ID from Bundle ID" — ele não resolveu qual app
+          # do App Store Connect corresponde ao bundle. Fazemos o upload
+          # explicitamente passando o Apple ID do app (6819832049, via
+          # $APP_STORE_APPLE_ID) para o altool não precisar adivinhar.
+          APP_IPA=$(find build/ios/ipa -name "*.ipa" | head -1)
+          echo "Enviando $APP_IPA para o App Store Connect (Apple ID $APP_STORE_APPLE_ID)..."
+          app-store-connect publish \
+            --path "$APP_IPA" \
+            --apple-id "$APP_STORE_APPLE_ID" \
+            --testflight
+
     artifacts:
       - build/ios/ipa/*.ipa
       - /tmp/xcodebuild_logs/*.log
-
-    publishing:
-      app_store_connect:
-        # Usa a API key da integração "App Store Connect" do Codemagic.
-        auth: integration
-        # Envia para o TestFlight (beta). NÃO submete para review da App Store
-        # automaticamente — você promove manualmente quando quiser.
-        submit_to_testflight: true
-        # Opcional: distribuir para grupos de teste específicos no TestFlight.
-        # beta_groups:
-        #   - "Testadores OutVitar"
