@@ -11,6 +11,19 @@ workflows:
     instance_type: mac_mini_m2
     max_build_duration: 60
     environment:
+      # Grupo de variáveis seguras cadastrado no painel do Codemagic
+      # (Settings → Environment variables → grupo "appstore"). Contém:
+      #   - CERT_PRIVATE_KEY           (chave privada persistente do certificado)
+      #   - VITE_SUPABASE_URL          (ex.: https://xxxx.supabase.co)
+      #   - VITE_SUPABASE_PUBLISHABLE_KEY
+      #   - VITE_SUPABASE_PROJECT_ID
+      #   - VITE_MAPBOX_TOKEN          (pk. público do Mapbox)
+      #   - VITE_SENTRY_DSN            (opcional)
+      # Essas VITE_* precisam existir no ambiente ANTES do `npm run build:native`,
+      # pois o Vite as embute no bundle em BUILD TIME. Sem elas, o app abre e
+      # mostra "Algo deu errado" (o cliente Supabase lança erro de env ausente).
+      groups:
+        - appstore
       vars:
         BUNDLE_ID: "app.outlife.mobile"
         XCODE_WORKSPACE: "ios/App/App.xcworkspace"
@@ -37,6 +50,14 @@ workflows:
 
       - name: Build web nativo (dist/native-spa)
         script: |
+          # As variáveis VITE_* precisam estar presentes AQUI (build time do
+          # Vite). Falha cedo com mensagem clara se faltarem — melhor errar no
+          # CI do que entregar um .ipa que abre em "Algo deu errado".
+          if [ -z "$VITE_SUPABASE_URL" ] || [ -z "$VITE_SUPABASE_PUBLISHABLE_KEY" ]; then
+            echo "ERRO: VITE_SUPABASE_URL e/ou VITE_SUPABASE_PUBLISHABLE_KEY ausentes."
+            echo "Cadastre-as no grupo de variáveis 'appstore' no painel do Codemagic."
+            exit 1
+          fi
           npm run build:native
 
       - name: Garantir plataforma iOS e sincronizar Capacitor

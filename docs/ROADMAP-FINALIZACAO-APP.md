@@ -5,7 +5,64 @@
 > `.kiro/steering/roadmap-outvitar.md`). **Mantenha-o atualizado** ao
 > concluir qualquer tarefa/bloco: marque status, data e resumo.
 
-**Última atualização:** 07/10/2026 (🎉 OutVitar NO TESTFLIGHT — build iOS enviada, processada e VÁLIDA na App Store Connect via Codemagic)
+**Última atualização:** 08/10/2026 (🐛 build 41 APROVADA no TestFlight mas abre em "Algo deu errado" — causa raiz: faltam VITE_SUPABASE_* no build do Codemagic; codemagic.yaml corrigido, falta cadastrar as envs no painel e rebuildar p/ build 42)
+
+> **🐛 BUG DE RUNTIME NA BETA — "Algo deu errado" (08/10/2026):**
+> A build **1.0 (41)** foi **APROVADA** no TestFlight e instala, mas ao abrir
+> mostra a tela de erro genérica "Algo deu errado / Ocorreu um erro inesperado"
+> (error boundary em `src/routes/__root.tsx`).
+> CAUSA RAIZ (confirmada no código): o `codemagic.yaml` rodava `npm run
+> build:native` SEM definir `VITE_SUPABASE_URL`/`VITE_SUPABASE_PUBLISHABLE_KEY`.
+> O Vite embute `import.meta.env.VITE_*` em BUILD TIME; como o `.env` é
+> gitignored (não sobe pro Codemagic) e o yaml não tinha essas vars, elas
+> ficaram `undefined` no bundle. O cliente Supabase
+> (`src/integrations/supabase/client.ts`) faz `throw new Error('Missing
+> Supabase environment variable(s)...')` na 1ª vez que é tocado (o AuthProvider
+> toca logo no boot) → cai no error boundary. Bate com o sintoma (erro já na
+> abertura, antes de login).
+> CORREÇÃO FEITA no `codemagic.yaml`: (1) `environment.groups: [appstore]`
+> declarado; (2) guard no passo de build que falha cedo se as VITE_* faltarem.
+> FALTA O USUÁRIO FAZER (painel Codemagic, grupo "appstore", Secure):
+> cadastrar `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`,
+> `VITE_SUPABASE_PROJECT_ID`, `VITE_MAPBOX_TOKEN`, `VITE_SENTRY_DSN` (valores no
+> `.env` local). NÃO cadastrar secrets de servidor (SERVICE_ROLE_KEY, DB_URL,
+> RESEND_API_KEY) — não vão pro bundle do app. Depois: rebuild → build 42 →
+> testar pelo mesmo link TestFlight.
+> SEGURANÇA: o `.env` local tem secrets expostos em chat; rotacionar
+> SUPABASE_SERVICE_ROLE_KEY e RESEND_API_KEY quando a beta terminar.
+
+> **✅ ENVIADO AO BETA APP REVIEW (07/10/2026):**
+> A build **1.0 (41)** foi enviada para revisão de beta externo e está com
+> status **"Aguardando revisão"** no grupo externo "Testadores OutVitar". O que
+> ficou pronto nesta etapa:
+> - **Grupo EXTERNO** "Testadores OutVitar" criado (o primeiro criado foi
+>   interno por engano; o externo é o que permite link público + qualquer
+>   pessoa). Build 41 adicionada ao grupo.
+
+> **✅ ENVIADO AO BETA APP REVIEW (07/10/2026):**
+> A build **1.0 (41)** foi enviada para revisão de beta externo e está com
+> status **"Aguardando revisão"** no grupo externo "Testadores OutVitar". O que
+> ficou pronto nesta etapa:
+> - **Grupo EXTERNO** "Testadores OutVitar" criado (o primeiro criado foi
+>   interno por engano; o externo é o que permite link público + qualquer
+>   pessoa). Build 41 adicionada ao grupo.
+> - **Informações de teste** preenchidas: e-mail de comentários, URL de
+>   marketing, URL de política de privacidade (avidanaoesotrilhar.com.br),
+>   contato de review (Rafael Vieira), notas para a equipe de revisão.
+> - **Login de teste (CRÍTICO)**: "Início de sessão obrigatório" marcado +
+>   `claudiosilvarangel1974@gmail.com` / `987123` (conta real do app). ATENÇÃO:
+>   houve divergência inicial (`...1974@` vs `...@`); o CORRETO é **com 1974**.
+>   Senha a trocar quando a beta terminar (foi compartilhada em chat).
+> - Notas de review mencionam o uso de **GPS/localização em segundo plano**
+>   (adianta o questionamento típico da Apple sobre background location).
+> **LINK PÚBLICO JÁ CRIADO**: `https://testflight.apple.com/join/NV29MJZH`
+> (aberto para todos, limite 500 testers). O link EXISTE mas o TestFlight avisa
+> que "os testers não podem entrar por um link público até que este grupo tenha
+> uma versão aprovada" — ou seja, só instala após a Apple aprovar o Beta Review.
+> FALTA: (1) Apple aprovar o Beta Review (~horas a 24-48h; chega e-mail quando
+> mudar de status); (2) após aprovado, compartilhar o link acima no WhatsApp.
+> Se a Apple REJEITAR, o motivo vem no e-mail/painel — provavelmente algo nas
+> notas de review ou nas permissões de localização em segundo plano.
 
 > **🎉 PUBLICAÇÃO iOS — BUILD NO TESTFLIGHT (07/10/2026):**
 > Após ~40 builds no Codemagic depurando a cadeia de assinatura, o `.ipa` do
