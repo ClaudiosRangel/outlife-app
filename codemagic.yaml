@@ -40,8 +40,20 @@ workflows:
     integrations:
       app_store_connect: "Apple ASC"
 
+    # Build AUTOMÁTICO a cada push na branch `main` (antes era manual —
+    # `events: []`). O webhook do repositório precisa estar conectado no painel
+    # do Codemagic (já está, pois o app está cadastrado lá); com `events: [push]`
+    # o Codemagic passa a disparar o workflow sozinho quando houver push na
+    # `main`. O número de build continua incrementando no passo `agvtool`.
+    # Para disparar manualmente mesmo assim, o botão "Start new build" segue
+    # funcionando.
     triggering:
-      events: []
+      events:
+        - push
+      branch_patterns:
+        - pattern: main
+          include: true
+          source: true
 
     scripts:
       - name: Instalar dependências JS
