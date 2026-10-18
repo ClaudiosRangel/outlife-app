@@ -38,10 +38,14 @@
 > build" continua funcionando para disparo manual. O nº de build segue
 > incrementando (`agvtool`). ⇒ A partir de agora, todo push na `main` gera um
 > build novo no TestFlight automaticamente.
-> OBS: o próprio push que habilitou o trigger já deve ter disparado o **build 42**
-> (que carrega a correção do Moving_Time + os 2 fixes que a 41 não tinha).
-> FALTA DO USUÁRIO: no TestFlight, quando o 42 processar, adicioná-lo ao grupo
-> externo "Testadores OutVitar" (link `https://testflight.apple.com/join/NV29MJZH`).
+> OBS: o push que habilitou o trigger disparou o build no Codemagic (Index 45,
+> App.ipa **#46**, finished 5m20s, commit `ac2de3e`).
+> ✅ CONCLUÍDO: a build **1.0 (46)** processou, foi **Aprovada** e está
+> **"Em testes"** no grupo externo "Testadores OutVitar" (3 testers). Entrou sem
+> novo Beta Review (a 41 já tinha sido aprovada antes). Testadores atualizam
+> pelo app TestFlight / link `https://testflight.apple.com/join/NV29MJZH`.
+> A 46 carrega a correção do Moving_Time + os 2 fixes que a 41 não tinha
+> (VITE_* "Algo deu errado" + use-profiles exit 65).
 
 
 > **🐛 RASTREAMENTO — REGISTROS INCOERENTES CORRIGIDOS (18/10/2026, commit `a2c1e98` na `main`):**
