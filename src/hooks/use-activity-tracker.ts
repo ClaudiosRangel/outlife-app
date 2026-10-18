@@ -21,7 +21,7 @@ import {
   pushElevationSample,
   type ElevationGainState,
 } from "@/lib/elevation-gain";
-import { elapsedFromPoints, elapsedTotalSeconds } from "@/lib/activity-duration";
+import { elapsedTotalSeconds, movingTimeSeconds } from "@/lib/activity-duration";
 import {
   loadActive,
   saveActive,
@@ -306,8 +306,10 @@ export function useActivityTracker() {
 
   // Restauração automática: ao montar o componente, se há atividade salva
   // ("tracking"/"paused"), restaura e retoma automaticamente sem pausar.
-  // O GPS nativo continua em segundo plano; o tempo decorrido enquanto
-  // esteve fora da tela é calculado a partir de `updatedAt`.
+  // O GPS nativo continua em segundo plano. O Moving_Time (duration) é
+  // restaurado EXATAMENTE como persistido (não soma tempo de relógio — ver
+  // comentário dentro do efeito); o tempo total fora da tela é refletido no
+  // Tempo Total (Elapsed_Time), derivado de `startedAt`→agora.
   useEffect(() => {
     if (restoredRef.current) return;
     restoredRef.current = true;
@@ -319,10 +321,19 @@ export function useActivityTracker() {
         return;
       }
       if (p.status === "tracking" || p.status === "paused") {
-        const elapsedSinceLastSave = Math.floor((Date.now() - (p.updatedAt || Date.now())) / 1000);
-        const restoredDuration = p.status === "tracking"
-          ? p.duration + Math.max(0, elapsedSinceLastSave)
-          : p.duration;
+        // BUG CORRIGIDO (registros incoerentes — ex.: 7h "em movimento" para
+        // 1,87 km, velocidade média 0,3 km/h): o Moving_Time (duration) NÃO
+        // pode crescer com tempo de RELÓGIO na restauração. Antes somávamos
+        // `Date.now() - updatedAt` ao `duration` quando o status salvo era
+        // "tracking"; se o app ficou horas em 2º plano/aberto parado sem
+        // movimento real, o Moving_Time inflava até quase o Tempo Total,
+        // destruindo a velocidade média e o ritmo. O tempo decorrido fora da
+        // tela pertence ao Tempo Total (Elapsed_Time, derivado de
+        // `startedAt`→agora em `elapsedTotalSeconds`), nunca ao Moving_Time.
+        // O Moving_Time só avança via `setInterval` enquanto há movimento (o
+        // auto-pause para o timer na inatividade). Logo, restauramos o
+        // `duration` persistido EXATAMENTE como estava, sem somar relógio.
+        const restoredDuration = p.duration;
 
         // Recupera o ganho de elevação persistido. O campo é opcional em
         // registros antigos (retrocompat) e ainda pode não existir no tipo
@@ -514,17 +525,15 @@ export function useActivityTracker() {
             coordinates: pointsRef.current.map((p) => [p.lng, p.lat]),
           }
         : null;
-    // Duração final: usa o MAIOR entre o contador do timer e o tempo real
-    // entre o 1º e o último ponto GPS. Corrige o caso em que o app ficou em
-    // segundo plano (timer suspenso) e a distância acumulou sem o tempo —
-    // antes isso inflava a velocidade média (ex.: 47 km/h numa pedalada).
-    const durationFinal = Math.max(durationRef.current, elapsedFromPoints(pointsRef.current));
     // Tempo Total (Elapsed_Time): relógio do início ao fim, contando paradas.
-    // Sempre >= Moving_Time (Math.max) — invariante do spec.
-    const elapsedFinal = Math.max(
-      elapsedTotalSeconds(startedAtRef.current, Date.now(), pointsRef.current),
-      durationFinal,
-    );
+    // É a fonte de verdade do tempo decorrido, imune à suspensão do timer.
+    const elapsedFinal = elapsedTotalSeconds(startedAtRef.current, Date.now(), pointsRef.current);
+    // Moving_Time (duration): tempo em MOVIMENTO, SEMPRE <= Tempo Total.
+    // `movingTimeSeconds` concentra a invariante (ver activity-duration.ts):
+    // maior entre o timer e o span dos pontos, limitado pelo Tempo Total —
+    // defesa final contra Moving_Time inflado (dados restaurados de versão
+    // anterior que somava relógio), que gerava velocidade/ritmo incoerentes.
+    const durationFinal = movingTimeSeconds(durationRef.current, pointsRef.current, elapsedFinal);
     return {
       route,
       distance: distanceRef.current,

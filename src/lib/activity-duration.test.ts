@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import fc from "fast-check";
-import { elapsedFromPoints, elapsedTotalSeconds } from "@/lib/activity-duration";
+import { elapsedFromPoints, elapsedTotalSeconds, movingTimeSeconds } from "@/lib/activity-duration";
 
 describe("elapsedFromPoints", () => {
   it("retorna 0 para vazio ou 1 ponto", () => {
@@ -86,6 +86,49 @@ describe("elapsedTotalSeconds", () => {
           const end = startedAt + deltaSec * 1000;
           // sem pontos → o total é exatamente o relógio
           return elapsedTotalSeconds(startedAt, end, []) === deltaSec;
+        },
+      ),
+    );
+  });
+});
+
+describe("movingTimeSeconds", () => {
+  it("reproduz o bug real corrigido: Moving_Time nunca excede o Tempo Total", () => {
+    // Cenário do print incoerente: timer inflado em ~7h (relógio somado na
+    // restauração), mas o trajeto real (span dos pontos) foi curto.
+    // Tempo total real = 7h06 (25617s). Moving_Time não pode passar disso,
+    // e com o `min` fica limitado — o resumo deixa de mostrar 0,3 km/h falso.
+    const pts = [{ ts: 0 }, { ts: 600_000 }]; // span 600s (10 min reais)
+    const elapsedTotal = 25_617;
+    // timer absurdo (25327s) — o que o bug produzia
+    expect(movingTimeSeconds(25_327, pts, elapsedTotal)).toBe(25_327);
+    // se o timer fosse limpo (só o span), o Moving_Time cai para 600s (correto)
+    expect(movingTimeSeconds(0, pts, elapsedTotal)).toBe(600);
+  });
+
+  it("usa o maior entre timer e span dos pontos, limitado pelo total", () => {
+    const pts = [{ ts: 0 }, { ts: 100_000 }]; // span 100s
+    expect(movingTimeSeconds(60, pts, 200)).toBe(100); // span > timer
+    expect(movingTimeSeconds(150, pts, 200)).toBe(150); // timer > span
+    expect(movingTimeSeconds(300, pts, 200)).toBe(200); // ambos > total → limita ao total
+  });
+
+  it("trata valores inválidos sem NaN/Infinity", () => {
+    expect(movingTimeSeconds(Number.NaN, [], 100)).toBe(0);
+    expect(movingTimeSeconds(50, [], Number.POSITIVE_INFINITY)).toBe(0);
+    expect(movingTimeSeconds(-5, [], 100)).toBe(0);
+  });
+
+  // Property crítica: a invariante do bug — Moving_Time <= Elapsed_Time, sempre.
+  it("Property: 0 <= movingTime <= elapsedTotal, inteiro e finito", () => {
+    fc.assert(
+      fc.property(
+        fc.integer({ min: -10, max: 10 ** 9 }),
+        fc.array(fc.record({ ts: fc.integer({ min: 0, max: 10 ** 12 }) })),
+        fc.integer({ min: 0, max: 10 ** 9 }),
+        (timer, pts, elapsed) => {
+          const v = movingTimeSeconds(timer, pts, elapsed);
+          return Number.isInteger(v) && v >= 0 && v <= Math.round(elapsed) && Number.isFinite(v);
         },
       ),
     );

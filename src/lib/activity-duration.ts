@@ -49,3 +49,35 @@ export function elapsedTotalSeconds(
   // O total nunca pode ser menor que o intervalo entre 1º e último ponto.
   return Math.max(total, spanFloor);
 }
+
+/**
+ * Moving_Time final (segundos) de uma atividade, GARANTINDO a invariante
+ * `0 <= movingTime <= elapsedTotal`.
+ *
+ * - `timerSeconds`: valor acumulado pelo contador (setInterval), que avança só
+ *   enquanto há movimento (o auto-pause para o timer na inatividade).
+ * - `points`: pontos aceitos (para o piso pelo span, caso o timer tenha sido
+ *   suspenso em 2º plano e ficado abaixo do tempo real do trajeto).
+ * - `elapsedTotalSeconds`: Tempo Total (relógio início→fim) — teto do
+ *   Moving_Time.
+ *
+ * Motivo (bug corrigido — registros incoerentes): quando o app ficava horas
+ * em 2º plano/aberto parado, a restauração somava tempo de RELÓGIO ao
+ * Moving_Time, inflando-o até quase o Tempo Total mesmo sem movimento real —
+ * resultando em velocidade média/ritmo absurdos (ex.: 1,87 km em 7h =
+ * 0,3 km/h). O Moving_Time nunca pode exceder o tempo total decorrido.
+ *
+ * Garante: inteiro `>= 0`, nunca NaN/Infinity, e sempre `<= elapsedTotal`.
+ */
+export function movingTimeSeconds(
+  timerSeconds: number,
+  points: { ts: number }[],
+  elapsedTotal: number,
+): number {
+  const safeElapsed =
+    Number.isFinite(elapsedTotal) && elapsedTotal > 0 ? Math.round(elapsedTotal) : 0;
+  const safeTimer = Number.isFinite(timerSeconds) && timerSeconds > 0 ? Math.round(timerSeconds) : 0;
+  const floor = elapsedFromPoints(points);
+  const moving = Math.max(safeTimer, floor);
+  return Math.min(moving, safeElapsed);
+}
