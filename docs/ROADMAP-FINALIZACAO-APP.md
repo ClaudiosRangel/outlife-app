@@ -5,7 +5,47 @@
 > `.kiro/steering/roadmap-outvitar.md`). **Mantenha-o atualizado** ao
 > concluir qualquer tarefa/bloco: marque status, data e resumo.
 
-**Última atualização:** 08/10/2026 (🐛 build 41 APROVADA no TestFlight mas abre em "Algo deu errado" — causa raiz: faltam VITE_SUPABASE_* no build do Codemagic; codemagic.yaml corrigido, falta cadastrar as envs no painel e rebuildar p/ build 42)
+**Última atualização:** 18/10/2026 (🐛 corrigido registro incoerente de atividade — "em movimento" inflado em 2º plano gerava velocidade/ritmo absurdos; pronto para build 42 no Codemagic)
+
+> **🐛 RASTREAMENTO — REGISTROS INCOERENTES CORRIGIDOS (18/10/2026, commit `a2c1e98` na `main`):**
+> O usuário reportou atividades com métricas absurdas (print real: 1,87 km com
+> "Em movimento" 7:02:07, velocidade média **0,3 km/h**, ritmo **225:49/km**;
+> "Tempo total" 7:06:57 — quase igual ao movimento). Outra atividade (3,54 km,
+> 46:52, 4,5 km/h) estava coerente.
+> **CAUSA RAIZ** (em `src/hooks/use-activity-tracker.ts`, restauração): ao
+> remontar com status salvo `"tracking"`, o hook SOMAVA `Date.now() - updatedAt`
+> ao `duration` (Moving_Time). Se o app ficou horas em 2º plano/aberto parado
+> SEM movimento real, o Moving_Time inflava até quase o Tempo Total — detonando
+> velocidade média e ritmo (que são `distância / Moving_Time`). Esse tempo
+> pertence ao Tempo Total (Elapsed_Time, derivado de `startedAt`→agora), NUNCA
+> ao Moving_Time (que só avança via setInterval enquanto há movimento; o
+> auto-pause para o timer na inatividade).
+> **CORREÇÃO:**
+> 1. Restauração: `duration` restaurado EXATAMENTE como persistido (não soma
+>    mais relógio). O tempo fora da tela aparece só no Tempo Total.
+> 2. Finalização: nova função pura `movingTimeSeconds()` em
+>    `src/lib/activity-duration.ts` garante a invariante **Moving_Time ≤
+>    Elapsed_Time** (blinda inclusive dados restaurados de versões antigas).
+> 3. Testes: `activity-duration.test.ts` 15/15 (4 novos: cenário do bug +
+>    property-based `0 ≤ moving ≤ elapsed`). `build:native` OK (✓ built in 2m13s).
+> **ESCOPO:** corrige atividades NOVAS. Atividades já salvas no Supabase com
+> valores errados continuam erradas no banco (não houve correção retroativa —
+> oferecido ao usuário um script que recalcula `duration_seconds` pelo span real
+> dos pontos, se ele quiser).
+> **PRÓXIMO PASSO (usuário, painel Codemagic):** disparar **build 42** no
+> workflow "OutVitar iOS — TestFlight" (branch `main`, trigger manual) →
+> adicionar a build 42 ao grupo externo "Testadores OutVitar" no TestFlight.
+> Como o grupo externo já tem a 41 aprovada, builds novos normalmente entram sem
+> novo Beta Review (ou review leve); testadores atualizam pelo mesmo link
+> `https://testflight.apple.com/join/NV29MJZH`. O build nº incrementa sozinho no
+> yaml (`agvtool new-version -all $(($PROJECT_BUILD_NUMBER + 1))`).
+> OBS: a build 42 já carrega TAMBÉM os dois fixes anteriores que a 41 não tinha
+> (VITE_* no Codemagic → corrige "Algo deu errado"; use-profiles no mesmo passo
+> → corrige exit 65 de assinatura).
+
+> **🐛 BUG DE RUNTIME NA BETA — "Algo deu errado" (08/10/2026):**
+> A build **1.0 (41)** foi **APROVADA** no TestFlight e instala, mas ao abrir
+> mostra a tela de erro genérica "Algo deu errado / Ocorreu um erro inesperado"
 
 > **🐛 BUG DE RUNTIME NA BETA — "Algo deu errado" (08/10/2026):**
 > A build **1.0 (41)** foi **APROVADA** no TestFlight e instala, mas ao abrir
