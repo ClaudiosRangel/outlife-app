@@ -5,7 +5,44 @@
 > `.kiro/steering/roadmap-outvitar.md`). **Mantenha-o atualizado** ao
 > concluir qualquer tarefa/bloco: marque status, data e resumo.
 
-**Última atualização:** 18/10/2026 (🐛 corrigido registro incoerente de atividade — "em movimento" inflado em 2º plano gerava velocidade/ritmo absurdos; pronto para build 42 no Codemagic)
+**Última atualização:** 18/10/2026 (🐛 corrigido registro incoerente de atividade + correção RETROATIVA de 2 atividades no Supabase + build iOS AUTOMÁTICO a cada push na main)
+
+> **🔁 CORREÇÃO RETROATIVA (2 atividades) + BUILD AUTOMÁTICO (18/10/2026):**
+> Complemento da correção do Moving_Time (ver bloco abaixo). Duas entregas:
+>
+> **1. Correção retroativa no Supabase (produção).** Diagnóstico (script
+> temporário read-only, já removido) achou **2 de 17** atividades concluídas com
+> Moving_Time incoerente (duration ~ elapsed, velocidade absurda):
+> - `f4e2a85b-...` — 1,87 km, moving 25327s, elapsed 25617s (0,27 km/h) [print do usuário]
+> - `055007d3-...` — 13,35 km, moving 69766s, elapsed 69821s (0,69 km/h)
+>
+> DECISÃO: **Opção B (honesta)** — como o servidor NÃO guarda timestamps por
+> ponto (`route_geojson` é LineString `[lng,lat]` sem `ts`), o Moving_Time real
+> dessas atividades antigas é IRRECUPERÁVEL. Em vez de inventar um número
+> (estimar por velocidade típica), ANULAMOS `duration_seconds` (→ null) dessas 2.
+> Efeito na tela de detalhe: "Em movimento", "Velocidade média" e "Ritmo" passam
+> a exibir "—" (indicador de indisponível via `computeActivityMetrics`), e
+> distância/trajeto/Tempo Total/elevação continuam corretos e visíveis.
+> VALORES ORIGINAIS PRESERVADOS AQUI (caso se queira a Opção A no futuro —
+> estimar Moving_Time por velocidade da modalidade):
+> ```
+> f4e2a85b: distance=1869.32m duration=25327 elapsed=25617 start=2026-10-09T02:08:18Z end=2026-10-09T09:15:19Z
+> 055007d3: distance=13346.98m duration=69766 elapsed=69821 start=2026-10-08T01:46:54Z end=2026-10-08T21:10:36Z
+> ```
+> Rediagnóstico pós-correção: **0 incoerentes**. Scripts `_tmp-*` removidos.
+>
+> **2. Build iOS AUTOMÁTICO no Codemagic (`codemagic.yaml`).** O workflow
+> `ios-testflight` deixou de ser trigger MANUAL (`events: []`) e passou a
+> disparar sozinho a cada **push na `main`** (`events: [push]` + `branch_patterns:
+> main`). O webhook do repo já estava conectado no painel. O botão "Start new
+> build" continua funcionando para disparo manual. O nº de build segue
+> incrementando (`agvtool`). ⇒ A partir de agora, todo push na `main` gera um
+> build novo no TestFlight automaticamente.
+> OBS: o próprio push que habilitou o trigger já deve ter disparado o **build 42**
+> (que carrega a correção do Moving_Time + os 2 fixes que a 41 não tinha).
+> FALTA DO USUÁRIO: no TestFlight, quando o 42 processar, adicioná-lo ao grupo
+> externo "Testadores OutVitar" (link `https://testflight.apple.com/join/NV29MJZH`).
+
 
 > **🐛 RASTREAMENTO — REGISTROS INCOERENTES CORRIGIDOS (18/10/2026, commit `a2c1e98` na `main`):**
 > O usuário reportou atividades com métricas absurdas (print real: 1,87 km com
