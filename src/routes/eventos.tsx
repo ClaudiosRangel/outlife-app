@@ -31,6 +31,10 @@ import {
 
 export const Route = createFileRoute("/eventos")({
   component: EventosPage,
+  // `?criar=1` abre direto a folha de criação (atalho da Home).
+  validateSearch: (search: Record<string, unknown>): { criar?: boolean } => ({
+    criar: search.criar === true || search.criar === "true" || search.criar === 1 || search.criar === "1" ? true : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Eventos — OutVitar" },
@@ -63,7 +67,11 @@ function EventosPage() {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const qc = useQueryClient();
-  const [createOpen, setCreateOpen] = useState(false);
+  const { criar } = Route.useSearch();
+  const [createOpen, setCreateOpen] = useState(!!criar);
+  useEffect(() => {
+    if (criar) setCreateOpen(true);
+  }, [criar]);
   const [detailEvent, setDetailEvent] = useState<EventItem | null>(null);
   const [editOpen, setEditOpen] = useState(false);
   // "now" fixado no mount para evitar hydration mismatch (server vs client timezone)

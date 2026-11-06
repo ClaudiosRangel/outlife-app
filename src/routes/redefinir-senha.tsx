@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ChevronLeft, Mountain, Loader2 } from "lucide-react";
+import { ChevronLeft, Mountain, Loader2, CheckCircle2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -41,6 +41,7 @@ function RedefinirSenha() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [done, setDone] = useState(false);
   // O link do e-mail de recuperação (`resetPasswordForEmail`) redireciona
   // para esta rota com `#access_token=...&type=recovery` na URL. O
   // supabase-js já processa esse hash automaticamente ao carregar a página
@@ -96,8 +97,36 @@ function RedefinirSenha() {
       return;
     }
     toast.success(t("auth.resetPasswordSuccess"));
-    navigate({ to: "/perfil" });
+    // Não entra no app por aqui: encerra a sessão de recuperação e pede o login.
+    await supabase.auth.signOut();
+    setDone(true);
   };
+
+  if (done) {
+    return (
+      <div className="animate-float-up min-h-screen bg-background pb-12">
+        <StatusBar />
+        <div className="flex flex-col items-center px-6 pt-24 text-center">
+          <span className="grid h-16 w-16 place-items-center rounded-full bg-primary/10 text-primary">
+            <CheckCircle2 size={32} />
+          </span>
+          <h1 className="mt-5 font-display text-3xl font-semibold leading-tight">
+            {t("auth.passwordChangedTitle", "Senha alterada com sucesso!")}
+          </h1>
+          <p className="mt-3 max-w-xs text-sm text-muted-foreground">
+            {t("auth.passwordChangedBody", "Abra o app OutVitar e entre com a sua nova senha.")}
+          </p>
+          <button
+            type="button"
+            onClick={() => navigate({ to: "/login" })}
+            className="mt-8 w-full max-w-xs rounded-xl bg-primary py-3.5 text-sm font-semibold text-primary-foreground shadow-card"
+          >
+            {t("auth.goToLogin", "Ir para o login")}
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="animate-float-up min-h-screen bg-background pb-12">

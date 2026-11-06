@@ -9,9 +9,10 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as RotaNovaRouteImport } from './routes/rota-nova'
 import { Route as TermosRouteImport } from './routes/termos'
+import { Route as EmailConfirmadoRouteImport } from './routes/email-confirmado'
 import { Route as SugerirDestinoRouteImport } from './routes/sugerir-destino'
+import { Route as RotaNovaRouteImport } from './routes/rota-nova'
 import { Route as RedefinirSenhaRouteImport } from './routes/redefinir-senha'
 import { Route as RankingRouteImport } from './routes/ranking'
 import { Route as PrivacidadeRouteImport } from './routes/privacidade'
@@ -59,8 +60,8 @@ import { Route as AdminLojaRouteImport } from './routes/admin.loja'
 import { Route as AdminDestinosRouteImport } from './routes/admin.destinos'
 import { Route as AdminDestinoNovoRouteImport } from './routes/admin.destino-novo'
 import { Route as AdminDashboardRouteImport } from './routes/admin.dashboard'
-import { Route as AdminConteudoRouteImport } from './routes/admin.conteudo'
 import { Route as AdminConvitesRouteImport } from './routes/admin.convites'
+import { Route as AdminConteudoRouteImport } from './routes/admin.conteudo'
 import { Route as AdminComplianceRouteImport } from './routes/admin.compliance'
 import { Route as AdminAtividadesRouteImport } from './routes/admin.atividades'
 import { Route as AActivityIdRouteImport } from './routes/a.$activityId'
@@ -80,9 +81,19 @@ const TermosRoute = TermosRouteImport.update({
   path: '/termos',
   getParentRoute: () => rootRouteImport,
 } as any)
+const EmailConfirmadoRoute = EmailConfirmadoRouteImport.update({
+  id: '/email-confirmado',
+  path: '/email-confirmado',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SugerirDestinoRoute = SugerirDestinoRouteImport.update({
   id: '/sugerir-destino',
   path: '/sugerir-destino',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RotaNovaRoute = RotaNovaRouteImport.update({
+  id: '/rota-nova',
+  path: '/rota-nova',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RedefinirSenhaRoute = RedefinirSenhaRouteImport.update({
@@ -315,24 +326,19 @@ const AdminDestinoNovoRoute = AdminDestinoNovoRouteImport.update({
   path: '/admin/destino-novo',
   getParentRoute: () => rootRouteImport,
 } as any)
-const RotaNovaRoute = RotaNovaRouteImport.update({
-  id: '/rota-nova',
-  path: '/rota-nova',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const AdminDashboardRoute = AdminDashboardRouteImport.update({
   id: '/admin/dashboard',
   path: '/admin/dashboard',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AdminConteudoRoute = AdminConteudoRouteImport.update({
-  id: '/admin/conteudo',
-  path: '/admin/conteudo',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const AdminConvitesRoute = AdminConvitesRouteImport.update({
   id: '/admin/convites',
   path: '/admin/convites',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminConteudoRoute = AdminConteudoRouteImport.update({
+  id: '/admin/conteudo',
+  path: '/admin/conteudo',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminComplianceRoute = AdminComplianceRouteImport.update({
@@ -424,8 +430,10 @@ export interface FileRoutesByFullPath {
   '/privacidade': typeof PrivacidadeRoute
   '/ranking': typeof RankingRoute
   '/redefinir-senha': typeof RedefinirSenhaRoute
+  '/rota-nova': typeof RotaNovaRoute
   '/sugerir-destino': typeof SugerirDestinoRoute
   '/termos': typeof TermosRoute
+  '/email-confirmado': typeof EmailConfirmadoRoute
   '/a/$activityId': typeof AActivityIdRoute
   '/admin/atividades': typeof AdminAtividadesRoute
   '/admin/compliance': typeof AdminComplianceRoute
@@ -433,7 +441,6 @@ export interface FileRoutesByFullPath {
   '/admin/convites': typeof AdminConvitesRoute
   '/admin/dashboard': typeof AdminDashboardRoute
   '/admin/destino-novo': typeof AdminDestinoNovoRoute
-  '/rota-nova': typeof RotaNovaRoute
   '/admin/destinos': typeof AdminDestinosRoute
   '/admin/loja': typeof AdminLojaRoute
   '/admin/melhorias': typeof AdminMelhoriasRoute
@@ -491,8 +498,10 @@ export interface FileRoutesByTo {
   '/privacidade': typeof PrivacidadeRoute
   '/ranking': typeof RankingRoute
   '/redefinir-senha': typeof RedefinirSenhaRoute
+  '/rota-nova': typeof RotaNovaRoute
   '/sugerir-destino': typeof SugerirDestinoRoute
   '/termos': typeof TermosRoute
+  '/email-confirmado': typeof EmailConfirmadoRoute
   '/a/$activityId': typeof AActivityIdRoute
   '/admin/atividades': typeof AdminAtividadesRoute
   '/admin/compliance': typeof AdminComplianceRoute
@@ -500,7 +509,6 @@ export interface FileRoutesByTo {
   '/admin/convites': typeof AdminConvitesRoute
   '/admin/dashboard': typeof AdminDashboardRoute
   '/admin/destino-novo': typeof AdminDestinoNovoRoute
-  '/rota-nova': typeof RotaNovaRoute
   '/admin/destinos': typeof AdminDestinosRoute
   '/admin/loja': typeof AdminLojaRoute
   '/admin/melhorias': typeof AdminMelhoriasRoute
@@ -559,8 +567,10 @@ export interface FileRoutesById {
   '/privacidade': typeof PrivacidadeRoute
   '/ranking': typeof RankingRoute
   '/redefinir-senha': typeof RedefinirSenhaRoute
+  '/rota-nova': typeof RotaNovaRoute
   '/sugerir-destino': typeof SugerirDestinoRoute
   '/termos': typeof TermosRoute
+  '/email-confirmado': typeof EmailConfirmadoRoute
   '/a/$activityId': typeof AActivityIdRoute
   '/admin/atividades': typeof AdminAtividadesRoute
   '/admin/compliance': typeof AdminComplianceRoute
@@ -568,7 +578,6 @@ export interface FileRoutesById {
   '/admin/convites': typeof AdminConvitesRoute
   '/admin/dashboard': typeof AdminDashboardRoute
   '/admin/destino-novo': typeof AdminDestinoNovoRoute
-  '/rota-nova': typeof RotaNovaRoute
   '/admin/destinos': typeof AdminDestinosRoute
   '/admin/loja': typeof AdminLojaRoute
   '/admin/melhorias': typeof AdminMelhoriasRoute
@@ -628,8 +637,10 @@ export interface FileRouteTypes {
     | '/privacidade'
     | '/ranking'
     | '/redefinir-senha'
+    | '/rota-nova'
     | '/sugerir-destino'
     | '/termos'
+    | '/email-confirmado'
     | '/a/$activityId'
     | '/admin/atividades'
     | '/admin/compliance'
@@ -637,7 +648,6 @@ export interface FileRouteTypes {
     | '/admin/convites'
     | '/admin/dashboard'
     | '/admin/destino-novo'
-    | '/rota-nova'
     | '/admin/destinos'
     | '/admin/loja'
     | '/admin/melhorias'
@@ -695,8 +705,10 @@ export interface FileRouteTypes {
     | '/privacidade'
     | '/ranking'
     | '/redefinir-senha'
+    | '/rota-nova'
     | '/sugerir-destino'
     | '/termos'
+    | '/email-confirmado'
     | '/a/$activityId'
     | '/admin/atividades'
     | '/admin/compliance'
@@ -704,7 +716,6 @@ export interface FileRouteTypes {
     | '/admin/convites'
     | '/admin/dashboard'
     | '/admin/destino-novo'
-    | '/rota-nova'
     | '/admin/destinos'
     | '/admin/loja'
     | '/admin/melhorias'
@@ -762,8 +773,10 @@ export interface FileRouteTypes {
     | '/privacidade'
     | '/ranking'
     | '/redefinir-senha'
+    | '/rota-nova'
     | '/sugerir-destino'
     | '/termos'
+    | '/email-confirmado'
     | '/a/$activityId'
     | '/admin/atividades'
     | '/admin/compliance'
@@ -771,7 +784,6 @@ export interface FileRouteTypes {
     | '/admin/convites'
     | '/admin/dashboard'
     | '/admin/destino-novo'
-    | '/rota-nova'
     | '/admin/destinos'
     | '/admin/loja'
     | '/admin/melhorias'
@@ -830,8 +842,10 @@ export interface RootRouteChildren {
   PrivacidadeRoute: typeof PrivacidadeRoute
   RankingRoute: typeof RankingRoute
   RedefinirSenhaRoute: typeof RedefinirSenhaRoute
+  RotaNovaRoute: typeof RotaNovaRoute
   SugerirDestinoRoute: typeof SugerirDestinoRoute
   TermosRoute: typeof TermosRoute
+  EmailConfirmadoRoute: typeof EmailConfirmadoRoute
   AActivityIdRoute: typeof AActivityIdRoute
   AdminAtividadesRoute: typeof AdminAtividadesRoute
   AdminComplianceRoute: typeof AdminComplianceRoute
@@ -839,7 +853,6 @@ export interface RootRouteChildren {
   AdminConvitesRoute: typeof AdminConvitesRoute
   AdminDashboardRoute: typeof AdminDashboardRoute
   AdminDestinoNovoRoute: typeof AdminDestinoNovoRoute
-  RotaNovaRoute: typeof RotaNovaRoute
   AdminDestinosRoute: typeof AdminDestinosRoute
   AdminLojaRoute: typeof AdminLojaRoute
   AdminMelhoriasRoute: typeof AdminMelhoriasRoute
@@ -884,11 +897,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TermosRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/email-confirmado': {
+      id: '/email-confirmado'
+      path: '/email-confirmado'
+      fullPath: '/email-confirmado'
+      preLoaderRoute: typeof EmailConfirmadoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/sugerir-destino': {
       id: '/sugerir-destino'
       path: '/sugerir-destino'
       fullPath: '/sugerir-destino'
       preLoaderRoute: typeof SugerirDestinoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/rota-nova': {
+      id: '/rota-nova'
+      path: '/rota-nova'
+      fullPath: '/rota-nova'
+      preLoaderRoute: typeof RotaNovaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/redefinir-senha': {
@@ -1213,13 +1240,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminDestinoNovoRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/rota-nova': {
-      id: '/rota-nova'
-      path: '/rota-nova'
-      fullPath: '/rota-nova'
-      preLoaderRoute: typeof RotaNovaRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/admin/dashboard': {
       id: '/admin/dashboard'
       path: '/admin/dashboard'
@@ -1227,18 +1247,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminDashboardRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/admin/conteudo': {
-      id: '/admin/conteudo'
-      path: '/admin/conteudo'
-      fullPath: '/admin/conteudo'
-      preLoaderRoute: typeof AdminConteudoRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/admin/convites': {
       id: '/admin/convites'
       path: '/admin/convites'
       fullPath: '/admin/convites'
       preLoaderRoute: typeof AdminConvitesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/conteudo': {
+      id: '/admin/conteudo'
+      path: '/admin/conteudo'
+      fullPath: '/admin/conteudo'
+      preLoaderRoute: typeof AdminConteudoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/compliance': {
@@ -1368,8 +1388,10 @@ const rootRouteChildren: RootRouteChildren = {
   PrivacidadeRoute: PrivacidadeRoute,
   RankingRoute: RankingRoute,
   RedefinirSenhaRoute: RedefinirSenhaRoute,
+  RotaNovaRoute: RotaNovaRoute,
   SugerirDestinoRoute: SugerirDestinoRoute,
   TermosRoute: TermosRoute,
+  EmailConfirmadoRoute: EmailConfirmadoRoute,
   AActivityIdRoute: AActivityIdRoute,
   AdminAtividadesRoute: AdminAtividadesRoute,
   AdminComplianceRoute: AdminComplianceRoute,
@@ -1377,7 +1399,6 @@ const rootRouteChildren: RootRouteChildren = {
   AdminConvitesRoute: AdminConvitesRoute,
   AdminDashboardRoute: AdminDashboardRoute,
   AdminDestinoNovoRoute: AdminDestinoNovoRoute,
-  RotaNovaRoute: RotaNovaRoute,
   AdminDestinosRoute: AdminDestinosRoute,
   AdminLojaRoute: AdminLojaRoute,
   AdminMelhoriasRoute: AdminMelhoriasRoute,

@@ -29,18 +29,9 @@
                 <data android:scheme="https" android:host="avidanaoesotrilhar.com.br" android:pathPrefix="/a/" />
             </intent-filter>
 
-            <!-- Deep Link: auth callbacks (confirmação de e-mail, redefinição de senha) -->
-            <intent-filter android:autoVerify="true">
-                <action android:name="android.intent.action.VIEW" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-                <data
-                    android:scheme="https"
-                    android:host="outlife-app.vercel.app"
-                    android:pathPrefix="/redefinir-senha"
-                />
-                <data android:scheme="https" android:host="outlife-app.vercel.app" android:path="/" />
-            </intent-filter>
+            <!-- Links de e-mail (confirmação de cadastro e redefinição de senha) NÃO abrem
+                 mais o app: ficam no navegador (/email-confirmado e /redefinir-senha),
+                 evitando o WebView. Por isso o App Link de auth foi removido. -->
 
             <!-- Custom scheme fallback para auth (sempre funciona, sem depender de App Links verification) -->
             <intent-filter>

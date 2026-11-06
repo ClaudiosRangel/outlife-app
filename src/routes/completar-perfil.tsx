@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { fetchMyProfile, updateMyProfile } from "@/lib/api";
 import { ageFromBirthDate, validateBirthDate, toISODate, MIN_AGE } from "@/lib/age-gate";
 
@@ -32,6 +32,7 @@ function CompletarPerfil() {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { user, loading: authLoading } = useAuth();
+  const qc = useQueryClient();
 
   const { data: profile } = useQuery({
     queryKey: ["my-profile", user?.id],
@@ -67,7 +68,8 @@ function CompletarPerfil() {
     setFullName((profile as { full_name?: string }).full_name ?? "");
     setGender((profile as { gender?: string }).gender ?? "");
     const bd = (profile as { birth_date?: string }).birth_date;
-    if (bd) {
+    const g = (profile as { gender?: string }).gender;
+    if (bd && g) {
       navigate({ to: "/" });
     }
   }, [profile, navigate]);
@@ -105,6 +107,8 @@ function CompletarPerfil() {
     setSaving(true);
     try {
       await updateMyProfile({ full_name: fullName.trim(), gender, birth_date: birthISO });
+      // Atualiza o cache que o portão de acesso (AuthGate) consulta.
+      await qc.invalidateQueries({ queryKey: ["my-profile", user?.id] });
       toast.success(t("completeProfile.saved", { defaultValue: "Perfil completo! Bem-vindo ao OutVitar." }));
       navigate({ to: "/" });
     } catch (e) {

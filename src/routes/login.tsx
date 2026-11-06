@@ -76,7 +76,8 @@ function Login() {
     // com confirmação de e-mail e só agora tem sessão ativa). Silencioso.
     await redeemPendingReferral();
     toast.success(t("auth.loginSuccess"));
-    navigate({ to: "/perfil" });
+    // O portão de acesso (AuthGate) leva aos termos e ao cadastro complementar.
+    navigate({ to: "/" });
   };
 
   const submitForgotPassword = async (e: React.FormEvent) => {

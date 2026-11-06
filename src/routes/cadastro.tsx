@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { getAuthRedirectOrigin } from "@/lib/auth-redirect";
+import { getAuthRedirectUrl } from "@/lib/auth-redirect";
 import { captureReferralFromUrl, redeemPendingReferral } from "@/lib/referral";
 
 // Traduz mensagens de erro da API do Supabase para pt-BR
@@ -75,6 +75,7 @@ function Cadastro() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [emailSent, setEmailSent] = useState(false);
 
   // Captura o código de indicação (?ref=CODIGO) assim que a tela abre.
   useEffect(() => {
@@ -87,7 +88,8 @@ function Cadastro() {
       email,
       password,
       options: {
-        emailRedirectTo: getAuthRedirectOrigin(),
+        // Página web simples "e-mail confirmado" (não abre o app/WebView).
+        emailRedirectTo: getAuthRedirectUrl("/email-confirmado"),
         data: { role, full_name: name, ...extra },
       },
     });
@@ -106,8 +108,10 @@ function Cadastro() {
       navigate({ to: "/completar-perfil" });
       return true;
     }
+    // Sem sessão = confirmação de e-mail pendente. Não há acesso ao app antes
+    // do login, então mostra o aviso para confirmar o e-mail e depois entrar.
     toast.success(t("auth.signupSuccess"));
-    navigate({ to: "/perfil" });
+    setEmailSent(true);
     return true;
   };
 
@@ -135,6 +139,34 @@ function Cadastro() {
   };
 
   const totalSteps = role === "partner" ? 2 : 1;
+
+  if (emailSent) {
+    return (
+      <div className="animate-float-up min-h-screen bg-background pb-12">
+        <StatusBar />
+        <div className="flex flex-col items-center px-6 pt-24 text-center">
+          <span className="grid h-16 w-16 place-items-center rounded-full bg-primary/10 text-primary">
+            <Check size={32} />
+          </span>
+          <h1 className="mt-5 font-display text-3xl font-semibold leading-tight">
+            {t("signup.checkEmailTitle", "Confirme seu e-mail")}
+          </h1>
+          <p className="mt-3 max-w-xs text-sm text-muted-foreground">
+            {t("signup.checkEmailBody", {
+              defaultValue: "Enviamos um link para {{email}}. Depois de confirmar, volte ao app e entre com seu login.",
+              email,
+            })}
+          </p>
+          <Link
+            to="/login"
+            className="mt-8 w-full max-w-xs rounded-xl bg-primary py-3.5 text-sm font-semibold text-primary-foreground shadow-card"
+          >
+            {t("auth.goToLogin", "Ir para o login")}
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="animate-float-up min-h-screen bg-background pb-12">

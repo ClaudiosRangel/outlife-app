@@ -1,4 +1,4 @@
-import { createRootRouteWithContext, HeadContent, Link, Outlet, Scripts, useRouter } from "@tanstack/react-router";
+import { createRootRouteWithContext, HeadContent, Link, Outlet, Scripts, useLocation, useRouter } from "@tanstack/react-router";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Analytics } from "@vercel/analytics/react";
 import { Toaster } from "sonner";
@@ -9,7 +9,8 @@ import { PhoneFrame } from "@/components/PhoneFrame";
 import { BottomNav } from "@/components/BottomNav";
 import { Capacitor } from "@capacitor/core";
 import { App } from "@capacitor/app";
-import { AuthProvider } from "@/hooks/use-auth";
+import { AuthProvider, useAuth } from "@/hooks/use-auth";
+import { AuthGate } from "@/components/AuthGate";
 import { supabase } from "@/integrations/supabase/client";
 import { registerPushNotificationTapNavigation } from "@/lib/push-registration";
 import { useLocalPushNotifications } from "@/hooks/use-local-push";
@@ -269,10 +270,14 @@ function useDeepLinkNavigation() {
       const accessToken = params.get("access_token");
       const refreshToken = params.get("refresh_token");
       if (!accessToken || !refreshToken) return;
-      await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
       if (params.get("type") === "recovery") {
+        await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
         router.navigate({ to: "/redefinir-senha" });
+        return;
       }
+      // Confirmação de e-mail (signup/email_change): NÃO cria sessão nem entra
+      // no app. Mostra só a tela "e-mail confirmado"; o acesso é pelo login.
+      router.navigate({ to: "/email-confirmado" });
     };
 
     // Navega para o destino resolvido por parseDeepLink (Frente B, Req 7).
@@ -336,6 +341,17 @@ function AuthedEffects() {
   return null;
 }
 
+/** Barra inferior: oculta para visitante e nas telas públicas de autenticação. */
+function AuthedBottomNav() {
+  const { user, loading } = useAuth();
+  const pathname = useLocation().pathname;
+  const hideOnAuthScreens = ["/completar-perfil", "/redefinir-senha", "/email-confirmado"].some(
+    (p) => pathname === p || pathname.startsWith(p + "/"),
+  );
+  if (loading || !user || hideOnAuthScreens) return null;
+  return <BottomNav />;
+}
+
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   useRegisterServiceWorker();
@@ -367,9 +383,13 @@ function RootComponent() {
                 de <main>, mantendo o BottomNav sempre visível abaixo,
                 independente de quantos posts/itens a lista tiver. */}
             <main id="app-scroll-container" className="min-h-0 flex-1 overflow-y-auto pb-2">
-              <Outlet />
+              {/* Portão de acesso: sem login, só telas públicas. */}
+              <AuthGate>
+                <Outlet />
+              </AuthGate>
             </main>
-            <BottomNav />
+            {/* Menu inferior só existe depois do login. */}
+            <AuthedBottomNav />
           </div>
           {appVersion && (
             <div className="pointer-events-none absolute left-0 right-0 top-0 z-50 flex justify-center">

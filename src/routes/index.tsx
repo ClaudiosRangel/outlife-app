@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { Bell, MapPin, Search, Sparkles, ArrowRight, Calendar, Users, Trophy, BarChart3 } from "lucide-react";
+import { Bell, MapPin, Search, Sparkles, ArrowRight, Calendar, Users, Trophy, BarChart3, Plus } from "lucide-react";
 import { BrandLogo } from "@/components/BrandLogo";
 import hero from "@/assets/hero-mountain.jpg";
 import seloCadastur from "@/assets/selo-cadastur.jpg";
@@ -115,13 +115,8 @@ function Home() {
   const displayName = profile?.full_name?.split(" ")[0] || user?.email?.split("@")[0] || "";
   const greetingKey = greetingKeyForHour(new Date().getHours());
 
-  // Age gate (13+): usuário logado sem data de nascimento precisa completar o
-  // perfil antes de usar o app. Redireciona uma vez que o profile carregou.
-  useEffect(() => {
-    if (user && profile && !(profile as { birth_date?: string | null }).birth_date) {
-      navigate({ to: "/completar-perfil" });
-    }
-  }, [user, profile, navigate]);
+  // Age gate (13+) e cadastro complementar agora são tratados pelo AuthGate
+  // (src/components/AuthGate.tsx), depois do aceite dos termos.
 
   const [category, setCategory] = useState<HomeCategory | null>(null);
   const filteredDestinations = useMemo(
@@ -426,14 +421,38 @@ function EventosHomeSection() {
     },
   });
 
-  if (events.length === 0) return null;
-
+  // A seção SEMPRE aparece: sem eventos, é o ponto de entrada para criar um.
   return (
     <section className="mt-5 px-5">
       <div className="flex items-center justify-between mb-3">
         <h2 className="font-display text-lg font-semibold">Próximos Eventos</h2>
-        <Link to="/eventos" className="rounded-full bg-secondary px-3 py-1 text-xs font-medium text-primary">Ver todos</Link>
+        <div className="flex items-center gap-2">
+          <Link
+            to="/eventos"
+            search={{ criar: true }}
+            className="inline-flex items-center gap-1 rounded-full bg-primary px-3 py-1 text-xs font-medium text-primary-foreground"
+          >
+            <Plus size={12} /> Criar evento
+          </Link>
+          <Link to="/eventos" className="rounded-full bg-secondary px-3 py-1 text-xs font-medium text-primary">Ver todos</Link>
+        </div>
       </div>
+      {events.length === 0 && (
+        <Link
+          to="/eventos"
+          search={{ criar: true }}
+          className="flex items-center gap-3 rounded-2xl border border-dashed border-border bg-card p-4 shadow-card"
+        >
+          <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary">
+            <Calendar size={20} />
+          </span>
+          <div className="min-w-0 flex-1">
+            <div className="text-sm font-semibold">Nenhum evento por enquanto</div>
+            <div className="text-xs text-muted-foreground">Toque aqui para criar o primeiro evento da comunidade.</div>
+          </div>
+          <Plus size={18} className="text-primary" />
+        </Link>
+      )}
       <div className="grid grid-cols-2 gap-3">
         {events.map((event: any) => (
           <Link key={event.id} to="/eventos" className="block rounded-2xl bg-card overflow-hidden shadow-card border border-border">

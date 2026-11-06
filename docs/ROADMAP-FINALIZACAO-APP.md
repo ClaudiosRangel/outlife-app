@@ -7,6 +7,33 @@
 
 **Última atualização:** 18/10/2026 (🐛 corrigido registro incoerente de atividade + correção RETROATIVA de 2 atividades no Supabase + build iOS AUTOMÁTICO a cada push na main)
 
+> **🔐 ACESSO SÓ APÓS LOGIN + E-MAIL SEM WEBVIEW + CRIAR EVENTO NA HOME (06/11/2026, local, NÃO commitado):**
+> Três pedidos do usuário numa rodada (`build:native` OK, `get_diagnostics` limpo):
+> 1. **Login obrigatório ao abrir o app.** Novo `AuthGate` (`src/components/AuthGate.tsx`)
+>    + regras puras em `src/lib/auth-guard.ts`. Sem sessão, só rotas públicas
+>    (`/login`, `/cadastro`, `/redefinir-senha`, `/email-confirmado`, `/termos`,
+>    `/privacidade`, prévia compartilhada `/a/<id>`); o resto redireciona a `/login`.
+>    BottomNav só aparece logado. Ordem pós-login: **Termos (LegalGate) → completar cadastro
+>    (gênero + data de nascimento, `/completar-perfil`) → app**. "Completo" agora exige
+>    `birth_date` E `gender` (usuário antigo sem gênero será levado a preencher). Login
+>    vai para `/` (não mais `/perfil`); cadastro sem sessão mostra "Confirme seu e-mail".
+>    O redirect de age-gate saiu da Home (agora é do AuthGate).
+> 2. **E-mail sem WebView.** `emailRedirectTo` do cadastro → `/email-confirmado` (nova rota,
+>    só informa "E-mail confirmado, entre no app com seu login"; faz signOut local do hash).
+>    Reset de senha: `/redefinir-senha` agora termina em "Senha alterada, entre no app"
+>    (signOut, não entra no app). **Removido do `AndroidManifest.xml` o App Link
+>    `https://outlife-app.vercel.app` (`/redefinir-senha` e `/`)** — era ele que jogava o link
+>    do e-mail dentro do app/WebView. `/a/` e os schemes `outlife://` continuam. Deep link
+>    de auth no app: `recovery` ainda abre redefinir; confirmação de cadastro NÃO cria sessão.
+>    ⚠️ Só vale para builds NOVAS (APK/IPA antigos mantêm o App Link antigo).
+>    ⚠️ Conferir no Supabase (Auth → URL Configuration) que `https://outlife-app.vercel.app/**`
+>    cobre `/email-confirmado` e que o deploy web (Vercel) está no ar com a nova rota.
+> 3. **Criar evento sempre acessível.** Seção "Próximos Eventos" da Home agora SEMPRE aparece
+>    (antes sumia sem eventos): botão "Criar evento" no cabeçalho + cartão de estado vazio.
+>    `/eventos?criar=1` abre direto a folha de criação.
+> **FALTA:** `cap sync` + APK + commit/push (aguardando o usuário), e testar no aparelho
+> os 3 fluxos (cadastro → e-mail → login → termos → perfil; esqueci senha; criar evento).
+
 > **🔁 CORREÇÃO RETROATIVA (2 atividades) + BUILD AUTOMÁTICO (18/10/2026):**
 > Complemento da correção do Moving_Time (ver bloco abaixo). Duas entregas:
 >

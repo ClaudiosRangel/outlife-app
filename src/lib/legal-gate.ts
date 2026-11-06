@@ -8,6 +8,7 @@ export const LEGAL_GATE_EXEMPT_PATHS = [
   "/termos",
   "/privacidade",
   "/redefinir-senha",
+  "/email-confirmado",
 ];
 
 export function isExemptPath(pathname: string): boolean {
