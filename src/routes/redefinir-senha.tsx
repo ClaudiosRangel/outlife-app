@@ -1,6 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ChevronLeft, Mountain, Loader2, CheckCircle2 } from "lucide-react";
+import { ChevronLeft, Loader2, CheckCircle2 } from "lucide-react";
+import logoOutvitar from "@/assets/logo-outvitar.png";
 import { useTranslation } from "react-i18next";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -140,8 +141,8 @@ function RedefinirSenha() {
       </div>
 
       <div className="px-5 mt-6 flex flex-col items-center text-center">
-        <span className="grid h-14 w-14 place-items-center rounded-2xl bg-primary/10 text-primary">
-          <Mountain size={28} />
+        <span className="grid h-20 w-20 place-items-center overflow-hidden rounded-full bg-white p-2 shadow-card ring-1 ring-border">
+          <img src={logoOutvitar} alt="OutVitar" className="h-full w-full object-contain" />
         </span>
         <h1 className="mt-4 font-display text-3xl font-semibold leading-tight">{t("auth.resetPasswordTitle")}</h1>
         <p className="mt-1 text-sm text-muted-foreground">{t("auth.resetPasswordDescription")}</p>

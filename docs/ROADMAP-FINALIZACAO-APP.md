@@ -7,6 +7,19 @@
 
 **Última atualização:** 18/10/2026 (🐛 corrigido registro incoerente de atividade + correção RETROATIVA de 2 atividades no Supabase + build iOS AUTOMÁTICO a cada push na main)
 
+> **🟢 iOS build 48 APROVADA (Codemagic voltou após aceitar o PLA atualizado da Apple)
+> + logomarca redonda no login (09/11/2026):**
+> - O build iOS voltou a passar depois que o titular aceitou o "Apple Developer Program
+>   License Agreement" atualizado (o 403 no passo "Preparar assinatura" era o PLA pendente,
+>   não o código). Build **1.0 (48)** = "Aprovado" no App Store Connect; falta só ADICIONAR
+>   a 48 ao grupo externo "Testadores OutVitar" (TestFlight → Testes externos → Compilações
+>   → +) — a 46 ainda era a "Em testes".
+> - **Login/Redefinir senha**: o ícone genérico de montanha (lucide `Mountain`) virou a
+>   LOGOMARCA do OutVitar (`src/assets/logo-outvitar.png`) num círculo branco (h-20 w-20,
+>   `rounded-full` + `object-contain` + padding, anel sutil). Trocado em `login.tsx` e
+>   `redefinir-senha.tsx`. `build:native` OK (travou 3× na armadilha do vite; resolvido com
+>   `Remove-Item node_modules/.vite` → ✓ built in 2m2s), `cap sync` OK, APK gerado, commit+push.
+
 > **🔐 ACESSO SÓ APÓS LOGIN + E-MAIL SEM WEBVIEW + CRIAR EVENTO NA HOME (06/11/2026, local, NÃO commitado):**
 > Três pedidos do usuário numa rodada (`build:native` OK, `get_diagnostics` limpo):
 > 1. **Login obrigatório ao abrir o app.** Novo `AuthGate` (`src/components/AuthGate.tsx`)
