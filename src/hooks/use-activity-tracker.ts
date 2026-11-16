@@ -46,6 +46,11 @@ export function useActivityTracker() {
   // GPS, expostos para a UI (spec rastreamento-preciso-gps, Req 4 e 6).
   const [smoothedSpeed, setSmoothedSpeed] = useState<number | null>(null);
   const [gpsSignalState, setGpsSignalState] = useState<GpsSignalState>("aquisitando");
+  // Aquecimento do GPS durante a tela de calibração (antes do start): lê a
+  // posição só para medir o sinal, sem gravar pontos.
+  const [warmingUp, setWarmingUp] = useState(false);
+  const warmListenerRef = useRef<{ remove: () => void | Promise<void> } | null>(null);
+  const warmWatchIdRef = useRef<number | null>(null);
   // ID do registro no Supabase + tipo de atividade, persistidos junto
   // com o estado para sobreviver à navegação entre telas.
   const activityIdRef = useRef<string | null>(null);
@@ -387,6 +392,64 @@ export function useActivityTracker() {
     });
   }, [startWatch, startTimer]);
 
+  // Aquece o GPS na tela de calibração: pede permissão, lê posições e
+  // alimenta só o GPS_Signal_State (nenhum ponto é gravado). Sem isso o sinal
+  // ficava em "Buscando" para sempre, pois o watch só começava no `start()`.
+  const warmUp = useCallback(async () => {
+    if (warmListenerRef.current || warmWatchIdRef.current != null) return;
+    signalAccuraciesRef.current = [];
+    lastSampleTsRef.current = Date.now();
+    lastAcceptedRef.current = null;
+    setGpsSignalState("aquisitando");
+    setWarmingUp(true);
+    const onSample = (lat: number, lng: number, ts: number, accuracy: number | null) => {
+      lastSampleTsRef.current = Date.now();
+      if (accuracy != null && Number.isFinite(accuracy) && accuracy >= 0) {
+        signalAccuraciesRef.current = pushAccuracy(signalAccuraciesRef.current, accuracy);
+      }
+      setCurrentPos({ lat, lng, ts });
+    };
+    try {
+      if (Capacitor.isNativePlatform()) {
+        const current = await LocationTracking.checkBackgroundPermission();
+        let granted = current.granted;
+        if (!granted) granted = (await LocationTracking.requestBackgroundPermission()).granted;
+        if (!granted) {
+          setPermissionDenied(true);
+          setWarmingUp(false);
+          return;
+        }
+        warmListenerRef.current = await LocationTracking.addListener("locationUpdate", (p) =>
+          onSample(p.lat, p.lng, p.ts, p.accuracy),
+        );
+        await LocationTracking.startTracking({ minIntervalMs: 1000, minDistanceMeters: 1 });
+        return;
+      }
+      if (!("geolocation" in navigator)) return;
+      warmWatchIdRef.current = navigator.geolocation.watchPosition(
+        (pos) => onSample(pos.coords.latitude, pos.coords.longitude, pos.timestamp, pos.coords.accuracy ?? null),
+        (err) => {
+          if (err.code === err.PERMISSION_DENIED) setPermissionDenied(true);
+        },
+        { enableHighAccuracy: true, maximumAge: 1000, timeout: 10000 },
+      );
+    } catch {
+      // Falha no aquecimento não bloqueia: o usuário ainda pode iniciar.
+    }
+  }, []);
+
+  // `keepNative`: ao passar direto para o start(), mantém o GPS nativo ligado.
+  const endWarmUp = useCallback((keepNative = false) => {
+    warmListenerRef.current?.remove();
+    warmListenerRef.current = null;
+    if (warmWatchIdRef.current != null && navigator.geolocation) {
+      navigator.geolocation.clearWatch(warmWatchIdRef.current);
+      warmWatchIdRef.current = null;
+    }
+    if (!keepNative && Capacitor.isNativePlatform()) void LocationTracking.stopTracking();
+    setWarmingUp(false);
+  }, []);
+
   // Retorna `true` quando o rastreamento de fato iniciou (status passou a
   // "tracking"), ou `false` quando bloqueado por permissão negada (nesse
   // caso `permissionDenied` já fica exposto para a UI exibir o aviso
@@ -612,7 +675,7 @@ export function useActivityTracker() {
   // rastreamento-preciso-gps, Req 4 e 6). Evita re-render por ponto e aplica
   // as janelas de validade (SPEED_STALE_MS / NO_SIGNAL_TIMEOUT_MS).
   useEffect(() => {
-    if (status === "idle" || status === "saving") {
+    if ((status === "idle" || status === "saving") && !warmingUp) {
       setSmoothedSpeed(null);
       return;
     }
@@ -635,9 +698,13 @@ export function useActivityTracker() {
       );
     }, 1000);
     return () => clearInterval(interval);
-  }, [status]);
+  }, [status, warmingUp]);
 
   useEffect(() => () => {
+    warmListenerRef.current?.remove();
+    if (warmWatchIdRef.current != null && navigator.geolocation) {
+      navigator.geolocation.clearWatch(warmWatchIdRef.current);
+    }
     stopWatch();
     stopTimer();
   }, []);
@@ -661,6 +728,8 @@ export function useActivityTracker() {
     setActivityId: (id: string | null) => { activityIdRef.current = id; },
     setActivityType: (type: string | null) => { activityTypeRef.current = type; },
     start,
+    warmUp,
+    endWarmUp,
     pause,
     resume,
     finalize,

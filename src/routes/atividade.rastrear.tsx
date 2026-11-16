@@ -311,10 +311,16 @@ function TrackActivityPage() {
     setCountdown(3);
     setPreStart("countdown");
   };
+  // Aquece o GPS durante a calibração para o estado do sinal sair de
+  // "Buscando" (antes só era lido após o start).
+  useEffect(() => {
+    if (preStart === "calibrating") void tracker.warmUp();
+  }, [preStart]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (preStart !== "countdown") return;
     if (countdown <= 0) {
       setPreStart(null);
+      tracker.endWarmUp(true);
       startMut.mutate();
       return;
     }
@@ -949,7 +955,10 @@ function TrackActivityPage() {
               </button>
               <button
                 type="button"
-                onClick={() => setPreStart(null)}
+                onClick={() => {
+                  tracker.endWarmUp();
+                  setPreStart(null);
+                }}
                 className="w-full rounded-xl border border-border bg-card py-3 text-sm font-medium text-muted-foreground active:scale-[0.98] transition-transform"
               >
                 {t("common.cancel", { defaultValue: "Cancelar" })}

@@ -40,8 +40,12 @@ public class LocationTrackingPlugin: CAPPlugin, CAPBridgedPlugin, CLLocationMana
         lastAuthorizationStatus = locationManager.authorizationStatus
     }
 
+    // "Ao usar o app" também basta: com UIBackgroundModes=location e
+    // allowsBackgroundLocationUpdates, o iOS segue gravando em 2º plano
+    // (mostra a barra azul). Exigir só "Sempre" travava o início quando o
+    // usuário escolhia "Ao usar o app" (o prompt de "Sempre" nunca resolvia).
     private func isBackgroundAuthorized(_ status: CLAuthorizationStatus) -> Bool {
-        return status == .authorizedAlways
+        return status == .authorizedAlways || status == .authorizedWhenInUse
     }
 
     @objc func checkBackgroundPermission(_ call: CAPPluginCall) {
@@ -82,8 +86,10 @@ public class LocationTrackingPlugin: CAPPlugin, CAPBridgedPlugin, CLLocationMana
 
         switch status {
         case .authorizedWhenInUse:
-            // Ainda não é "Always" — solicita a elevação, necessária para
-            // segundo plano confiável (Requirement 2.1/2.2/2.3).
+            // Já permite gravar (inclusive em 2º plano). Resolve sem esperar
+            // e pede a elevação para "Sempre" sem bloquear o início.
+            pendingPermissionCall = nil
+            call.resolve(["granted": true])
             manager.requestAlwaysAuthorization()
         case .authorizedAlways:
             pendingPermissionCall = nil

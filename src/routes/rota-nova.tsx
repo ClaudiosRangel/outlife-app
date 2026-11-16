@@ -121,9 +121,13 @@ function RotaNovaScreen() {
     setPreStart("countdown");
   };
   useEffect(() => {
+    if (preStart === "calibrating") void tracker.warmUp();
+  }, [preStart]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
     if (preStart !== "countdown") return;
     if (countdown <= 0) {
       setPreStart(null);
+      tracker.endWarmUp(true);
       void tracker.start();
       return;
     }
@@ -145,6 +149,7 @@ function RotaNovaScreen() {
   };
 
   const cancelLive = () => {
+    tracker.endWarmUp();
     tracker.discard();
     tracker.setActivityId(null);
     setPreStart(null);
