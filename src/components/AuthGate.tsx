@@ -1,8 +1,9 @@
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { useLocation, useRouter } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
-import { fetchMyLegalStatus, fetchMyProfile } from "@/lib/api";
+import { fetchMyLegalStatus, fetchMyProfile, touchLastSeen } from "@/lib/api";
+import { WelcomeSplash } from "@/components/WelcomeSplash";
 import { LEGAL_DOC_VERSION } from "@/lib/legal-content";
 import { isPublicPath, resolveAuthRedirect } from "@/lib/auth-guard";
 
@@ -53,11 +54,48 @@ export function useAuthGate() {
 
   // Bloqueia o conteúdo protegido enquanto a sessão carrega ou o redirect ocorre.
   const blocked = (loading && !isPublicPath(pathname)) || (!!redirectTo && redirectTo !== pathname);
-  return { user, blocked };
+  // Logado, termos aceitos e cadastro completo = está dentro do app (boas-vindas liberadas).
+  const inApp = !!user && termsAccepted === true && profileComplete === true && !redirectTo;
+  const fullName = (profile as { full_name?: string | null } | null | undefined)?.full_name ?? null;
+
+  return { user, blocked, inApp, fullName };
 }
 
+const WELCOME_KEY = "outvitar:welcome-shown:";
+
 export function AuthGate({ children }: { children: ReactNode }) {
-  const { blocked } = useAuthGate();
+  const { user, blocked, inApp, fullName } = useAuthGate();
+  const [welcomeOpen, setWelcomeOpen] = useState(false);
+
+  // Boas-vindas uma vez por abertura/login (sessionStorage zera ao fechar o app).
+  useEffect(() => {
+    if (!inApp || !user) return;
+    try {
+      if (sessionStorage.getItem(WELCOME_KEY + user.id)) return;
+      sessionStorage.setItem(WELCOME_KEY + user.id, "1");
+    } catch {
+      /* sessionStorage indisponível: mostra mesmo assim */
+    }
+    setWelcomeOpen(true);
+  }, [inApp, user]);
+
+  // Último acesso: registra ao entrar e ao voltar para o primeiro plano
+  // (o servidor limita a 1 gravação a cada 5 minutos).
+  useEffect(() => {
+    if (!user) return;
+    void touchLastSeen();
+    const onVisible = () => {
+      if (document.visibilityState === "visible") void touchLastSeen();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
+  }, [user]);
+
   if (blocked) return <div className="min-h-screen bg-background" aria-busy="true" />;
-  return <>{children}</>;
+  return (
+    <>
+      {children}
+      {welcomeOpen && <WelcomeSplash fullName={fullName} onDone={() => setWelcomeOpen(false)} />}
+    </>
+  );
 }

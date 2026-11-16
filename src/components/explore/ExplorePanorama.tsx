@@ -34,7 +34,7 @@ import { buildExploreSummary } from "@/lib/explore-summary";
 import type { Panorama } from "@/lib/explore-panorama";
 import type { NowMarker } from "@/lib/nearby";
 import { resolveAsset } from "@/lib/api";
-import avatarFallback from "@/assets/avatar-rafael.jpg";
+import avatarFallback from "@/assets/avatar-default.svg";
 
 const WEATHER_ICON: Record<string, typeof Sun> = {
   clear: Sun,

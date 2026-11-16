@@ -5,6 +5,7 @@
  *
  * URL: /a/:activityId (curta, para compartilhar via WhatsApp/Instagram)
  */
+import avatarDefault from "@/assets/avatar-default.svg";
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -121,7 +122,7 @@ function ActivityDeepLinkPage() {
   }
 
   const authorName = activity.profile?.full_name ?? "Aventureiro";
-  const authorAvatar = resolveAsset(activity.profile?.avatar_url);
+  const authorAvatar = resolveAsset(activity.profile?.avatar_url, avatarDefault);
 
   return (
     <div className="min-h-screen bg-[#0f172a] text-white">

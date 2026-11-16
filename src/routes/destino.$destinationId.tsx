@@ -31,7 +31,7 @@ import {
 import { haversineMeters } from "@/lib/haversine";
 import { SafeImage as Avatar } from "@/components/SafeImage";
 import waterfall from "@/assets/cachoeira_do_tabuleiro.jpg";
-import avatarFallback from "@/assets/avatar-rafael.jpg";
+import avatarFallback from "@/assets/avatar-default.svg";
 
 const DestinationRouteMap = lazy(() => import("@/components/DestinationRouteMap"));
 const DestinationWeather = lazy(() => import("@/components/DestinationWeather"));

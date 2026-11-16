@@ -1271,3 +1271,18 @@ alter table public.profile_contacts
 --     códigos NÃO liberam acesso — preparação da monetização do lançamento.
 --     (idempotente)
 -- ############################################################################
+
+-- ############################################################################
+-- 56. 20261116120000_ocultar-usuario.sql
+--     Ocultar usuário do app (moderação admin) + datas de cadastro/último
+--     acesso. Colunas profiles.is_hidden/hidden_at/last_seen_at; funções
+--     is_user_hidden/can_see_user; RPCs admin_set_hidden, touch_last_seen,
+--     admin_user_dates; trigger protect_profile_trust_fields protege is_hidden;
+--     políticas RESTRICTIVE de SELECT (hidden_users_restrictive) em profiles,
+--     posts/curtidas/comentários, atividades, eventos, reviews, amizades/follows,
+--     chat, parceiro (services/leads/campanhas/favoritos/cupons) e destinos
+--     pendentes; ranking, liga, segmentos, sugestões de amigos, amigos na
+--     trilha, visitantes/comentários do destino, avatares de curtida e
+--     conversas passam a filtrar por can_see_user. (idempotente)
+--     CONTEÚDO: copiar de supabase/migrations/20261116120000_ocultar-usuario.sql
+-- ############################################################################

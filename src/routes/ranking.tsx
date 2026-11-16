@@ -9,7 +9,7 @@ import { SafeImage } from "@/components/SafeImage";
 import { useAuth } from "@/hooks/use-auth";
 import { fetchActivityRanking, fetchActivityTypes, resolveAsset } from "@/lib/api";
 import { formatRankingValue, type RankingMetric, type RankingScope, type RankingPeriod } from "@/lib/ranking-format";
-import avatarFallback from "@/assets/avatar-rafael.jpg";
+import avatarFallback from "@/assets/avatar-default.svg";
 
 const LeagueTab = lazy(() => import("@/components/LeagueTab"));
 

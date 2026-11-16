@@ -10,7 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { SafeImage } from "@/components/SafeImage";
 import { fetchLeagueStandings, type LeagueDivision } from "@/lib/league";
 import { resolveAsset } from "@/lib/api";
-import avatarFallback from "@/assets/avatar-rafael.jpg";
+import avatarFallback from "@/assets/avatar-default.svg";
 
 const DIVISION_LABEL: Record<LeagueDivision, string> = {
   bronze: "Bronze",

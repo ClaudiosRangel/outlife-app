@@ -3838,6 +3838,74 @@ export async function adminSetBan(userId: string, banned: boolean, reason?: stri
   if (error) throw error;
 }
 
+/** Oculta/reexibe um usuário do app (moderação admin). */
+export async function adminSetHidden(userId: string, hidden: boolean): Promise<void> {
+  const { error } = await supabase.rpc("admin_set_hidden" as never, {
+    _user_id: userId,
+    _hidden: hidden,
+  } as never);
+  if (error) throw error;
+}
+
+/** Marca o "último acesso" do usuário logado (throttle de 5 min no banco). Nunca lança. */
+export async function touchLastSeen(): Promise<void> {
+  try {
+    await supabase.rpc("touch_last_seen" as never);
+  } catch {
+    // best-effort: falha não deve afetar o app
+  }
+}
+
+export type AdminUserDates = {
+  createdAt: string | null;
+  lastSeenAt: string | null;
+  lastSignInAt: string | null;
+  isHidden: boolean;
+};
+
+/** Datas de cadastro/último acesso + flag de oculto (só admin). Mapa id -> datas. */
+export async function adminUserDates(ids: string[]): Promise<Record<string, AdminUserDates>> {
+  if (ids.length === 0) return {};
+  const { data, error } = await supabase.rpc("admin_user_dates" as never, { _user_ids: ids } as never);
+  if (error) throw error;
+  const map: Record<string, AdminUserDates> = {};
+  for (const r of (data ?? []) as unknown as {
+    id: string;
+    created_at: string | null;
+    last_seen_at: string | null;
+    last_sign_in_at: string | null;
+    is_hidden: boolean | null;
+  }[]) {
+    map[r.id] = {
+      createdAt: r.created_at,
+      lastSeenAt: r.last_seen_at,
+      lastSignInAt: r.last_sign_in_at,
+      isHidden: !!r.is_hidden,
+    };
+  }
+  return map;
+}
+
+export type AdminUserListItem = UserSearchResult & AdminUserDates;
+
+/** Lista de usuários da moderação já unida às datas e ao flag "oculto". */
+export async function adminListUsersWithDates(query = "", limit = 200): Promise<AdminUserListItem[]> {
+  const users = await adminListUsers(query, limit);
+  let dates: Record<string, AdminUserDates> = {};
+  try {
+    dates = await adminUserDates(users.map((u) => u.id));
+  } catch {
+    // migration ainda não aplicada: lista segue sem as datas
+  }
+  return users.map((u) => ({
+    ...u,
+    createdAt: dates[u.id]?.createdAt ?? null,
+    lastSeenAt: dates[u.id]?.lastSeenAt ?? null,
+    lastSignInAt: dates[u.id]?.lastSignInAt ?? null,
+    isHidden: dates[u.id]?.isHidden ?? false,
+  }));
+}
+
 // ============================================================================
 // Programa de indicação (WhatsApp PRO + indicação)
 // ============================================================================

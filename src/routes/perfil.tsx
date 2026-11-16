@@ -29,7 +29,7 @@ import {
 import { StatusBar } from "@/components/StatusBar";
 import { Stars } from "@/components/Stars";
 import { Textarea } from "@/components/ui/textarea";
-import avatar from "@/assets/avatar-rafael.jpg";
+import avatar from "@/assets/avatar-default.svg";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { Switch } from "@/components/ui/switch";

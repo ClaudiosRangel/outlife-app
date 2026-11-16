@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import avatarDefault from "@/assets/avatar-default.svg";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ChevronLeft, Search, MapPin, X, Navigation } from "lucide-react";
@@ -226,7 +227,7 @@ function Busca() {
                     <div key={a.id} className="flex items-center gap-3 rounded-2xl bg-card p-3 shadow-card">
                       <div className="relative">
                         <img
-                          src={resolveAsset(a.profiles?.avatar_url)}
+                          src={resolveAsset(a.profiles?.avatar_url, avatarDefault)}
                           alt={a.profiles?.full_name ?? ""}
                           className="h-12 w-12 rounded-full object-cover"
                         />
@@ -340,7 +341,7 @@ function Busca() {
                 {foundPosts.map((c: any) => (
                   <div key={c.id} className="flex items-start gap-3 rounded-2xl bg-card p-3 shadow-card">
                     <img
-                      src={resolveAsset(c.author?.avatar_url)}
+                      src={resolveAsset(c.author?.avatar_url, avatarDefault)}
                       alt={c.author?.full_name ?? "autor"}
                       loading="lazy"
                       className="h-10 w-10 rounded-full object-cover"

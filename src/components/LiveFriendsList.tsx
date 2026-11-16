@@ -5,6 +5,7 @@
 // por is_live/visibilidade pelo pai (tarefa 10.1) e NÃO faz fetch aqui. Ao
 // tocar num amigo, dispara `onSelectFriend(friendId)` para que a Explore_Screen
 // centralize o MapView na posição ao vivo dele (Req 4.1).
+import avatarDefault from "@/assets/avatar-default.svg";
 import { useTranslation } from "react-i18next";
 import { Navigation } from "lucide-react";
 
@@ -69,7 +70,7 @@ export function LiveFriendsList({ friends, onSelectFriend }: LiveFriendsListProp
                 className="flex w-full items-center gap-3 rounded-2xl bg-card p-3 text-left shadow-card transition-colors hover:bg-accent"
               >
                 <Avatar className="h-12 w-12">
-                  <AvatarImage src={resolveAsset(friend.avatar_url)} alt={name} />
+                  <AvatarImage src={resolveAsset(friend.avatar_url, avatarDefault)} alt={name} />
                   <AvatarFallback>{initialOf(friend)}</AvatarFallback>
                 </Avatar>
 

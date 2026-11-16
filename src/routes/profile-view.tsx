@@ -42,7 +42,7 @@ import {
 } from "@/lib/api";
 import { getActivityIcon } from "@/lib/activity-icons";
 import { Skeleton } from "@/components/ui/skeleton";
-import avatarFallback from "@/assets/avatar-rafael.jpg";
+import avatarFallback from "@/assets/avatar-default.svg";
 import community1 from "@/assets/community-1.jpg";
 
 type ProfileTab = "atividades" | "posts" | "conquistas";

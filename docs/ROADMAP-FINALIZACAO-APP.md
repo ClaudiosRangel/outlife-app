@@ -7,6 +7,25 @@
 
 **Última atualização:** 18/10/2026 (🐛 corrigido registro incoerente de atividade + correção RETROATIVA de 2 atividades no Supabase + build iOS AUTOMÁTICO a cada push na main)
 
+> **👤 AVATAR PADRÃO + OCULTAR USUÁRIO + BOAS-VINDAS (16/11/2026, local, NÃO commitado):**
+> 1. **Avatar padrão estilo Instagram** (`src/assets/avatar-default.svg`, silhueta branca em fundo cinza)
+>    substitui a foto `avatar-rafael.jpg` em todos os fallbacks (17 arquivos) e nos pontos que
+>    caíam em `guide`/`community1` (LiveFriendsList, a.$activityId, busca, comunidade, eventos).
+> 2. **Ocultar usuário (admin → Moderação)**: migration `20261116120000_ocultar-usuario.sql`
+>    (aplicada em produção 2×, item 56 do consolidado). `profiles.is_hidden/hidden_at/last_seen_at`,
+>    `can_see_user()`, RPCs `admin_set_hidden`, `touch_last_seen`, `admin_user_dates`, políticas
+>    RESTRICTIVE de SELECT em ~27 tabelas (perfil, posts, atividades, eventos, amigos, parceiro…) e
+>    ranking/liga/segmentos/sugestões/chat/comentários filtrando oculto. Dono e admin continuam
+>    vendo. Teste em transação revertida: oculto some (perfil e posts = 0 para outro usuário).
+>    Trigger passou a impedir que o próprio usuário se desoculte ou se desbaneie.
+>    Pendente (contam o oculto): `my_segment_trophies`, `activity_segment_achievements`, `notifications`.
+> 3. **Admin mostra "Cadastro" e "Último acesso"** (`last_seen_at`, gravado por `touchLastSeen()`
+>    no `AuthGate` ao abrir/voltar ao app, no máx. 1×/5 min; fallback no último login).
+> 4. **Boas-vindas animadas** (`WelcomeSplash`, chamada no `AuthGate`) a cada abertura/login:
+>    logo com anéis, montanhas subindo, partículas e "Aqui registraremos seus melhores momentos!".
+>    Toque pula; respeita "reduzir movimento"; textos em `welcome.*` (pt-BR/en).
+> **FALTA:** `build:native` + `cap sync` + APK + commit/push (aguardando o usuário) e testar no aparelho.
+
 > **🛰️ FIX GPS iOS: calibração travada em "Buscando sinal" (16/11/2026, commit `843401b`):**
 > Relato (iPhone, build 49): ao iniciar atividade, a calibração ficava em "Buscando sinal de GPS"
 > e "Iniciar mesmo assim" também não iniciava (Strava achava na hora). Duas causas:

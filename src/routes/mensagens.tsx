@@ -14,7 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/hooks/use-auth";
 import { fetchConversations, searchUsers, resolveAsset } from "@/lib/api";
-import avatarFallback from "@/assets/avatar-rafael.jpg";
+import avatarFallback from "@/assets/avatar-default.svg";
 
 export const Route = createFileRoute("/mensagens")({
   component: MessagesInbox,

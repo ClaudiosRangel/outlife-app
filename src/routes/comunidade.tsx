@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from "react";
+import avatarDefault from "@/assets/avatar-default.svg";
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
@@ -171,7 +172,7 @@ function toUIPost(p: any): UIPost {
     authorId: p.author_id,
     user: author.full_name || "Aventureiro",
     handle: author.username ? `@${author.username}` : "@outlife",
-    avatar: resolveAsset(author.avatar_url, community1),
+    avatar: resolveAsset(author.avatar_url, avatarDefault),
     time: created.toLocaleDateString("pt-BR"),
     place: p.place || "Brasil",
     text: p.text || "",

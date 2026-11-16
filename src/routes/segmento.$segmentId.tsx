@@ -12,7 +12,7 @@ import {
 } from "@/lib/api";
 import { fetchSegmentRanking } from "@/lib/league";
 import { useAuth } from "@/hooks/use-auth";
-import avatarFallback from "@/assets/avatar-rafael.jpg";
+import avatarFallback from "@/assets/avatar-default.svg";
 
 const SegmentViewMap = lazy(() => import("@/components/SegmentViewMap"));
 

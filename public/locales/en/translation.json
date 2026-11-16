@@ -115,9 +115,18 @@
     "submit": "Confirm and continue"
   },
   "months": {
-    "jan": "January", "feb": "February", "mar": "March", "apr": "April",
-    "may": "May", "jun": "June", "jul": "July", "aug": "August",
-    "sep": "September", "oct": "October", "nov": "November", "dec": "December"
+    "jan": "January",
+    "feb": "February",
+    "mar": "March",
+    "apr": "April",
+    "may": "May",
+    "jun": "June",
+    "jul": "July",
+    "aug": "August",
+    "sep": "September",
+    "oct": "October",
+    "nov": "November",
+    "dec": "December"
   },
   "home": {
     "goodMorning": "Good morning",
@@ -318,24 +327,27 @@
     }
   },
   "destination": {
-    "notFound": "Destination not found",
-    "notFoundDescription": "The destination you're looking for isn't available on OutVitar.",
-    "backToExplore": "Back to Explore",
-    "pendingBadge": "Under review",
-    "pendingNotice": "This destination is still under review and is only visible to you until it's approved.",
-    "metrics": {
-      "difficulty": "Difficulty",
-      "distance": "Distance",
-      "duration": "Duration",
-      "elevation": "Elevation",
-      "type": "Type"
-    },
-    "noDescription": "This destination doesn't have a description yet.",
-    "visitorsTitle": "Who's been here",
-    "commentsTitle": "Comments",
-    "commentPlaceholder": "Write a comment...",
-    "commentLoginRequired": "Sign in to comment.",
-    "commentsEmpty": "Be the first to comment! ⭐"
+    "notFound": "Destination not found.",
+    "save": "Save",
+    "saved": "Saved! See it in Profile → Saved",
+    "unsaved": "Removed from saved",
+    "paid": "Paid",
+    "free": "Free",
+    "routeMap": "Route map",
+    "about": "About the trail",
+    "safetyTitle": "Practice safely",
+    "safetyText": "Trails may change due to weather and external factors. Use is the user's responsibility, who assumes the risks involved.",
+    "startNav": "Start navigation",
+    "elevationProfile": "Elevation profile",
+    "elevMin": "Min. alt.",
+    "elevMax": "Max. alt.",
+    "elevGain": "Total climb",
+    "friendsOnTrail": "Friends on this trail",
+    "partnersNearby": "Partners nearby",
+    "farTitle": "You are far from the start",
+    "farText": "The trail start is ~{{dist}} away from you. Want us to take you there?",
+    "howToArrive": "How to get there (Google Maps)",
+    "startAnyway": "Start anyway"
   },
   "collection": {
     "saveLabel": "Save",
@@ -850,29 +862,6 @@
     "earned": "Earned",
     "toEarn": "To earn"
   },
-  "destination": {
-    "notFound": "Destination not found.",
-    "save": "Save",
-    "saved": "Saved! See it in Profile → Saved",
-    "unsaved": "Removed from saved",
-    "paid": "Paid",
-    "free": "Free",
-    "routeMap": "Route map",
-    "about": "About the trail",
-    "safetyTitle": "Practice safely",
-    "safetyText": "Trails may change due to weather and external factors. Use is the user's responsibility, who assumes the risks involved.",
-    "startNav": "Start navigation",
-    "elevationProfile": "Elevation profile",
-    "elevMin": "Min. alt.",
-    "elevMax": "Max. alt.",
-    "elevGain": "Total climb",
-    "friendsOnTrail": "Friends on this trail",
-    "partnersNearby": "Partners nearby",
-    "farTitle": "You are far from the start",
-    "farText": "The trail start is ~{{dist}} away from you. Want us to take you there?",
-    "howToArrive": "How to get there (Google Maps)",
-    "startAnyway": "Start anyway"
-  },
   "weather": {
     "attention": "Attention",
     "feelsLike": "Feels like",
@@ -1282,7 +1271,10 @@
       "escalada": "Climbing"
     },
     "travelLabel": "How you'll travel",
-    "travel": { "foot": "On foot", "bike": "By bike" },
+    "travel": {
+      "foot": "On foot",
+      "bike": "By bike"
+    },
     "modeLabel": "How to create the route",
     "modeLive": "Record live",
     "modeLiveHint": "Record the real route going to the place.",
@@ -1366,5 +1358,12 @@
     "centerMe": "Center on me",
     "centerBrazil": "Center on Brazil",
     "viewProfile": "View profile"
+  },
+  "welcome": {
+    "aria": "Welcome",
+    "hello": "Welcome, {{name}}",
+    "helloNoName": "Welcome",
+    "tagline": "Here we will record your best moments!",
+    "skip": "Tap to continue"
   }
 }

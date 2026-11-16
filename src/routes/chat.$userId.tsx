@@ -19,7 +19,7 @@ import {
   markMessagesRead,
   resolveAsset,
 } from "@/lib/api";
-import avatarFallback from "@/assets/avatar-rafael.jpg";
+import avatarFallback from "@/assets/avatar-default.svg";
 
 export const Route = createFileRoute("/chat/$userId")({
   component: ChatPage,

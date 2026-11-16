@@ -1,4 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import avatarDefault from "@/assets/avatar-default.svg";
 import { useEffect, useRef, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Calendar, MapPin, Users, Plus, MessageCircle, Loader2, Image as ImageIcon, CalendarPlus, Pencil, Trash2, Send, Bell } from "lucide-react";
@@ -630,7 +631,7 @@ function EventDetailSheet({ event, open, onClose, onEdit }: { event: EventItem |
               {participants.slice(0, 6).map((p, i) => (
                 <div key={i} className="h-7 w-7 rounded-full border-2 border-card bg-primary/10 grid place-items-center overflow-hidden">
                   {p.profile?.avatar_url ? (
-                    <img src={p.profile.avatar_url} alt="" className="h-full w-full object-cover" />
+                    <img src={p.profile.avatar_url || avatarDefault} alt="" className="h-full w-full object-cover" />
                   ) : (
                     <span className="text-[9px] font-bold text-primary">{(p.profile?.full_name ?? "?")[0]?.toUpperCase()}</span>
                   )}

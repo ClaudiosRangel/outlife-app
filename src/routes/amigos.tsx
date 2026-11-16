@@ -22,7 +22,7 @@ import {
   type UserSearchResult,
 } from "@/lib/api";
 import { supabase } from "@/integrations/supabase/client";
-import avatarFallback from "@/assets/avatar-rafael.jpg";
+import avatarFallback from "@/assets/avatar-default.svg";
 
 export const Route = createFileRoute("/amigos")({
   component: FriendsScreen,

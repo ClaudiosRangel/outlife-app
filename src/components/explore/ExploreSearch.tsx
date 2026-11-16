@@ -4,7 +4,7 @@ import { Search, MapPin, Users, Store, CalendarDays, Loader2, Mountain, Footprin
 import { searchUsers, resolveAsset, type Partner } from "@/lib/api";
 import type { NearbyEvent } from "@/lib/api";
 import { geocodePlace } from "@/lib/geocode";
-import avatarFallback from "@/assets/avatar-rafael.jpg";
+import avatarFallback from "@/assets/avatar-default.svg";
 
 export type ExploreSearchResult =
   | { kind: "region"; label: string; lat: number; lng: number }

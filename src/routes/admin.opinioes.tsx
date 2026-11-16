@@ -7,7 +7,7 @@ import { StatusBar } from "@/components/StatusBar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/hooks/use-auth";
 import { isCurrentUserAdmin, fetchAdminFeedback, resolveAsset } from "@/lib/api";
-import avatarFallback from "@/assets/avatar-rafael.jpg";
+import avatarFallback from "@/assets/avatar-default.svg";
 import i18n from "@/lib/i18n";
 
 export const Route = createFileRoute("/admin/opinioes")({

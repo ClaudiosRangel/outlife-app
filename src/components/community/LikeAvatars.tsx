@@ -1,7 +1,7 @@
 import { resolveAsset } from "@/lib/api";
 import type { PostLikeAvatar } from "@/lib/api";
 import { formatLikeSummary } from "@/lib/community-card";
-import avatarFallback from "@/assets/avatar-rafael.jpg";
+import avatarFallback from "@/assets/avatar-default.svg";
 import { useTranslation } from "react-i18next";
 
 /**

@@ -6,7 +6,7 @@ import { Bell, MapPin, Search, Sparkles, ArrowRight, Calendar, Users, Trophy, Ba
 import { BrandLogo } from "@/components/BrandLogo";
 import hero from "@/assets/hero-mountain.jpg";
 import seloCadastur from "@/assets/selo-cadastur.jpg";
-import avatarFallback from "@/assets/avatar-rafael.jpg";
+import avatarFallback from "@/assets/avatar-default.svg";
 import { StatusBar } from "@/components/StatusBar";
 import { Stars } from "@/components/Stars";
 import { fetchAppContent, fetchDestinations, fetchMyProfile, fetchPartners, fetchUnreadNotificationCount, fetchCommunityCampaigns, resolveAsset, type Destination } from "@/lib/api";

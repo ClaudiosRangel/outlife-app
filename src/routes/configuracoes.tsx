@@ -24,7 +24,7 @@ import {
   type PersonType,
 } from "@/lib/api";
 import { maskCPF, maskCNPJ, maskCEP, isValidCPF, isValidCNPJ } from "@/lib/document-validation";
-import avatarFallback from "@/assets/avatar-rafael.jpg";
+import avatarFallback from "@/assets/avatar-default.svg";
 
 export const Route = createFileRoute("/configuracoes")({
   component: SettingsScreen,

@@ -115,9 +115,18 @@
     "submit": "Confirmar e continuar"
   },
   "months": {
-    "jan": "janeiro", "feb": "fevereiro", "mar": "março", "apr": "abril",
-    "may": "maio", "jun": "junho", "jul": "julho", "aug": "agosto",
-    "sep": "setembro", "oct": "outubro", "nov": "novembro", "dec": "dezembro"
+    "jan": "janeiro",
+    "feb": "fevereiro",
+    "mar": "março",
+    "apr": "abril",
+    "may": "maio",
+    "jun": "junho",
+    "jul": "julho",
+    "aug": "agosto",
+    "sep": "setembro",
+    "oct": "outubro",
+    "nov": "novembro",
+    "dec": "dezembro"
   },
   "home": {
     "goodMorning": "Bom dia",
@@ -318,24 +327,27 @@
     }
   },
   "destination": {
-    "notFound": "Destino não encontrado",
-    "notFoundDescription": "O destino que você busca não está disponível no OutVitar.",
-    "backToExplore": "Voltar a Explorar",
-    "pendingBadge": "Análise pendente",
-    "pendingNotice": "Este destino ainda está em análise e só é visível para você até ser aprovado.",
-    "metrics": {
-      "difficulty": "Dificuldade",
-      "distance": "Distância",
-      "duration": "Duração",
-      "elevation": "Elevação",
-      "type": "Tipo"
-    },
-    "noDescription": "Este destino ainda não tem descrição.",
-    "visitorsTitle": "Quem já esteve aqui",
-    "commentsTitle": "Comentários",
-    "commentPlaceholder": "Escreva um comentário...",
-    "commentLoginRequired": "Entre para comentar.",
-    "commentsEmpty": "Seja o primeiro a comentar! ⭐"
+    "notFound": "Destino não encontrado.",
+    "save": "Salvar",
+    "saved": "Salvo! Veja em Perfil → Salvos",
+    "unsaved": "Removido dos salvos",
+    "paid": "Pago",
+    "free": "Gratuito",
+    "routeMap": "Mapa da rota",
+    "about": "Sobre a trilha",
+    "safetyTitle": "Pratique com segurança",
+    "safetyText": "Trilhas podem sofrer alterações por condições climáticas e fatores externos. A decisão de utilização é de responsabilidade do usuário, que assume os riscos envolvidos.",
+    "startNav": "Iniciar navegação",
+    "elevationProfile": "Perfil de elevação",
+    "elevMin": "Alt. mínima",
+    "elevMax": "Alt. máxima",
+    "elevGain": "Subida acum.",
+    "friendsOnTrail": "Amigos nesta trilha",
+    "partnersNearby": "Parceiros na região",
+    "farTitle": "Você está longe do início",
+    "farText": "O início desta trilha está a ~{{dist}} de você. Quer que a gente te leve até lá?",
+    "howToArrive": "Como chegar (Google Maps)",
+    "startAnyway": "Iniciar mesmo assim"
   },
   "collection": {
     "saveLabel": "Salvar",
@@ -850,29 +862,6 @@
     "earned": "Conquistadas",
     "toEarn": "A conquistar"
   },
-  "destination": {
-    "notFound": "Destino não encontrado.",
-    "save": "Salvar",
-    "saved": "Salvo! Veja em Perfil → Salvos",
-    "unsaved": "Removido dos salvos",
-    "paid": "Pago",
-    "free": "Gratuito",
-    "routeMap": "Mapa da rota",
-    "about": "Sobre a trilha",
-    "safetyTitle": "Pratique com segurança",
-    "safetyText": "Trilhas podem sofrer alterações por condições climáticas e fatores externos. A decisão de utilização é de responsabilidade do usuário, que assume os riscos envolvidos.",
-    "startNav": "Iniciar navegação",
-    "elevationProfile": "Perfil de elevação",
-    "elevMin": "Alt. mínima",
-    "elevMax": "Alt. máxima",
-    "elevGain": "Subida acum.",
-    "friendsOnTrail": "Amigos nesta trilha",
-    "partnersNearby": "Parceiros na região",
-    "farTitle": "Você está longe do início",
-    "farText": "O início desta trilha está a ~{{dist}} de você. Quer que a gente te leve até lá?",
-    "howToArrive": "Como chegar (Google Maps)",
-    "startAnyway": "Iniciar mesmo assim"
-  },
   "weather": {
     "attention": "Atenção",
     "feelsLike": "Sensação",
@@ -1282,7 +1271,10 @@
       "escalada": "Escalada"
     },
     "travelLabel": "Como você vai percorrer",
-    "travel": { "foot": "A pé", "bike": "De bicicleta" },
+    "travel": {
+      "foot": "A pé",
+      "bike": "De bicicleta"
+    },
     "modeLabel": "Como criar a rota",
     "modeLive": "Gravar ao vivo",
     "modeLiveHint": "Grave o trajeto real indo até o lugar.",
@@ -1366,5 +1358,12 @@
     "centerMe": "Centralizar em mim",
     "centerBrazil": "Centralizar no Brasil",
     "viewProfile": "Ver perfil"
+  },
+  "welcome": {
+    "aria": "Boas-vindas",
+    "hello": "Bem-vindo, {{name}}",
+    "helloNoName": "Bem-vindo",
+    "tagline": "Aqui registraremos seus melhores momentos!",
+    "skip": "Toque para continuar"
   }
 }

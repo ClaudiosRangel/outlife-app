@@ -17,7 +17,7 @@ import {
   Star,
   CalendarClock,
 } from "lucide-react";
-import avatarFallback from "@/assets/avatar-rafael.jpg";
+import avatarFallback from "@/assets/avatar-default.svg";
 import i18n from "@/lib/i18n";
 import { useTranslation } from "react-i18next";
 import { StatusBar } from "@/components/StatusBar";

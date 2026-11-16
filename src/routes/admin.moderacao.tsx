@@ -2,24 +2,48 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { ArrowLeft, Search, Trash2, Megaphone, Ban, ShieldCheck, Loader2, ShieldAlert } from "lucide-react";
+import { ArrowLeft, Search, Trash2, Megaphone, Ban, ShieldCheck, Loader2, ShieldAlert, EyeOff, Eye } from "lucide-react";
 import { StatusBar } from "@/components/StatusBar";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import {
   isCurrentUserAdmin,
-  adminListUsers,
+  adminListUsersWithDates,
   adminUserPosts,
   adminUserEvents,
   adminDeletePost,
   adminDeleteEvent,
   adminSendWarning,
   adminSetBan,
+  adminSetHidden,
   resolveAsset,
-  type UserSearchResult,
+  type AdminUserListItem,
 } from "@/lib/api";
-import avatarFallback from "@/assets/avatar-rafael.jpg";
+import avatarFallback from "@/assets/avatar-default.svg";
+
+function fmtDate(iso: string | null | undefined): string {
+  return iso ? new Date(iso).toLocaleDateString("pt-BR") : "—";
+}
+
+function fmtDateTime(iso: string | null | undefined): string {
+  if (!iso) return "nunca";
+  const d = new Date(iso);
+  return `${d.toLocaleDateString("pt-BR")} ${d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}`;
+}
+
+/** Último acesso: usa last_seen_at com fallback para o último login. */
+function lastAccess(u: AdminUserListItem): string {
+  return fmtDateTime(u.lastSeenAt ?? u.lastSignInAt);
+}
+
+function HiddenBadge() {
+  return (
+    <span className="inline-flex items-center gap-1 rounded-full bg-destructive/10 px-2 py-0.5 text-[10px] font-semibold text-destructive">
+      <EyeOff size={10} /> Oculto
+    </span>
+  );
+}
 
 export const Route = createFileRoute("/admin/moderacao")({
   component: AdminModeration,
@@ -38,7 +62,7 @@ function AdminModeration() {
   const { user, loading } = useAuth();
   const [query, setQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
-  const [selected, setSelected] = useState<UserSearchResult | null>(null);
+  const [selected, setSelected] = useState<AdminUserListItem | null>(null);
   const [warning, setWarning] = useState("");
 
   // Debounce da busca incremental (300ms) para não consultar a cada tecla.
@@ -61,7 +85,7 @@ function AdminModeration() {
   // (busca incremental com debounce). Só ativa quando não há usuário selecionado.
   const { data: users = [], isLoading: usersLoading } = useQuery({
     queryKey: ["admin-list-users", debouncedQuery],
-    queryFn: () => adminListUsers(debouncedQuery),
+    queryFn: () => adminListUsersWithDates(debouncedQuery),
     enabled: !!user && isAdmin === true && !selected,
   });
 
@@ -96,6 +120,24 @@ function AdminModeration() {
     onSuccess: (_d, banned) => toast.success(banned ? "Usuário banido." : "Usuário desbanido."),
     onError: (e: Error) => toast.error(e.message),
   });
+  const setHidden = useMutation({
+    mutationFn: (hidden: boolean) => adminSetHidden(selected!.id, hidden),
+    onSuccess: (_d, hidden) => {
+      toast.success(hidden ? "Usuário oculto do app." : "Usuário reexibido no app.");
+      setSelected((s) => (s ? { ...s, isHidden: hidden } : s));
+      qc.invalidateQueries({ queryKey: ["admin-list-users"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const toggleHidden = () => {
+    if (!selected) return;
+    const next = !selected.isHidden;
+    const msg = next
+      ? "Ocultar este usuário do app? Todo o conteúdo, nome nas listas e perfil de parceiro deste usuário deixam de aparecer para os outros."
+      : "Reexibir este usuário no app? Seu conteúdo e perfil voltam a aparecer para os outros.";
+    if (window.confirm(msg)) setHidden.mutate(next);
+  };
 
   if (loading || (!!user && adminLoading)) {
     return <div className="p-6 text-center text-sm text-muted-foreground">Carregando…</div>;
@@ -161,8 +203,14 @@ function AdminModeration() {
               >
                 <img src={resolveAsset(u.avatar_url, avatarFallback)} alt="" className="h-9 w-9 rounded-full object-cover" />
                 <div className="min-w-0 flex-1">
-                  <div className="truncate text-sm font-medium">{u.full_name ?? "Aventureiro"}</div>
+                  <div className="flex items-center gap-2">
+                    <span className="truncate text-sm font-medium">{u.full_name ?? "Aventureiro"}</span>
+                    {u.isHidden && <HiddenBadge />}
+                  </div>
                   {u.username && <div className="truncate text-[11px] text-muted-foreground">@{u.username}</div>}
+                  <div className="truncate text-[10px] text-muted-foreground">
+                    Cadastro: {fmtDate(u.createdAt)} · Último acesso: {lastAccess(u)}
+                  </div>
                 </div>
               </button>
             ))}
@@ -176,8 +224,13 @@ function AdminModeration() {
           <div className="flex items-center gap-3 rounded-2xl bg-card p-3 shadow-card">
             <img src={resolveAsset(selected.avatar_url, avatarFallback)} alt="" className="h-11 w-11 rounded-full object-cover" />
             <div className="min-w-0 flex-1">
-              <div className="truncate text-sm font-semibold">{selected.full_name ?? "Aventureiro"}</div>
+              <div className="flex items-center gap-2">
+                <span className="truncate text-sm font-semibold">{selected.full_name ?? "Aventureiro"}</span>
+                {selected.isHidden && <HiddenBadge />}
+              </div>
               {selected.username && <div className="truncate text-[11px] text-muted-foreground">@{selected.username}</div>}
+              <div className="text-[10px] text-muted-foreground">Cadastro: {fmtDate(selected.createdAt)}</div>
+              <div className="text-[10px] text-muted-foreground">Último acesso: {lastAccess(selected)}</div>
             </div>
             <button onClick={() => setSelected(null)} className="text-xs text-muted-foreground underline">Trocar</button>
           </div>
@@ -203,6 +256,18 @@ function AdminModeration() {
               </Button>
               <Button variant="outline" className="flex-1 h-10 rounded-xl" disabled={setBan.isPending} onClick={() => setBan.mutate(false)}>
                 <ShieldCheck size={15} className="mr-1" /> Desbanir
+              </Button>
+            </div>
+            <div className="mt-2">
+              <Button variant="outline" className="w-full h-10 rounded-xl" disabled={setHidden.isPending} onClick={toggleHidden}>
+                {setHidden.isPending ? (
+                  <Loader2 size={15} className="mr-1 animate-spin" />
+                ) : selected.isHidden ? (
+                  <Eye size={15} className="mr-1" />
+                ) : (
+                  <EyeOff size={15} className="mr-1" />
+                )}
+                {selected.isHidden ? "Reexibir no app" : "Ocultar do app"}
               </Button>
             </div>
           </div>
