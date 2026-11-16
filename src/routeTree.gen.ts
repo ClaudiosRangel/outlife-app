@@ -10,7 +10,6 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TermosRouteImport } from './routes/termos'
-import { Route as EmailConfirmadoRouteImport } from './routes/email-confirmado'
 import { Route as SugerirDestinoRouteImport } from './routes/sugerir-destino'
 import { Route as RotaNovaRouteImport } from './routes/rota-nova'
 import { Route as RedefinirSenhaRouteImport } from './routes/redefinir-senha'
@@ -25,6 +24,7 @@ import { Route as MarketplaceRouteImport } from './routes/marketplace'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ExplorarRouteImport } from './routes/explorar'
 import { Route as EventosRouteImport } from './routes/eventos'
+import { Route as EmailConfirmadoRouteImport } from './routes/email-confirmado'
 import { Route as ConquistasRouteImport } from './routes/conquistas'
 import { Route as ConfiguracoesRouteImport } from './routes/configuracoes'
 import { Route as ComunidadeRouteImport } from './routes/comunidade'
@@ -79,11 +79,6 @@ import { Route as ApiPlacesPhotosRouteImport } from './routes/api.places.photos'
 const TermosRoute = TermosRouteImport.update({
   id: '/termos',
   path: '/termos',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const EmailConfirmadoRoute = EmailConfirmadoRouteImport.update({
-  id: '/email-confirmado',
-  path: '/email-confirmado',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SugerirDestinoRoute = SugerirDestinoRouteImport.update({
@@ -154,6 +149,11 @@ const ExplorarRoute = ExplorarRouteImport.update({
 const EventosRoute = EventosRouteImport.update({
   id: '/eventos',
   path: '/eventos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EmailConfirmadoRoute = EmailConfirmadoRouteImport.update({
+  id: '/email-confirmado',
+  path: '/email-confirmado',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ConquistasRoute = ConquistasRouteImport.update({
@@ -418,6 +418,7 @@ export interface FileRoutesByFullPath {
   '/comunidade': typeof ComunidadeRoute
   '/configuracoes': typeof ConfiguracoesRoute
   '/conquistas': typeof ConquistasRoute
+  '/email-confirmado': typeof EmailConfirmadoRoute
   '/eventos': typeof EventosRouteWithChildren
   '/explorar': typeof ExplorarRoute
   '/login': typeof LoginRoute
@@ -433,7 +434,6 @@ export interface FileRoutesByFullPath {
   '/rota-nova': typeof RotaNovaRoute
   '/sugerir-destino': typeof SugerirDestinoRoute
   '/termos': typeof TermosRoute
-  '/email-confirmado': typeof EmailConfirmadoRoute
   '/a/$activityId': typeof AActivityIdRoute
   '/admin/atividades': typeof AdminAtividadesRoute
   '/admin/compliance': typeof AdminComplianceRoute
@@ -486,6 +486,7 @@ export interface FileRoutesByTo {
   '/comunidade': typeof ComunidadeRoute
   '/configuracoes': typeof ConfiguracoesRoute
   '/conquistas': typeof ConquistasRoute
+  '/email-confirmado': typeof EmailConfirmadoRoute
   '/eventos': typeof EventosRouteWithChildren
   '/explorar': typeof ExplorarRoute
   '/login': typeof LoginRoute
@@ -501,7 +502,6 @@ export interface FileRoutesByTo {
   '/rota-nova': typeof RotaNovaRoute
   '/sugerir-destino': typeof SugerirDestinoRoute
   '/termos': typeof TermosRoute
-  '/email-confirmado': typeof EmailConfirmadoRoute
   '/a/$activityId': typeof AActivityIdRoute
   '/admin/atividades': typeof AdminAtividadesRoute
   '/admin/compliance': typeof AdminComplianceRoute
@@ -555,6 +555,7 @@ export interface FileRoutesById {
   '/comunidade': typeof ComunidadeRoute
   '/configuracoes': typeof ConfiguracoesRoute
   '/conquistas': typeof ConquistasRoute
+  '/email-confirmado': typeof EmailConfirmadoRoute
   '/eventos': typeof EventosRouteWithChildren
   '/explorar': typeof ExplorarRoute
   '/login': typeof LoginRoute
@@ -570,7 +571,6 @@ export interface FileRoutesById {
   '/rota-nova': typeof RotaNovaRoute
   '/sugerir-destino': typeof SugerirDestinoRoute
   '/termos': typeof TermosRoute
-  '/email-confirmado': typeof EmailConfirmadoRoute
   '/a/$activityId': typeof AActivityIdRoute
   '/admin/atividades': typeof AdminAtividadesRoute
   '/admin/compliance': typeof AdminComplianceRoute
@@ -625,6 +625,7 @@ export interface FileRouteTypes {
     | '/comunidade'
     | '/configuracoes'
     | '/conquistas'
+    | '/email-confirmado'
     | '/eventos'
     | '/explorar'
     | '/login'
@@ -640,7 +641,6 @@ export interface FileRouteTypes {
     | '/rota-nova'
     | '/sugerir-destino'
     | '/termos'
-    | '/email-confirmado'
     | '/a/$activityId'
     | '/admin/atividades'
     | '/admin/compliance'
@@ -693,6 +693,7 @@ export interface FileRouteTypes {
     | '/comunidade'
     | '/configuracoes'
     | '/conquistas'
+    | '/email-confirmado'
     | '/eventos'
     | '/explorar'
     | '/login'
@@ -708,7 +709,6 @@ export interface FileRouteTypes {
     | '/rota-nova'
     | '/sugerir-destino'
     | '/termos'
-    | '/email-confirmado'
     | '/a/$activityId'
     | '/admin/atividades'
     | '/admin/compliance'
@@ -761,6 +761,7 @@ export interface FileRouteTypes {
     | '/comunidade'
     | '/configuracoes'
     | '/conquistas'
+    | '/email-confirmado'
     | '/eventos'
     | '/explorar'
     | '/login'
@@ -776,7 +777,6 @@ export interface FileRouteTypes {
     | '/rota-nova'
     | '/sugerir-destino'
     | '/termos'
-    | '/email-confirmado'
     | '/a/$activityId'
     | '/admin/atividades'
     | '/admin/compliance'
@@ -830,6 +830,7 @@ export interface RootRouteChildren {
   ComunidadeRoute: typeof ComunidadeRoute
   ConfiguracoesRoute: typeof ConfiguracoesRoute
   ConquistasRoute: typeof ConquistasRoute
+  EmailConfirmadoRoute: typeof EmailConfirmadoRoute
   EventosRoute: typeof EventosRouteWithChildren
   ExplorarRoute: typeof ExplorarRoute
   LoginRoute: typeof LoginRoute
@@ -845,7 +846,6 @@ export interface RootRouteChildren {
   RotaNovaRoute: typeof RotaNovaRoute
   SugerirDestinoRoute: typeof SugerirDestinoRoute
   TermosRoute: typeof TermosRoute
-  EmailConfirmadoRoute: typeof EmailConfirmadoRoute
   AActivityIdRoute: typeof AActivityIdRoute
   AdminAtividadesRoute: typeof AdminAtividadesRoute
   AdminComplianceRoute: typeof AdminComplianceRoute
@@ -895,13 +895,6 @@ declare module '@tanstack/react-router' {
       path: '/termos'
       fullPath: '/termos'
       preLoaderRoute: typeof TermosRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/email-confirmado': {
-      id: '/email-confirmado'
-      path: '/email-confirmado'
-      fullPath: '/email-confirmado'
-      preLoaderRoute: typeof EmailConfirmadoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/sugerir-destino': {
@@ -1000,6 +993,13 @@ declare module '@tanstack/react-router' {
       path: '/eventos'
       fullPath: '/eventos'
       preLoaderRoute: typeof EventosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/email-confirmado': {
+      id: '/email-confirmado'
+      path: '/email-confirmado'
+      fullPath: '/email-confirmado'
+      preLoaderRoute: typeof EmailConfirmadoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/conquistas': {
@@ -1376,6 +1376,7 @@ const rootRouteChildren: RootRouteChildren = {
   ComunidadeRoute: ComunidadeRoute,
   ConfiguracoesRoute: ConfiguracoesRoute,
   ConquistasRoute: ConquistasRoute,
+  EmailConfirmadoRoute: EmailConfirmadoRoute,
   EventosRoute: EventosRouteWithChildren,
   ExplorarRoute: ExplorarRoute,
   LoginRoute: LoginRoute,
@@ -1391,7 +1392,6 @@ const rootRouteChildren: RootRouteChildren = {
   RotaNovaRoute: RotaNovaRoute,
   SugerirDestinoRoute: SugerirDestinoRoute,
   TermosRoute: TermosRoute,
-  EmailConfirmadoRoute: EmailConfirmadoRoute,
   AActivityIdRoute: AActivityIdRoute,
   AdminAtividadesRoute: AdminAtividadesRoute,
   AdminComplianceRoute: AdminComplianceRoute,
