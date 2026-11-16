@@ -9,186 +9,76 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as TermosRouteImport } from './routes/termos'
-import { Route as SugerirDestinoRouteImport } from './routes/sugerir-destino'
-import { Route as RotaNovaRouteImport } from './routes/rota-nova'
-import { Route as RedefinirSenhaRouteImport } from './routes/redefinir-senha'
-import { Route as RankingRouteImport } from './routes/ranking'
-import { Route as PrivacidadeRouteImport } from './routes/privacidade'
-import { Route as PerfilRouteImport } from './routes/perfil'
-import { Route as PedidosRouteImport } from './routes/pedidos'
-import { Route as NotificacoesRouteImport } from './routes/notificacoes'
-import { Route as MercadoRouteImport } from './routes/mercado'
-import { Route as MensagensRouteImport } from './routes/mensagens'
-import { Route as MarketplaceRouteImport } from './routes/marketplace'
-import { Route as LoginRouteImport } from './routes/login'
-import { Route as ExplorarRouteImport } from './routes/explorar'
-import { Route as EventosRouteImport } from './routes/eventos'
-import { Route as EmailConfirmadoRouteImport } from './routes/email-confirmado'
-import { Route as ConquistasRouteImport } from './routes/conquistas'
-import { Route as ConfiguracoesRouteImport } from './routes/configuracoes'
-import { Route as ComunidadeRouteImport } from './routes/comunidade'
-import { Route as ComplianceRouteImport } from './routes/compliance'
-import { Route as CompletarPerfilRouteImport } from './routes/completar-perfil'
-import { Route as CadastroRouteImport } from './routes/cadastro'
-import { Route as BuscaRouteImport } from './routes/busca'
-import { Route as AmigosRouteImport } from './routes/amigos'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as AdminIndexRouteImport } from './routes/admin.index'
-import { Route as UUserIdRouteImport } from './routes/u.$userId'
-import { Route as TrilhaTrailIdRouteImport } from './routes/trilha.$trailId'
-import { Route as SegmentoCriarRouteImport } from './routes/segmento.criar'
-import { Route as SegmentoSegmentIdRouteImport } from './routes/segmento.$segmentId'
-import { Route as ParceiroPainelRouteImport } from './routes/parceiro.painel'
-import { Route as ParceiroPartnerIdRouteImport } from './routes/parceiro.$partnerId'
-import { Route as PagamentoOrderIdRouteImport } from './routes/pagamento.$orderId'
-import { Route as OfertaCampaignIdRouteImport } from './routes/oferta.$campaignId'
-import { Route as EventosEventIdRouteImport } from './routes/eventos.$eventId'
-import { Route as DestinoDestinationIdRouteImport } from './routes/destino.$destinationId'
-import { Route as CheckoutCampaignIdRouteImport } from './routes/checkout.$campaignId'
-import { Route as ChecklistChecklistIdRouteImport } from './routes/checklist.$checklistId'
-import { Route as ChatUserIdRouteImport } from './routes/chat.$userId'
-import { Route as AtividadeRastrearRouteImport } from './routes/atividade.rastrear'
-import { Route as AtividadeActivityIdRouteImport } from './routes/atividade.$activityId'
-import { Route as ApiNotifyAdminsRouteImport } from './routes/api.notify-admins'
-import { Route as AdminTrilhasRouteImport } from './routes/admin.trilhas'
-import { Route as AdminPublicarRouteImport } from './routes/admin.publicar'
-import { Route as AdminOpinioesRouteImport } from './routes/admin.opinioes'
-import { Route as AdminModeracaoRouteImport } from './routes/admin.moderacao'
-import { Route as AdminMelhoriasRouteImport } from './routes/admin.melhorias'
-import { Route as AdminLojaRouteImport } from './routes/admin.loja'
-import { Route as AdminDestinosRouteImport } from './routes/admin.destinos'
-import { Route as AdminDestinoNovoRouteImport } from './routes/admin.destino-novo'
-import { Route as AdminDashboardRouteImport } from './routes/admin.dashboard'
-import { Route as AdminConvitesRouteImport } from './routes/admin.convites'
-import { Route as AdminConteudoRouteImport } from './routes/admin.conteudo'
-import { Route as AdminComplianceRouteImport } from './routes/admin.compliance'
-import { Route as AdminAtividadesRouteImport } from './routes/admin.atividades'
+import { Route as AmigosRouteImport } from './routes/amigos'
+import { Route as BuscaRouteImport } from './routes/busca'
+import { Route as CadastroRouteImport } from './routes/cadastro'
+import { Route as CompletarPerfilRouteImport } from './routes/completar-perfil'
+import { Route as ComplianceRouteImport } from './routes/compliance'
+import { Route as ComunidadeRouteImport } from './routes/comunidade'
+import { Route as ConfiguracoesRouteImport } from './routes/configuracoes'
+import { Route as ConquistasRouteImport } from './routes/conquistas'
+import { Route as EmailConfirmadoRouteImport } from './routes/email-confirmado'
+import { Route as EventosRouteImport } from './routes/eventos'
+import { Route as ExplorarRouteImport } from './routes/explorar'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as MarketplaceRouteImport } from './routes/marketplace'
+import { Route as MensagensRouteImport } from './routes/mensagens'
+import { Route as MercadoRouteImport } from './routes/mercado'
+import { Route as NotificacoesRouteImport } from './routes/notificacoes'
+import { Route as PedidosRouteImport } from './routes/pedidos'
+import { Route as PerfilRouteImport } from './routes/perfil'
+import { Route as PrivacidadeRouteImport } from './routes/privacidade'
+import { Route as RankingRouteImport } from './routes/ranking'
+import { Route as RedefinirSenhaRouteImport } from './routes/redefinir-senha'
+import { Route as RotaNovaRouteImport } from './routes/rota-nova'
+import { Route as SugerirDestinoRouteImport } from './routes/sugerir-destino'
+import { Route as TermosRouteImport } from './routes/termos'
 import { Route as AActivityIdRouteImport } from './routes/a.$activityId'
-import { Route as SegmentoIrSegmentIdRouteImport } from './routes/segmento.ir.$segmentId'
-import { Route as SegmentoEditarSegmentIdRouteImport } from './routes/segmento.editar.$segmentId'
-import { Route as AtividadeConcluidaActivityIdRouteImport } from './routes/atividade.concluida.$activityId'
-import { Route as ApiPushSendFcmRouteImport } from './routes/api.push.send-fcm'
-import { Route as ApiPushRegisterWebRouteImport } from './routes/api.push.register-web'
-import { Route as ApiPushRegisterNativeRouteImport } from './routes/api.push.register-native'
-import { Route as ApiPushInvalidateWebRouteImport } from './routes/api.push.invalidate-web'
-import { Route as ApiPushInvalidateNativeRouteImport } from './routes/api.push.invalidate-native'
-import { Route as ApiPlacesSearchRouteImport } from './routes/api.places.search'
+import { Route as AdminIndexRouteImport } from './routes/admin.index'
+import { Route as AdminAtividadesRouteImport } from './routes/admin.atividades'
+import { Route as AdminComplianceRouteImport } from './routes/admin.compliance'
+import { Route as AdminConteudoRouteImport } from './routes/admin.conteudo'
+import { Route as AdminConvitesRouteImport } from './routes/admin.convites'
+import { Route as AdminDashboardRouteImport } from './routes/admin.dashboard'
+import { Route as AdminDestinoNovoRouteImport } from './routes/admin.destino-novo'
+import { Route as AdminDestinosRouteImport } from './routes/admin.destinos'
+import { Route as AdminLojaRouteImport } from './routes/admin.loja'
+import { Route as AdminMelhoriasRouteImport } from './routes/admin.melhorias'
+import { Route as AdminModeracaoRouteImport } from './routes/admin.moderacao'
+import { Route as AdminOpinioesRouteImport } from './routes/admin.opinioes'
+import { Route as AdminPublicarRouteImport } from './routes/admin.publicar'
+import { Route as AdminTrilhasRouteImport } from './routes/admin.trilhas'
+import { Route as ApiNotifyAdminsRouteImport } from './routes/api.notify-admins'
+import { Route as AtividadeActivityIdRouteImport } from './routes/atividade.$activityId'
+import { Route as AtividadeRastrearRouteImport } from './routes/atividade.rastrear'
+import { Route as ChatUserIdRouteImport } from './routes/chat.$userId'
+import { Route as ChecklistChecklistIdRouteImport } from './routes/checklist.$checklistId'
+import { Route as CheckoutCampaignIdRouteImport } from './routes/checkout.$campaignId'
+import { Route as DestinoDestinationIdRouteImport } from './routes/destino.$destinationId'
+import { Route as EventosEventIdRouteImport } from './routes/eventos.$eventId'
+import { Route as OfertaCampaignIdRouteImport } from './routes/oferta.$campaignId'
+import { Route as PagamentoOrderIdRouteImport } from './routes/pagamento.$orderId'
+import { Route as ParceiroPartnerIdRouteImport } from './routes/parceiro.$partnerId'
+import { Route as ParceiroPainelRouteImport } from './routes/parceiro.painel'
+import { Route as SegmentoSegmentIdRouteImport } from './routes/segmento.$segmentId'
+import { Route as SegmentoCriarRouteImport } from './routes/segmento.criar'
+import { Route as TrilhaTrailIdRouteImport } from './routes/trilha.$trailId'
+import { Route as UUserIdRouteImport } from './routes/u.$userId'
 import { Route as ApiPlacesPhotosRouteImport } from './routes/api.places.photos'
+import { Route as ApiPlacesSearchRouteImport } from './routes/api.places.search'
+import { Route as ApiPushInvalidateNativeRouteImport } from './routes/api.push.invalidate-native'
+import { Route as ApiPushInvalidateWebRouteImport } from './routes/api.push.invalidate-web'
+import { Route as ApiPushRegisterNativeRouteImport } from './routes/api.push.register-native'
+import { Route as ApiPushRegisterWebRouteImport } from './routes/api.push.register-web'
+import { Route as ApiPushSendFcmRouteImport } from './routes/api.push.send-fcm'
+import { Route as AtividadeConcluidaActivityIdRouteImport } from './routes/atividade.concluida.$activityId'
+import { Route as SegmentoEditarSegmentIdRouteImport } from './routes/segmento.editar.$segmentId'
+import { Route as SegmentoIrSegmentIdRouteImport } from './routes/segmento.ir.$segmentId'
 
-const TermosRoute = TermosRouteImport.update({
-  id: '/termos',
-  path: '/termos',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SugerirDestinoRoute = SugerirDestinoRouteImport.update({
-  id: '/sugerir-destino',
-  path: '/sugerir-destino',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const RotaNovaRoute = RotaNovaRouteImport.update({
-  id: '/rota-nova',
-  path: '/rota-nova',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const RedefinirSenhaRoute = RedefinirSenhaRouteImport.update({
-  id: '/redefinir-senha',
-  path: '/redefinir-senha',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const RankingRoute = RankingRouteImport.update({
-  id: '/ranking',
-  path: '/ranking',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PrivacidadeRoute = PrivacidadeRouteImport.update({
-  id: '/privacidade',
-  path: '/privacidade',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PerfilRoute = PerfilRouteImport.update({
-  id: '/perfil',
-  path: '/perfil',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PedidosRoute = PedidosRouteImport.update({
-  id: '/pedidos',
-  path: '/pedidos',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const NotificacoesRoute = NotificacoesRouteImport.update({
-  id: '/notificacoes',
-  path: '/notificacoes',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const MercadoRoute = MercadoRouteImport.update({
-  id: '/mercado',
-  path: '/mercado',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const MensagensRoute = MensagensRouteImport.update({
-  id: '/mensagens',
-  path: '/mensagens',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const MarketplaceRoute = MarketplaceRouteImport.update({
-  id: '/marketplace',
-  path: '/marketplace',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LoginRoute = LoginRouteImport.update({
-  id: '/login',
-  path: '/login',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ExplorarRoute = ExplorarRouteImport.update({
-  id: '/explorar',
-  path: '/explorar',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const EventosRoute = EventosRouteImport.update({
-  id: '/eventos',
-  path: '/eventos',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const EmailConfirmadoRoute = EmailConfirmadoRouteImport.update({
-  id: '/email-confirmado',
-  path: '/email-confirmado',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ConquistasRoute = ConquistasRouteImport.update({
-  id: '/conquistas',
-  path: '/conquistas',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ConfiguracoesRoute = ConfiguracoesRouteImport.update({
-  id: '/configuracoes',
-  path: '/configuracoes',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ComunidadeRoute = ComunidadeRouteImport.update({
-  id: '/comunidade',
-  path: '/comunidade',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ComplianceRoute = ComplianceRouteImport.update({
-  id: '/compliance',
-  path: '/compliance',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CompletarPerfilRoute = CompletarPerfilRouteImport.update({
-  id: '/completar-perfil',
-  path: '/completar-perfil',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CadastroRoute = CadastroRouteImport.update({
-  id: '/cadastro',
-  path: '/cadastro',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const BuscaRoute = BuscaRouteImport.update({
-  id: '/busca',
-  path: '/busca',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AmigosRoute = AmigosRouteImport.update({
@@ -196,159 +86,119 @@ const AmigosRoute = AmigosRouteImport.update({
   path: '/amigos',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const BuscaRoute = BuscaRouteImport.update({
+  id: '/busca',
+  path: '/busca',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AdminIndexRoute = AdminIndexRouteImport.update({
-  id: '/admin/',
-  path: '/admin/',
+const CadastroRoute = CadastroRouteImport.update({
+  id: '/cadastro',
+  path: '/cadastro',
   getParentRoute: () => rootRouteImport,
 } as any)
-const UUserIdRoute = UUserIdRouteImport.update({
-  id: '/u/$userId',
-  path: '/u/$userId',
+const CompletarPerfilRoute = CompletarPerfilRouteImport.update({
+  id: '/completar-perfil',
+  path: '/completar-perfil',
   getParentRoute: () => rootRouteImport,
 } as any)
-const TrilhaTrailIdRoute = TrilhaTrailIdRouteImport.update({
-  id: '/trilha/$trailId',
-  path: '/trilha/$trailId',
+const ComplianceRoute = ComplianceRouteImport.update({
+  id: '/compliance',
+  path: '/compliance',
   getParentRoute: () => rootRouteImport,
 } as any)
-const SegmentoCriarRoute = SegmentoCriarRouteImport.update({
-  id: '/segmento/criar',
-  path: '/segmento/criar',
+const ComunidadeRoute = ComunidadeRouteImport.update({
+  id: '/comunidade',
+  path: '/comunidade',
   getParentRoute: () => rootRouteImport,
 } as any)
-const SegmentoSegmentIdRoute = SegmentoSegmentIdRouteImport.update({
-  id: '/segmento/$segmentId',
-  path: '/segmento/$segmentId',
+const ConfiguracoesRoute = ConfiguracoesRouteImport.update({
+  id: '/configuracoes',
+  path: '/configuracoes',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ParceiroPainelRoute = ParceiroPainelRouteImport.update({
-  id: '/parceiro/painel',
-  path: '/parceiro/painel',
+const ConquistasRoute = ConquistasRouteImport.update({
+  id: '/conquistas',
+  path: '/conquistas',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ParceiroPartnerIdRoute = ParceiroPartnerIdRouteImport.update({
-  id: '/parceiro/$partnerId',
-  path: '/parceiro/$partnerId',
+const EmailConfirmadoRoute = EmailConfirmadoRouteImport.update({
+  id: '/email-confirmado',
+  path: '/email-confirmado',
   getParentRoute: () => rootRouteImport,
 } as any)
-const PagamentoOrderIdRoute = PagamentoOrderIdRouteImport.update({
-  id: '/pagamento/$orderId',
-  path: '/pagamento/$orderId',
+const EventosRoute = EventosRouteImport.update({
+  id: '/eventos',
+  path: '/eventos',
   getParentRoute: () => rootRouteImport,
 } as any)
-const OfertaCampaignIdRoute = OfertaCampaignIdRouteImport.update({
-  id: '/oferta/$campaignId',
-  path: '/oferta/$campaignId',
+const ExplorarRoute = ExplorarRouteImport.update({
+  id: '/explorar',
+  path: '/explorar',
   getParentRoute: () => rootRouteImport,
 } as any)
-const EventosEventIdRoute = EventosEventIdRouteImport.update({
-  id: '/$eventId',
-  path: '/$eventId',
-  getParentRoute: () => EventosRoute,
-} as any)
-const DestinoDestinationIdRoute = DestinoDestinationIdRouteImport.update({
-  id: '/destino/$destinationId',
-  path: '/destino/$destinationId',
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
-const CheckoutCampaignIdRoute = CheckoutCampaignIdRouteImport.update({
-  id: '/checkout/$campaignId',
-  path: '/checkout/$campaignId',
+const MarketplaceRoute = MarketplaceRouteImport.update({
+  id: '/marketplace',
+  path: '/marketplace',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ChecklistChecklistIdRoute = ChecklistChecklistIdRouteImport.update({
-  id: '/checklist/$checklistId',
-  path: '/checklist/$checklistId',
+const MensagensRoute = MensagensRouteImport.update({
+  id: '/mensagens',
+  path: '/mensagens',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ChatUserIdRoute = ChatUserIdRouteImport.update({
-  id: '/chat/$userId',
-  path: '/chat/$userId',
+const MercadoRoute = MercadoRouteImport.update({
+  id: '/mercado',
+  path: '/mercado',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AtividadeRastrearRoute = AtividadeRastrearRouteImport.update({
-  id: '/atividade/rastrear',
-  path: '/atividade/rastrear',
+const NotificacoesRoute = NotificacoesRouteImport.update({
+  id: '/notificacoes',
+  path: '/notificacoes',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AtividadeActivityIdRoute = AtividadeActivityIdRouteImport.update({
-  id: '/atividade/$activityId',
-  path: '/atividade/$activityId',
+const PedidosRoute = PedidosRouteImport.update({
+  id: '/pedidos',
+  path: '/pedidos',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiNotifyAdminsRoute = ApiNotifyAdminsRouteImport.update({
-  id: '/api/notify-admins',
-  path: '/api/notify-admins',
+const PerfilRoute = PerfilRouteImport.update({
+  id: '/perfil',
+  path: '/perfil',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AdminTrilhasRoute = AdminTrilhasRouteImport.update({
-  id: '/admin/trilhas',
-  path: '/admin/trilhas',
+const PrivacidadeRoute = PrivacidadeRouteImport.update({
+  id: '/privacidade',
+  path: '/privacidade',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AdminPublicarRoute = AdminPublicarRouteImport.update({
-  id: '/admin/publicar',
-  path: '/admin/publicar',
+const RankingRoute = RankingRouteImport.update({
+  id: '/ranking',
+  path: '/ranking',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AdminOpinioesRoute = AdminOpinioesRouteImport.update({
-  id: '/admin/opinioes',
-  path: '/admin/opinioes',
+const RedefinirSenhaRoute = RedefinirSenhaRouteImport.update({
+  id: '/redefinir-senha',
+  path: '/redefinir-senha',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AdminModeracaoRoute = AdminModeracaoRouteImport.update({
-  id: '/admin/moderacao',
-  path: '/admin/moderacao',
+const RotaNovaRoute = RotaNovaRouteImport.update({
+  id: '/rota-nova',
+  path: '/rota-nova',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AdminMelhoriasRoute = AdminMelhoriasRouteImport.update({
-  id: '/admin/melhorias',
-  path: '/admin/melhorias',
+const SugerirDestinoRoute = SugerirDestinoRouteImport.update({
+  id: '/sugerir-destino',
+  path: '/sugerir-destino',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AdminLojaRoute = AdminLojaRouteImport.update({
-  id: '/admin/loja',
-  path: '/admin/loja',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AdminDestinosRoute = AdminDestinosRouteImport.update({
-  id: '/admin/destinos',
-  path: '/admin/destinos',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AdminDestinoNovoRoute = AdminDestinoNovoRouteImport.update({
-  id: '/admin/destino-novo',
-  path: '/admin/destino-novo',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AdminDashboardRoute = AdminDashboardRouteImport.update({
-  id: '/admin/dashboard',
-  path: '/admin/dashboard',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AdminConvitesRoute = AdminConvitesRouteImport.update({
-  id: '/admin/convites',
-  path: '/admin/convites',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AdminConteudoRoute = AdminConteudoRouteImport.update({
-  id: '/admin/conteudo',
-  path: '/admin/conteudo',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AdminComplianceRoute = AdminComplianceRouteImport.update({
-  id: '/admin/compliance',
-  path: '/admin/compliance',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AdminAtividadesRoute = AdminAtividadesRouteImport.update({
-  id: '/admin/atividades',
-  path: '/admin/atividades',
+const TermosRoute = TermosRouteImport.update({
+  id: '/termos',
+  path: '/termos',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AActivityIdRoute = AActivityIdRouteImport.update({
@@ -356,14 +206,189 @@ const AActivityIdRoute = AActivityIdRouteImport.update({
   path: '/a/$activityId',
   getParentRoute: () => rootRouteImport,
 } as any)
-const SegmentoIrSegmentIdRoute = SegmentoIrSegmentIdRouteImport.update({
-  id: '/segmento/ir/$segmentId',
-  path: '/segmento/ir/$segmentId',
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/admin/',
+  path: '/admin/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const SegmentoEditarSegmentIdRoute = SegmentoEditarSegmentIdRouteImport.update({
-  id: '/segmento/editar/$segmentId',
-  path: '/segmento/editar/$segmentId',
+const AdminAtividadesRoute = AdminAtividadesRouteImport.update({
+  id: '/admin/atividades',
+  path: '/admin/atividades',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminComplianceRoute = AdminComplianceRouteImport.update({
+  id: '/admin/compliance',
+  path: '/admin/compliance',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminConteudoRoute = AdminConteudoRouteImport.update({
+  id: '/admin/conteudo',
+  path: '/admin/conteudo',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminConvitesRoute = AdminConvitesRouteImport.update({
+  id: '/admin/convites',
+  path: '/admin/convites',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminDashboardRoute = AdminDashboardRouteImport.update({
+  id: '/admin/dashboard',
+  path: '/admin/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminDestinoNovoRoute = AdminDestinoNovoRouteImport.update({
+  id: '/admin/destino-novo',
+  path: '/admin/destino-novo',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminDestinosRoute = AdminDestinosRouteImport.update({
+  id: '/admin/destinos',
+  path: '/admin/destinos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminLojaRoute = AdminLojaRouteImport.update({
+  id: '/admin/loja',
+  path: '/admin/loja',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminMelhoriasRoute = AdminMelhoriasRouteImport.update({
+  id: '/admin/melhorias',
+  path: '/admin/melhorias',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminModeracaoRoute = AdminModeracaoRouteImport.update({
+  id: '/admin/moderacao',
+  path: '/admin/moderacao',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminOpinioesRoute = AdminOpinioesRouteImport.update({
+  id: '/admin/opinioes',
+  path: '/admin/opinioes',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminPublicarRoute = AdminPublicarRouteImport.update({
+  id: '/admin/publicar',
+  path: '/admin/publicar',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminTrilhasRoute = AdminTrilhasRouteImport.update({
+  id: '/admin/trilhas',
+  path: '/admin/trilhas',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiNotifyAdminsRoute = ApiNotifyAdminsRouteImport.update({
+  id: '/api/notify-admins',
+  path: '/api/notify-admins',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AtividadeActivityIdRoute = AtividadeActivityIdRouteImport.update({
+  id: '/atividade/$activityId',
+  path: '/atividade/$activityId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AtividadeRastrearRoute = AtividadeRastrearRouteImport.update({
+  id: '/atividade/rastrear',
+  path: '/atividade/rastrear',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ChatUserIdRoute = ChatUserIdRouteImport.update({
+  id: '/chat/$userId',
+  path: '/chat/$userId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ChecklistChecklistIdRoute = ChecklistChecklistIdRouteImport.update({
+  id: '/checklist/$checklistId',
+  path: '/checklist/$checklistId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CheckoutCampaignIdRoute = CheckoutCampaignIdRouteImport.update({
+  id: '/checkout/$campaignId',
+  path: '/checkout/$campaignId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DestinoDestinationIdRoute = DestinoDestinationIdRouteImport.update({
+  id: '/destino/$destinationId',
+  path: '/destino/$destinationId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EventosEventIdRoute = EventosEventIdRouteImport.update({
+  id: '/$eventId',
+  path: '/$eventId',
+  getParentRoute: () => EventosRoute,
+} as any)
+const OfertaCampaignIdRoute = OfertaCampaignIdRouteImport.update({
+  id: '/oferta/$campaignId',
+  path: '/oferta/$campaignId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PagamentoOrderIdRoute = PagamentoOrderIdRouteImport.update({
+  id: '/pagamento/$orderId',
+  path: '/pagamento/$orderId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ParceiroPartnerIdRoute = ParceiroPartnerIdRouteImport.update({
+  id: '/parceiro/$partnerId',
+  path: '/parceiro/$partnerId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ParceiroPainelRoute = ParceiroPainelRouteImport.update({
+  id: '/parceiro/painel',
+  path: '/parceiro/painel',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SegmentoSegmentIdRoute = SegmentoSegmentIdRouteImport.update({
+  id: '/segmento/$segmentId',
+  path: '/segmento/$segmentId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SegmentoCriarRoute = SegmentoCriarRouteImport.update({
+  id: '/segmento/criar',
+  path: '/segmento/criar',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TrilhaTrailIdRoute = TrilhaTrailIdRouteImport.update({
+  id: '/trilha/$trailId',
+  path: '/trilha/$trailId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const UUserIdRoute = UUserIdRouteImport.update({
+  id: '/u/$userId',
+  path: '/u/$userId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPlacesPhotosRoute = ApiPlacesPhotosRouteImport.update({
+  id: '/api/places/photos',
+  path: '/api/places/photos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPlacesSearchRoute = ApiPlacesSearchRouteImport.update({
+  id: '/api/places/search',
+  path: '/api/places/search',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPushInvalidateNativeRoute = ApiPushInvalidateNativeRouteImport.update({
+  id: '/api/push/invalidate-native',
+  path: '/api/push/invalidate-native',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPushInvalidateWebRoute = ApiPushInvalidateWebRouteImport.update({
+  id: '/api/push/invalidate-web',
+  path: '/api/push/invalidate-web',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPushRegisterNativeRoute = ApiPushRegisterNativeRouteImport.update({
+  id: '/api/push/register-native',
+  path: '/api/push/register-native',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPushRegisterWebRoute = ApiPushRegisterWebRouteImport.update({
+  id: '/api/push/register-web',
+  path: '/api/push/register-web',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPushSendFcmRoute = ApiPushSendFcmRouteImport.update({
+  id: '/api/push/send-fcm',
+  path: '/api/push/send-fcm',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AtividadeConcluidaActivityIdRoute =
@@ -372,39 +397,14 @@ const AtividadeConcluidaActivityIdRoute =
     path: '/atividade/concluida/$activityId',
     getParentRoute: () => rootRouteImport,
   } as any)
-const ApiPushSendFcmRoute = ApiPushSendFcmRouteImport.update({
-  id: '/api/push/send-fcm',
-  path: '/api/push/send-fcm',
+const SegmentoEditarSegmentIdRoute = SegmentoEditarSegmentIdRouteImport.update({
+  id: '/segmento/editar/$segmentId',
+  path: '/segmento/editar/$segmentId',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiPushRegisterWebRoute = ApiPushRegisterWebRouteImport.update({
-  id: '/api/push/register-web',
-  path: '/api/push/register-web',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPushRegisterNativeRoute = ApiPushRegisterNativeRouteImport.update({
-  id: '/api/push/register-native',
-  path: '/api/push/register-native',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPushInvalidateWebRoute = ApiPushInvalidateWebRouteImport.update({
-  id: '/api/push/invalidate-web',
-  path: '/api/push/invalidate-web',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPushInvalidateNativeRoute = ApiPushInvalidateNativeRouteImport.update({
-  id: '/api/push/invalidate-native',
-  path: '/api/push/invalidate-native',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPlacesSearchRoute = ApiPlacesSearchRouteImport.update({
-  id: '/api/places/search',
-  path: '/api/places/search',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPlacesPhotosRoute = ApiPlacesPhotosRouteImport.update({
-  id: '/api/places/photos',
-  path: '/api/places/photos',
+const SegmentoIrSegmentIdRoute = SegmentoIrSegmentIdRouteImport.update({
+  id: '/segmento/ir/$segmentId',
+  path: '/segmento/ir/$segmentId',
   getParentRoute: () => rootRouteImport,
 } as any)
 
@@ -890,165 +890,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/termos': {
-      id: '/termos'
-      path: '/termos'
-      fullPath: '/termos'
-      preLoaderRoute: typeof TermosRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/sugerir-destino': {
-      id: '/sugerir-destino'
-      path: '/sugerir-destino'
-      fullPath: '/sugerir-destino'
-      preLoaderRoute: typeof SugerirDestinoRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/rota-nova': {
-      id: '/rota-nova'
-      path: '/rota-nova'
-      fullPath: '/rota-nova'
-      preLoaderRoute: typeof RotaNovaRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/redefinir-senha': {
-      id: '/redefinir-senha'
-      path: '/redefinir-senha'
-      fullPath: '/redefinir-senha'
-      preLoaderRoute: typeof RedefinirSenhaRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/ranking': {
-      id: '/ranking'
-      path: '/ranking'
-      fullPath: '/ranking'
-      preLoaderRoute: typeof RankingRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/privacidade': {
-      id: '/privacidade'
-      path: '/privacidade'
-      fullPath: '/privacidade'
-      preLoaderRoute: typeof PrivacidadeRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/perfil': {
-      id: '/perfil'
-      path: '/perfil'
-      fullPath: '/perfil'
-      preLoaderRoute: typeof PerfilRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/pedidos': {
-      id: '/pedidos'
-      path: '/pedidos'
-      fullPath: '/pedidos'
-      preLoaderRoute: typeof PedidosRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/notificacoes': {
-      id: '/notificacoes'
-      path: '/notificacoes'
-      fullPath: '/notificacoes'
-      preLoaderRoute: typeof NotificacoesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/mercado': {
-      id: '/mercado'
-      path: '/mercado'
-      fullPath: '/mercado'
-      preLoaderRoute: typeof MercadoRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/mensagens': {
-      id: '/mensagens'
-      path: '/mensagens'
-      fullPath: '/mensagens'
-      preLoaderRoute: typeof MensagensRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/marketplace': {
-      id: '/marketplace'
-      path: '/marketplace'
-      fullPath: '/marketplace'
-      preLoaderRoute: typeof MarketplaceRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/login': {
-      id: '/login'
-      path: '/login'
-      fullPath: '/login'
-      preLoaderRoute: typeof LoginRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/explorar': {
-      id: '/explorar'
-      path: '/explorar'
-      fullPath: '/explorar'
-      preLoaderRoute: typeof ExplorarRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/eventos': {
-      id: '/eventos'
-      path: '/eventos'
-      fullPath: '/eventos'
-      preLoaderRoute: typeof EventosRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/email-confirmado': {
-      id: '/email-confirmado'
-      path: '/email-confirmado'
-      fullPath: '/email-confirmado'
-      preLoaderRoute: typeof EmailConfirmadoRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/conquistas': {
-      id: '/conquistas'
-      path: '/conquistas'
-      fullPath: '/conquistas'
-      preLoaderRoute: typeof ConquistasRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/configuracoes': {
-      id: '/configuracoes'
-      path: '/configuracoes'
-      fullPath: '/configuracoes'
-      preLoaderRoute: typeof ConfiguracoesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/comunidade': {
-      id: '/comunidade'
-      path: '/comunidade'
-      fullPath: '/comunidade'
-      preLoaderRoute: typeof ComunidadeRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/compliance': {
-      id: '/compliance'
-      path: '/compliance'
-      fullPath: '/compliance'
-      preLoaderRoute: typeof ComplianceRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/completar-perfil': {
-      id: '/completar-perfil'
-      path: '/completar-perfil'
-      fullPath: '/completar-perfil'
-      preLoaderRoute: typeof CompletarPerfilRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/cadastro': {
-      id: '/cadastro'
-      path: '/cadastro'
-      fullPath: '/cadastro'
-      preLoaderRoute: typeof CadastroRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/busca': {
-      id: '/busca'
-      path: '/busca'
-      fullPath: '/busca'
-      preLoaderRoute: typeof BuscaRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/amigos': {
@@ -1058,221 +904,165 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AmigosRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/busca': {
+      id: '/busca'
+      path: '/busca'
+      fullPath: '/busca'
+      preLoaderRoute: typeof BuscaRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/admin/': {
-      id: '/admin/'
-      path: '/admin'
-      fullPath: '/admin/'
-      preLoaderRoute: typeof AdminIndexRouteImport
+    '/cadastro': {
+      id: '/cadastro'
+      path: '/cadastro'
+      fullPath: '/cadastro'
+      preLoaderRoute: typeof CadastroRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/u/$userId': {
-      id: '/u/$userId'
-      path: '/u/$userId'
-      fullPath: '/u/$userId'
-      preLoaderRoute: typeof UUserIdRouteImport
+    '/completar-perfil': {
+      id: '/completar-perfil'
+      path: '/completar-perfil'
+      fullPath: '/completar-perfil'
+      preLoaderRoute: typeof CompletarPerfilRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/trilha/$trailId': {
-      id: '/trilha/$trailId'
-      path: '/trilha/$trailId'
-      fullPath: '/trilha/$trailId'
-      preLoaderRoute: typeof TrilhaTrailIdRouteImport
+    '/compliance': {
+      id: '/compliance'
+      path: '/compliance'
+      fullPath: '/compliance'
+      preLoaderRoute: typeof ComplianceRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/segmento/criar': {
-      id: '/segmento/criar'
-      path: '/segmento/criar'
-      fullPath: '/segmento/criar'
-      preLoaderRoute: typeof SegmentoCriarRouteImport
+    '/comunidade': {
+      id: '/comunidade'
+      path: '/comunidade'
+      fullPath: '/comunidade'
+      preLoaderRoute: typeof ComunidadeRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/segmento/$segmentId': {
-      id: '/segmento/$segmentId'
-      path: '/segmento/$segmentId'
-      fullPath: '/segmento/$segmentId'
-      preLoaderRoute: typeof SegmentoSegmentIdRouteImport
+    '/configuracoes': {
+      id: '/configuracoes'
+      path: '/configuracoes'
+      fullPath: '/configuracoes'
+      preLoaderRoute: typeof ConfiguracoesRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/parceiro/painel': {
-      id: '/parceiro/painel'
-      path: '/parceiro/painel'
-      fullPath: '/parceiro/painel'
-      preLoaderRoute: typeof ParceiroPainelRouteImport
+    '/conquistas': {
+      id: '/conquistas'
+      path: '/conquistas'
+      fullPath: '/conquistas'
+      preLoaderRoute: typeof ConquistasRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/parceiro/$partnerId': {
-      id: '/parceiro/$partnerId'
-      path: '/parceiro/$partnerId'
-      fullPath: '/parceiro/$partnerId'
-      preLoaderRoute: typeof ParceiroPartnerIdRouteImport
+    '/email-confirmado': {
+      id: '/email-confirmado'
+      path: '/email-confirmado'
+      fullPath: '/email-confirmado'
+      preLoaderRoute: typeof EmailConfirmadoRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/pagamento/$orderId': {
-      id: '/pagamento/$orderId'
-      path: '/pagamento/$orderId'
-      fullPath: '/pagamento/$orderId'
-      preLoaderRoute: typeof PagamentoOrderIdRouteImport
+    '/eventos': {
+      id: '/eventos'
+      path: '/eventos'
+      fullPath: '/eventos'
+      preLoaderRoute: typeof EventosRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/oferta/$campaignId': {
-      id: '/oferta/$campaignId'
-      path: '/oferta/$campaignId'
-      fullPath: '/oferta/$campaignId'
-      preLoaderRoute: typeof OfertaCampaignIdRouteImport
+    '/explorar': {
+      id: '/explorar'
+      path: '/explorar'
+      fullPath: '/explorar'
+      preLoaderRoute: typeof ExplorarRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/eventos/$eventId': {
-      id: '/eventos/$eventId'
-      path: '/$eventId'
-      fullPath: '/eventos/$eventId'
-      preLoaderRoute: typeof EventosEventIdRouteImport
-      parentRoute: typeof EventosRoute
-    }
-    '/destino/$destinationId': {
-      id: '/destino/$destinationId'
-      path: '/destino/$destinationId'
-      fullPath: '/destino/$destinationId'
-      preLoaderRoute: typeof DestinoDestinationIdRouteImport
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/checkout/$campaignId': {
-      id: '/checkout/$campaignId'
-      path: '/checkout/$campaignId'
-      fullPath: '/checkout/$campaignId'
-      preLoaderRoute: typeof CheckoutCampaignIdRouteImport
+    '/marketplace': {
+      id: '/marketplace'
+      path: '/marketplace'
+      fullPath: '/marketplace'
+      preLoaderRoute: typeof MarketplaceRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/checklist/$checklistId': {
-      id: '/checklist/$checklistId'
-      path: '/checklist/$checklistId'
-      fullPath: '/checklist/$checklistId'
-      preLoaderRoute: typeof ChecklistChecklistIdRouteImport
+    '/mensagens': {
+      id: '/mensagens'
+      path: '/mensagens'
+      fullPath: '/mensagens'
+      preLoaderRoute: typeof MensagensRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/chat/$userId': {
-      id: '/chat/$userId'
-      path: '/chat/$userId'
-      fullPath: '/chat/$userId'
-      preLoaderRoute: typeof ChatUserIdRouteImport
+    '/mercado': {
+      id: '/mercado'
+      path: '/mercado'
+      fullPath: '/mercado'
+      preLoaderRoute: typeof MercadoRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/atividade/rastrear': {
-      id: '/atividade/rastrear'
-      path: '/atividade/rastrear'
-      fullPath: '/atividade/rastrear'
-      preLoaderRoute: typeof AtividadeRastrearRouteImport
+    '/notificacoes': {
+      id: '/notificacoes'
+      path: '/notificacoes'
+      fullPath: '/notificacoes'
+      preLoaderRoute: typeof NotificacoesRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/atividade/$activityId': {
-      id: '/atividade/$activityId'
-      path: '/atividade/$activityId'
-      fullPath: '/atividade/$activityId'
-      preLoaderRoute: typeof AtividadeActivityIdRouteImport
+    '/pedidos': {
+      id: '/pedidos'
+      path: '/pedidos'
+      fullPath: '/pedidos'
+      preLoaderRoute: typeof PedidosRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/notify-admins': {
-      id: '/api/notify-admins'
-      path: '/api/notify-admins'
-      fullPath: '/api/notify-admins'
-      preLoaderRoute: typeof ApiNotifyAdminsRouteImport
+    '/perfil': {
+      id: '/perfil'
+      path: '/perfil'
+      fullPath: '/perfil'
+      preLoaderRoute: typeof PerfilRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/admin/trilhas': {
-      id: '/admin/trilhas'
-      path: '/admin/trilhas'
-      fullPath: '/admin/trilhas'
-      preLoaderRoute: typeof AdminTrilhasRouteImport
+    '/privacidade': {
+      id: '/privacidade'
+      path: '/privacidade'
+      fullPath: '/privacidade'
+      preLoaderRoute: typeof PrivacidadeRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/admin/publicar': {
-      id: '/admin/publicar'
-      path: '/admin/publicar'
-      fullPath: '/admin/publicar'
-      preLoaderRoute: typeof AdminPublicarRouteImport
+    '/ranking': {
+      id: '/ranking'
+      path: '/ranking'
+      fullPath: '/ranking'
+      preLoaderRoute: typeof RankingRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/admin/opinioes': {
-      id: '/admin/opinioes'
-      path: '/admin/opinioes'
-      fullPath: '/admin/opinioes'
-      preLoaderRoute: typeof AdminOpinioesRouteImport
+    '/redefinir-senha': {
+      id: '/redefinir-senha'
+      path: '/redefinir-senha'
+      fullPath: '/redefinir-senha'
+      preLoaderRoute: typeof RedefinirSenhaRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/admin/moderacao': {
-      id: '/admin/moderacao'
-      path: '/admin/moderacao'
-      fullPath: '/admin/moderacao'
-      preLoaderRoute: typeof AdminModeracaoRouteImport
+    '/rota-nova': {
+      id: '/rota-nova'
+      path: '/rota-nova'
+      fullPath: '/rota-nova'
+      preLoaderRoute: typeof RotaNovaRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/admin/melhorias': {
-      id: '/admin/melhorias'
-      path: '/admin/melhorias'
-      fullPath: '/admin/melhorias'
-      preLoaderRoute: typeof AdminMelhoriasRouteImport
+    '/sugerir-destino': {
+      id: '/sugerir-destino'
+      path: '/sugerir-destino'
+      fullPath: '/sugerir-destino'
+      preLoaderRoute: typeof SugerirDestinoRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/admin/loja': {
-      id: '/admin/loja'
-      path: '/admin/loja'
-      fullPath: '/admin/loja'
-      preLoaderRoute: typeof AdminLojaRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/admin/destinos': {
-      id: '/admin/destinos'
-      path: '/admin/destinos'
-      fullPath: '/admin/destinos'
-      preLoaderRoute: typeof AdminDestinosRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/admin/destino-novo': {
-      id: '/admin/destino-novo'
-      path: '/admin/destino-novo'
-      fullPath: '/admin/destino-novo'
-      preLoaderRoute: typeof AdminDestinoNovoRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/admin/dashboard': {
-      id: '/admin/dashboard'
-      path: '/admin/dashboard'
-      fullPath: '/admin/dashboard'
-      preLoaderRoute: typeof AdminDashboardRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/admin/convites': {
-      id: '/admin/convites'
-      path: '/admin/convites'
-      fullPath: '/admin/convites'
-      preLoaderRoute: typeof AdminConvitesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/admin/conteudo': {
-      id: '/admin/conteudo'
-      path: '/admin/conteudo'
-      fullPath: '/admin/conteudo'
-      preLoaderRoute: typeof AdminConteudoRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/admin/compliance': {
-      id: '/admin/compliance'
-      path: '/admin/compliance'
-      fullPath: '/admin/compliance'
-      preLoaderRoute: typeof AdminComplianceRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/admin/atividades': {
-      id: '/admin/atividades'
-      path: '/admin/atividades'
-      fullPath: '/admin/atividades'
-      preLoaderRoute: typeof AdminAtividadesRouteImport
+    '/termos': {
+      id: '/termos'
+      path: '/termos'
+      fullPath: '/termos'
+      preLoaderRoute: typeof TermosRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/a/$activityId': {
@@ -1282,60 +1072,221 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AActivityIdRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/segmento/ir/$segmentId': {
-      id: '/segmento/ir/$segmentId'
-      path: '/segmento/ir/$segmentId'
-      fullPath: '/segmento/ir/$segmentId'
-      preLoaderRoute: typeof SegmentoIrSegmentIdRouteImport
+    '/admin/': {
+      id: '/admin/'
+      path: '/admin'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/segmento/editar/$segmentId': {
-      id: '/segmento/editar/$segmentId'
-      path: '/segmento/editar/$segmentId'
-      fullPath: '/segmento/editar/$segmentId'
-      preLoaderRoute: typeof SegmentoEditarSegmentIdRouteImport
+    '/admin/atividades': {
+      id: '/admin/atividades'
+      path: '/admin/atividades'
+      fullPath: '/admin/atividades'
+      preLoaderRoute: typeof AdminAtividadesRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/atividade/concluida/$activityId': {
-      id: '/atividade/concluida/$activityId'
-      path: '/atividade/concluida/$activityId'
-      fullPath: '/atividade/concluida/$activityId'
-      preLoaderRoute: typeof AtividadeConcluidaActivityIdRouteImport
+    '/admin/compliance': {
+      id: '/admin/compliance'
+      path: '/admin/compliance'
+      fullPath: '/admin/compliance'
+      preLoaderRoute: typeof AdminComplianceRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/push/send-fcm': {
-      id: '/api/push/send-fcm'
-      path: '/api/push/send-fcm'
-      fullPath: '/api/push/send-fcm'
-      preLoaderRoute: typeof ApiPushSendFcmRouteImport
+    '/admin/conteudo': {
+      id: '/admin/conteudo'
+      path: '/admin/conteudo'
+      fullPath: '/admin/conteudo'
+      preLoaderRoute: typeof AdminConteudoRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/push/register-web': {
-      id: '/api/push/register-web'
-      path: '/api/push/register-web'
-      fullPath: '/api/push/register-web'
-      preLoaderRoute: typeof ApiPushRegisterWebRouteImport
+    '/admin/convites': {
+      id: '/admin/convites'
+      path: '/admin/convites'
+      fullPath: '/admin/convites'
+      preLoaderRoute: typeof AdminConvitesRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/push/register-native': {
-      id: '/api/push/register-native'
-      path: '/api/push/register-native'
-      fullPath: '/api/push/register-native'
-      preLoaderRoute: typeof ApiPushRegisterNativeRouteImport
+    '/admin/dashboard': {
+      id: '/admin/dashboard'
+      path: '/admin/dashboard'
+      fullPath: '/admin/dashboard'
+      preLoaderRoute: typeof AdminDashboardRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/push/invalidate-web': {
-      id: '/api/push/invalidate-web'
-      path: '/api/push/invalidate-web'
-      fullPath: '/api/push/invalidate-web'
-      preLoaderRoute: typeof ApiPushInvalidateWebRouteImport
+    '/admin/destino-novo': {
+      id: '/admin/destino-novo'
+      path: '/admin/destino-novo'
+      fullPath: '/admin/destino-novo'
+      preLoaderRoute: typeof AdminDestinoNovoRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/push/invalidate-native': {
-      id: '/api/push/invalidate-native'
-      path: '/api/push/invalidate-native'
-      fullPath: '/api/push/invalidate-native'
-      preLoaderRoute: typeof ApiPushInvalidateNativeRouteImport
+    '/admin/destinos': {
+      id: '/admin/destinos'
+      path: '/admin/destinos'
+      fullPath: '/admin/destinos'
+      preLoaderRoute: typeof AdminDestinosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/loja': {
+      id: '/admin/loja'
+      path: '/admin/loja'
+      fullPath: '/admin/loja'
+      preLoaderRoute: typeof AdminLojaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/melhorias': {
+      id: '/admin/melhorias'
+      path: '/admin/melhorias'
+      fullPath: '/admin/melhorias'
+      preLoaderRoute: typeof AdminMelhoriasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/moderacao': {
+      id: '/admin/moderacao'
+      path: '/admin/moderacao'
+      fullPath: '/admin/moderacao'
+      preLoaderRoute: typeof AdminModeracaoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/opinioes': {
+      id: '/admin/opinioes'
+      path: '/admin/opinioes'
+      fullPath: '/admin/opinioes'
+      preLoaderRoute: typeof AdminOpinioesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/publicar': {
+      id: '/admin/publicar'
+      path: '/admin/publicar'
+      fullPath: '/admin/publicar'
+      preLoaderRoute: typeof AdminPublicarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/trilhas': {
+      id: '/admin/trilhas'
+      path: '/admin/trilhas'
+      fullPath: '/admin/trilhas'
+      preLoaderRoute: typeof AdminTrilhasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/notify-admins': {
+      id: '/api/notify-admins'
+      path: '/api/notify-admins'
+      fullPath: '/api/notify-admins'
+      preLoaderRoute: typeof ApiNotifyAdminsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/atividade/$activityId': {
+      id: '/atividade/$activityId'
+      path: '/atividade/$activityId'
+      fullPath: '/atividade/$activityId'
+      preLoaderRoute: typeof AtividadeActivityIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/atividade/rastrear': {
+      id: '/atividade/rastrear'
+      path: '/atividade/rastrear'
+      fullPath: '/atividade/rastrear'
+      preLoaderRoute: typeof AtividadeRastrearRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/chat/$userId': {
+      id: '/chat/$userId'
+      path: '/chat/$userId'
+      fullPath: '/chat/$userId'
+      preLoaderRoute: typeof ChatUserIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/checklist/$checklistId': {
+      id: '/checklist/$checklistId'
+      path: '/checklist/$checklistId'
+      fullPath: '/checklist/$checklistId'
+      preLoaderRoute: typeof ChecklistChecklistIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/checkout/$campaignId': {
+      id: '/checkout/$campaignId'
+      path: '/checkout/$campaignId'
+      fullPath: '/checkout/$campaignId'
+      preLoaderRoute: typeof CheckoutCampaignIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/destino/$destinationId': {
+      id: '/destino/$destinationId'
+      path: '/destino/$destinationId'
+      fullPath: '/destino/$destinationId'
+      preLoaderRoute: typeof DestinoDestinationIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/eventos/$eventId': {
+      id: '/eventos/$eventId'
+      path: '/$eventId'
+      fullPath: '/eventos/$eventId'
+      preLoaderRoute: typeof EventosEventIdRouteImport
+      parentRoute: typeof EventosRoute
+    }
+    '/oferta/$campaignId': {
+      id: '/oferta/$campaignId'
+      path: '/oferta/$campaignId'
+      fullPath: '/oferta/$campaignId'
+      preLoaderRoute: typeof OfertaCampaignIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pagamento/$orderId': {
+      id: '/pagamento/$orderId'
+      path: '/pagamento/$orderId'
+      fullPath: '/pagamento/$orderId'
+      preLoaderRoute: typeof PagamentoOrderIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/parceiro/$partnerId': {
+      id: '/parceiro/$partnerId'
+      path: '/parceiro/$partnerId'
+      fullPath: '/parceiro/$partnerId'
+      preLoaderRoute: typeof ParceiroPartnerIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/parceiro/painel': {
+      id: '/parceiro/painel'
+      path: '/parceiro/painel'
+      fullPath: '/parceiro/painel'
+      preLoaderRoute: typeof ParceiroPainelRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/segmento/$segmentId': {
+      id: '/segmento/$segmentId'
+      path: '/segmento/$segmentId'
+      fullPath: '/segmento/$segmentId'
+      preLoaderRoute: typeof SegmentoSegmentIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/segmento/criar': {
+      id: '/segmento/criar'
+      path: '/segmento/criar'
+      fullPath: '/segmento/criar'
+      preLoaderRoute: typeof SegmentoCriarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/trilha/$trailId': {
+      id: '/trilha/$trailId'
+      path: '/trilha/$trailId'
+      fullPath: '/trilha/$trailId'
+      preLoaderRoute: typeof TrilhaTrailIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/u/$userId': {
+      id: '/u/$userId'
+      path: '/u/$userId'
+      fullPath: '/u/$userId'
+      preLoaderRoute: typeof UUserIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/places/photos': {
+      id: '/api/places/photos'
+      path: '/api/places/photos'
+      fullPath: '/api/places/photos'
+      preLoaderRoute: typeof ApiPlacesPhotosRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/places/search': {
@@ -1345,11 +1296,60 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPlacesSearchRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/places/photos': {
-      id: '/api/places/photos'
-      path: '/api/places/photos'
-      fullPath: '/api/places/photos'
-      preLoaderRoute: typeof ApiPlacesPhotosRouteImport
+    '/api/push/invalidate-native': {
+      id: '/api/push/invalidate-native'
+      path: '/api/push/invalidate-native'
+      fullPath: '/api/push/invalidate-native'
+      preLoaderRoute: typeof ApiPushInvalidateNativeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/push/invalidate-web': {
+      id: '/api/push/invalidate-web'
+      path: '/api/push/invalidate-web'
+      fullPath: '/api/push/invalidate-web'
+      preLoaderRoute: typeof ApiPushInvalidateWebRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/push/register-native': {
+      id: '/api/push/register-native'
+      path: '/api/push/register-native'
+      fullPath: '/api/push/register-native'
+      preLoaderRoute: typeof ApiPushRegisterNativeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/push/register-web': {
+      id: '/api/push/register-web'
+      path: '/api/push/register-web'
+      fullPath: '/api/push/register-web'
+      preLoaderRoute: typeof ApiPushRegisterWebRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/push/send-fcm': {
+      id: '/api/push/send-fcm'
+      path: '/api/push/send-fcm'
+      fullPath: '/api/push/send-fcm'
+      preLoaderRoute: typeof ApiPushSendFcmRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/atividade/concluida/$activityId': {
+      id: '/atividade/concluida/$activityId'
+      path: '/atividade/concluida/$activityId'
+      fullPath: '/atividade/concluida/$activityId'
+      preLoaderRoute: typeof AtividadeConcluidaActivityIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/segmento/editar/$segmentId': {
+      id: '/segmento/editar/$segmentId'
+      path: '/segmento/editar/$segmentId'
+      fullPath: '/segmento/editar/$segmentId'
+      preLoaderRoute: typeof SegmentoEditarSegmentIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/segmento/ir/$segmentId': {
+      id: '/segmento/ir/$segmentId'
+      path: '/segmento/ir/$segmentId'
+      fullPath: '/segmento/ir/$segmentId'
+      preLoaderRoute: typeof SegmentoIrSegmentIdRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
