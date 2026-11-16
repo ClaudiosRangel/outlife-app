@@ -3772,19 +3772,14 @@ export type AdminUserEvent = { id: string; title: string; eventDate: string; sta
  * busca incremental enquanto digita. Com termo, filtra por nome/@username.
  */
 export async function adminListUsers(query = "", limit = 200): Promise<UserSearchResult[]> {
-  const trimmed = query.trim();
-  let q = supabase
-    .from("profiles")
-    .select("id, full_name, username, avatar_url");
-  if (trimmed) {
-    const pattern = `%${escapeForOrFilter(trimmed)}%`;
-    q = q.or(`full_name.ilike."${pattern}",username.ilike."${pattern}"`);
-  }
-  const { data, error } = await q
-    .order("full_name", { ascending: true, nullsFirst: false })
-    .limit(limit);
+  // RPC de admin (security definer): é a única forma de listar também os usuários ocultos,
+  // que nenhuma outra consulta do app enxerga (nem para admin).
+  const { data, error } = await supabase.rpc("admin_list_users" as never, {
+    _query: query.trim() || null,
+    _limit: limit,
+  } as never);
   if (error) throw error;
-  return (data ?? []) as UserSearchResult[];
+  return (data ?? []) as unknown as UserSearchResult[];
 }
 
 /** Busca usuários por nome/@username (reaproveita searchUsers). */

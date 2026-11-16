@@ -1286,3 +1286,5 @@ alter table public.profile_contacts
 --     conversas passam a filtrar por can_see_user. (idempotente)
 --     CONTEÚDO: copiar de supabase/migrations/20261116120000_ocultar-usuario.sql
 -- ############################################################################
+
+-- 57) 20261116140000_ocultar-usuario-admin.sql: oculto some ate para admin (can_see_user sem excecao de admin) + RPC admin_list_users para a moderacao.
