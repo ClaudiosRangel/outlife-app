@@ -7,6 +7,19 @@
 
 **Última atualização:** 18/10/2026 (🐛 corrigido registro incoerente de atividade + correção RETROATIVA de 2 atividades no Supabase + build iOS AUTOMÁTICO a cada push na main)
 
+> **🛰️ FIX GPS iOS: calibração travada em "Buscando sinal" (16/11/2026, commit `843401b`):**
+> Relato (iPhone, build 49): ao iniciar atividade, a calibração ficava em "Buscando sinal de GPS"
+> e "Iniciar mesmo assim" também não iniciava (Strava achava na hora). Duas causas:
+> 1. O GPS só era lido após `start()`; na calibração (tracker `idle`) o sinal nunca atualizava.
+>    Novo `warmUp()/endWarmUp()` em `use-activity-tracker.ts` (lê posição só p/ medir sinal, sem
+>    gravar pontos), usado em `atividade.rastrear.tsx` e `rota-nova.tsx`.
+> 2. `LocationTrackingPlugin.swift` exigia permissão "Sempre"; com "Ao usar o app" o
+>    `requestBackgroundPermission` nunca resolvia (início travado). Agora "Ao usar o app" basta
+>    (resolve na hora e pede "Sempre" sem bloquear).
+> Push na `main` dispara build iOS no Codemagic. **FALTA:** testar a nova build no iPhone
+> (calibração deve virar "Sinal bom"; iniciar com permissão "Ao usar o app").
+> Não rodados: `build:native`/`cap sync`/APK (mudança afeta iOS e JS compartilhado).
+
 > **🟢 iOS build 48 APROVADA (Codemagic voltou após aceitar o PLA atualizado da Apple)
 > + logomarca redonda no login (09/11/2026):**
 > - O build iOS voltou a passar depois que o titular aceitou o "Apple Developer Program
