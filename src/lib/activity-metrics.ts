@@ -27,8 +27,18 @@
  */
 export type ActivityType = "caminhada" | "pedalada" | "trilha" | "outro";
 
-/** Activity_Type para os quais o Average_Pace é exibido (Requirement 4.4). */
-const PACE_ACTIVITY_TYPES: readonly ActivityType[] = ["caminhada", "pedalada"];
+/**
+ * Activity_Type para os quais o Average_Pace (min/km) é a métrica de ritmo.
+ * Padrão de mercado (Strava/Garmin): modalidades a pé usam pace; ciclismo e
+ * demais usam velocidade média (km/h). Pedalada saiu da lista a pedido dos
+ * testadores (pace não faz sentido em bike).
+ */
+const PACE_ACTIVITY_TYPES: readonly string[] = ["caminhada", "trilha", "corrida"];
+
+/** true quando a modalidade exibe pace (min/km) em vez de velocidade média. */
+export function usesPace(activityType: string | null | undefined): boolean {
+  return activityType != null && PACE_ACTIVITY_TYPES.includes(activityType);
+}
 
 export interface ComputeActivityMetricsInput {
   /** Tipo de atividade selecionado; determina se o Average_Pace é calculado. */
@@ -85,7 +95,7 @@ export function computeActivityMetrics(input: ComputeActivityMetricsInput): Acti
   const durationHours = durationSeconds / 3600;
   const averageSpeedKmh = (distanceKm / durationHours).toFixed(1);
 
-  const showsPace = activityType != null && PACE_ACTIVITY_TYPES.includes(activityType);
+  const showsPace = usesPace(activityType);
   if (!showsPace || distanceKm <= 0) {
     return { averageSpeedKmh, averagePaceLabel: null };
   }

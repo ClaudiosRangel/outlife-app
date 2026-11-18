@@ -8,7 +8,7 @@ import { fetchActivityById, fetchActivityTypes, uploadActivityImage, updateActiv
 import { StatusBar } from "@/components/StatusBar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import { computeActivityMetrics } from "@/lib/activity-metrics";
+import { computeActivityMetrics, usesPace } from "@/lib/activity-metrics";
 import { computeByMetricForm, type MetricForm } from "@/lib/metric-forms";
 import { generateActivityBanner, type ActivityBannerMetric, type ActivityBannerVariant } from "@/lib/banner-generator";
 import { generateActivityStory, type StoryMetric } from "@/lib/story-generator";
@@ -371,7 +371,11 @@ function ActivityDetailPage() {
 
       {!isLoading && activity && (
         <div className="mx-5 mt-2 grid grid-cols-2 gap-2">
-          <div className="rounded-2xl bg-card p-3 shadow-card text-center">
+          <div
+            className={`rounded-2xl bg-card p-3 shadow-card text-center ${
+              usesPace(activity.activity_type) ? "" : "col-span-2"
+            }`}
+          >
             <div className="text-[11px] uppercase tracking-widest text-muted-foreground">
               {t("activity.metrics.speed")}
             </div>
@@ -379,14 +383,17 @@ function ActivityDetailPage() {
               {finalMetrics.averageSpeedKmh ? `${finalMetrics.averageSpeedKmh} km/h` : "—"}
             </div>
           </div>
-          <div className="rounded-2xl bg-card p-3 shadow-card text-center">
-            <div className="text-[11px] uppercase tracking-widest text-muted-foreground">
-              {t("activity.metrics.pace")}
+          {/* Pace só nas modalidades a pé (bike usa velocidade média). */}
+          {usesPace(activity.activity_type) && (
+            <div className="rounded-2xl bg-card p-3 shadow-card text-center">
+              <div className="text-[11px] uppercase tracking-widest text-muted-foreground">
+                {t("activity.metrics.pace")}
+              </div>
+              <div className="mt-1 font-display text-lg font-semibold text-primary tabular-nums">
+                {finalMetrics.averagePaceLabel ?? "—"}
+              </div>
             </div>
-            <div className="mt-1 font-display text-lg font-semibold text-primary tabular-nums">
-              {finalMetrics.averagePaceLabel ?? "—"}
-            </div>
-          </div>
+          )}
           {/* Requirement 1.2/1.3: card de Elevação (Elevation_Gain) — exibe
               "<inteiro>m" quando > 0 e "—" quando ausente/zero, nunca NaN. */}
           <div className="col-span-2 rounded-2xl bg-card p-3 shadow-card text-center">

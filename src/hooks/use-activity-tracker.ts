@@ -49,6 +49,9 @@ export function useActivityTracker() {
   // Aquecimento do GPS durante a tela de calibração (antes do start): lê a
   // posição só para medir o sinal, sem gravar pontos.
   const [warmingUp, setWarmingUp] = useState(false);
+  // Meta de precisão da calibração (padrão de mercado ~25 m). A gravação
+  // continua validando cada ponto com o limiar do perfil da atividade.
+  const WARMUP_GOOD_ACCURACY_M = 25;
   const warmListenerRef = useRef<{ remove: () => void | Promise<void> } | null>(null);
   const warmWatchIdRef = useRef<number | null>(null);
   // ID do registro no Supabase + tipo de atividade, persistidos junto
@@ -686,6 +689,20 @@ export function useActivityTracker() {
         setSmoothedSpeed(0);
       } else {
         setSmoothedSpeed(computeSmoothedSpeed(speedWindowRef.current, now));
+      }
+      // Calibração (antes do start): sinal derivado só da acurácia recebida.
+      // Não exige ponto aceito nem amostras contínuas — parado, o iOS quase
+      // não envia novas leituras (filtro de distância).
+      if (warmingUp && (status === "idle" || status === "saving")) {
+        const accs = signalAccuraciesRef.current;
+        setGpsSignalState(
+          accs.length === 0
+            ? "aquisitando"
+            : Math.min(...accs) <= WARMUP_GOOD_ACCURACY_M
+              ? "bom"
+              : "fraco",
+        );
+        return;
       }
       const profile = getProfile(activityTypeRef.current as ActivityType | null);
       setGpsSignalState(

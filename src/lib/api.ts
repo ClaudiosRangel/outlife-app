@@ -371,12 +371,15 @@ export async function fetchPartnerById(id: string): Promise<Partner | null> {
 
 // ============ Profile do usuário logado ============
 export async function fetchMyProfile() {
-  const { data: userData } = await supabase.auth.getUser();
-  if (!userData.user) return null;
+  // Sessão LOCAL (getUser() faz rede; com 4G fraco retornava null e o
+  // AuthGate mandava o usuário para "completar cadastro" no meio da atividade).
+  const { data: sessionData } = await supabase.auth.getSession();
+  const userId = sessionData.session?.user.id;
+  if (!userId) return null;
   const { data, error } = await supabase
     .from("profiles")
     .select("*")
-    .eq("id", userData.user.id)
+    .eq("id", userId)
     .maybeSingle();
   if (error) throw error;
   return data;
@@ -3062,17 +3065,43 @@ export async function fetchAdminFeedback(limit = 100): Promise<UserFeedback[]> {
 // rápido). A exclusão chama a RPC transacional `delete_my_account`.
 
 /** Versão dos termos que o usuário logado já aceitou (ou null). */
+// BUG corrigido (termo reaparecendo durante a atividade): usava
+// `supabase.auth.getUser()`, que faz chamada de REDE. Com 4G fraco ela falha,
+// devolvia "sem usuário" → acceptedVersion null → o modal de aceite aparecia
+// para quem já tinha aceito. Agora: id vem da sessão LOCAL, qualquer falha de
+// rede é propagada (o gate não decide sem dado) e o aceite fica memorizado no
+// aparelho por usuário+versão.
+const LEGAL_CACHE_KEY = "outvitar:legal-accepted:";
+
+export function rememberLegalAccepted(userId: string, version: string): void {
+  try {
+    localStorage.setItem(LEGAL_CACHE_KEY + userId, version);
+  } catch {
+    /* storage indisponível: segue sem cache */
+  }
+}
+
+export function getCachedLegalAccepted(userId: string): string | null {
+  try {
+    return localStorage.getItem(LEGAL_CACHE_KEY + userId);
+  } catch {
+    return null;
+  }
+}
+
 export async function fetchMyLegalStatus(): Promise<{ acceptedVersion: string | null }> {
-  const { data: userData } = await supabase.auth.getUser();
-  if (!userData.user) return { acceptedVersion: null };
+  const { data: sessionData } = await supabase.auth.getSession();
+  const userId = sessionData.session?.user.id;
+  if (!userId) throw new Error("Sessão indisponível");
   const { data, error } = await supabase
     .from("profiles")
     .select("accepted_legal_version" as never)
-    .eq("id", userData.user.id)
+    .eq("id", userId)
     .maybeSingle();
   if (error) throw error;
-  const v = (data as { accepted_legal_version?: string | null } | null)?.accepted_legal_version;
-  return { acceptedVersion: v ?? null };
+  const v = (data as { accepted_legal_version?: string | null } | null)?.accepted_legal_version ?? null;
+  if (v) rememberLegalAccepted(userId, v);
+  return { acceptedVersion: v };
 }
 
 /** Registra o aceite da versão vigente dos termos para o usuário logado. */

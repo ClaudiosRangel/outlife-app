@@ -7,7 +7,12 @@ import { toast } from "sonner";
 import { ShieldCheck, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
-import { acceptLegalTerms, fetchMyLegalStatus } from "@/lib/api";
+import {
+  acceptLegalTerms,
+  fetchMyLegalStatus,
+  getCachedLegalAccepted,
+  rememberLegalAccepted,
+} from "@/lib/api";
 import { supabase } from "@/integrations/supabase/client";
 import { LEGAL_DOC_VERSION } from "@/lib/legal-content";
 import { shouldShowLegalGate } from "@/lib/legal-gate";
@@ -39,21 +44,26 @@ export function LegalGate() {
       await acceptLegalTerms(LEGAL_DOC_VERSION, platform);
     },
     onSuccess: () => {
+      if (user) rememberLegalAccepted(user.id, LEGAL_DOC_VERSION);
       qc.invalidateQueries({ queryKey: ["my-legal-status", user?.id] });
       qc.invalidateQueries({ queryKey: ["my-profile", user?.id] });
     },
     onError: (e: Error) => toast.error(e.message || t("common.error", "Erro")),
   });
 
+  // Aceite já memorizado neste aparelho para a versão vigente: nunca bloqueia
+  // (evita o modal no meio de uma atividade por oscilação de rede).
+  const cachedAccepted = user ? getCachedLegalAccepted(user.id) : null;
+
   const show = shouldShowLegalGate({
     isAuthenticated: !!user,
-    acceptedVersion: legal?.acceptedVersion,
+    acceptedVersion: cachedAccepted === LEGAL_DOC_VERSION ? cachedAccepted : legal?.acceptedVersion,
     currentVersion: LEGAL_DOC_VERSION,
     pathname,
   });
 
   // Só decide quando já temos o status carregado, para evitar flash.
-  if (!show || legal === undefined) return null;
+  if (!show || (legal === undefined && cachedAccepted !== LEGAL_DOC_VERSION)) return null;
 
   const handleSignOut = async () => {
     setSigningOut(true);

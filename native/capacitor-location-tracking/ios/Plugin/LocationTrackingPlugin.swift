@@ -113,7 +113,11 @@ public class LocationTrackingPlugin: CAPPlugin, CAPBridgedPlugin, CLLocationMana
         minIntervalMs = call.getDouble("minIntervalMs") ?? 5000
         minDistanceMeters = call.getDouble("minDistanceMeters") ?? 10
 
-        locationManager.distanceFilter = minDistanceMeters
+        // Sem filtro de distância no iOS: com o aparelho parado o sistema
+        // deixava de enviar leituras e o sinal aparecia como "Buscando/Sem
+        // sinal". A frequência fica limitada pelo throttle de minIntervalMs e
+        // a distância mínima entre pontos é aplicada no JS (validatePoint).
+        locationManager.distanceFilter = kCLDistanceFilterNone
         lastEmittedAt = nil
         isTracking = true
         locationManager.startUpdatingLocation()

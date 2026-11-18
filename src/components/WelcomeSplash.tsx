@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useQuery } from "@tanstack/react-query";
+import { fetchAppContent } from "@/lib/api";
 import logo from "@/assets/logo-outvitar.png";
 
 interface Props {
@@ -21,9 +23,18 @@ export function WelcomeSplash({ fullName, onDone }: Props) {
   const [saindo, setSaindo] = useState(false);
 
   const primeiroNome = (fullName ?? "").trim().split(/\s+/)[0] || "";
-  const frase = t("welcome.tagline", {
-    defaultValue: "Aqui registraremos seus melhores momentos!",
-  });
+  // Frase segue o slogan editado em Administração → Textos da Home (mesmo
+  // texto do cartão da Home). Sem conteúdo cadastrado, usa o padrão.
+  const { data: appContent } = useQuery({ queryKey: ["app-content"], queryFn: fetchAppContent });
+  const sloganAdmin = (appContent?.["home.slogan"] ?? "")
+    .replace(/[“”"]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+  const frase =
+    sloganAdmin ||
+    t("welcome.tagline", {
+      defaultValue: "Aqui registraremos seus melhores momentos!",
+    });
   const palavras = frase.split(" ");
 
   // Partículas determinísticas (sem Math.random no render).

@@ -2,7 +2,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { useLocation, useRouter } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
-import { fetchMyLegalStatus, fetchMyProfile, touchLastSeen } from "@/lib/api";
+import { fetchMyLegalStatus, fetchMyProfile, getCachedLegalAccepted, touchLastSeen } from "@/lib/api";
 import { WelcomeSplash } from "@/components/WelcomeSplash";
 import { LEGAL_DOC_VERSION } from "@/lib/legal-content";
 import { isPublicPath, resolveAuthRedirect } from "@/lib/auth-guard";
@@ -35,7 +35,14 @@ export function useAuthGate() {
     enabled: !!user && !loading,
   });
 
-  const termsAccepted = legal === undefined ? undefined : legal.acceptedVersion === LEGAL_DOC_VERSION;
+  // Aceite memorizado no aparelho vale mesmo com a rede oscilando (não tira o
+  // usuário da gravação para a tela de termos).
+  const cachedAccepted = user ? getCachedLegalAccepted(user.id) === LEGAL_DOC_VERSION : false;
+  const termsAccepted = cachedAccepted
+    ? true
+    : legal === undefined
+      ? undefined
+      : legal.acceptedVersion === LEGAL_DOC_VERSION;
   const profileComplete = profile === undefined ? undefined : isProfileComplete(profile);
 
   const redirectTo = resolveAuthRedirect({

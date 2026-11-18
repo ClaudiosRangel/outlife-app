@@ -91,7 +91,24 @@ async function shareFileNatively(file: File, title?: string, text?: string): Pro
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     console.error("[OutLife] Falha ao compartilhar arquivo nativamente:", err);
+    // Fallback (ex.: build iOS antiga sem o plugin): folha de compartilhar do
+    // próprio WebView (Web Share API), que o WKWebView do iOS suporta.
+    if (await tryWebShare({ files: [file], title, text })) return { status: "shared" };
     return { status: "failed", message };
+  }
+}
+
+/** Tenta `navigator.share`; true se compartilhou (ou o usuário cancelou). */
+async function tryWebShare(data: ShareData): Promise<boolean> {
+  if (typeof navigator === "undefined" || typeof navigator.share !== "function") return false;
+  try {
+    if (data.files && typeof navigator.canShare === "function" && !navigator.canShare({ files: data.files })) {
+      return false;
+    }
+    await navigator.share(data);
+    return true;
+  } catch (err) {
+    return err instanceof Error && err.name === "AbortError";
   }
 }
 
@@ -184,6 +201,7 @@ export async function shareContent(data: ShareContentInput): Promise<void> {
       return;
     } catch (err) {
       console.error("[OutLife] Falha ao compartilhar link nativamente:", err);
+      if (await tryWebShare({ title: data.title, text: data.text, url: data.url })) return;
       // Cai para o fallback de clipboard abaixo.
     }
   } else if (typeof navigator !== "undefined" && typeof navigator.share === "function") {

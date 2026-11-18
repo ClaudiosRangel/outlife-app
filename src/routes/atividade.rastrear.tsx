@@ -43,7 +43,7 @@ import { Label } from "@/components/ui/label";
 import { enqueueActivity } from "@/lib/activity-storage";
 import { useActivitySync } from "@/hooks/use-activity-sync";
 import { ReviewPromptDialog } from "@/components/ReviewPromptDialog";
-import { computeActivityMetrics } from "@/lib/activity-metrics";
+import { computeActivityMetrics, usesPace } from "@/lib/activity-metrics";
 import { mpsToKmh } from "@/lib/instant-speed";
 import { generateActivityMapSnapshot } from "@/lib/activity-map-snapshot";
 import { getActivityIcon } from "@/lib/activity-icons";
@@ -597,10 +597,16 @@ function TrackActivityPage() {
             </div>
             <div>
               <div className="text-[11px] uppercase tracking-widest text-muted-foreground">
-                {t("activity.metrics.pace")}
+                {usesPace(activityType)
+                  ? t("activity.metrics.pace")
+                  : t("activity.metrics.averageSpeed", { defaultValue: "Velocidade média" })}
               </div>
               <div className="mt-1 font-display text-4xl font-bold tabular-nums leading-none">
-                {liveMetrics.averagePaceLabel ?? "—"}
+                {usesPace(activityType)
+                  ? liveMetrics.averagePaceLabel ?? "—"
+                  : liveMetrics.averageSpeedKmh
+                    ? `${liveMetrics.averageSpeedKmh} km/h`
+                    : "—"}
               </div>
             </div>
           </div>
