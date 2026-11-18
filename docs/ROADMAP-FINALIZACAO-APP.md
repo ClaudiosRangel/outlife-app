@@ -26,6 +26,20 @@
 >    Toque pula; respeita "reduzir movimento"; textos em `welcome.*` (pt-BR/en).
 > **FALTA:** `build:native` + `cap sync` + APK + commit/push (aguardando o usuário) e testar no aparelho.
 
+> **🧪 CORREÇÕES DO GRUPO DE TESTES — build iOS 51 (18/11/2026, commit `7e40179`):**
+> 1. **Calibração nunca achava GPS:** o aquecimento exigia "ponto aceito" (nunca gravado) →
+>    eterno "Buscando". Agora a calibração usa só a acurácia recebida (bom ≤ 25 m). No iOS,
+>    `distanceFilter = kCLDistanceFilterNone` (parado o iOS não mandava leitura → "sem sinal").
+> 2. **Termo reaparecendo no meio da atividade:** `fetchMyLegalStatus`/`fetchMyProfile` usavam
+>    `auth.getUser()` (rede); com 4G fraco viravam "não aceito"/"perfil incompleto". Agora usam a
+>    sessão local, propagam erro e o aceite fica memorizado no aparelho (`outvitar:legal-accepted:`).
+> 3. **Compartilhar no iOS ("NativeShare not implemented"):** novo `NativeSharePlugin.swift`
+>    (UIActivityViewController) no pod local + fallback `navigator.share`.
+> 4. **Pedalada mostrava pace:** pace só em caminhada/trilha/corrida (`usesPace`); bike mostra
+>    velocidade média (gravação e detalhe).
+> 5. **Boas-vindas:** a frase segue o slogan de Administração → Textos da Home (`home.slogan`).
+> **FALTA:** validar na nova build do TestFlight; APK Android desta rodada não gerado.
+
 > **🛰️ FIX GPS iOS: calibração travada em "Buscando sinal" (16/11/2026, commit `843401b`):**
 > Relato (iPhone, build 49): ao iniciar atividade, a calibração ficava em "Buscando sinal de GPS"
 > e "Iniciar mesmo assim" também não iniciava (Strava achava na hora). Duas causas:
